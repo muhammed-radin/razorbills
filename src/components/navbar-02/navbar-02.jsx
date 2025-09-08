@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Logo } from "./logo";
+import { Logo } from "../logo";
 import { NavMenu } from "./nav-menu";
 import { NavigationSheet } from "./navigation-sheet";
 import { SunIcon } from "lucide-react";
 
-const Navbar02Page = () => {
+const NavbarBlock = () => {
   return (
-    <div className="min-h-screen bg-muted">
       <nav className="h-16 bg-background border-b">
         <div
           className="h-full flex items-center justify-between max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8">
@@ -33,8 +32,7 @@ const Navbar02Page = () => {
           </div>
         </div>
       </nav>
-    </div>
   );
 };
 
-export default Navbar02Page;
+export default NavbarBlock;
