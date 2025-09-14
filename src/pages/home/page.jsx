@@ -11,93 +11,96 @@ const products = [
     category: "Electronics",
     description: "High-quality sound and comfortable fit for all-day use.",
     price: 99.99,
-    image: "/img/Headphone.jpg",
+    image: "/products/Headphone.jpg",
   },
   {
     name: "Bluetooth Speaker",
     category: "Speaker",
     description: "Portable speaker with deep bass and long battery life.",
     price: 49.99,
-    image: "/img/Speaker.webp",
+    image: "/products/Speaker.webp",
   },
   {
     name: "Rechargeable Battery Pack",
     category: "Battery",
     description: "Durable battery pack with fast charging support.",
     price: 19.99,
-    image: "/img/Battery.png",
+    image: "/products/Battery.png",
   },
   {
     name: "LED Light Strip",
     category: "LED",
     description: "Colorful LED strip for decoration and ambient lighting.",
     price: 14.99,
-    image: "/img/LedStrip.webp",
+    image: "/products/LedStrip.webp",
   },
   {
     name: "Wireless Headphones",
     category: "Electronics",
     description: "High-quality sound and comfortable fit for all-day use.",
     price: 99.99,
-    image: "/img/Headphone.jpg",
+    image: "/products/Headphone.jpg",
   },
   {
     name: "Bluetooth Speaker",
     category: "Speaker",
     description: "Portable speaker with deep bass and long battery life.",
     price: 49.99,
-    image: "/img/Speaker.webp",
+    image: "/products/Speaker.webp",
   },
   {
     name: "Rechargeable Battery Pack",
     category: "Battery",
     description: "Durable battery pack with fast charging support.",
     price: 19.99,
-    image: "/img/Battery.png",
+    image: "/products/Battery.png",
   },
   {
     name: "LED Light Strip",
     category: "LED",
     description: "Colorful LED strip for decoration and ambient lighting.",
     price: 14.99,
-    image: "/img/LedStrip.webp",
+    image: "/products/LedStrip.webp",
   },
   {
     name: "Wireless Headphones",
     category: "Electronics",
     description: "High-quality sound and comfortable fit for all-day use.",
     price: 99.99,
-    image: "/img/Headphone2.jpg",
+    image: "/products/Headphone2.jpg",
   },
   {
     name: "Bluetooth Speaker",
     category: "Speaker",
     description: "Portable speaker with deep bass and long battery life.",
     price: 49.99,
-    image: "/img/Speaker.webp",
+    image: "/products/Speaker.webp",
   },
   {
     name: "Rechargeable Battery Pack",
     category: "Battery",
     description: "Durable battery pack with fast charging support.",
     price: 19.99,
-    image: "/img/Battery.png",
+    image: "/products/Battery.png",
   },
   {
     name: "LED Light Strip",
     category: "LED",
     description: "Colorful LED strip for decoration and ambient lighting.",
     price: 14.99,
-    image: "/img/LedStrip.jpg",
+    image: "/products/LedStrip.jpg",
   },
 ];
 
 export default function HomePage() {
   return (
-    <div className=" min-h-screen  p-3 sm:p-7">
-      <SearchBar/>
-      <Hero1 />
-     
+    <div className="min-h-screen p-3 sm:p-7 w-full">
+      <SearchBar />
+      <br />
+      <br />
+      <br />
+      {/* <Hero1 /> */}
+
 
       <div className="flex flex-wrap justify-center gap-6 mt-6">
         {products.map((product, index) => (
