@@ -95,9 +95,9 @@ const products = [
 export default function HomePage() {
   return (
     <div className=" min-h-screen  p-3 sm:p-7">
-      <SearchBar/>
-      <Hero1 />
-     
+      <br />
+      <SearchBar />
+      <br />
 
       <div className="flex flex-wrap justify-center gap-6 mt-6">
         {products.map((product, index) => (
