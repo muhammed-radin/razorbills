@@ -8,7 +8,7 @@ import {
 
 const ProductCard = ({ product }) => {
     return (
-        <Card className="sm:w-45 h-55  border shadow-none border-none rounded-none p-0 bg-transparent  gap-3  ">
+        <Card className="w-35 sm:w-45 h-55  border shadow-none border-none rounded-none p-0 bg-transparent  gap-3  ">
             <CardHeader className="h-40 border-3 rounded-2xl p-0 m-0 overflow-hidden bg-center">
                 <img
                     src={product.image}
@@ -22,7 +22,7 @@ const ProductCard = ({ product }) => {
                     {product.name}
                 </h2>
                 <p className="space-x-2" >
-                    <span className=" text-[13px] text-gray-600 line-through"> ${product.price} </span>      <span className=" text-[13px] font-bold "> ${product.price}</span>
+                    <span className=" text-[13px] text-red-950 line-through"> ${product.price} </span>      <span className=" text-[13px] font-bold text-green-600"> ${product.price}</span>
                 </p>
 
             </CardContent>

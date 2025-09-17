@@ -97,7 +97,7 @@ export default function HomePage() {
     <div className=" min-h-screen  p-3 sm:p-7">
       <br />
       <SearchBar />
-      <br />
+      
 
       <div className="flex flex-wrap justify-center gap-6 mt-6">
         {products.map((product, index) => (

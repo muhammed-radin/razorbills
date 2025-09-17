@@ -1,8 +1,8 @@
 import { LucideSearch } from "lucide-react";
 export default function SearchBar() {
     return (
-        <div className="w-full mb-5">
-            <div className="relative sm:w-1/2 max-sm:w-full mx-auto">
+        <div className="w-full mb-5 my-2">
+            <div className="relative sm:w-1/2 max-sm:w-[90%] mx-auto">
                 <input
                     type="text"
                     placeholder="Search..."
