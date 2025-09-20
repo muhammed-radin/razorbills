@@ -5,6 +5,10 @@ import CategoryList from "@/components/category-tag/CategoryList";
 import ProductCard from "@/components/product-card/ProductCard";
 import { Hero1 } from "@/components/hero/hero1";
 import SearchBar from "@/components/searchBar/SearchBar";
+import CarouselSlide from "@/components/carousel-10";
+import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
+import ListHorizontalProductCards from "@/components/horizontal-card/list-horizontal-product-cards";
+
 const products = [
   {
     name: "Wireless Headphones",
@@ -114,6 +118,8 @@ export default function HomePage() {
         "Microcontroller",
       ]} className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap" tagClassName="max-sm:rounded-md" />
 
+      <CarouselSlide />
+      <ListHorizontalProductCards />
 
       <div className="flex flex-wrap justify-center gap-6 mt-6">
         {products.map((product, index) => (
