@@ -9,11 +9,11 @@ import {
 const ProductCard = ({ product }) => {
     return (
         <Card className="w-35 sm:w-45 h-55  border shadow-none border-none rounded-none p-0 bg-transparent  gap-3  ">
-            <CardHeader className="h-40 border-3 rounded-2xl p-0 m-0 overflow-hidden bg-center">
+            <CardHeader className="h-40 border-1 max-sm:border-2 rounded-2xl p-0 m-0 overflow-hidden bg-center">
                 <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-40 object-cover hover:scale-115 transition-transform duration-300 ease-in-out"
+                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out"
                 />
             </CardHeader>
 

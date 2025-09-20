@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   purge: [],
   darkMode: false, // or 'media' or 'class'
   theme: {
@@ -8,8 +8,8 @@ module.exports = {
       },
     },
     fontFamily: {
-        bakbak: ["Bakbak One", "Geist", "sans-serif"],
-      },
+      bakbak: ["Bakbak One", "Geist", "sans-serif"],
+    },
   },
   variants: {
     extend: {},
