@@ -118,14 +118,26 @@ export default function HomePage() {
         "Microcontroller",
       ]} className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap" tagClassName="max-sm:rounded-md" />
 
-      <CarouselSlide />
-      <ListHorizontalProductCards />
 
       <div className="flex flex-wrap justify-center gap-6 mt-6">
         {products.map((product, index) => (
           <ProductCard key={index} product={product} />
         ))}
       </div>
+      <CarouselSlide />
+      <br />
+      <ListHorizontalProductCards />
+
+      <br />
+      <div className="flex flex-wrap justify-center gap-6 mt-6">
+        {products.map((product, index) => (
+          <ProductCard key={index} product={product} />
+        ))}
+      </div>
+      <br />
+      <ListHorizontalProductCards />
+
+
     </div>
   );
 }
