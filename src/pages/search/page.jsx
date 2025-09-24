@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search, Filter, SlidersHorizontal, Grid, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -198,8 +199,15 @@ const sortOptions = [
 ];
 
 export default function ProductSearchPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState(["All"]);
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || "");
+  
+  // Initialize selected categories from URL params
+  const urlCategory = searchParams.get('category');
+  const [selectedCategories, setSelectedCategories] = useState(
+    urlCategory && urlCategory !== "All" ? [urlCategory] : ["All"]
+  );
+  
   const [selectedBrands, setSelectedBrands] = useState(["All"]);
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [minRating, setMinRating] = useState(0);
