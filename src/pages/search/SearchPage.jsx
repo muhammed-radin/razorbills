@@ -2,21 +2,21 @@ import React, { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/product-card/ProductCard";
-import { 
-  Search, 
-  Filter, 
-  SlidersHorizontal, 
+import {
+  Search,
+  Filter,
+  SlidersHorizontal,
   Star,
   X
 } from "lucide-react";
@@ -132,7 +132,7 @@ const allProducts = [
 const categories = [
   "All",
   "Electronics",
-  "Speaker", 
+  "Speaker",
   "Battery",
   "LED",
   "Microphone",
@@ -169,20 +169,20 @@ export default function SearchPage() {
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = allProducts.filter(product => {
       // Text search
-      const searchMatches = searchQuery === "" || 
+      const searchMatches = searchQuery === "" ||
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      
+
       // Category filter
       const categoryMatches = selectedCategory === "All" || product.category === selectedCategory;
-      
+
       // Price range filter
       const priceMatches = product.price >= priceRange[0] && product.price <= priceRange[1];
-      
+
       // Rating filter
       const ratingMatches = product.rating >= minRating;
-      
+
       // Stock filter
       const stockMatches = !showOnlyInStock || product.inStock;
 
@@ -232,7 +232,7 @@ export default function SearchPage() {
   ].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen p-3 sm:p-7">
+    <div className="min-h-screen p-3 sm:p-7 max-sm:p-4 max-sm:mt-3">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -241,15 +241,15 @@ export default function SearchPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-6">
+        <div className="relative mb-6">
           <div className="relative w-full max-w-2xl">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" size={20} />
             <Input
               type="text"
               placeholder="Search products, categories, or keywords..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-3 text-lg border-2 focus:border-gray-500"
+              className="pl-10 h-10 text-base"
             />
           </div>
         </div>
@@ -257,8 +257,8 @@ export default function SearchPage() {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filters Sidebar */}
           <div className="w-full lg:w-80">
-            <Card>
-              <CardHeader className="pb-3">
+            <Card className="py-3 border-none shadow-none"> 
+              <CardHeader className="">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Filter size={20} />
@@ -269,8 +269,8 @@ export default function SearchPage() {
                       </Badge>
                     )}
                   </CardTitle>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => setShowFilters(!showFilters)}
                     className="lg:hidden"
@@ -280,8 +280,8 @@ export default function SearchPage() {
                 </div>
                 {activeFiltersCount > 0 && (
                   <Button
-                    variant="outline" 
-                    size="sm" 
+                    variant="outline"
+                    size="sm"
                     onClick={clearFilters}
                     className="mt-2 w-full"
                   >
@@ -290,7 +290,7 @@ export default function SearchPage() {
                   </Button>
                 )}
               </CardHeader>
-              
+
               <CardContent className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
                 {/* Category Filter */}
                 <div>
@@ -345,9 +345,9 @@ export default function SearchPage() {
                         <label htmlFor={`rating-${rating}`} className="flex items-center space-x-1 cursor-pointer">
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map(star => (
-                              <Star 
-                                key={star} 
-                                size={16} 
+                              <Star
+                                key={star}
+                                size={16}
                                 className={star <= (rating || 5) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
                               />
                             ))}
@@ -390,7 +390,7 @@ export default function SearchPage() {
                   </p>
                 )}
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <Label htmlFor="sort" className="text-sm whitespace-nowrap">Sort by:</Label>
                 <Select value={sortBy} onValueChange={setSortBy}>
@@ -410,17 +410,17 @@ export default function SearchPage() {
 
             {/* Products Grid */}
             {filteredAndSortedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
                 {filteredAndSortedProducts.map(product => (
-                  <ProductCard 
-                    key={product.id} 
+                  <ProductCard
+                    key={product.id}
                     product={{
                       name: product.name,
                       category: product.category,
                       description: product.description,
                       price: product.price,
                       image: product.image
-                    }} 
+                    }}
                   />
                 ))}
               </div>
