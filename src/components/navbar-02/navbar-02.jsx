@@ -2,10 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "../logo";
 import { NavMenu } from "./nav-menu";
 import { NavigationSheet } from "./navigation-sheet";
-import { SunIcon } from "lucide-react";
+import { SunIcon, MoonIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTheme } from "@/utils/theme-provider";
 
 const NavbarBlock = () => {
+  const { setTheme, theme } = useTheme();
+
   return (
     <nav className="h-16 bg-background border-b">
       <div className="h-full flex items-center justify-between max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,8 +28,8 @@ const NavbarBlock = () => {
           <Link to="./signup" className="cursor-pointer">
             <Button>Sign Up</Button>
           </Link>
-          <Button size="icon" variant="outline">
-            <SunIcon />
+          <Button size="icon" variant="outline" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+            { theme === "light" ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" /> }
           </Button>
 
           {/* Mobile Menu */}
