@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 
 function FilterContent({ showFilters, categories, selectedCategory, setSelectedCategory, priceRange, setPriceRange, minRating, setMinRating, showOnlyInStock, setShowOnlyInStock, className }) {
     return (<div>
@@ -76,16 +77,14 @@ function FilterContent({ showFilters, categories, selectedCategory, setSelectedC
 
             {/* In Stock Filter */}
             <div className="flex items-center space-x-2">
-                <input
-                    type="checkbox"
+                <Checkbox
                     id="in-stock"
                     checked={showOnlyInStock}
-                    onChange={(e) => setShowOnlyInStock(e.target.checked)}
-                    className="w-4 h-4"
+                    onCheckedChange={setShowOnlyInStock}
                 />
-                <label htmlFor="in-stock" className="text-sm cursor-pointer">
+                <Label htmlFor="in-stock" className="text-sm cursor-pointer">
                     In Stock Only
-                </label>
+                </Label>
             </div>
         </div>
     </div>);
