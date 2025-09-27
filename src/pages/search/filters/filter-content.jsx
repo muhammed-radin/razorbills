@@ -76,7 +76,7 @@ function FilterContent({ showFilters, categories, selectedCategory, setSelectedC
             </div>
 
             {/* In Stock Filter */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 mb-3">
                 <Checkbox
                     id="in-stock"
                     checked={showOnlyInStock}
