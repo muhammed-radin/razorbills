@@ -4,6 +4,7 @@ import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
 import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 function FilterContent({ showFilters, categories, selectedCategory, setSelectedCategory, priceRange, setPriceRange, minRating, setMinRating, showOnlyInStock, setShowOnlyInStock, className }) {
     return (<div>
@@ -37,6 +38,7 @@ function FilterContent({ showFilters, categories, selectedCategory, setSelectedC
                     min={0}
                     step={10}
                     className="w-full"
+                    dualThumb={true}
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">
                     <span>$0</span>
@@ -47,18 +49,15 @@ function FilterContent({ showFilters, categories, selectedCategory, setSelectedC
             {/* Rating Filter */}
             <div>
                 <Label className="text-sm font-medium mb-3 block">Minimum Rating</Label>
-                <div className="space-y-2">
+                <RadioGroup
+                    value={minRating}
+                    onValueChange={setMinRating}
+                    className="space-y-2"
+                >
                     {[4, 3, 2, 1, 0].map(rating => (
                         <div key={rating} className="flex items-center space-x-2">
-                            <input
-                                type="radio"
-                                id={`rating-${rating}`}
-                                name="rating"
-                                checked={minRating === rating}
-                                onChange={() => setMinRating(rating)}
-                                className="w-4 h-4"
-                            />
-                            <label htmlFor={`rating-${rating}`} className="flex items-center space-x-1 cursor-pointer">
+                            <RadioGroupItem value={rating} id={`rating-${rating}`} />
+                            <Label htmlFor={`rating-${rating}`} className="flex items-center space-x-1">
                                 <div className="flex">
                                     {[1, 2, 3, 4, 5].map(star => (
                                         <Star
@@ -69,13 +68,13 @@ function FilterContent({ showFilters, categories, selectedCategory, setSelectedC
                                     ))}
                                 </div>
                                 <span className="text-sm">{rating === 0 ? "All Ratings" : `${rating}+ Stars`}</span>
-                            </label>
+                            </Label>
                         </div>
                     ))}
-                </div>
+                </RadioGroup>
             </div>
 
-            {/* Stock Filter */}
+            {/* In Stock Filter */}
             <div className="flex items-center space-x-2">
                 <input
                     type="checkbox"
