@@ -8,8 +8,8 @@ export default function CategoryTag({ label, selected, onClick, className }) {
       className={cn(
         "px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
         selected
-          ? "bg-black text-white"
-          : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+          ? "bg-primary text-primary-foreground hover:brightness-120"
+          : "bg-muted text-muted-foreground hover:brightness-90",
         className
       )}
     >

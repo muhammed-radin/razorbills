@@ -13,7 +13,7 @@ const ProductCard = ({ product }) => {
                 <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out"
+                    className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out bg-background"
                 />
             </CardHeader>
 
@@ -22,7 +22,7 @@ const ProductCard = ({ product }) => {
                     {product.name}
                 </h2>
                 <p className="space-x-2" >
-                    <span className=" text-[13px] text-red-950 line-through"> ${product.price} </span>      <span className=" text-[13px] font-bold text-green-600"> ${product.price}</span>
+                    <span className=" text-[13px] text-red-950 dark:text-red-300 line-through"> ${product.price} </span>      <span className=" text-[13px] font-bold text-green-600 dark:text-green-400"> ${product.price}</span>
                 </p>
 
             </CardContent>

@@ -12,7 +12,7 @@ import { Filter, SlidersHorizontal, X, Star } from 'lucide-react';
 
 function FilterSidebar({ activeFiltersCount, clearFilters, categories, selectedCategory, setSelectedCategory, priceRange, setPriceRange, minRating, setMinRating, showOnlyInStock, setShowOnlyInStock, showFilters, setShowFilters }) {
     return (<div className="w-full lg:w-80">
-        <Card className="py-3 border-none shadow-none">
+        <Card className="py-3 border-none shadow-none max-sm:bg-transparent">
             <CardHeader className="max-sm:px-2">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
