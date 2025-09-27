@@ -21,7 +21,7 @@ export function HorizontalProductCard({ variant, className }) {
     return (
         <Card className={cn("w-[400px] min-w-[300px] max-sm:max-w-[300px] relative flex flex-row items-start justify-start p-4 pl-0", varientStyle, className)}>
             <div className="mx-2">
-                <img src="/products/Headphone.jpg" alt="Product Image" className="w-[70px] min-w-[60px]" />
+                <img src="/products/Headphone.jpg" alt="Product Image" className="w-[70px] min-w-[60px] rounded-md bg-background" />
             </div>
             <CardContent className="m-0 p-0">
                 <CardTitle>Product Name</CardTitle>

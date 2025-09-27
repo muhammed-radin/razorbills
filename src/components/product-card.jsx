@@ -15,7 +15,7 @@ export default function CardProduct({ className, title, description, price, rati
         <div className={cn("w-full p-6 flex justify-center", className)}>
             <Card className="w-48 min-w-48">
                 <CardContent className="p-3 py-0">
-                    <img src={thumbnail} alt="" className="aspect-square rounded-md bg-gray-100 mb-2" />
+                    <img src={thumbnail} alt="" className="aspect-square rounded-md bg-background mb-2" />
                     <CardTitle className="text-sm mb-1">{title}</CardTitle>
                     <CardDescription className="text-xs mb-2 line-clamp-2">
                         {description}
