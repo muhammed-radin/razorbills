@@ -31,7 +31,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
-import FilterSidebar from "./filter-sidebar";
+import FilterSidebar from "./filters/filter-sidebar";
 
 // Mock data - in a real app, this would come from an API
 const allProducts = [
