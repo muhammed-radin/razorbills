@@ -1,12 +1,24 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import CategoryTag from "./CategoryTag";
 import React from "react";
 import { cn } from "@/lib/utils";
 
 export default function CategoryList(params) {
   const categories = params.items;
+  const navigate = useNavigate();
 
   const [active, setActive] = useState("All");
+  
+  const handleCategoryClick = (category) => {
+    setActive(category);
+    if (category === "All") {
+      navigate("/search");
+    } else {
+      navigate(`/search?category=${encodeURIComponent(category)}`);
+    }
+  };
+
   return (
     <>
       <div className={cn("p-4 flex gap-3 flex-wrap", params.className)}>
@@ -15,7 +27,7 @@ export default function CategoryList(params) {
             key={category}
             label={category}
             selected={active === category}
-            onClick={() => setActive(category)}
+            onClick={() => handleCategoryClick(category)}
             className={params.tagClassName}
           />
         ))}
