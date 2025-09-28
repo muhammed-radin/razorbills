@@ -121,7 +121,7 @@ export default function HomePage() {
 
       <div className="flex flex-wrap justify-center gap-6 mt-6">
         {products.map((product, index) => (
-          <ProductCard key={index} product={product} />
+          <ProductCard key={index} product={product} index={index} />
         ))}
       </div>
       <CarouselSlide />
@@ -131,7 +131,7 @@ export default function HomePage() {
       <br />
       <div className="flex flex-wrap justify-center gap-6 mt-6">
         {products.map((product, index) => (
-          <ProductCard key={index} product={product} />
+          <ProductCard key={index} product={product} index={index} />
         ))}
       </div>
       <br />
