@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -169,6 +170,7 @@ const sortOptions = [
 ];
 
 export default function SearchPage() {
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("relevance");
@@ -176,6 +178,15 @@ export default function SearchPage() {
   const [minRating, setMinRating] = useState(0);
   const [showOnlyInStock, setShowOnlyInStock] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Initialize search query and category from URL parameters
+  useEffect(() => {
+    const queryFromUrl = searchParams.get("q") || "";
+    const categoryFromUrl = searchParams.get("category") || "All";
+    
+    setSearchQuery(queryFromUrl);
+    setSelectedCategory(categoryFromUrl);
+  }, [searchParams]);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
