@@ -24,9 +24,12 @@ import { Product } from "@/models/product";
 import { currency } from "@/utils/currency";
 import StyledMd from "@/components/styled-md";
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Sample product data - in a real app this would come from an API or context
 import { products } from "./sample-data";
+import ReviewCard from "@/components/review-card";
+import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 
 const ProductDetailsPage = () => {
     const { id } = useParams();
@@ -249,10 +252,10 @@ const ProductDetailsPage = () => {
 
                 <br />
 
-                <div className="flex flex-col sm:flex-row sm:items-stretch sm:justify-stretch sm:space-x-4 space-y-6 sm:space-y-0">
+                <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-stretch lg:space-x-4 space-y-6 lg:space-y-0">
 
                     {/* Specifications */}
-                    <Card className="flex-1">
+                    <Card className="shrink-0">
                         <CardHeader>
                             <CardTitle>Specifications</CardTitle>
                             <CardDescription>
@@ -272,7 +275,7 @@ const ProductDetailsPage = () => {
                     </Card>
 
                     {/* Features */}
-                    <Card className="">
+                    <Card className="flex-1">
                         <CardHeader>
                             <CardTitle>Features</CardTitle>
                             <CardDescription>
@@ -296,43 +299,50 @@ const ProductDetailsPage = () => {
             {/* Review */}
             {/* Reviews Section */}
             <div className="max-w-7xl mx-auto mt-12 space-y-8">
-                <Separator />
-                <div>
-                    <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
-                    {([1, 2, 3]).length > 0 ? (
-                        <div className="space-y-6">
-                            {[{ rating: 3, title: "Its Good", comment: "Goooood", author: "Boxes", date: new Date() }].map((review, index) => (
-                                <div key={index} className="border-b pb-4 last:border-b-0">
-                                    <div className="flex items-center space-x-2 mb-2">
-                                        <div className="flex">
-                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                <StarIcon
-                                                    key={star}
-                                                    className={cn(
-                                                        "h-4 w-4",
-                                                        star <= review.rating
-                                                            ? "fill-yellow-400 text-yellow-400"
-                                                            : "text-gray-300"
-                                                    )}
-                                                />
-                                            ))}
-                                        </div>
-                                        <span className="text-sm text-muted-foreground">
-                                            {review.rating} out of 5
-                                        </span>
-                                    </div>
-                                    <p className="text-sm font-medium">{review.title}</p>
-                                    <p className="text-sm text-muted-foreground">{review.comment}</p>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        By {review.author} on {new Date(review.date).toLocaleDateString()}
-                                    </p>
+                <Tabs defaultValue="review">
+                    <TabsList>
+                        <TabsTrigger value="review">Reviews</TabsTrigger>
+                        <TabsTrigger value="similar">Products From {product.brand}</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="review" className="w-full">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Customer Reviews</CardTitle>
+                                <CardDescription>
+                                    See what our customers are saying
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className='w-full'>
+                                <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
+                                    {([1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9]).map((it, index) => {
+                                        return (<ReviewCard review={{
+                                            date: new Date(),
+                                            author: "John Doe",
+                                            comment: "Great product! Highly recommend it.".repeat(index),
+                                            title: "Excellent Quality",
+                                            rating: Math.floor(Math.random() * 5),
+                                        }} className="w-[350px]" />)
+                                    })}
                                 </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-sm text-muted-foreground">No reviews yet. Be the first to review this product!</p>
-                    )}
-                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="similar"><Card>
+                        <CardHeader>
+                            <CardTitle>Products From {product.brand}</CardTitle>
+                            <CardDescription>
+                                Explore more products from this brand
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className='w-full'>
+                            <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
+                                {([1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9]).map((it, index) => {
+                                    return (<HorizontalProductCard product={products[index % products.length]} className="w-[350px]" />)
+                                })}
+                            </div>
+                        </CardContent>
+                    </Card></TabsContent>
+                </Tabs>
             </div>
         </div>
     );
