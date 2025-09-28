@@ -35,7 +35,7 @@ const CartItem = ({
 
   return (
     <div className={cn(
-      "flex flex-col sm:flex-row gap-4 p-4 border rounded-lg bg-white",
+      "flex flex-col sm:flex-row gap-4 p-4 border rounded-lg bg-card",
       isOutOfStock && "opacity-60",
       className
     )}>
@@ -58,11 +58,11 @@ const CartItem = ({
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
           <div className="space-y-1">
             <Link to={`/product/${product.id}`}>
-              <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors line-clamp-2">
+              <h3 className="text-lg font-semibold text-foreground hover:text-primary transition-colors line-clamp-2">
                 {product.name}
               </h3>
             </Link>
-            <p className="text-sm text-gray-600 line-clamp-2">
+            <p className="text-sm text-muted-foreground line-clamp-2">
               {product.description}
             </p>
             <div className="flex items-center gap-2">
@@ -80,7 +80,7 @@ const CartItem = ({
             <Button
               variant="ghost"
               size="sm"
-              className="text-gray-500 hover:text-red-600"
+              className="text-muted-foreground hover:text-destructive"
               onClick={handleRemove}
             >
               <Trash2 className="w-4 h-4" />
@@ -88,7 +88,7 @@ const CartItem = ({
             <Button
               variant="ghost"
               size="sm"
-              className="text-gray-500 hover:text-pink-600"
+              className="text-muted-foreground hover:text-pink-600"
             >
               <Heart className="w-4 h-4" />
             </Button>
@@ -101,12 +101,12 @@ const CartItem = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-foreground">
                 {currency(product.price)}
               </span>
               {product.originalPrice > product.price && (
                 <>
-                  <span className="text-sm text-gray-500 line-through">
+                  <span className="text-sm text-muted-foreground line-through">
                     {currency(product.originalPrice)}
                   </span>
                   <Badge variant="destructive" className="text-xs">
@@ -115,11 +115,11 @@ const CartItem = ({
                 </>
               )}
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               Subtotal: <span className="font-semibold">{currency(cartItem.getTotalPrice())}</span>
             </div>
             {cartItem.getSavings() > 0 && (
-              <div className="text-sm text-green-600">
+              <div className="text-sm text-green-600 dark:text-green-400">
                 You save: {currency(cartItem.getSavings())}
               </div>
             )}
@@ -128,7 +128,7 @@ const CartItem = ({
           {/* Quantity Controls */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Qty:</span>
+              <span className="text-sm font-medium text-foreground">Qty:</span>
               <div className="flex items-center border rounded-md">
                 <Button
                   variant="ghost"
@@ -163,12 +163,12 @@ const CartItem = ({
           </Badge>
         )}
         {isLowStock && !isOutOfStock && (
-          <Badge variant="outline" className="w-fit text-orange-600 border-orange-600">
+          <Badge variant="outline" className="w-fit text-orange-600 border-orange-600 dark:text-orange-400 dark:border-orange-400">
             Only {product.stock} left in stock
           </Badge>
         )}
         {!isOutOfStock && !isLowStock && (
-          <div className="text-xs text-green-600">
+          <div className="text-xs text-green-600 dark:text-green-400">
             In Stock
           </div>
         )}

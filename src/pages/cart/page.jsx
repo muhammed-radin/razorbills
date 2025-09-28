@@ -26,7 +26,11 @@ import CartItem from "./components/CartItem";
 import CartSummary from "./components/CartSummary";
 
 const CartPage = () => {
-  const [cart, setCart] = useState(sampleCart);
+  const [cart] = useState(() => {
+    // Use the sample cart directly for this demo
+    return sampleCart;
+  });
+  const [cartItems, setCartItems] = useState([...cart.items]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleQuantityChange = (cartItemId, newQuantity) => {
@@ -35,9 +39,8 @@ const CartPage = () => {
     setTimeout(() => {
       const success = cart.updateItemQuantity(cartItemId, newQuantity);
       if (success) {
-        // Force re-render by creating a new cart instance with updated data
-        const updatedCart = { ...cart };
-        setCart(updatedCart);
+        // Update the cart items to trigger re-render
+        setCartItems([...cart.items]);
       }
       setIsLoading(false);
     }, 300);
@@ -48,9 +51,8 @@ const CartPage = () => {
     setTimeout(() => {
       const success = cart.removeItem(cartItemId);
       if (success) {
-        // Force re-render by creating a new cart instance with updated data
-        const updatedCart = { ...cart };
-        setCart(updatedCart);
+        // Update the cart items to trigger re-render
+        setCartItems([...cart.items]);
       }
       setIsLoading(false);
     }, 300);
@@ -61,9 +63,8 @@ const CartPage = () => {
       setIsLoading(true);
       setTimeout(() => {
         cart.clear();
-        // Force re-render by creating a new cart instance
-        const newCart = new (cart.constructor)();
-        setCart(newCart);
+        // Update the cart items to trigger re-render
+        setCartItems([...cart.items]);
         setIsLoading(false);
       }, 300);
     }
@@ -74,10 +75,10 @@ const CartPage = () => {
     alert("Proceeding to checkout... (This is a demo)");
   };
 
-  const isEmpty = cart.isEmpty();
+  const isEmpty = cart?.isEmpty?.() ?? true;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
@@ -97,11 +98,11 @@ const CartPage = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div className="flex items-center gap-3 mb-4 sm:mb-0">
-            <ShoppingCart className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">
+            <ShoppingCart className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">
               Shopping Cart
               {!isEmpty && (
-                <span className="ml-2 text-lg font-normal text-gray-600">
+                <span className="ml-2 text-lg font-normal text-muted-foreground">
                   ({cart.getTotalItemsCount()} {cart.getTotalItemsCount() === 1 ? 'item' : 'items'})
                 </span>
               )}
@@ -120,7 +121,7 @@ const CartPage = () => {
                 variant="outline" 
                 onClick={handleClearCart}
                 disabled={isLoading}
-                className="text-red-600 border-red-600 hover:bg-red-50"
+                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Clear Cart
@@ -133,11 +134,11 @@ const CartPage = () => {
           /* Empty Cart State */
           <Card className="text-center py-16">
             <CardContent>
-              <ShoppingBag className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">
+              <ShoppingBag className="w-24 h-24 text-muted-foreground mx-auto mb-6" />
+              <h2 className="text-2xl font-semibold text-foreground mb-4">
                 Your cart is empty
               </h2>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
                 Looks like you haven't added anything to your cart yet. 
                 Start shopping to fill it up!
               </p>
@@ -162,24 +163,24 @@ const CartPage = () => {
             <div className="lg:col-span-2 space-y-4">
               {/* Cart Items Header */}
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-foreground">
                   Cart Items
                 </h2>
                 <div className="flex items-center gap-2">
                   {cart.getTotalSavings() > 0 && (
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
                       Total Savings: {currency(cart.getTotalSavings())}
                     </Badge>
                   )}
                   {isLoading && (
-                    <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />
+                    <RefreshCw className="w-4 h-4 text-primary animate-spin" />
                   )}
                 </div>
               </div>
 
               {/* Cart Items List */}
               <div className="space-y-4">
-                {cart.items.map((cartItem) => (
+                {cartItems.map((cartItem) => (
                   <CartItem
                     key={cartItem.id}
                     cartItem={cartItem}
@@ -191,13 +192,13 @@ const CartPage = () => {
               </div>
 
               {/* Continue Shopping */}
-              <Card className="p-4 bg-blue-50 border-blue-200">
+              <Card className="p-4 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-medium text-blue-900 mb-1">
+                    <h3 className="font-medium text-blue-900 dark:text-blue-100 mb-1">
                       Need something else?
                     </h3>
-                    <p className="text-sm text-blue-700">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
                       Continue shopping to discover more products
                     </p>
                   </div>
@@ -224,23 +225,23 @@ const CartPage = () => {
         {!isEmpty && (
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="text-center p-6">
-              <ShoppingCart className="w-8 h-8 text-blue-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">Free Shipping</h3>
-              <p className="text-sm text-gray-600">
+              <ShoppingCart className="w-8 h-8 text-primary mx-auto mb-4" />
+              <h3 className="font-semibold text-foreground mb-2">Free Shipping</h3>
+              <p className="text-sm text-muted-foreground">
                 Free shipping on orders above ₹500
               </p>
             </Card>
             <Card className="text-center p-6">
-              <RefreshCw className="w-8 h-8 text-green-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">Easy Returns</h3>
-              <p className="text-sm text-gray-600">
+              <RefreshCw className="w-8 h-8 text-green-600 dark:text-green-400 mx-auto mb-4" />
+              <h3 className="font-semibold text-foreground mb-2">Easy Returns</h3>
+              <p className="text-sm text-muted-foreground">
                 30-day return policy for all items
               </p>
             </Card>
             <Card className="text-center p-6">
-              <Heart className="w-8 h-8 text-pink-600 mx-auto mb-4" />
-              <h3 className="font-semibold text-gray-900 mb-2">Customer Support</h3>
-              <p className="text-sm text-gray-600">
+              <Heart className="w-8 h-8 text-pink-600 dark:text-pink-400 mx-auto mb-4" />
+              <h3 className="font-semibold text-foreground mb-2">Customer Support</h3>
+              <p className="text-sm text-muted-foreground">
                 24/7 customer support available
               </p>
             </Card>
