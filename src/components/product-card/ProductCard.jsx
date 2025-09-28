@@ -18,7 +18,7 @@ const ProductCard = ({ product, index }) => {
 
     return (
         <Card 
-            className="w-35 sm:w-45 h-55 border shadow-none border-none rounded-none p-0 bg-transparent gap-3 cursor-pointer hover:shadow-lg transition-shadow duration-300"
+            className="w-35 sm:w-45 h-55 border shadow-none border-none rounded-none p-0 bg-transparent gap-3 cursor-pointer transition-shadow duration-300"
             onClick={handleProductClick}
         >
             <CardHeader className="h-40 border-1 max-sm:border-2 rounded-2xl p-0 m-0 overflow-hidden bg-center">

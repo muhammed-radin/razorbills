@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,104 +9,80 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import {
+    Breadcrumb,
+    BreadcrumbItem,
+    BreadcrumbLink,
+    BreadcrumbList,
+    BreadcrumbPage,
+    BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator";
 import { StarIcon, ShoppingCart, Heart, Share2, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Product } from "@/models/product";
+import { currency } from "@/utils/currency";
+import StyledMd from "@/components/styled-md";
+
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Sample product data - in a real app this would come from an API or context
-const products = [
-  {
-    id: "1",
-    name: "Wireless Headphones",
-    category: "Electronics",
-    description: "High-quality sound and comfortable fit for all-day use. These wireless headphones deliver exceptional audio quality with active noise cancellation technology.",
-    price: 99.99,
-    originalPrice: 129.99,
-    image: "/products/Headphone.jpg",
-    images: ["/products/Headphone.jpg", "/products/Headphone2.jpg"],
-    brand: "AudioTech",
-    stock: 15,
-    rating: 4.5,
-    reviewCount: 256,
-    tags: ["Electronics", "Audio", "Wireless", "Noise Cancellation"],
-    specifications: [
-      { label: "Connectivity", value: "Bluetooth 5.0, USB-C" },
-      { label: "Battery Life", value: "30 hours playback" },
-      { label: "Weight", value: "250g" },
-      { label: "Driver Size", value: "40mm" },
-      { label: "Frequency Response", value: "20Hz - 20kHz" },
-      { label: "Impedance", value: "32 Ohms" }
-    ],
-    features: [
-      "Active Noise Cancellation",
-      "Quick Charge - 5 min charge for 2 hours playback",
-      "Comfortable over-ear design",
-      "Built-in microphone for calls",
-      "Foldable design for portability"
-    ]
-  },
-  {
-    id: "2",
-    name: "Bluetooth Speaker",
-    category: "Speaker",
-    description: "Portable speaker with deep bass and long battery life. Perfect for outdoor activities and home entertainment.",
-    price: 49.99,
-    originalPrice: 69.99,
-    image: "/products/Speaker.webp",
-    images: ["/products/Speaker.webp"],
-    brand: "SoundWave",
-    stock: 8,
-    rating: 4.2,
-    reviewCount: 189,
-    tags: ["Speaker", "Bluetooth", "Portable", "Waterproof"],
-    specifications: [
-      { label: "Power Output", value: "20W RMS" },
-      { label: "Battery Life", value: "12 hours" },
-      { label: "Bluetooth Range", value: "10 meters" },
-      { label: "Water Rating", value: "IPX7" },
-      { label: "Charging Time", value: "3 hours" }
-    ],
-    features: [
-      "360-degree sound",
-      "IPX7 waterproof rating",
-      "Built-in power bank function",
-      "Voice assistant support",
-      "RGB LED lighting"
-    ]
-  }
-];
+import { products } from "./sample-data";
+import ReviewCard from "@/components/review-card";
+import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 
 const ProductDetailsPage = () => {
     const { id } = useParams();
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
-    
+
     // Find the product by ID (in real app, this would be fetched from API)
     const product = products.find(p => p.id === id) || products[0];
-    
+
     const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
-    
+
     const handleQuantityChange = (change) => {
         const newQuantity = quantity + change;
         if (newQuantity >= 1 && newQuantity <= product.stock) {
             setQuantity(newQuantity);
         }
     };
-    
+
     return (
         <div className="min-h-screen p-3 sm:p-6 lg:p-8">
             {/* Breadcrumb */}
-            <nav className="mb-6 text-sm text-muted-foreground">
-                <span className="hover:text-foreground cursor-pointer">Home</span>
-                <span className="mx-2">/</span>
-                <span className="hover:text-foreground cursor-pointer">{product.category}</span>
-                <span className="mx-2">/</span>
-                <span className="text-foreground font-medium">{product.name}</span>
+            <nav className="mb-6 text-sm text-muted-foreground max-w-7xl mx-auto">
+                <Breadcrumb>
+                    <BreadcrumbList>
+                        <BreadcrumbItem>
+                            <Link to="/">Home</Link>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <Link to={"/search?category=" + product.category}>{product.category}</Link>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                            <BreadcrumbPage>{product.name}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                    </BreadcrumbList>
+                </Breadcrumb>
             </nav>
-            
+
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                 {/* Product Images */}
-                <div className="space-y-4">
+                <div className="space-y-4 sm:w-full max-w-md">
                     {/* Main Image */}
                     <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
                         <img
@@ -115,7 +91,7 @@ const ProductDetailsPage = () => {
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                     </div>
-                    
+
                     {/* Thumbnail Images */}
                     {product.images.length > 1 && (
                         <div className="flex space-x-3">
@@ -138,7 +114,7 @@ const ProductDetailsPage = () => {
                         </div>
                     )}
                 </div>
-                
+
                 {/* Product Information */}
                 <div className="space-y-6">
                     {/* Title and Brand */}
@@ -147,7 +123,7 @@ const ProductDetailsPage = () => {
                         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                             {product.name}
                         </h1>
-                        
+
                         {/* Rating */}
                         <div className="flex items-center space-x-2 mt-2">
                             <div className="flex">
@@ -168,17 +144,17 @@ const ProductDetailsPage = () => {
                             </span>
                         </div>
                     </div>
-                    
+
                     {/* Price */}
                     <div className="space-y-1">
                         <div className="flex items-center space-x-3">
                             <span className="text-3xl font-bold text-foreground">
-                                ${product.price}
+                                {currency(product.price)}
                             </span>
                             {product.originalPrice > product.price && (
                                 <>
                                     <span className="text-lg text-muted-foreground line-through">
-                                        ${product.originalPrice}
+                                        {currency(product.originalPrice)}
                                     </span>
                                     <Badge variant="destructive" className="text-xs">
                                         {discount}% OFF
@@ -187,17 +163,17 @@ const ProductDetailsPage = () => {
                             )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            Free shipping on orders over $75
+                            Free shipping on orders over {currency(300)}
                         </p>
                     </div>
-                    
+
                     {/* Description */}
                     <div>
                         <p className="text-muted-foreground leading-relaxed">
                             {product.description}
                         </p>
                     </div>
-                    
+
                     {/* Stock Status */}
                     <div className="flex items-center space-x-2">
                         <div className={cn(
@@ -205,13 +181,13 @@ const ProductDetailsPage = () => {
                             product.stock > 0 ? "bg-green-500" : "bg-red-500"
                         )}></div>
                         <span className="text-sm">
-                            {product.stock > 0 
+                            {product.stock > 0
                                 ? `${product.stock} items in stock`
                                 : "Out of stock"
                             }
                         </span>
                     </div>
-                    
+
                     {/* Quantity and Add to Cart */}
                     <div className="space-y-4">
                         <div className="flex items-center space-x-4">
@@ -240,25 +216,27 @@ const ProductDetailsPage = () => {
                                 </Button>
                             </div>
                         </div>
-                        
+
                         <div className="flex flex-col sm:flex-row gap-3">
-                            <Button 
-                                size="lg" 
-                                className="flex-1"
+                            <Button
+                                size="lg"
+                                className="sm:flex-1"
                                 disabled={product.stock === 0}
                             >
                                 <ShoppingCart className="w-4 h-4 mr-2" />
                                 Add to Cart
                             </Button>
-                            <Button variant="outline" size="lg">
-                                <Heart className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="lg">
-                                <Share2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex space-x-2 flex-row max-sm:justify-center sm:w-49">
+                                <Button variant="outline" size="lg" className="w-[49%]">
+                                    <Heart className="w-4 h-4" />
+                                </Button>
+                                <Button variant="outline" size="lg" className="w-[49%]">
+                                    <Share2 className="w-4 h-4" />
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                    
+
                     {/* Tags */}
                     <div className="space-y-2">
                         <h3 className="text-sm font-medium">Tags:</h3>
@@ -272,50 +250,129 @@ const ProductDetailsPage = () => {
                     </div>
                 </div>
             </div>
-            
+
             {/* Product Details Tabs */}
             <div className="max-w-7xl mx-auto mt-12 space-y-8">
                 <Separator />
-                
-                {/* Specifications */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Specifications</CardTitle>
-                        <CardDescription>
-                            Technical specifications and details
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {product.specifications.map((spec, index) => (
-                                <div key={index} className="flex justify-between py-2 border-b last:border-b-0">
-                                    <span className="font-medium text-sm">{spec.label}</span>
-                                    <span className="text-sm text-muted-foreground">{spec.value}</span>
+                {/* Detailed Description */}
+                <div className="sm:max-w-3xl max-sm:max-w-full">
+                    <h2 className="text-2xl font-bold mb-4">Product Details</h2>
+                    {/* Using StyledMd component to render markdown */}
+                    <StyledMd>{product.detailedDescription}</StyledMd>
+                </div>
+
+                <br />
+
+                <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-stretch lg:space-x-4 space-y-6 lg:space-y-0">
+
+                    {/* Specifications */}
+                    <Card className="shrink-0">
+                        <CardHeader>
+                            <CardTitle>Specifications</CardTitle>
+                            <CardDescription>
+                                Technical specifications and details
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {product.specifications.map((spec, index) => (
+                                    <div key={index} className="flex justify-between py-2 border-b last:border-b-0">
+                                        <span className="font-medium text-sm">{spec.label}</span>
+                                        <span className="text-sm text-muted-foreground">{spec.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Features */}
+                    <Card className="flex-1">
+                        <CardHeader>
+                            <CardTitle>Features</CardTitle>
+                            <CardDescription>
+                                Key features and benefits
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {product.features.map((feature, index) => (
+                                    <li key={index} className="flex items-start space-x-2">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                                        <span className="text-sm">{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            {/* Review */}
+            {/* Reviews Section */}
+            <div className="max-w-7xl mx-auto mt-12 space-y-8">
+                <Tabs defaultValue="review">
+                    <TabsList>
+                        <TabsTrigger value="review">Reviews</TabsTrigger>
+                        <TabsTrigger value="similar">Products From {product.brand}</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="review" className="w-full">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Customer Reviews</CardTitle>
+                                <CardDescription>
+                                    See what our customers are saying
+                                </CardDescription>
+                                <Drawer>
+                                    <DrawerTrigger variant="outline" size="sm" className="ml-auto my-1">
+                                       <Button variant="outline" size="sm" className="ml-auto my-1">
+                                       Write a Review</Button>
+                                    </DrawerTrigger>
+                                    <DrawerContent>
+                                        <DrawerHeader>
+                                            <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+                                            <DrawerDescription>This action cannot be undone.</DrawerDescription>
+                                        </DrawerHeader>
+                                        <DrawerFooter className="space-x-2 flex flex-row items-center justify-center">
+                                            <Button>Submit</Button>
+                                            <DrawerClose>
+                                                Cancel
+                                            </DrawerClose>
+                                        </DrawerFooter>
+                                    </DrawerContent>
+                                </Drawer>
+                                <Separator className="my-2" />
+                            </CardHeader>
+                            <CardContent className='w-full'>
+                                <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
+                                    {([1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9]).map((it, index) => {
+                                        return (<ReviewCard review={{
+                                            date: new Date(),
+                                            author: "John Doe",
+                                            comment: "Great product! Highly recommend it.".repeat(index),
+                                            title: "Excellent Quality",
+                                            rating: Math.floor(Math.random() * 5),
+                                        }} className="w-[350px]" key={index} />)
+                                    })}
                                 </div>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-                
-                {/* Features */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Features</CardTitle>
-                        <CardDescription>
-                            Key features and benefits
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {product.features.map((feature, index) => (
-                                <li key={index} className="flex items-start space-x-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
-                                    <span className="text-sm">{feature}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="similar"><Card>
+                        <CardHeader>
+                            <CardTitle>Products From {product.brand}</CardTitle>
+                            <CardDescription>
+                                Explore more products from this brand
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className='w-full'>
+                            <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
+                                {([1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9]).map((it, index) => {
+                                    return (<HorizontalProductCard product={products[index % products.length]} className="w-[350px]" />)
+                                })}
+                            </div>
+                        </CardContent>
+                    </Card></TabsContent>
+                </Tabs>
             </div>
         </div>
     );
