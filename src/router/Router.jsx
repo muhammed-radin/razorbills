@@ -6,6 +6,7 @@ import LoginPage from '@/pages/login/page'
 import SignUpPage from '@/pages/signup/page'
 import ProductSearchPage from '@/pages/search/page'
 import ProductDetailsPage from '@/pages/product/page'
+import PrivacyPolicyPage from '@/pages/privacy/page'
 
 export default function Router() {
   return (
@@ -16,6 +17,7 @@ export default function Router() {
         <Route path="product/:id" element={<ProductDetailsPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignUpPage />} />
+        <Route path="privacy" element={<PrivacyPolicyPage />} />
       </Route>
     </Routes>
   )
