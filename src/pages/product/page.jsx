@@ -68,7 +68,7 @@ const ProductDetailsPage = () => {
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                 {/* Product Images */}
-                <div className="space-y-4">
+                <div className="space-y-4 sm:w-full max-w-md">
                     {/* Main Image */}
                     <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
                         <img
@@ -247,10 +247,12 @@ const ProductDetailsPage = () => {
                     <StyledMd>{product.detailedDescription}</StyledMd>
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+                <br />
+
+                <div className="flex flex-col sm:flex-row sm:items-stretch sm:justify-stretch sm:space-x-4 space-y-6 sm:space-y-0">
 
                     {/* Specifications */}
-                    <Card className="shrink-0">
+                    <Card className="flex-1">
                         <CardHeader>
                             <CardTitle>Specifications</CardTitle>
                             <CardDescription>
@@ -270,7 +272,7 @@ const ProductDetailsPage = () => {
                     </Card>
 
                     {/* Features */}
-                    <Card>
+                    <Card className="">
                         <CardHeader>
                             <CardTitle>Features</CardTitle>
                             <CardDescription>
@@ -288,6 +290,48 @@ const ProductDetailsPage = () => {
                             </ul>
                         </CardContent>
                     </Card>
+                </div>
+            </div>
+
+            {/* Review */}
+            {/* Reviews Section */}
+            <div className="max-w-7xl mx-auto mt-12 space-y-8">
+                <Separator />
+                <div>
+                    <h2 className="text-2xl font-bold mb-4">Customer Reviews</h2>
+                    {([1, 2, 3]).length > 0 ? (
+                        <div className="space-y-6">
+                            {[{ rating: 3, title: "Its Good", comment: "Goooood", author: "Boxes", date: new Date() }].map((review, index) => (
+                                <div key={index} className="border-b pb-4 last:border-b-0">
+                                    <div className="flex items-center space-x-2 mb-2">
+                                        <div className="flex">
+                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                <StarIcon
+                                                    key={star}
+                                                    className={cn(
+                                                        "h-4 w-4",
+                                                        star <= review.rating
+                                                            ? "fill-yellow-400 text-yellow-400"
+                                                            : "text-gray-300"
+                                                    )}
+                                                />
+                                            ))}
+                                        </div>
+                                        <span className="text-sm text-muted-foreground">
+                                            {review.rating} out of 5
+                                        </span>
+                                    </div>
+                                    <p className="text-sm font-medium">{review.title}</p>
+                                    <p className="text-sm text-muted-foreground">{review.comment}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        By {review.author} on {new Date(review.date).toLocaleDateString()}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground">No reviews yet. Be the first to review this product!</p>
+                    )}
                 </div>
             </div>
         </div>

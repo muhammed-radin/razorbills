@@ -36,6 +36,8 @@ Headphones are personal audio devices, small loudspeaker drivers worn on or arou
 | **Length** | 3.5 inches  |
 | **Weight** | 250g        |
 | **Extra**  | Foldable design for portability |
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique vestibulum orci sit amet accumsan. Nunc odio augue, egestas eget arcu sit amet, dapibus scelerisque mauris. Donec rutrum eros at justo consectetur mattis eget ut augue. Morbi tempus nulla non diam ultricies laoreet. Pellentesque congue felis enim, eget bibendum lorem molestie vitae. Donec consectetur tristique arcu nec vehicula. Donec porttitor facilisis nisl vitae maximus. Sed sit amet elit sit amet odio varius volutpat. Sed porttitor mattis tellus, ac elementum mi malesuada ac. Duis neque ex, pellentesque quis arcu et, mollis ultrices purus. Nam at posuere orci. Praesent auctor risus mi, at lacinia sem aliquet quis. Praesent rhoncus ultrices enim, sit amet pulvinar leo tincidunt et. Sed ultricies non lorem varius lacinia.
 `,
     [
       { label: "Connectivity", value: "Bluetooth 5.0, USB-C" },
@@ -93,6 +95,8 @@ Bluetooth speakers are wireless audio devices that connect to your smartphone, t
 | **Length** | 2.5 inches  |
 | **Weight** | 400g        |
 | **Extra**  | Water-resistant design |
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique vestibulum orci sit amet accumsan. Nunc odio augue, egestas eget arcu sit amet, dapibus scelerisque mauris. Donec rutrum eros at justo consectetur mattis eget ut augue. Morbi tempus nulla non diam ultricies laoreet. Pellentesque congue felis enim, eget bibendum lorem molestie vitae. Donec consectetur tristique arcu nec vehicula. Donec porttitor facilisis nisl vitae maximus. Sed sit amet elit sit amet odio varius volutpat. Sed porttitor mattis tellus, ac elementum mi malesuada ac. Duis neque ex, pellentesque quis arcu et, mollis ultrices purus. Nam at posuere orci. Praesent auctor risus mi, at lacinia sem aliquet quis. Praesent rhoncus ultrices enim, sit amet pulvinar leo tincidunt et. Sed ultricies non lorem varius lacinia.
     `,
     [
       { label: "Connectivity", value: "Bluetooth 5.0, AUX" },
@@ -149,6 +153,8 @@ Power banks are portable devices designed to recharge your electronic gadgets on
 | **Length** | 0.9 inches  |
 | **Weight** | 300g        |
 | **Extra**  | LED battery indicator |
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique vestibulum orci sit amet accumsan. Nunc odio augue, egestas eget arcu sit amet, dapibus scelerisque mauris. Donec rutrum eros at justo consectetur mattis eget ut augue. Morbi tempus nulla non diam ultricies laoreet. Pellentesque congue felis enim, eget bibendum lorem molestie vitae. Donec consectetur tristique arcu nec vehicula. Donec porttitor facilisis nisl vitae maximus. Sed sit amet elit sit amet odio varius volutpat. Sed porttitor mattis tellus, ac elementum mi malesuada ac. Duis neque ex, pellentesque quis arcu et, mollis ultrices purus. Nam at posuere orci. Praesent auctor risus mi, at lacinia sem aliquet quis. Praesent rhoncus ultrices enim, sit amet pulvinar leo tincidunt et. Sed ultricies non lorem varius lacinia.
     `,
     [
       { label: "Capacity", value: "20,000mAh" },
@@ -203,6 +209,8 @@ Power banks are portable devices designed to recharge your electronic gadgets on
     | **Width**  | 0.4 inches  |
     | **Weight** | 200g        |
     | **Extra**  | Includes remote control and power adapter |
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique vestibulum orci sit amet accumsan. Nunc odio augue, egestas eget arcu sit amet, dapibus scelerisque mauris. Donec rutrum eros at justo consectetur mattis eget ut augue. Morbi tempus nulla non diam ultricies laoreet. Pellentesque congue felis enim, eget bibendum lorem molestie vitae. Donec consectetur tristique arcu nec vehicula. Donec porttitor facilisis nisl vitae maximus. Sed sit amet elit sit amet odio varius volutpat. Sed porttitor mattis tellus, ac elementum mi malesuada ac. Duis neque ex, pellentesque quis arcu et, mollis ultrices purus. Nam at posuere orci. Praesent auctor risus mi, at lacinia sem aliquet quis. Praesent rhoncus ultrices enim, sit amet pulvinar leo tincidunt et. Sed ultricies non lorem varius lacinia.
     `,
     [
       { label: "Length", value: "16.4 feet" },
