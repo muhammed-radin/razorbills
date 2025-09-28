@@ -6,6 +6,7 @@ import LoginPage from '@/pages/login/page'
 import SignUpPage from '@/pages/signup/page'
 import ProductSearchPage from '@/pages/search/page'
 import ProductDetailsPage from '@/pages/product/page'
+import CartPage from '@/pages/cart/page'
 
 export default function Router() {
   return (
@@ -14,6 +15,7 @@ export default function Router() {
         <Route index element={<HomePage />} />
         <Route path="search" element={<ProductSearchPage />} />
         <Route path="product/:id" element={<ProductDetailsPage />} />
+        <Route path="cart" element={<CartPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignUpPage />} />
       </Route>
