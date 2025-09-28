@@ -24,6 +24,17 @@ import { Product } from "@/models/product";
 import { currency } from "@/utils/currency";
 import StyledMd from "@/components/styled-md";
 
+import {
+    Drawer,
+    DrawerClose,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
+    DrawerTrigger,
+} from "@/components/ui/drawer"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Sample product data - in a real app this would come from an API or context
@@ -311,6 +322,25 @@ const ProductDetailsPage = () => {
                                 <CardDescription>
                                     See what our customers are saying
                                 </CardDescription>
+                                <Drawer>
+                                    <DrawerTrigger variant="outline" size="sm" className="ml-auto my-1">
+                                       <Button variant="outline" size="sm" className="ml-auto my-1">
+                                       Write a Review</Button>
+                                    </DrawerTrigger>
+                                    <DrawerContent>
+                                        <DrawerHeader>
+                                            <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+                                            <DrawerDescription>This action cannot be undone.</DrawerDescription>
+                                        </DrawerHeader>
+                                        <DrawerFooter className="space-x-2 flex flex-row items-center justify-center">
+                                            <Button>Submit</Button>
+                                            <DrawerClose>
+                                                Cancel
+                                            </DrawerClose>
+                                        </DrawerFooter>
+                                    </DrawerContent>
+                                </Drawer>
+                                <Separator className="my-2" />
                             </CardHeader>
                             <CardContent className='w-full'>
                                 <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
@@ -321,7 +351,7 @@ const ProductDetailsPage = () => {
                                             comment: "Great product! Highly recommend it.".repeat(index),
                                             title: "Excellent Quality",
                                             rating: Math.floor(Math.random() * 5),
-                                        }} className="w-[350px]" />)
+                                        }} className="w-[350px]" key={index} />)
                                     })}
                                 </div>
                             </CardContent>
