@@ -62,6 +62,6 @@ export const Logo = ({ className = "", ...props }) => (
         </g>
       </g>
     </svg>
-    <h3 className="font-lg color-red font-bold font-bakbak font-[Bakbak_One]">RazorBills</h3>
+    <h3 className="font-lg color-red font-semibold sm:font-normal font-bakbak font-[Bakbak_One]">RazorBills</h3>
   </div>
 );

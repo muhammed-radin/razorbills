@@ -1,55 +1,54 @@
 class Product {
-    constructor(id, name, price, description, category, stock, brand, discount = 0, tax = 0, tags = []) {
-        this.id = id;
-        this.name = name;
-        this.price = price;
-        this.description = description;
-        this.category = category;
-        this.stock = stock;
-        this.brand = brand;
-        this.discount = discount; // Discount percentage
-        this.tax = tax; // Tax percentage
-        this.tags = tags; // Array of tags
-    }
-
-    updateStock(quantity) {
-        this.stock += quantity;
-    }
-
-    applyDiscount(discountPercentage) {
-        this.discount = discountPercentage;
-        this.price -= (this.price * discountPercentage) / 100;
-    }
-
-    calculateFinalPrice() {
-        const discountedPrice = this.price - (this.price * this.discount) / 100;
-        const finalPrice = discountedPrice + (discountedPrice * this.tax) / 100;
-        return finalPrice;
-    }
-
-    addTag(tag) {
-        if (!this.tags.includes(tag)) {
-            this.tags.push(tag);
-        }
-    }
-
-    removeTag(tag) {
-        this.tags = this.tags.filter(t => t !== tag);
-    }
-
-    getDetails() {
-        return {
-            id: this.id,
-            name: this.name,
-            price: this.price,
-            description: this.description,
-            category: this.category,
-            stock: this.stock,
-            brand: this.brand,
-            discount: this.discount,
-            tax: this.tax,
-            tags: this.tags,
-            finalPrice: this.calculateFinalPrice(),
-        };
-    }
+  constructor(
+    id,
+    name,
+    price,
+    originalPrice,
+    thumbnail,
+    description,
+    category,
+    stock,
+    brand,
+    tax = 0,
+    tags = [],
+    keywords = [],
+    detailedDescription = "",
+    specifications = [],
+    features = [],
+    images = [],
+    rating = 4.5,
+    reviewsCount = 0,
+  ) {
+    this.id = id;
+    this.name = name;
+    this.thumbnail = thumbnail; // URL of the thumbnail image
+    this.price = price;
+    this.originalPrice = originalPrice;
+    this.description = description;
+    this.category = category;
+    this.stock = stock;
+    this.brand = brand;
+    this.tax = tax; // Tax percentage
+    this.tags = tags; // Array of tags
+    this.keywords = keywords;
+    this.detailedDescription = detailedDescription;
+    this.specifications = specifications;
+    this.features = features;
+    this.images = images; // Array of image URLs
+    this.rating = rating; // Average rating out of 5
+    this.reviewCount = reviewsCount; // Total number of reviews
+    this.createdAt = new Date(); // Timestamp when the product is created
+    this.updatedAt = new Date(); // Timestamp when the product is last updated
+    this.isActive = true; // Boolean to indicate if the product is active
+    this.currency = "INR"; // Default currency
+  }
 }
+
+class ProductSpecification {
+  constructor(label, value) {
+    this.label = label;
+    this.value = value;
+  }
+}
+
+export { Product, ProductSpecification };
