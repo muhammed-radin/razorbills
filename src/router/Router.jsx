@@ -5,6 +5,7 @@ import HomePage from '../pages/home/page'
 import LoginPage from '@/pages/login/page'
 import SignUpPage from '@/pages/signup/page'
 import ProductSearchPage from '@/pages/search/page'
+import ProductDetailsPage from '@/pages/product/page'
 
 export default function Router() {
   return (
@@ -12,6 +13,7 @@ export default function Router() {
       <Route path="/" element={<App />}>
         <Route index element={<HomePage />} />
         <Route path="search" element={<ProductSearchPage />} />
+        <Route path="product/:id" element={<ProductDetailsPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignUpPage />} />
       </Route>

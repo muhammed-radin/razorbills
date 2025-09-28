@@ -1,14 +1,26 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
     Card,
     CardContent,
     CardHeader,
 } from "@/components/ui/card";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, index }) => {
+    const navigate = useNavigate();
+    
+    const handleProductClick = () => {
+        // Generate a simple ID based on the product name and index
+        const productId = (index + 1).toString();
+        navigate(`/product/${productId}`);
+    };
+
     return (
-        <Card className="w-35 sm:w-45 h-55  border shadow-none border-none rounded-none p-0 bg-transparent  gap-3  ">
+        <Card 
+            className="w-35 sm:w-45 h-55 border shadow-none border-none rounded-none p-0 bg-transparent gap-3 cursor-pointer hover:shadow-lg transition-shadow duration-300"
+            onClick={handleProductClick}
+        >
             <CardHeader className="h-40 border-1 max-sm:border-2 rounded-2xl p-0 m-0 overflow-hidden bg-center">
                 <img
                     src={product.image}
