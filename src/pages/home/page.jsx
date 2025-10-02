@@ -98,46 +98,53 @@ const products = [
 
 export default function HomePage() {
   return (
-    <div className=" min-h-screen  p-3 sm:p-7">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <br />
       <SearchBar />
-      <CategoryList items={[
-        "All",
-        "Resistor",
-        "Diode",
-        "LED",
-        "Transistor",
-        "Battery",
-        "Fuse",
-        "Potentiometer",
-        "Speaker",
-        "Microphone",
-        "Crystal Oscillator",
-        "Connector",
-        "Sensor",
-        "Microcontroller",
-      ]} className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap" tagClassName="max-sm:rounded-md" />
+      <CategoryList 
+        items={[
+          "All",
+          "Resistor",
+          "Diode",
+          "LED",
+          "Transistor",
+          "Battery",
+          "Fuse",
+          "Potentiometer",
+          "Speaker",
+          "Microphone",
+          "Crystal Oscillator",
+          "Connector",
+          "Sensor",
+          "Microcontroller",
+        ]} 
+        className="w-full sm:w-[90%] lg:w-2/3 mx-auto overflow-x-auto" 
+        tagClassName="text-xs sm:text-sm whitespace-nowrap" 
+      />
 
-
-      <div className="flex flex-wrap justify-center gap-6 mt-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-6 mt-6 max-w-7xl mx-auto">
         {products.map((product, index) => (
           <ProductCard key={index} product={product} index={index} />
         ))}
       </div>
-      <CarouselSlide />
-      <br />
-      <ListHorizontalProductCards />
+      
+      <div className="mt-8 sm:mt-12">
+        <CarouselSlide />
+      </div>
+      
+      <div className="mt-8 sm:mt-12">
+        <ListHorizontalProductCards />
+      </div>
 
-      <br />
-      <div className="flex flex-wrap justify-center gap-6 mt-6">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 sm:gap-6 mt-6 sm:mt-8 max-w-7xl mx-auto">
         {products.map((product, index) => (
           <ProductCard key={index} product={product} index={index} />
         ))}
       </div>
-      <br />
-      <ListHorizontalProductCards />
-
-
+      
+      <div className="mt-8 sm:mt-12">
+        <ListHorizontalProductCards />
+      </div>
     </div>
   );
 }
