@@ -60,9 +60,9 @@ const ProductDetailsPage = () => {
     };
 
     return (
-        <div className="min-h-screen p-3 sm:p-6 lg:p-8">
+        <div className="min-h-screen p-4 sm:p-6 lg:p-8">
             {/* Breadcrumb */}
-            <nav className="mb-6 text-sm text-muted-foreground max-w-7xl mx-auto">
+            <nav className="mb-4 sm:mb-6 text-xs sm:text-sm text-muted-foreground max-w-7xl mx-auto">
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
@@ -80,11 +80,11 @@ const ProductDetailsPage = () => {
                 </Breadcrumb>
             </nav>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
                 {/* Product Images */}
-                <div className="space-y-4 sm:w-full max-w-md">
+                <div className="space-y-3 sm:space-y-4 w-full lg:max-w-md mx-auto">
                     {/* Main Image */}
-                    <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
+                    <div className="aspect-square rounded-lg sm:rounded-xl overflow-hidden bg-gray-50 border">
                         <img
                             src={product.images[selectedImage]}
                             alt={product.name}
@@ -94,13 +94,13 @@ const ProductDetailsPage = () => {
 
                     {/* Thumbnail Images */}
                     {product.images.length > 1 && (
-                        <div className="flex space-x-3">
+                        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2">
                             {product.images.map((image, index) => (
                                 <button
                                     key={index}
                                     onClick={() => setSelectedImage(index)}
                                     className={cn(
-                                        "w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors",
+                                        "flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-md sm:rounded-lg overflow-hidden border-2 transition-colors",
                                         selectedImage === index ? "border-primary" : "border-gray-200"
                                     )}
                                 >
@@ -116,22 +116,22 @@ const ProductDetailsPage = () => {
                 </div>
 
                 {/* Product Information */}
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                     {/* Title and Brand */}
                     <div>
-                        <Badge variant="secondary" className="mb-2">{product.brand}</Badge>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+                        <Badge variant="secondary" className="mb-2 text-xs sm:text-sm">{product.brand}</Badge>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                             {product.name}
                         </h1>
 
                         {/* Rating */}
-                        <div className="flex items-center space-x-2 mt-2">
+                        <div className="flex items-center gap-2 mt-2">
                             <div className="flex">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <StarIcon
                                         key={star}
                                         className={cn(
-                                            "h-4 w-4",
+                                            "h-3 w-3 sm:h-4 sm:w-4",
                                             star <= Math.round(product.rating)
                                                 ? "fill-yellow-400 text-yellow-400"
                                                 : "text-gray-300"
@@ -139,7 +139,7 @@ const ProductDetailsPage = () => {
                                     />
                                 ))}
                             </div>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-xs sm:text-sm text-muted-foreground">
                                 ({product.rating}) • {product.reviewCount} reviews
                             </span>
                         </div>
@@ -147,13 +147,13 @@ const ProductDetailsPage = () => {
 
                     {/* Price */}
                     <div className="space-y-1">
-                        <div className="flex items-center space-x-3">
-                            <span className="text-3xl font-bold text-foreground">
+                        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                            <span className="text-2xl sm:text-3xl font-bold text-foreground">
                                 {currency(product.price)}
                             </span>
                             {product.originalPrice > product.price && (
                                 <>
-                                    <span className="text-lg text-muted-foreground line-through">
+                                    <span className="text-base sm:text-lg text-muted-foreground line-through">
                                         {currency(product.originalPrice)}
                                     </span>
                                     <Badge variant="destructive" className="text-xs">
@@ -162,25 +162,25 @@ const ProductDetailsPage = () => {
                                 </>
                             )}
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                             Free shipping on orders over {currency(300)}
                         </p>
                     </div>
 
                     {/* Description */}
                     <div>
-                        <p className="text-muted-foreground leading-relaxed">
+                        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                             {product.description}
                         </p>
                     </div>
 
                     {/* Stock Status */}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                         <div className={cn(
                             "w-2 h-2 rounded-full",
                             product.stock > 0 ? "bg-green-500" : "bg-red-500"
                         )}></div>
-                        <span className="text-sm">
+                        <span className="text-xs sm:text-sm">
                             {product.stock > 0
                                 ? `${product.stock} items in stock`
                                 : "Out of stock"
@@ -189,20 +189,20 @@ const ProductDetailsPage = () => {
                     </div>
 
                     {/* Quantity and Add to Cart */}
-                    <div className="space-y-4">
-                        <div className="flex items-center space-x-4">
-                            <label className="text-sm font-medium">Quantity:</label>
+                    <div className="space-y-3 sm:space-y-4">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <label className="text-xs sm:text-sm font-medium">Quantity:</label>
                             <div className="flex items-center border rounded-md">
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => handleQuantityChange(-1)}
                                     disabled={quantity <= 1}
-                                    className="h-9 w-9 p-0"
+                                    className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                                 >
                                     <Minus className="h-3 w-3" />
                                 </Button>
-                                <span className="px-4 text-center min-w-[3rem]">
+                                <span className="px-3 sm:px-4 text-center min-w-[2.5rem] sm:min-w-[3rem] text-sm sm:text-base">
                                     {quantity}
                                 </span>
                                 <Button
@@ -210,27 +210,27 @@ const ProductDetailsPage = () => {
                                     size="sm"
                                     onClick={() => handleQuantityChange(1)}
                                     disabled={quantity >= product.stock}
-                                    className="h-9 w-9 p-0"
+                                    className="h-8 w-8 sm:h-9 sm:w-9 p-0"
                                 >
                                     <Plus className="h-3 w-3" />
                                 </Button>
                             </div>
                         </div>
 
-                        <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                             <Button
                                 size="lg"
-                                className="sm:flex-1"
+                                className="flex-1 text-sm sm:text-base"
                                 disabled={product.stock === 0}
                             >
                                 <ShoppingCart className="w-4 h-4 mr-2" />
                                 Add to Cart
                             </Button>
-                            <div className="flex space-x-2 flex-row max-sm:justify-center sm:w-49">
-                                <Button variant="outline" size="lg" className="w-[49%]">
+                            <div className="flex gap-2 justify-center">
+                                <Button variant="outline" size="lg" className="flex-1 sm:flex-none sm:w-auto">
                                     <Heart className="w-4 h-4" />
                                 </Button>
-                                <Button variant="outline" size="lg" className="w-[49%]">
+                                <Button variant="outline" size="lg" className="flex-1 sm:flex-none sm:w-auto">
                                     <Share2 className="w-4 h-4" />
                                 </Button>
                             </div>
@@ -239,7 +239,7 @@ const ProductDetailsPage = () => {
 
                     {/* Tags */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-medium">Tags:</h3>
+                        <h3 className="text-xs sm:text-sm font-medium">Tags:</h3>
                         <div className="flex flex-wrap gap-2">
                             {product.tags.map((tag) => (
                                 <Badge key={tag} variant="outline" className="text-xs">
@@ -252,33 +252,32 @@ const ProductDetailsPage = () => {
             </div>
 
             {/* Product Details Tabs */}
-            <div className="max-w-7xl mx-auto mt-12 space-y-8">
+            <div className="max-w-7xl mx-auto mt-8 sm:mt-12 space-y-6 sm:space-y-8">
                 <Separator />
                 {/* Detailed Description */}
-                <div className="sm:max-w-3xl max-sm:max-w-full">
-                    <h2 className="text-2xl font-bold mb-4">Product Details</h2>
+                <div className="w-full max-w-3xl">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Product Details</h2>
                     {/* Using StyledMd component to render markdown */}
                     <StyledMd>{product.detailedDescription}</StyledMd>
                 </div>
 
                 <br />
 
-                <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-stretch lg:space-x-4 space-y-6 lg:space-y-0">
-
+                <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-stretch gap-4 lg:gap-4">
                     {/* Specifications */}
-                    <Card className="shrink-0">
+                    <Card className="flex-1">
                         <CardHeader>
-                            <CardTitle>Specifications</CardTitle>
-                            <CardDescription>
+                            <CardTitle className="text-base sm:text-lg">Specifications</CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
                                 Technical specifications and details
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-3 sm:gap-4">
                                 {product.specifications.map((spec, index) => (
-                                    <div key={index} className="flex justify-between py-2 border-b last:border-b-0">
-                                        <span className="font-medium text-sm">{spec.label}</span>
-                                        <span className="text-sm text-muted-foreground">{spec.value}</span>
+                                    <div key={index} className="flex justify-between py-2 border-b last:border-b-0 gap-2">
+                                        <span className="font-medium text-xs sm:text-sm">{spec.label}</span>
+                                        <span className="text-xs sm:text-sm text-muted-foreground text-right">{spec.value}</span>
                                     </div>
                                 ))}
                             </div>
@@ -288,17 +287,17 @@ const ProductDetailsPage = () => {
                     {/* Features */}
                     <Card className="flex-1">
                         <CardHeader>
-                            <CardTitle>Features</CardTitle>
-                            <CardDescription>
+                            <CardTitle className="text-base sm:text-lg">Features</CardTitle>
+                            <CardDescription className="text-xs sm:text-sm">
                                 Key features and benefits
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <ul className="grid grid-cols-1 gap-2 sm:gap-3">
                                 {product.features.map((feature, index) => (
-                                    <li key={index} className="flex items-start space-x-2">
+                                    <li key={index} className="flex items-start gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
-                                        <span className="text-sm">{feature}</span>
+                                        <span className="text-xs sm:text-sm">{feature}</span>
                                     </li>
                                 ))}
                             </ul>

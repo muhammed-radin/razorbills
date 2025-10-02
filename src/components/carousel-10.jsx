@@ -1,9 +1,6 @@
 import * as React from "react";
-
-import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
-import ProductCard from "./product-card/ProductCard";
 import CardProduct from "./product-card";
 
 export default function CarouselSlide() {
@@ -23,19 +20,36 @@ export default function CarouselSlide() {
   }, [api]);
 
   return (
-    <div className="mx-auto max-w-[85%] w-[85%]">
-      <Carousel setApi={setApi} className="w-full max-w-[90%] mx-2" opts={{ loop: true }}>
-        <CarouselContent>
+    <div className="w-full max-w-full px-4 sm:px-6 lg:px-8">
+      <Carousel 
+        setApi={setApi} 
+        className="w-full" 
+        opts={{ loop: true }}
+      >
+        <CarouselContent className="-ml-2 md:-ml-4">
           {Array.from({ length: 30 }).map((_, index) => (
-            <CarouselItem key={index} className="max-sm:basis-[75%] basis-[40%] min-[1000px]:basis-[25%] xl:basis-[20%]">
-              <CardProduct className={cn("transition-all duration-500", {
-                "scale-[0.9]": index !== current - 1
-              })} title="Demo" description="A headset is a combination of headphone and microphone. Headsets connect over a telephone or to a computer, allowing the user to speak and listen while keeping " rating={2} price={100} thumbnail={'/products/Headphone.jpg'} />
+            <CarouselItem 
+              key={index} 
+              className="pl-2 md:pl-4 basis-3/4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+            >
+              <CardProduct 
+                className={cn(
+                  "transition-all duration-500",
+                  {
+                    "scale-95 opacity-90": index !== current - 1
+                  }
+                )} 
+                title="Demo" 
+                description="A headset is a combination of headphone and microphone. Headsets connect over a telephone or to a computer, allowing the user to speak and listen while keeping " 
+                rating={2} 
+                price={100} 
+                thumbnail={'/products/Headphone.jpg'} 
+              />
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
+        <CarouselPrevious className="hidden sm:flex" />
+        <CarouselNext className="hidden sm:flex" />
       </Carousel>
     </div>
   );

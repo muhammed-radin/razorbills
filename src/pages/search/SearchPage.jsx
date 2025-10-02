@@ -244,24 +244,24 @@ export default function SearchPage() {
   ].filter(Boolean).length;
 
   return (
-    <div className="min-h-screen p-3 sm:p-7 max-sm:p-4 max-sm:mt-3">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Search Products</h1>
-          <p className="text-gray-600">Find the perfect electronic components and gadgets</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Search Products</h1>
+          <p className="text-sm sm:text-base text-gray-600">Find the perfect electronic components and gadgets</p>
         </div>
 
         {/* Search Bar */}
         <div className="relative mb-6">
           <div className="relative w-full max-w-2xl">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search products, categories, or keywords..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-10 text-base"
+              className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
             />
           </div>
         </div>
@@ -286,22 +286,22 @@ export default function SearchPage() {
           {/* Results */}
           <div className="flex-1">
             {/* Results Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
               <div>
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-lg sm:text-xl font-semibold">
                   {filteredAndSortedProducts.length} Products Found
                 </h2>
                 {searchQuery && (
-                  <p className="text-gray-600">
+                  <p className="text-sm sm:text-base text-gray-600">
                     Results for "{searchQuery}"
                   </p>
                 )}
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="sort" className="text-sm whitespace-nowrap">Sort by:</Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="sort" className="text-xs sm:text-sm whitespace-nowrap">Sort by:</Label>
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-40 sm:w-48 h-9 sm:h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -317,7 +317,7 @@ export default function SearchPage() {
 
             {/* Products Grid */}
             {filteredAndSortedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
+              <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 {filteredAndSortedProducts.map(product => (
                   <ProductCard
                     key={product.id}
@@ -333,15 +333,15 @@ export default function SearchPage() {
               </div>
             ) : (
               /* No Results State */
-              <div className="text-center py-16">
+              <div className="text-center py-12 sm:py-16">
                 <div className="mb-4">
-                  <Search size={64} className="mx-auto text-gray-300" />
+                  <Search size={48} className="mx-auto text-gray-300 sm:w-16 sm:h-16" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No products found</h3>
-                <p className="text-gray-600 mb-6">
+                <h3 className="text-lg sm:text-xl font-semibold mb-2">No products found</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 px-4">
                   Try adjusting your search criteria or filters
                 </p>
-                <Button onClick={clearFilters} variant="outline">
+                <Button onClick={clearFilters} variant="outline" size="sm" className="sm:size-default">
                   Clear All Filters
                 </Button>
               </div>
