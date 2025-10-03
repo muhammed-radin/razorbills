@@ -27,7 +27,7 @@ export default function CarouselSlide() {
       <Carousel setApi={setApi} className="w-full max-w-[90%] mx-2" opts={{ loop: true }}>
         <CarouselContent>
           {Array.from({ length: 30 }).map((_, index) => (
-            <CarouselItem key={index} className="max-sm:basis-[75%] basis-[40%] min-[1000px]:basis-[25%] xl:basis-[20%]">
+            <CarouselItem key={index} className="basis-[clamp(200px,20%,300px)]">
               <CardProduct className={cn("transition-all duration-500", {
                 "scale-[0.9]": index !== current - 1
               })} title="Demo" description="A headset is a combination of headphone and microphone. Headsets connect over a telephone or to a computer, allowing the user to speak and listen while keeping " rating={2} price={100} thumbnail={'/products/Headphone.jpg'} />

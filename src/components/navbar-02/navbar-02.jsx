@@ -10,7 +10,7 @@ const NavbarBlock = () => {
   const { setTheme, theme } = useTheme();
 
   return (
-    <nav className="h-16 bg-background border-b">
+    <nav className="h-16 bg-background border-b sticky top-0 z-50 w-full">
       <div className="h-full flex items-center justify-between max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">
           <Logo />
