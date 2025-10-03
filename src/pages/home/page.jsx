@@ -103,7 +103,7 @@ export default function HomePage() {
 
   React.useEffect(() => {
     // Fetch products from the API
-    axios.get('https://dummyjson.com/products/category/smartphones?limit=100')
+    axios.get('https://dummyjson.com/products/?limit=300')
       .then(response => {
         console.log(response);
 

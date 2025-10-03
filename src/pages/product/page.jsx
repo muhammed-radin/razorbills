@@ -52,7 +52,7 @@ const ProductDetailsPage = () => {
 
     React.useEffect(() => {
         // Fetch products from the API
-        axios.get('https://dummyjson.com/products/category/smartphones?limit=100')
+        axios.get('https://dummyjson.com/products/?limit=300')
             .then(response => {
                 console.log(response);
 
@@ -70,7 +70,7 @@ const ProductDetailsPage = () => {
 
 
     // Find the product by ID (in real app, this would be fetched from API)
-    const product = products.find(p => p.id === 120 + parseInt(id)) || products[0];
+    const product = products.find(p => p.id === parseInt(id)) || products[0];
 
     const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
