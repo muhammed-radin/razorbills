@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import CategoryList from "@/components/category-tag/CategoryList";
@@ -8,95 +8,117 @@ import SearchBar from "@/components/searchBar/SearchBar";
 import CarouselSlide from "@/components/carousel-10";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 import ListHorizontalProductCards from "@/components/horizontal-card/list-horizontal-product-cards";
+import axios from "axios";
+import { LoaderScreen } from "@/components/LoaderScreen";
 
-const products = [
-  {
-    name: "Wireless Headphones",
-    category: "Electronics",
-    description: "High-quality sound and comfortable fit for all-day use.",
-    price: 99.99,
-    image: "/products/Headphone.jpg",
-  },
-  {
-    name: "Bluetooth Speaker",
-    category: "Speaker",
-    description: "Portable speaker with deep bass and long battery life.",
-    price: 49.99,
-    image: "/products/Speaker.webp",
-  },
-  {
-    name: "Rechargeable Battery Pack",
-    category: "Battery",
-    description: "Durable battery pack with fast charging support.",
-    price: 19.99,
-    image: "/products/Battery.png",
-  },
-  {
-    name: "LED Light Strip",
-    category: "LED",
-    description: "Colorful LED strip for decoration and ambient lighting.",
-    price: 14.99,
-    image: "/products/LedStrip.webp",
-  },
-  {
-    name: "Wireless Headphones",
-    category: "Electronics",
-    description: "High-quality sound and comfortable fit for all-day use.",
-    price: 99.99,
-    image: "/products/Headphone.jpg",
-  },
-  {
-    name: "Bluetooth Speaker",
-    category: "Speaker",
-    description: "Portable speaker with deep bass and long battery life.",
-    price: 49.99,
-    image: "/products/Speaker.webp",
-  },
-  {
-    name: "Rechargeable Battery Pack",
-    category: "Battery",
-    description: "Durable battery pack with fast charging support.",
-    price: 19.99,
-    image: "/products/Battery.png",
-  },
-  {
-    name: "LED Light Strip",
-    category: "LED",
-    description: "Colorful LED strip for decoration and ambient lighting.",
-    price: 14.99,
-    image: "/products/LedStrip.webp",
-  },
-  {
-    name: "Wireless Headphones",
-    category: "Electronics",
-    description: "High-quality sound and comfortable fit for all-day use.",
-    price: 99.99,
-    image: "/products/Headphone2.jpg",
-  },
-  {
-    name: "Bluetooth Speaker",
-    category: "Speaker",
-    description: "Portable speaker with deep bass and long battery life.",
-    price: 49.99,
-    image: "/products/Speaker.webp",
-  },
-  {
-    name: "Rechargeable Battery Pack",
-    category: "Battery",
-    description: "Durable battery pack with fast charging support.",
-    price: 19.99,
-    image: "/products/Battery.png",
-  },
-  {
-    name: "LED Light Strip",
-    category: "LED",
-    description: "Colorful LED strip for decoration and ambient lighting.",
-    price: 14.99,
-    image: "/products/LedStrip.jpg",
-  },
-];
+// const products = [
+//   {
+//     name: "Wireless Headphones",
+//     category: "Electronics",
+//     description: "High-quality sound and comfortable fit for all-day use.",
+//     price: 99.99,
+//     image: "/products/Headphone.jpg",
+//   },
+//   {
+//     name: "Bluetooth Speaker",
+//     category: "Speaker",
+//     description: "Portable speaker with deep bass and long battery life.",
+//     price: 49.99,
+//     image: "/products/Speaker.webp",
+//   },
+//   {
+//     name: "Rechargeable Battery Pack",
+//     category: "Battery",
+//     description: "Durable battery pack with fast charging support.",
+//     price: 19.99,
+//     image: "/products/Battery.png",
+//   },
+//   {
+//     name: "LED Light Strip",
+//     category: "LED",
+//     description: "Colorful LED strip for decoration and ambient lighting.",
+//     price: 14.99,
+//     image: "/products/LedStrip.webp",
+//   },
+//   {
+//     name: "Wireless Headphones",
+//     category: "Electronics",
+//     description: "High-quality sound and comfortable fit for all-day use.",
+//     price: 99.99,
+//     image: "/products/Headphone.jpg",
+//   },
+//   {
+//     name: "Bluetooth Speaker",
+//     category: "Speaker",
+//     description: "Portable speaker with deep bass and long battery life.",
+//     price: 49.99,
+//     image: "/products/Speaker.webp",
+//   },
+//   {
+//     name: "Rechargeable Battery Pack",
+//     category: "Battery",
+//     description: "Durable battery pack with fast charging support.",
+//     price: 19.99,
+//     image: "/products/Battery.png",
+//   },
+//   {
+//     name: "LED Light Strip",
+//     category: "LED",
+//     description: "Colorful LED strip for decoration and ambient lighting.",
+//     price: 14.99,
+//     image: "/products/LedStrip.webp",
+//   },
+//   {
+//     name: "Wireless Headphones",
+//     category: "Electronics",
+//     description: "High-quality sound and comfortable fit for all-day use.",
+//     price: 99.99,
+//     image: "/products/Headphone2.jpg",
+//   },
+//   {
+//     name: "Bluetooth Speaker",
+//     category: "Speaker",
+//     description: "Portable speaker with deep bass and long battery life.",
+//     price: 49.99,
+//     image: "/products/Speaker.webp",
+//   },
+//   {
+//     name: "Rechargeable Battery Pack",
+//     category: "Battery",
+//     description: "Durable battery pack with fast charging support.",
+//     price: 19.99,
+//     image: "/products/Battery.png",
+//   },
+//   {
+//     name: "LED Light Strip",
+//     category: "LED",
+//     description: "Colorful LED strip for decoration and ambient lighting.",
+//     price: 14.99,
+//     image: "/products/LedStrip.jpg",
+//   },
+// ];
 
 export default function HomePage() {
+  const [products, setProducts] = useState([]);
+
+  React.useEffect(() => {
+    // Fetch products from the API
+    axios.get('https://dummyjson.com/products/category/smartphones?limit=100')
+      .then(response => {
+        console.log(response);
+
+        setProducts(response.data.products);
+      }
+      )
+      .catch(error => {
+        console.error('Error fetching products:', error);
+      });
+  }, []);
+
+  if (products.length === 0) {
+    return <LoaderScreen />
+  }
+
   return (
     <div className=" min-h-screen p-3 sm:p-3 w-full max-w-7xl mx-auto">
       <br />
