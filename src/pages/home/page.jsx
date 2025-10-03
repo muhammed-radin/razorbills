@@ -98,7 +98,7 @@ const products = [
 
 export default function HomePage() {
   return (
-    <div className=" min-h-screen  p-3 sm:p-7">
+    <div className=" min-h-screen p-3 sm:p-3 w-full max-w-7xl mx-auto">
       <br />
       <SearchBar />
       <CategoryList items={[
@@ -119,24 +119,25 @@ export default function HomePage() {
       ]} className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap" tagClassName="max-sm:rounded-md" />
 
 
-      <div className="flex flex-wrap justify-center gap-6 mt-6">
-        {products.map((product, index) => (
-          <ProductCard key={index} product={product} index={index} />
-        ))}
-      </div>
-      <CarouselSlide />
-      <br />
-      <ListHorizontalProductCards />
+      <div className="mt-6 w-full">
+        <div className="flex flex-wrap justify-center gap-6 mt-6">
+          {products.map((product, index) => (
+            <ProductCard key={index} product={product} index={index} />
+          ))}
+        </div>
+        <CarouselSlide />
+        <br />
+        <ListHorizontalProductCards />
 
-      <br />
-      <div className="flex flex-wrap justify-center gap-6 mt-6">
-        {products.map((product, index) => (
-          <ProductCard key={index} product={product} index={index} />
-        ))}
+        <br />
+        <div className="flex flex-wrap justify-center gap-6 mt-6">
+          {products.map((product, index) => (
+            <ProductCard key={index} product={product} index={index} />
+          ))}
+        </div>
+        <br />
+        <ListHorizontalProductCards />
       </div>
-      <br />
-      <ListHorizontalProductCards />
-
 
     </div>
   );
