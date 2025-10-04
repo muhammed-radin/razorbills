@@ -103,11 +103,11 @@ export default function HomePage() {
 
   React.useEffect(() => {
     // Fetch products from the API
-    axios.get('https://dummyjson.com/products/?limit=300')
+    axios.get(import.meta.env.VITE_API_ENDPOINT + '/api/products')
       .then(response => {
         console.log(response);
 
-        setProducts(response.data.products);
+        setProducts(response.data);
       }
       )
       .catch(error => {

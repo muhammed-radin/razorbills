@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -37,8 +37,6 @@ import {
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-// Sample product data - in a real app this would come from an API or context
-// import { products } from "./sample-data";
 import ReviewCard from "@/components/review-card";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 import axios from "axios";
@@ -49,14 +47,13 @@ const ProductDetailsPage = () => {
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [products, setProducts] = useState([]);
+    const navigate = useNavigate();
 
     React.useEffect(() => {
         // Fetch products from the API
-        axios.get('https://dummyjson.com/products/?limit=300')
+        axios.get(import.meta.env.VITE_API_ENDPOINT + '/api/products')
             .then(response => {
-                console.log(response);
-
-                setProducts(response.data.products);
+                setProducts(response.data);
             }
             )
             .catch(error => {
@@ -70,7 +67,11 @@ const ProductDetailsPage = () => {
 
 
     // Find the product by ID (in real app, this would be fetched from API)
-    const product = products.find(p => p.id === parseInt(id)) || products[0];
+    const product = products.find(p => p.id == parseInt(id));
+    if (!product) {
+        navigate('/404')
+    }
+
 
     const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
@@ -290,7 +291,7 @@ const ProductDetailsPage = () => {
                 <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-stretch lg:space-x-4 space-y-6 lg:space-y-0">
 
                     {/* Specifications */}
-                    <Card className="shrink-0">
+                    <Card className="shrink-0 flex-1">
                         <CardHeader>
                             <CardTitle>Specifications</CardTitle>
                             <CardDescription>
@@ -340,7 +341,7 @@ const ProductDetailsPage = () => {
                         <TabsTrigger value="similar">Products From {product.brand}</TabsTrigger>
                     </TabsList>
                     <TabsContent value="review" className="w-full">
-                        <Card>
+                        <Card className="bg-background">
                             <CardHeader>
                                 <CardTitle>Customer Reviews</CardTitle>
                                 <CardDescription>
@@ -348,8 +349,8 @@ const ProductDetailsPage = () => {
                                 </CardDescription>
                                 <Drawer>
                                     <DrawerTrigger variant="outline" size="sm" className="ml-auto my-1">
-                                        <Button variant="outline" size="sm" className="ml-auto my-1">
-                                            Write a Review</Button>
+                                        <span variant="outline" size="sm" className="ml-auto my-1">
+                                            Write a Review</span>
                                     </DrawerTrigger>
                                     <DrawerContent>
                                         <DrawerHeader>
@@ -381,7 +382,7 @@ const ProductDetailsPage = () => {
                             </CardContent>
                         </Card>
                     </TabsContent>
-                    <TabsContent value="similar"><Card>
+                    <TabsContent value="similar"><Card className="bg-background">
                         <CardHeader>
                             <CardTitle>Products From {product.brand}</CardTitle>
                             <CardDescription>
