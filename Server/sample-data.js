@@ -1,6 +1,6 @@
-import { Product } from "@/models/product";
+const { Product } = require("./models/product");
 
-export const products = [
+let products = [
   new Product(
     "1",
     "Wireless Headphones",
@@ -184,7 +184,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique v
     "LED Light Strips",
     29.99,
     49.99,
-    "/products/LEDStrips.jpg",
+    "/products/LedStrip.jpg",
     "Customizable LED light strips for home decoration.",
     "Lighting",
     100,
@@ -229,12 +229,14 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique v
       "Optional Water-Resistant Coating",
     ],
     [
-      "/products/LEDStrips.jpg",
-      "/products/LEDStrips2.jpg",
-      "/products/LEDStrips3.jpg",
+      "/products/LedStrip.jpg",
+      "/products/LedStrip.webp",
+      "/products/LedStrip.jpg",
     ],
     4.7,
     200
   ),
   // More products can be added here
 ];
+
+module.exports = products;
