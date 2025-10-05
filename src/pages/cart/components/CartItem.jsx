@@ -7,14 +7,14 @@ import { currency } from "@/utils/currency";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
-const CartItem = ({ 
-  cartItem, 
-  onQuantityChange, 
-  onRemove, 
-  className 
+const CartItem = ({
+  cartItem,
+  onQuantityChange,
+  onRemove,
+  className
 }) => {
   const { product, quantity } = cartItem;
-  
+
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
     if (newQuantity >= 1 && newQuantity <= product.stock) {
@@ -26,7 +26,7 @@ const CartItem = ({
     onRemove(cartItem.id);
   };
 
-  const discount = product.originalPrice > product.price 
+  const discount = product.originalPrice > product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
@@ -44,7 +44,7 @@ const CartItem = ({
         <Link to={`/product/${product.id}`}>
           <img
             src={product.thumbnail}
-            alt={product.name}
+            alt={product.title}
             className="w-full sm:w-24 h-48 sm:h-24 object-cover rounded-md hover:opacity-80 transition-opacity cursor-pointer"
             onError={(e) => {
               e.target.src = '/products/placeholder.png';
@@ -59,7 +59,7 @@ const CartItem = ({
           <div className="space-y-1">
             <Link to={`/product/${product.id}`}>
               <h3 className="text-lg font-semibold text-foreground hover:text-primary transition-colors line-clamp-2">
-                {product.name}
+                {product.title}
               </h3>
             </Link>
             <p className="text-sm text-muted-foreground line-clamp-2">

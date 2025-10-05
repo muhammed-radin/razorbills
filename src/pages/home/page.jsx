@@ -108,7 +108,7 @@ export default function HomePage() {
       .then(response => {
         console.log(response);
 
-        setProducts(response.data);
+        setProducts(response.data.products || response.data);
       }
       )
       .catch(error => {

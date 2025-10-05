@@ -54,7 +54,7 @@ const ProductDetailsPage = () => {
         // Fetch products from the API
         axios.get(api.products())
             .then(response => {
-                setProducts(response.data);
+                setProducts(response.data.products || response.data);
             }
             )
             .catch(error => {
@@ -83,8 +83,6 @@ const ProductDetailsPage = () => {
         }
     };
 
-    product.name = product.title
-
     return (
         <div className="min-h-screen p-3 sm:p-6 lg:p-8">
             {/* Breadcrumb */}
@@ -100,7 +98,7 @@ const ProductDetailsPage = () => {
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbPage>{product.name}</BreadcrumbPage>
+                            <BreadcrumbPage>{product.title}</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
@@ -108,12 +106,12 @@ const ProductDetailsPage = () => {
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
                 {/* Product Images */}
-                <div className="space-y-4 sm:w-full max-w-md">
+                <div className="space-y-4 sm:w-full max-w-lg">
                     {/* Main Image */}
                     <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
                         <img
                             src={product.images[selectedImage]}
-                            alt={product.name}
+                            alt={product.title}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                     </div>
@@ -132,7 +130,7 @@ const ProductDetailsPage = () => {
                                 >
                                     <img
                                         src={image}
-                                        alt={`${product.name} ${index + 1}`}
+                                        alt={`${product.title} ${index + 1}`}
                                         className="w-full h-full object-cover"
                                     />
                                 </button>
@@ -147,7 +145,7 @@ const ProductDetailsPage = () => {
                     <div>
                         <Badge variant="secondary" className="mb-2">{product.brand}</Badge>
                         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                            {product.name}
+                            {product.title}
                         </h1>
 
                         {/* Rating */}

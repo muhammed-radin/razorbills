@@ -1,7 +1,7 @@
 class Product {
   constructor(
     id,
-    name,
+    title,
     price,
     originalPrice,
     thumbnail,
@@ -20,7 +20,7 @@ class Product {
     reviewsCount = 0
   ) {
     this.id = id;
-    this.name = name;
+    this.title = title;
     this.thumbnail = thumbnail; // URL of the thumbnail image
     this.price = price;
     this.originalPrice = originalPrice;

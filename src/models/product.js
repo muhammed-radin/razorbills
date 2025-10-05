@@ -1,7 +1,7 @@
 class Product {
   constructor(
     id,
-    name,
+    title,
     price,
     originalPrice,
     thumbnail,
@@ -20,7 +20,7 @@ class Product {
     reviewsCount = 0
   ) {
     this.id = id;
-    this.name = name;
+    this.title = title;
     this.thumbnail = thumbnail; // URL of the thumbnail image
     this.price = price;
     this.originalPrice = originalPrice;
@@ -38,8 +38,8 @@ class Product {
       width: 0,
       height: 0,
       depth: 0,
-    }
-    this.weight = 0
+    };
+    this.weight = 0;
     this.images = images; // Array of image URLs
     this.rating = rating; // Average rating out of 5
     this.reviewCount = reviewsCount; // Total number of reviews
@@ -54,7 +54,7 @@ class Product {
     this.relatedProducts = []; // Array of related product IDs
     this.accessories = []; // Array of accessory product IDs
     this.priceHistory = []; // Array to track price changes over time
-    this.sku = "111 122 33"
+    this.sku = "111 122 33";
   }
 }
 

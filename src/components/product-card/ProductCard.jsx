@@ -32,7 +32,7 @@ const ProductCard = ({ product, index }) => {
             <CardHeader className="h-40 border-1 max-sm:border-2 rounded-2xl p-0 m-0 overflow-hidden bg-center">
                 <img
                     src={product.image || product.thumbnail}
-                    alt={product.name || product.title}
+                    alt={product.title}
                     className={cn("w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out bg-background", { 'hidden': !imageLoaded })}
                     onLoad={onImageLoad}
                 />
@@ -41,10 +41,10 @@ const ProductCard = ({ product, index }) => {
 
             <CardContent className="p-0 m-0">
                 <h2 className="text-sm font-semibold line-clamp-1">
-                    {product.name || product.title}
+                    {product.title}
                 </h2>
                 <p className="space-x-2" >
-                    <span className=" text-[13px] text-red-950 dark:text-red-300 line-through"> ${product.price} </span>      <span className=" text-[13px] font-bold text-green-600 dark:text-green-400"> ${product.price}</span>
+                    {( product.originalPrice != product.price && <span className=" text-[13px] text-red-950 dark:text-red-300 line-through"> ${product.originalPrice} </span> )}     <span className=" text-[13px] font-bold text-green-600 dark:text-green-400"> ${product.price}</span>
                 </p>
 
             </CardContent>
