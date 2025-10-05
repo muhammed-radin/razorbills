@@ -20,7 +20,7 @@ import {
   RefreshCw 
 } from "lucide-react";
 import { currency } from "@/utils/currency";
-import { sampleCart } from "./sample-data";
+import { sampleCart } from "./sample-data.js";
 import { Cart } from "@/models/cart";
 import CartItem from "./components/CartItem";
 import CartSummary from "./components/CartSummary";

@@ -183,7 +183,7 @@ export default function SearchPage() {
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
     const categoryFromUrl = searchParams.get("category") || "All";
-    
+
     setSearchQuery(queryFromUrl);
     setSelectedCategory(categoryFromUrl);
   }, [searchParams]);
@@ -193,7 +193,7 @@ export default function SearchPage() {
     let filtered = allProducts.filter(product => {
       // Text search
       const searchMatches = searchQuery === "" ||
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
@@ -333,7 +333,7 @@ export default function SearchPage() {
                   <ProductCard
                     key={product.id}
                     product={{
-                      name: product.name,
+                      name: product.title,
                       category: product.category,
                       description: product.description,
                       price: product.price,

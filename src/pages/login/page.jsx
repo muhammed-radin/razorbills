@@ -101,14 +101,14 @@ const LoginPage = () => {
 
         <div className="mt-5 space-y-5">
           <Link
-            href="#"
+            to="#"
             className="text-sm block underline text-muted-foreground text-center"
           >
             Forgot your password?
           </Link>
           <p className="text-sm text-center">
             Don&apos;t have an account?
-            <Link href="#" className="ml-1 underline text-muted-foreground">
+            <Link to="/signup" className="ml-1 underline text-muted-foreground">
               Create account
             </Link>
           </p>
