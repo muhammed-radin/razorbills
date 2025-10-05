@@ -17,7 +17,7 @@ class Product {
     features = [],
     images = [],
     rating = 4.5,
-    reviewsCount = 0,
+    reviewsCount = 0
   ) {
     this.id = id;
     this.name = name;
@@ -41,6 +41,13 @@ class Product {
     this.updatedAt = new Date(); // Timestamp when the product is last updated
     this.isActive = true; // Boolean to indicate if the product is active
     this.currency = "INR"; // Default currency
+    this.owner = { id: "admin", name: "Admin" }; // Owner information
+    this.warranty = null; // Warranty information
+    this.returnPolicy = null; // Return policy information
+    this.shippingDetails = null; // Shipping details
+    this.relatedProducts = []; // Array of related product IDs
+    this.accessories = []; // Array of accessory product IDs
+    this.priceHistory = []; // Array to track price changes over time
   }
 }
 
@@ -51,4 +58,13 @@ class ProductSpecification {
   }
 }
 
-export { Product, ProductSpecification };
+class Price {
+  constructor(amount, date, currency = "INR", discount = 0) {
+    this.amount = amount;
+    this.date = date;
+    this.currency = currency;
+    this.discount = discount; // Discount price
+  }
+}
+
+export { Product, ProductSpecification, Price };
