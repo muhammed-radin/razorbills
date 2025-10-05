@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -85,7 +87,7 @@ const CartPage = () => {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
+                <Link href="/">Home</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -111,7 +113,7 @@ const CartPage = () => {
           
           <div className="flex gap-3">
             <Button variant="outline" asChild>
-              <Link to="/search">
+              <Link href="/search">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Continue Shopping
               </Link>
@@ -144,7 +146,7 @@ const CartPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg">
-                  <Link to="/search">
+                  <Link href="/search">
                     <ShoppingBag className="w-4 h-4 mr-2" />
                     Start Shopping
                   </Link>
@@ -203,7 +205,7 @@ const CartPage = () => {
                     </p>
                   </div>
                   <Button variant="outline" asChild>
-                    <Link to="/search">
+                    <Link href="/search">
                       Continue Shopping
                     </Link>
                   </Button>

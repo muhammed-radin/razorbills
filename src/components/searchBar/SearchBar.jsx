@@ -1,17 +1,19 @@
+'use client';
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { LucideSearch } from "lucide-react";
 
 export default function SearchBar() {
     const [searchTerm, setSearchTerm] = useState("");
-    const navigate = useNavigate();
+    const router = useRouter();
 
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchTerm.trim()) {
-            navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+            router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
         } else {
-            navigate("/search");
+            router.push("/search");
         }
     };
 

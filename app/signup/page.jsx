@@ -1,3 +1,5 @@
+'use client';
+
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -20,7 +22,7 @@ const formSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
-const LoginPage = () => {
+const SignUpPage = () => {
   const form = useForm({
     defaultValues: {
       email: "",
@@ -38,7 +40,7 @@ const LoginPage = () => {
       <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />
         <p className="mt-4 text-xl font-semibold tracking-tight">
-          Log in to Shadcn UI Blocks
+          Sign up for Shadcn UI Blocks
         </p>
 
         <Button className="mt-8 w-full gap-3">
@@ -99,20 +101,12 @@ const LoginPage = () => {
           </form>
         </Form>
 
-        <div className="mt-5 space-y-5">
-          <Link
-            href="#"
-            className="text-sm block underline text-muted-foreground text-center"
-          >
-            Forgot your password?
+        <p className="mt-5 text-sm text-center">
+          Already have an account?
+          <Link href="#" className="ml-1 underline text-muted-foreground">
+            Log in
           </Link>
-          <p className="text-sm text-center">
-            Don&apos;t have an account?
-            <Link href="#" className="ml-1 underline text-muted-foreground">
-              Create account
-            </Link>
-          </p>
-        </div>
+        </p>
       </div>
     </div>
   );
@@ -154,4 +148,4 @@ const GoogleLogo = () => (
   </svg>
 );
 
-export default LoginPage;
+export default SignUpPage;

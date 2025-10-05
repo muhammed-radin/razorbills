@@ -1,21 +1,23 @@
+'use client';
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import CategoryTag from "./CategoryTag";
 import React from "react";
 import { cn } from "@/lib/utils";
 
 export default function CategoryList(params) {
   const categories = params.items;
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const [active, setActive] = useState("All");
   
   const handleCategoryClick = (category) => {
     setActive(category);
     if (category === "All") {
-      navigate("/search");
+      router.push("/search");
     } else {
-      navigate(`/search?category=${encodeURIComponent(category)}`);
+      router.push(`/search?category=${encodeURIComponent(category)}`);
     }
   };
 

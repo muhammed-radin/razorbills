@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,8 +44,8 @@ import { products } from "./sample-data";
 import ReviewCard from "@/components/review-card";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 
-const ProductDetailsPage = () => {
-    const { id } = useParams();
+const ProductDetailsPage = ({ params }) => {
+    const { id } = params;
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
 
@@ -66,11 +68,11 @@ const ProductDetailsPage = () => {
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
-                            <Link to="/">Home</Link>
+                            <Link href="/">Home</Link>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <Link to={"/search?category=" + product.category}>{product.category}</Link>
+                            <Link href={"/search?category=" + product.category}>{product.category}</Link>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>

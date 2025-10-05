@@ -1,18 +1,20 @@
 export default {
-  purge: [],
-  darkMode: false, // or 'media' or 'class'
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
         bakbak: ["Bakbak One", "Geist", "sans-serif"],
       },
     },
-    fontFamily: {
-      bakbak: ["Bakbak One", "Geist", "sans-serif"],
-    },
   },
-  variants: {
-    extend: {},
-  },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+    require('@tailwindcss/aspect-ratio'),
+    require('tailwindcss-animate'),
+  ],
 };

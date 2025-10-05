@@ -1,6 +1,7 @@
+'use client';
 
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import {
     Card,
     CardContent,
@@ -8,12 +9,12 @@ import {
 } from "@/components/ui/card";
 
 const ProductCard = ({ product, index }) => {
-    const navigate = useNavigate();
+    const router = useRouter();
     
     const handleProductClick = () => {
         // Generate a simple ID based on the product name and index
         const productId = (index + 1).toString();
-        navigate(`/product/${productId}`);
+        router.push(`/product/${productId}`);
     };
 
     return (

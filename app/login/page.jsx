@@ -1,3 +1,5 @@
+'use client';
+
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -21,7 +23,7 @@ const formSchema = z.object({
 });
 
 const LoginPage = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm({
     defaultValues: {
       email: "",
       password: "",
@@ -34,8 +36,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-xs w-full flex flex-col items-center">
+    <div className="min-h-screen flex items-center justify-center sm:bg-muted">
+      <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />
         <p className="mt-4 text-xl font-semibold tracking-tight">
           Log in to Shadcn UI Blocks
@@ -154,4 +156,4 @@ const GoogleLogo = () => (
   </svg>
 );
 
-export default Login01Page;
+export default LoginPage;

@@ -1,5 +1,5 @@
 import { Cart } from "@/models/cart";
-import { products } from "@/pages/product/sample-data";
+import { products } from "@/app/product/[id]/sample-data";
 
 // Create a sample cart with some products
 export const sampleCart = new Cart();

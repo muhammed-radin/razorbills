@@ -1,3 +1,5 @@
+'use client';
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Minus, Plus, Trash2, Heart } from "lucide-react";
 import { currency } from "@/utils/currency";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const CartItem = ({ 
   cartItem, 
@@ -41,7 +43,7 @@ const CartItem = ({
     )}>
       {/* Product Image */}
       <div className="flex-shrink-0">
-        <Link to={`/product/${product.id}`}>
+        <Link href={`/product/${product.id}`}>
           <img
             src={product.thumbnail}
             alt={product.name}
@@ -57,7 +59,7 @@ const CartItem = ({
       <div className="flex-grow space-y-2">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
           <div className="space-y-1">
-            <Link to={`/product/${product.id}`}>
+            <Link href={`/product/${product.id}`}>
               <h3 className="text-lg font-semibold text-foreground hover:text-primary transition-colors line-clamp-2">
                 {product.name}
               </h3>

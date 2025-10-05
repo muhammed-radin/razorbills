@@ -14,18 +14,17 @@ RazorBills is a modern, responsive e-commerce platform specializing in electroni
 - **🛒 Shopping Cart**: Add products to cart and manage orders
 - **👤 User Authentication**: Sign up and sign in functionality
 - **🎨 Modern UI**: Clean, intuitive interface with smooth animations
-- **⚡ Fast Performance**: Built with Vite for lightning-fast development and builds
+- **⚡ Fast Performance**: Built with Next.js for optimized performance and builds
 - **📦 Product Catalog**: Comprehensive listing of electronic components with detailed information
 
 ## 🛠️ Technology Stack
 
 - **Frontend Framework**: [React 19](https://reactjs.org/) - Modern JavaScript library for building user interfaces
-- **Build Tool**: [Vite](https://vitejs.dev/) - Next generation frontend tooling
+- **Framework**: [Next.js 15](https://nextjs.org/) - React framework for production
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
 - **UI Components**: 
   - [Radix UI](https://www.radix-ui.com/) - Low-level UI primitives
   - [Lucide React](https://lucide.dev/) - Beautiful & consistent icon pack
-- **Routing**: [React Router](https://reactrouter.com/) - Declarative routing for React
 - **Form Handling**: [React Hook Form](https://react-hook-form.com/) - Performant, flexible forms
 - **Validation**: [Zod](https://zod.dev/) - TypeScript-first schema validation
 - **Carousel**: [Embla Carousel](https://www.embla-carousel.com/) - Lightweight carousel library
@@ -58,13 +57,23 @@ Make sure you have the following installed on your machine:
 
 4. **Open your browser**
    
-   Navigate to `http://localhost:5173` to see the application running.
+   Navigate to `http://localhost:3000` to see the application running.
 
 ## 🏗️ Project Structure
 
 ```
 razorbills/
 ├── public/                 # Static assets
+├── app/                    # Next.js app directory
+│   ├── cart/              # Cart page
+│   ├── login/             # Login page
+│   ├── signup/            # Sign up page
+│   ├── product/[id]/      # Dynamic product details page
+│   ├── search/            # Search page
+│   ├── privacy/           # Privacy policy page
+│   ├── layout.jsx         # Root layout
+│   ├── template.jsx       # Template with navbar and footer
+│   └── page.jsx           # Homepage
 ├── src/
 │   ├── components/         # Reusable UI components
 │   │   ├── ui/            # Base UI components (buttons, cards, etc.)
@@ -72,25 +81,21 @@ razorbills/
 │   │   ├── navbar-02/     # Navigation components
 │   │   ├── footer-02/     # Footer components
 │   │   └── ...
-│   ├── pages/             # Page components
-│   │   ├── home/          # Homepage
-│   │   ├── login/         # Login page
-│   │   └── signup/        # Registration page
-│   ├── router/            # Application routing
 │   ├── lib/               # Utility functions
-│   ├── utils/             # Helper utilities
-│   └── main.jsx           # Application entry point
+│   ├── utils/             # Helper utilities (theme provider, etc.)
+│   ├── models/            # Data models
+│   └── index.css          # Global styles
 ├── components.json         # Component configuration
 ├── tailwind.config.js      # Tailwind CSS configuration
-├── vite.config.js          # Vite configuration
+├── next.config.js          # Next.js configuration
 └── package.json           # Project dependencies and scripts
 ```
 
 ## 🚀 Available Scripts
 
-- **`npm run dev`** - Start the development server
+- **`npm run dev`** - Start the Next.js development server
 - **`npm run build`** - Build the application for production
-- **`npm run preview`** - Preview the production build locally
+- **`npm run start`** - Start the production server
 - **`npm run lint`** - Run ESLint to check code quality
 
 ## 🎯 Product Categories
@@ -134,7 +139,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- Built with [Vite](https://vitejs.dev/) for exceptional development experience
+- Built with [Next.js](https://nextjs.org/) for exceptional performance and developer experience
 - UI components powered by [Radix UI](https://www.radix-ui.com/)
 - Styled with [Tailwind CSS](https://tailwindcss.com/)
 - Icons provided by [Lucide](https://lucide.dev/)
