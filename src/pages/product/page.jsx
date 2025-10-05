@@ -41,6 +41,7 @@ import ReviewCard from "@/components/review-card";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 import axios from "axios";
 import { LoaderScreen } from "@/components/LoaderScreen";
+import { api } from "@/utils/api";
 
 const ProductDetailsPage = () => {
     const { id } = useParams();
@@ -51,7 +52,7 @@ const ProductDetailsPage = () => {
 
     React.useEffect(() => {
         // Fetch products from the API
-        axios.get(import.meta.env.VITE_API_ENDPOINT + '/api/products')
+        axios.get(api.products())
             .then(response => {
                 setProducts(response.data);
             }

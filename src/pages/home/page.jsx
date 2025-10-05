@@ -10,6 +10,7 @@ import HorizontalProductCard from "@/components/horizontal-card/horizontal-card"
 import ListHorizontalProductCards from "@/components/horizontal-card/list-horizontal-product-cards";
 import axios from "axios";
 import { LoaderScreen } from "@/components/LoaderScreen";
+import { api } from "@/utils/api";
 
 // const products = [
 //   {
@@ -103,7 +104,7 @@ export default function HomePage() {
 
   React.useEffect(() => {
     // Fetch products from the API
-    axios.get(import.meta.env.VITE_API_ENDPOINT + '/api/products')
+    axios.get(api.products())
       .then(response => {
         console.log(response);
 
