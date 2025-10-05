@@ -1,3 +1,5 @@
+'use client';
+
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "../logo"; 
 import {
@@ -6,7 +8,7 @@ import {
   TwitchIcon,
   TwitterIcon,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 const footerSections = [
   {
     title: "Quick Links",
@@ -96,7 +98,7 @@ Your one-stop shop for the latest and greatest electronics.
                   {links.map(({ title, href }) => (
                     <li key={title}>
                       <Link
-                        to={href}
+                        href={href}
                         className="text-muted-foreground hover:text-foreground"
                       >
                         {title}

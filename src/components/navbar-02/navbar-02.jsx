@@ -1,9 +1,11 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Logo } from "../logo";
 import { NavMenu } from "./nav-menu";
 import { NavigationSheet } from "./navigation-sheet";
 import { SunIcon, MoonIcon } from "lucide-react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { useTheme } from "@/utils/theme-provider";
 
 const NavbarBlock = () => {
@@ -20,12 +22,12 @@ const NavbarBlock = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link to="./login" className="cursor-pointer">
+          <Link href="/login" className="cursor-pointer">
             <Button variant="outline" className="hidden sm:inline-flex">
               Sign In
             </Button>
           </Link>
-          <Link to="./signup" className="cursor-pointer">
+          <Link href="/signup" className="cursor-pointer">
             <Button>Sign Up</Button>
           </Link>
           <Button size="icon" variant="outline" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
