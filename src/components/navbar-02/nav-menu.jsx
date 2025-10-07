@@ -27,9 +27,7 @@ export const NavMenu = (props) => (
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild>
-
          <Link to="/order">Order</Link>
- orderhistory
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
