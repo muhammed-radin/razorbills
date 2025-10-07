@@ -1,15 +1,26 @@
 import React from "react";
-import OrderProductCard from "@/components/order-card/Order-card";
+import OrderProductCard from "@/components/order-card/Order-product-card";
+import OrderCard from "@/components/order-card/Order-card";
+import { ArrowLeft } from "lucide-react";
+import { Button } from '@/components/ui/button';
 export default function Orderhistory() {
   return (
     <div >
-      <h1 className="text-2xl font-bold ml-35 mt-4">My Order</h1>
+        <div className="flex items-center gap-4 px-4 py-4">
+          <Button variant="ghost" size="icon">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-xl font-semibold tracking-tight">MY ORDERS</h1>
+        </div>
     <div className="flex flex-wrap gap-5 justify-center p-5">
-      <OrderProductCard />
-      <OrderProductCard />
-      <OrderProductCard />
-      <OrderProductCard /> 
-      <OrderProductCard />
+      <OrderCard/>
+      <OrderCard/>
+      <OrderCard/>
+      <OrderCard/>
+      <OrderCard/>
+      <OrderCard/>
+      <OrderCard/>
+      <OrderCard/>
     </div>
     </div>
   );
