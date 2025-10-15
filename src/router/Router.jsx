@@ -1,3 +1,4 @@
+
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import App from '../App'
@@ -8,6 +9,9 @@ import ProductSearchPage from '@/pages/search/page'
 import ProductDetailsPage from '@/pages/product/page'
 import CartPage from '@/pages/cart/page'
 import PrivacyPolicyPage from '@/pages/privacy/page'
+import Orderhistory from '@/pages/orderhistory/Orderhistory'
+import Wishlist from '@/pages/wishlist/Wishlist'
+
 
 export default function Router() {
   return (
@@ -20,7 +24,9 @@ export default function Router() {
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignUpPage />} />
         <Route path="privacy" element={<PrivacyPolicyPage />} />
+        <Route path="order" element={<Orderhistory />} />
+        <Route path="wishlist" element={<Wishlist />} />
       </Route>
     </Routes>
-  )
+  );
 }
