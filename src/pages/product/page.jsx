@@ -52,7 +52,7 @@ const ProductDetailsPage = () => {
 
     React.useEffect(() => {
         // Fetch products from the API
-        axios.get(api.products() + "/" + id)
+        axios.get(api.products() + "/api/products/" + id)
             .then(response => {
                 setProduct(response.data.products || response.data || null);
             }
