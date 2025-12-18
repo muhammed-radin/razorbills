@@ -1,24 +1,26 @@
-const express = require("express");
-const app = express();
-const port = process.env.PORT || 3000;
-const cors = require("cors");
-const keyMiddileWare = require("./utils/key");
-const products = require("./sample-data");
+var express = require("express");
+var path = require("path");
+var cookieParser = require("cookie-parser");
+var logger = require("morgan");
 require("dotenv").config();
 
+var indexRouter = require("./routes/index");
+var usersRouter = require("./routes/users");
+var cors = require("cors");
+
+var app = express();
+
 app.use(cors());
+app.use(logger("dev"));
 app.use(express.json());
-// app.use(keyMiddileWare());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+app.use("/api", indexRouter);
 
-app.get("/api/products", (req, res) => {
-  
-  res.json(products);
-});
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+
+app.listen(3000, () => {
+  console.log("Server is running on http://localhost:3000");
 });
+module.exports = app;

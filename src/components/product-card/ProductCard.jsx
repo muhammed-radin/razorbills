@@ -8,21 +8,30 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Preloader } from "../LoaderScreen";
+import { ImageIcon, ImageOff } from "lucide-react";
 
 const ProductCard = ({ product, index }) => {
     const navigate = useNavigate();
 
     const handleProductClick = () => {
         // Generate a simple ID based on the product name and index
-        const productId = (index + 1).toString();
+        const productId = product.id;
         navigate(`/product/${productId}`);
     };
 
     const [imageLoaded, setLoadedState] = useState(false);
+    const [imageErr, setImageErr] = useState(false);
 
     function onImageLoad() {
         setLoadedState(true);
     }
+
+    function onImageError() {
+        setImageErr(true);
+    }
+
+    console.log(product.id, imageLoaded, imageErr);
+    
 
     return (
         <Card
@@ -33,10 +42,12 @@ const ProductCard = ({ product, index }) => {
                 <img
                     src={product.image || product.thumbnail}
                     alt={product.title}
-                    className={cn("w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out bg-background", { 'hidden': !imageLoaded })}
+                    className={cn("w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out bg-background", { 'hidden': (!imageLoaded || imageErr) })}
                     onLoad={onImageLoad}
+                    onError={onImageError}
                 />
-                <div className={cn("w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out bg-background flex items-center justify-center", { 'hidden': imageLoaded })}><Preloader></Preloader></div>
+                <div className={cn("w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out bg-background flex items-center justify-center", { 'hidden': !(imageLoaded || !imageErr) })}><Preloader></Preloader></div>
+                <div className={cn("w-full h-40 object-cover hover:scale-105 transition-transform duration-300 ease-in-out bg-background flex items-center justify-center", { 'hidden': !(!imageLoaded && imageErr) })}><ImageOff></ImageOff></div>
             </CardHeader>
 
             <CardContent className="p-0 m-0">
@@ -44,7 +55,7 @@ const ProductCard = ({ product, index }) => {
                     {product.title}
                 </h2>
                 <p className="space-x-2" >
-                    {( product.originalPrice != product.price && <span className=" text-[13px] text-red-950 dark:text-red-300 line-through"> ${product.originalPrice} </span> )}     <span className=" text-[13px] font-bold text-green-600 dark:text-green-400"> ${product.price}</span>
+                    {(product.originalPrice != product.price && <span className=" text-[13px] text-red-950 dark:text-red-300 line-through"> ${product.originalPrice} </span>)}     <span className=" text-[13px] font-bold text-green-600 dark:text-green-400"> ${product.price}</span>
                 </p>
 
             </CardContent>

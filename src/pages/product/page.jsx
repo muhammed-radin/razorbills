@@ -47,29 +47,31 @@ const ProductDetailsPage = () => {
     const { id } = useParams();
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
-    const [products, setProducts] = useState([]);
+    const [product, setProduct] = useState({ loading: true });
     const navigate = useNavigate();
 
     React.useEffect(() => {
         // Fetch products from the API
-        axios.get(api.products())
+        axios.get(api.products() + "/" + id)
             .then(response => {
-                setProducts(response.data.products || response.data);
+                setProduct(response.data.products || response.data || null);
             }
             )
             .catch(error => {
+                if (error.response && error.response.status === 404) {
+                    navigate('/404')
+                }
                 console.error('Error fetching products:', error);
             });
     }, []);
 
-    if (products.length === 0) {
+    if (product.loading) {
         return <LoaderScreen />
     }
+    
 
-
-    // Find the product by ID (in real app, this would be fetched from API)
-    const product = products.find(p => p.id == parseInt(id));
-    if (!product) {
+    if (!product || !product.id) {
+        alert("Product not found!");
         navigate('/404')
     }
 
@@ -84,7 +86,7 @@ const ProductDetailsPage = () => {
     };
 
     return (
-        <div className="min-h-screen p-3 sm:p-6 lg:p-8">
+        <div className="min-h-screen p-3 sm:p-6 lg:p-8 flex flex-col justify-center">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-muted-foreground max-w-7xl mx-auto">
                 <Breadcrumb>
@@ -104,11 +106,11 @@ const ProductDetailsPage = () => {
                 </Breadcrumb>
             </nav>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full sm:w-5xl">
                 {/* Product Images */}
                 <div className="space-y-4 sm:w-full max-w-lg">
                     {/* Main Image */}
-                    <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
+                    <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border ">
                         <img
                             src={product.images[selectedImage]}
                             alt={product.title}
@@ -391,7 +393,7 @@ const ProductDetailsPage = () => {
                         <CardContent className='w-full'>
                             <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
                                 {([1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9]).map((it, index) => {
-                                    return (<HorizontalProductCard product={products[index % products.length]} className="w-[350px]" />)
+                                    return (<HorizontalProductCard product={[product]} className="w-[350px]" />)
                                 })}
                             </div>
                         </CardContent>
