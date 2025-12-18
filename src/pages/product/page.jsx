@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,7 +18,7 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator";
-import { StarIcon, ShoppingCart, Heart, Share2, Minus, Plus } from "lucide-react";
+import { StarIcon, ShoppingCart, Heart, Share2, Minus, Plus, LoaderPinwheel } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Product } from "@/models/product";
 import { currency } from "@/utils/currency";
@@ -37,18 +37,44 @@ import {
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-// Sample product data - in a real app this would come from an API or context
-import { products } from "./sample-data";
 import ReviewCard from "@/components/review-card";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
+import axios from "axios";
+import { LoaderScreen } from "@/components/LoaderScreen";
+import { api } from "@/utils/api";
 
 const ProductDetailsPage = () => {
     const { id } = useParams();
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
+    const [product, setProduct] = useState({ loading: true });
+    const navigate = useNavigate();
 
-    // Find the product by ID (in real app, this would be fetched from API)
-    const product = products.find(p => p.id === id) || products[0];
+    React.useEffect(() => {
+        // Fetch products from the API
+        axios.get(api.products() + "/api/products/" + id)
+            .then(response => {
+                setProduct(response.data.products || response.data || null);
+            }
+            )
+            .catch(error => {
+                if (error.response && error.response.status === 404) {
+                    navigate('/404')
+                }
+                console.error('Error fetching products:', error);
+            });
+    }, []);
+
+    if (product.loading) {
+        return <LoaderScreen />
+    }
+    
+
+    if (!product || !product.id) {
+        alert("Product not found!");
+        navigate('/404')
+    }
+
 
     const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
 
@@ -60,7 +86,7 @@ const ProductDetailsPage = () => {
     };
 
     return (
-        <div className="min-h-screen p-3 sm:p-6 lg:p-8">
+        <div className="min-h-screen p-3 sm:p-6 lg:p-8 flex flex-col justify-center">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-muted-foreground max-w-7xl mx-auto">
                 <Breadcrumb>
@@ -74,20 +100,20 @@ const ProductDetailsPage = () => {
                         </BreadcrumbItem>
                         <BreadcrumbSeparator />
                         <BreadcrumbItem>
-                            <BreadcrumbPage>{product.name}</BreadcrumbPage>
+                            <BreadcrumbPage>{product.title}</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
             </nav>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full sm:w-5xl">
                 {/* Product Images */}
-                <div className="space-y-4 sm:w-full max-w-md">
+                <div className="space-y-4 sm:w-full max-w-lg">
                     {/* Main Image */}
-                    <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
+                    <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border ">
                         <img
                             src={product.images[selectedImage]}
-                            alt={product.name}
+                            alt={product.title}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                     </div>
@@ -106,7 +132,7 @@ const ProductDetailsPage = () => {
                                 >
                                     <img
                                         src={image}
-                                        alt={`${product.name} ${index + 1}`}
+                                        alt={`${product.title} ${index + 1}`}
                                         className="w-full h-full object-cover"
                                     />
                                 </button>
@@ -121,7 +147,7 @@ const ProductDetailsPage = () => {
                     <div>
                         <Badge variant="secondary" className="mb-2">{product.brand}</Badge>
                         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                            {product.name}
+                            {product.title}
                         </h1>
 
                         {/* Rating */}
@@ -258,7 +284,7 @@ const ProductDetailsPage = () => {
                 <div className="sm:max-w-3xl max-sm:max-w-full">
                     <h2 className="text-2xl font-bold mb-4">Product Details</h2>
                     {/* Using StyledMd component to render markdown */}
-                    <StyledMd>{product.detailedDescription}</StyledMd>
+                    <StyledMd>{product.detailedDescription || product.description}</StyledMd>
                 </div>
 
                 <br />
@@ -266,7 +292,7 @@ const ProductDetailsPage = () => {
                 <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-stretch lg:space-x-4 space-y-6 lg:space-y-0">
 
                     {/* Specifications */}
-                    <Card className="shrink-0">
+                    <Card className="shrink-0 flex-1">
                         <CardHeader>
                             <CardTitle>Specifications</CardTitle>
                             <CardDescription>
@@ -275,7 +301,7 @@ const ProductDetailsPage = () => {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {product.specifications.map((spec, index) => (
+                                {product.specifications && product.specifications.map((spec, index) => (
                                     <div key={index} className="flex justify-between py-2 border-b last:border-b-0">
                                         <span className="font-medium text-sm">{spec.label}</span>
                                         <span className="text-sm text-muted-foreground">{spec.value}</span>
@@ -295,7 +321,7 @@ const ProductDetailsPage = () => {
                         </CardHeader>
                         <CardContent>
                             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {product.features.map((feature, index) => (
+                                {product.features && product.features.map((feature, index) => (
                                     <li key={index} className="flex items-start space-x-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
                                         <span className="text-sm">{feature}</span>
@@ -316,7 +342,7 @@ const ProductDetailsPage = () => {
                         <TabsTrigger value="similar">Products From {product.brand}</TabsTrigger>
                     </TabsList>
                     <TabsContent value="review" className="w-full">
-                        <Card>
+                        <Card className="bg-background">
                             <CardHeader>
                                 <CardTitle>Customer Reviews</CardTitle>
                                 <CardDescription>
@@ -324,8 +350,8 @@ const ProductDetailsPage = () => {
                                 </CardDescription>
                                 <Drawer>
                                     <DrawerTrigger variant="outline" size="sm" className="ml-auto my-1">
-                                       <Button variant="outline" size="sm" className="ml-auto my-1">
-                                       Write a Review</Button>
+                                        <span variant="outline" size="sm" className="ml-auto my-1">
+                                            Write a Review</span>
                                     </DrawerTrigger>
                                     <DrawerContent>
                                         <DrawerHeader>
@@ -357,7 +383,7 @@ const ProductDetailsPage = () => {
                             </CardContent>
                         </Card>
                     </TabsContent>
-                    <TabsContent value="similar"><Card>
+                    <TabsContent value="similar"><Card className="bg-background">
                         <CardHeader>
                             <CardTitle>Products From {product.brand}</CardTitle>
                             <CardDescription>
@@ -367,7 +393,7 @@ const ProductDetailsPage = () => {
                         <CardContent className='w-full'>
                             <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
                                 {([1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9]).map((it, index) => {
-                                    return (<HorizontalProductCard product={products[index % products.length]} className="w-[350px]" />)
+                                    return (<HorizontalProductCard product={[product]} className="w-[350px]" />)
                                 })}
                             </div>
                         </CardContent>

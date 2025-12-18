@@ -1,6 +1,6 @@
-import { Product } from "@/models/product";
+const { Product } = require("./models/product");
 
-export const products = [
+let products = [
   new Product(
     "1",
     "Wireless Headphones",
@@ -183,8 +183,8 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique v
     "4",
     "LED Light Strips",
     29.99,
-    49.99,
-    "/products/LEDStrips.jpg",
+    29.99,
+    "/products/LedStrip.jpg",
     "Customizable LED light strips for home decoration.",
     "Lighting",
     100,
@@ -194,21 +194,21 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique v
     ["rgb led strips", "smart light strips", "home decor lighting"],
     `### Illuminate Your Space
 
-    LED light strips are versatile lighting solutions that can be used for decoration, ambiance, or functional lighting. They are flexible, easy to install, and come with various color and brightness options.
-    - **Customizable Colors**: Choose from millions of colors to match your mood.
-    - **Smart Control**: Compatible with mobile apps and voice assistants.
-    - **Energy Efficient**: Low power consumption with high brightness.
-    - **Easy Installation**: Adhesive backing for quick setup.
-    - **Cuttable Design**: Adjust the length to fit your space.
-    - **Water-Resistant Options**: Suitable for indoor and outdoor use.
+LED light strips are versatile lighting solutions that can be used for decoration, ambiance, or functional lighting. They are flexible, easy to install, and come with various color and brightness options.
+- **Customizable Colors**: Choose from millions of colors to match your mood.
+- **Smart Control**: Compatible with mobile apps and voice assistants.
+- **Energy Efficient**: Low power consumption with high brightness.
+- **Easy Installation**: Adhesive backing for quick setup.
+- **Cuttable Design**: Adjust the length to fit your space.
+- **Water-Resistant Options**: Suitable for indoor and outdoor use.
 
-    ### Physical Details
-    | Property   | Value       |
-    |------------|-------------|
-    | **Length** | 16.4 feet   |
-    | **Width**  | 0.4 inches  |
-    | **Weight** | 200g        |
-    | **Extra**  | Includes remote control and power adapter |
+### Physical Details
+| Property   | Value       |
+|------------|-------------|
+| **Length** | 16.4 feet   |
+| **Width**  | 0.4 inches  |
+| **Weight** | 200g        |
+| **Extra**  | Includes remote control and power adapter |
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique vestibulum orci sit amet accumsan. Nunc odio augue, egestas eget arcu sit amet, dapibus scelerisque mauris. Donec rutrum eros at justo consectetur mattis eget ut augue. Morbi tempus nulla non diam ultricies laoreet. Pellentesque congue felis enim, eget bibendum lorem molestie vitae. Donec consectetur tristique arcu nec vehicula. Donec porttitor facilisis nisl vitae maximus. Sed sit amet elit sit amet odio varius volutpat. Sed porttitor mattis tellus, ac elementum mi malesuada ac. Duis neque ex, pellentesque quis arcu et, mollis ultrices purus. Nam at posuere orci. Praesent auctor risus mi, at lacinia sem aliquet quis. Praesent rhoncus ultrices enim, sit amet pulvinar leo tincidunt et. Sed ultricies non lorem varius lacinia.
     `,
@@ -229,12 +229,14 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique v
       "Optional Water-Resistant Coating",
     ],
     [
-      "/products/LEDStrips.jpg",
-      "/products/LEDStrips2.jpg",
-      "/products/LEDStrips3.jpg",
+      "/products/LedStrip.jpg",
+      "/products/LedStrip.webp",
+      "/products/LedStrip.jpg",
     ],
     4.7,
     200
   ),
   // More products can be added here
 ];
+
+module.exports = products;

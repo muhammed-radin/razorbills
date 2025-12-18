@@ -74,4 +74,4 @@ class Price {
   }
 }
 
-export { Product, ProductSpecification, Price };
+module.exports = { Product, ProductSpecification, Price };

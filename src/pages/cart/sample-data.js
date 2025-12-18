@@ -1,14 +1,13 @@
 import { Cart } from "@/models/cart";
-import { products } from "@/pages/product/sample-data";
 
 // Create a sample cart with some products
 export const sampleCart = new Cart();
 
-// Add some sample products to cart
-sampleCart.addItem(products[0], 2); // Wireless Headphones - 2 units
-sampleCart.addItem(products[1], 1); // Bluetooth Speaker - 1 unit
-sampleCart.addItem(products[2], 3); // Power Bank - 3 units
-sampleCart.addItem(products[3], 1); // LED Light Strips - 1 unit
+// // Add some sample products to cart
+// sampleCart.addItem(products[0], 2); // Wireless Headphones - 2 units
+// sampleCart.addItem(products[1], 1); // Bluetooth Speaker - 1 unit
+// sampleCart.addItem(products[2], 3); // Power Bank - 3 units
+// sampleCart.addItem(products[3], 1); // LED Light Strips - 1 unit
 
 // Additional sample cart items for demonstration
 export const createSampleCart = () => {
