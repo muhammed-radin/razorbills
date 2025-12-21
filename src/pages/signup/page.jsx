@@ -14,10 +14,22 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import CryptoJS from "crypto-js";
+import { api } from "@/utils/api";
+import { clickToGProvider } from "@/utils/auth";
+import { encrypt, encryptStrict } from "@/utils/crypt";
+import axios from "axios";
 
 const formSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
+  name: z.string().min(2, "Name must be at least 2 characters long"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[@$!%*?&#]/, "Password must contain at least one special character"),
 });
 
 const SignUpPage = () => {
@@ -25,23 +37,71 @@ const SignUpPage = () => {
     defaultValues: {
       email: "",
       password: "",
+      name: "",
     },
     resolver: zodResolver(formSchema),
   });
 
   const onSubmit = (data) => {
-    console.log(data);
+    let { email, password, name } = data;
+    let encryptedData =
+    {
+      email: email,
+      password: encryptStrict(password),
+      name: encrypt(name)
+    };
+    console.log(encryptedData);
+
+
+    SumbitForm(encryptedData);
   };
+
+  const SumbitForm = (data) => {
+    axios.post(api.base("/api/auth/signup"), data)
+      .then((response) => {
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.error("There was an error!", error);
+      });
+  }
+
+  const onUserGoogleSignUp = () => {
+    clickToGProvider().then(({ user, token }) => {
+      console.log("User Info:", user);
+      console.log("Access Token:", token);
+      // extract uid, displayName, photoURL, email,  from user
+      const { uid, displayName, photoURL, email } = user;
+      let password = encryptStrict(uid);
+      // You can now use the user info and token as needed
+      let encryptedData = {
+        id: encrypt(uid),
+        name: encrypt(displayName),
+        avatar: encrypt(photoURL),
+        email: email,
+        provider: "google",
+        password: encryptStrict(password), // Using uid as password for Google signups
+      }
+
+      SumbitForm(encryptedData);
+
+    }).catch(({ errorCode, errorMessage, email, credential }) => {
+      console.error("Error Code:", errorCode);
+      console.error("Error Message:", errorMessage);
+      console.error("Email:", email);
+      console.error("Credential:", credential);
+    });
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">
       <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />
         <p className="mt-4 text-xl font-semibold tracking-tight">
-          Sign up for Shadcn UI Blocks
+          Sign up for RazorBills
         </p>
 
-        <Button className="mt-8 w-full gap-3">
+        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignUp}>
           <GoogleLogo />
           Continue with Google
         </Button>
@@ -57,6 +117,24 @@ const SignUpPage = () => {
             className="w-full space-y-4"
             onSubmit={form.handleSubmit(onSubmit)}
           >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="name"
+                      placeholder="Your Full Name"
+                      className="w-full"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"

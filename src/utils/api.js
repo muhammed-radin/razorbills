@@ -1,7 +1,7 @@
 const apiBase = import.meta.env.VITE_API_ENDPOINT;
 const api = {
-  products() {
-    let base = apiBase;
+  base(path = "") {
+    let base = apiBase+path;
     return base;
   }
 };
