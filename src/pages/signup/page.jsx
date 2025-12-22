@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import CryptoJS from "crypto-js";
@@ -19,6 +19,7 @@ import { api } from "@/utils/api";
 import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import axios from "axios";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -33,6 +34,8 @@ const formSchema = z.object({
 });
 
 const SignUpPage = () => {
+  const navigate = useNavigate();
+
   const form = useForm({
     defaultValues: {
       email: "",
@@ -57,13 +60,27 @@ const SignUpPage = () => {
   };
 
   const SumbitForm = (data) => {
-    axios.post(api.base("/api/auth/signup"), data)
-      .then((response) => {
-        console.log(response.data);
-      })
-      .catch((error) => {
-        console.error("There was an error!", error);
-      });
+    toast.promise(
+      () =>
+        new Promise((resolveui, rejectui) => {
+          axios.post(api.base("/api/auth/signup"), data)
+            .then((response) => {
+              resolveui("Sign-up Successful");
+              navigate("/login?email=" + encodeURIComponent(data.email) + "&pw=" + encodeURIComponent(data.password) + "&signup=true");
+            })
+            .catch((error) => {
+              rejectui(error);
+              console.error("There was an error!", error);
+            });
+        }
+
+        ),
+      {
+        loading: "Signing up...",
+        success: (msg) => `${msg}`,
+        error: (err) => `Sign-up failed: ${err.response.data.message || err.message || "Unknown error"}`,
+      }
+    );
   }
 
   const onUserGoogleSignUp = () => {
@@ -72,7 +89,7 @@ const SignUpPage = () => {
       console.log("Access Token:", token);
       // extract uid, displayName, photoURL, email,  from user
       const { uid, displayName, photoURL, email } = user;
-      let password = encryptStrict(uid);
+      let password = uid;
       // You can now use the user info and token as needed
       let encryptedData = {
         id: encrypt(uid),

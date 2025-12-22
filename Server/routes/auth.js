@@ -49,18 +49,20 @@ router.post("/login", async function (req, res, next) {
 
     // Password already encrypted for simplicity
     // Decrypt and compare
-    const encryptedPassword = CryptoJS.AES.decrypt(
+    const decryptedPassword = CryptoJS.AES.decrypt(
       user.password,
-      process.env.CRYPTO_STRICT
+      process.env.CRYPTED_STRICT
     ).toString(CryptoJS.enc.Utf8);
 
     // Decrypt user input password for comparison
     const inputDecryptedPassword = CryptoJS.AES.decrypt(
       password,
-      process.env.CRYPTO_STRICT
+      process.env.CRYPTED_STRICT
     ).toString(CryptoJS.enc.Utf8);
 
-    if (encryptedPassword === inputDecryptedPassword) {
+    console.log(email, decryptedPassword, inputDecryptedPassword);
+
+    if (decryptedPassword === inputDecryptedPassword) {
       await UserModel.updateOne(
         { email: email },
         { lastLogin: new Date(), currentlyLoggedIn: true }

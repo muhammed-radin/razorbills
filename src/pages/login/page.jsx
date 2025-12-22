@@ -11,9 +11,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { set, z } from "zod";
+import { clickToGProvider } from "@/utils/auth";
+import { encrypt, encryptStrict } from "@/utils/crypt";
+import axios from "axios";
+import { api } from "@/utils/api";
+
+import { toast } from "sonner"
+import { useEffect } from "react";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -27,6 +34,8 @@ const formSchema = z.object({
 });
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+
   const form = useForm({
     defaultValues: {
       email: "",
@@ -36,8 +45,96 @@ const LoginPage = () => {
   });
 
   const onSubmit = (data) => {
-    console.log(data);
+    let { email, password } = data;
+    let encryptedData =
+    {
+      email: email,
+      password: encryptStrict(password),
+    };
+
+    SumbitForm(encryptedData);
   };
+
+  const SumbitForm = (data) => {
+    toast.promise(
+      () =>
+        new Promise((resolveui, rejectui) => {
+          axios.post(api.base("/api/auth/login"), data)
+            .then((response) => {
+              console.log(response.data);
+              resolveui("Login Successful");
+
+              // // Store token in indexedDB
+              // localStorage.setItem("auth_token", response.data.token);
+              // localStorage.setItem("user_data", JSON.stringify(response.data.user));
+
+              navigate("/");
+            })
+            .catch((error) => {
+              rejectui(error);
+              console.error("There was an error!", error);
+
+              setTimeout(() => {
+                form.setValue('password', '');
+              }, 1000);
+            });
+        }
+
+        ),
+      {
+        loading: "Logging in...",
+        success: (msg) => `${msg}`,
+        error: (err) => `Login failed: ${err.response.data.message || err.message || "Unknown error"}`,
+      }
+    );
+  };
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const email = urlParams.get('email');
+    const pw = urlParams.get('pw');
+    const signup = urlParams.get('signup');
+    
+    if (email && pw && signup) {
+      form.setValue('email', decodeURIComponent(email));
+      form.setValue('password', decodeURIComponent(pw));
+
+      SumbitForm({
+        email: decodeURIComponent(email),
+        password: decodeURIComponent(pw)
+      });
+    } 
+
+    
+  }, []);
+
+
+  const onUserGoogleSignIn = () => {
+    clickToGProvider().then(({ user, token }) => {
+      console.log("User Info:", user);
+      console.log("Access Token:", token);
+      // extract uid, displayName, photoURL, email,  from user
+      const { uid, displayName, photoURL, email } = user;
+      let password = uid;
+      // You can now use the user info and token as needed
+      let encryptedData = {
+        id: encrypt(uid),
+        name: encrypt(displayName),
+        avatar: encrypt(photoURL),
+        email: email,
+        provider: "google",
+        password: encryptStrict(password), // Using uid as password for Google signups
+      }
+
+      SumbitForm(encryptedData);
+
+    }).catch(({ errorCode, errorMessage, email, credential }) => {
+      console.error("Error Code:", errorCode);
+      console.error("Error Message:", errorMessage);
+      console.error("Email:", email);
+      console.error("Credential:", credential);
+    });
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">
@@ -47,7 +144,7 @@ const LoginPage = () => {
           Log in to RazorBills
         </p>
 
-        <Button className="mt-8 w-full gap-3">
+        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignIn}>
           <GoogleLogo />
           Continue with Google
         </Button>

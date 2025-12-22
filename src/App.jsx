@@ -3,6 +3,7 @@ import NavbarBlock from '@/components/navbar-02/navbar-02';
 import { Footer } from './components/footer-02/footer';
 import { ThemeProvider } from './utils/theme-provider';
 import ScrollToTop from './utils/ScrollToTop'; // Import the ScrollToTop component
+import { Toaster } from 'sonner';
 
 function App() {
   const location = useLocation();
@@ -11,9 +12,10 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         {!hideNavbar && <NavbarBlock />}
         <Outlet />
+        <Toaster position="top-right" theme="dark" richColors/>
         <Footer />
       </ThemeProvider>
     </>
