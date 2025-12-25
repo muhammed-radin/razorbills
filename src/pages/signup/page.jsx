@@ -53,7 +53,6 @@ const SignUpPage = () => {
       password: encryptStrict(password),
       name: encrypt(name)
     };
-    console.log(encryptedData);
 
 
     SumbitForm(encryptedData);
@@ -85,12 +84,11 @@ const SignUpPage = () => {
 
   const onUserGoogleSignUp = () => {
     clickToGProvider().then(({ user, token }) => {
-      console.log("User Info:", user);
-      console.log("Access Token:", token);
       // extract uid, displayName, photoURL, email,  from user
       const { uid, displayName, photoURL, email } = user;
       let password = uid;
       // You can now use the user info and token as needed
+      // uid encrypted for getting uniqe user id
       let encryptedData = {
         id: encrypt(uid),
         name: encrypt(displayName),

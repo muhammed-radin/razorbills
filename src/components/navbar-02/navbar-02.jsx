@@ -5,9 +5,13 @@ import { NavigationSheet } from "./navigation-sheet";
 import { SunIcon, MoonIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/utils/theme-provider";
+import { api } from "@/utils/api";
+import AvatarIcon from "@/components/avatar-icon";
+import AvatarMenu from "../avatar-menu";
 
 const NavbarBlock = () => {
   const { setTheme, theme } = useTheme();
+  const user = api.getUser();
 
   return (
     <nav className="h-16 bg-background border-b sticky top-0 z-50 w-full">
@@ -20,17 +24,21 @@ const NavbarBlock = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link to="./login" className="cursor-pointer">
+          {/* theme button */}
+          <Button size="icon" variant="outline" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+            {theme === "light" ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
+          </Button>
+
+          {/* avatar or auth buttons */}
+          {user ? (<AvatarMenu name={user.name} img={user.profilePicture} size={40} />) : (<><Link to="./login" className="cursor-pointer">
             <Button variant="outline" className="hidden sm:inline-flex">
               Sign In
             </Button>
           </Link>
-          <Link to="./signup" className="cursor-pointer">
-            <Button>Sign Up</Button>
-          </Link>
-          <Button size="icon" variant="outline" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-            { theme === "light" ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" /> }
-          </Button>
+            <Link to="./signup" className="cursor-pointer">
+              <Button>Sign Up</Button>
+            </Link></>)}
+
 
           {/* Mobile Menu */}
           <div className="md:hidden">

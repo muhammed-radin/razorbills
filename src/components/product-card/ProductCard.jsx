@@ -29,8 +29,6 @@ const ProductCard = ({ product, index }) => {
     function onImageError() {
         setImageErr(true);
     }
-
-    console.log(product.id, imageLoaded, imageErr);
     
 
     return (

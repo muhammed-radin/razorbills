@@ -67,10 +67,24 @@ router.post("/login", async function (req, res, next) {
         { email: email },
         { lastLogin: new Date(), currentlyLoggedIn: true }
       );
-      return res.status(200).json({ message: "Login successful" });
+      return res.status(200).json({ message: "Login successful", user: user });
     } else {
       return res.status(400).json({ message: "Invalid email or password" });
     }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error", error: err });
+  }
+});
+
+router.post("/logout", async function (req, res, next) {
+  try {
+    const { email } = req.body;
+    await UserModel.updateOne(
+      { email: email },
+      { currentlyLoggedIn: false }
+    );
+    return res.status(200).json({ message: "Logout successful" });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error", error: err });
