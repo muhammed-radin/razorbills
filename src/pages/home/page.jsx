@@ -17,10 +17,8 @@ export default function HomePage() {
 
   React.useEffect(() => {
     // Fetch products from the API
-    axios.get(api.base("/api/products"))
+    axios.get(api.products())
       .then(response => {
-        console.log(response);
-
         setProducts(response.data.products || response.data);
       }
       )

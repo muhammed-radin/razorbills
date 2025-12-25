@@ -61,12 +61,12 @@ const LoginPage = () => {
         new Promise((resolveui, rejectui) => {
           axios.post(api.base("/api/auth/login"), data)
             .then((response) => {
-              console.log(response.data);
+              console.log("user data from", response.data);
               resolveui("Login Successful");
 
               // // Store token in indexedDB
-              // localStorage.setItem("auth_token", response.data.token);
-              // localStorage.setItem("user_data", JSON.stringify(response.data.user));
+              localStorage.setItem("auth_token", encrypt(response.data.token));
+              localStorage.setItem("user_data", encrypt(JSON.stringify(response.data.user)));
 
               navigate("/");
             })
@@ -111,8 +111,6 @@ const LoginPage = () => {
 
   const onUserGoogleSignIn = () => {
     clickToGProvider().then(({ user, token }) => {
-      console.log("User Info:", user);
-      console.log("Access Token:", token);
       // extract uid, displayName, photoURL, email,  from user
       const { uid, displayName, photoURL, email } = user;
       let password = uid;
