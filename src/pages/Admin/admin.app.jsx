@@ -15,8 +15,8 @@ function AdminApp() {
     <ThemeProvider>
       <SidebarProvider defaultOpen >
         <AdminSidebar variant="sidebar" collapsible="none" className="h-screen"/>
-        <SidebarInset className="flex flex-col relative overflow-auto h-screen ">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+        <SidebarInset className="flex flex-col relative overflow-auto h-screen">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background z-10">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <Breadcrumb>

@@ -5,6 +5,7 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
+  CardFooter
 } from "@/components/ui/card";
 import {
   Table,
@@ -26,6 +27,74 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { api } from "@/utils/api";
+import { Pie, PieChart } from "recharts"
+
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from "@/components/ui/chart"
+
+export const description = "A simple pie chart"
+
+const chartData = [
+  { browser: "chrome", visitors: 275, fill: "var(--color-chrome)" },
+  { browser: "safari", visitors: 200, fill: "var(--color-safari)" },
+  { browser: "firefox", visitors: 187, fill: "var(--color-firefox)" },
+  { browser: "edge", visitors: 173, fill: "var(--color-edge)" },
+  { browser: "other", visitors: 90, fill: "var(--color-other)" },
+]
+
+const chartConfig = {
+  visitors: {
+    label: "Visitors",
+  },
+  chrome: {
+    label: "Chrome",
+    color: "var(--chart-1)",
+  },
+  safari: {
+    label: "Safari",
+    color: "var(--chart-2)",
+  },
+  firefox: {
+    label: "Firefox",
+    color: "var(--chart-3)",
+  },
+  edge: {
+    label: "Edge",
+    color: "var(--chart-4)",
+  },
+  other: {
+    label: "Other",
+    color: "var(--chart-5)",
+  },
+}
+
+
+
+const chartConfigA = {
+  desktop: {
+    label: "Desktop",
+    color: "var(--chart-1)",
+  },
+  mobile: {
+    label: "Mobile",
+    color: "var(--chart-2)",
+  },
+}
+
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
+
+const chartDataA = [
+  { month: "January", desktop: 186, mobile: 80 },
+  { month: "February", desktop: 305, mobile: 200 },
+  { month: "March", desktop: 237, mobile: 120 },
+  { month: "April", desktop: 73, mobile: 190 },
+  { month: "May", desktop: 209, mobile: 130 },
+  { month: "June", desktop: 214, mobile: 140 },
+]
+
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState([]);
@@ -115,7 +184,7 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-5">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">
@@ -156,7 +225,7 @@ export default function AdminDashboardPage() {
 
       {/* Tabs Section */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
+        <TabsList className="flex flex-row flex-wrap items-start justify-start h-max sm:w-max">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="orders">Orders</TabsTrigger>
@@ -194,13 +263,12 @@ export default function AdminDashboardPage() {
                         <TableCell>{order.amount}</TableCell>
                         <TableCell>
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                              order.status === "Delivered"
-                                ? "bg-green-100 text-green-700"
-                                : order.status === "Shipped"
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${order.status === "Delivered"
+                              ? "bg-green-100 text-green-700"
+                              : order.status === "Shipped"
                                 ? "bg-blue-100 text-blue-700"
                                 : "bg-yellow-100 text-yellow-700"
-                            }`}
+                              }`}
                           >
                             {order.status}
                           </span>
@@ -346,13 +414,12 @@ export default function AdminDashboardPage() {
                       <TableCell>{order.amount}</TableCell>
                       <TableCell>
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            order.status === "Delivered"
-                              ? "bg-green-100 text-green-700"
-                              : order.status === "Shipped"
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${order.status === "Delivered"
+                            ? "bg-green-100 text-green-700"
+                            : order.status === "Shipped"
                               ? "bg-blue-100 text-blue-700"
                               : "bg-yellow-100 text-yellow-700"
-                          }`}
+                            }`}
                         >
                           {order.status}
                         </span>
@@ -379,21 +446,53 @@ export default function AdminDashboardPage() {
                 <CardDescription>Revenue trends over time</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center border rounded-lg">
-                  <p className="text-muted-foreground">Chart Placeholder</p>
-                </div>
+                <ChartContainer
+                  config={chartConfig}
+                  className="mx-auto aspect-square max-h-[250px]"
+                >
+                  <PieChart>
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent hideLabel />}
+                    />
+                    <Pie data={chartData} dataKey="visitors" nameKey="browser" />
+                  </PieChart>
+                </ChartContainer>
               </CardContent>
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle>Product Performance</CardTitle>
-                <CardDescription>Top selling products</CardDescription>
+                <CardTitle>Bar Chart - Multiple</CardTitle>
+                <CardDescription>January - June 2024</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-center justify-center border rounded-lg">
-                  <p className="text-muted-foreground">Chart Placeholder</p>
-                </div>
+                <ChartContainer config={chartConfigA}>
+                  <BarChart accessibilityLayer data={chartDataA}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="month"
+                      tickLine={false}
+                      tickMargin={10}
+                      axisLine={false}
+                      tickFormatter={(value) => value.slice(0, 3)}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="dashed" />}
+                    />
+                    <Bar dataKey="desktop" fill="var(--color-desktop)" radius={4} />
+                    <Bar dataKey="mobile" fill="var(--color-mobile)" radius={4} />
+                  </BarChart>
+                </ChartContainer>
               </CardContent>
+              <CardFooter className="flex-col items-start gap-2 text-sm">
+                <div className="flex gap-2 leading-none font-medium">
+                  Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+                </div>
+                <div className="text-muted-foreground leading-none">
+                  Showing total visitors for the last 6 months
+                </div>
+              </CardFooter>
             </Card>
             <Card>
               <CardHeader>
