@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import NavbarBlock from '@/components/navbar-02/navbar-02';
-import { Footer } from './components/footer-02/footer';
+import NavbarBlock from '@/components/navbar/navbar';
+import { Footer } from './components/footer/footer';
 import { ThemeProvider } from './utils/theme-provider';
 import ScrollToTop from './utils/ScrollToTop'; // Import the ScrollToTop component
 import { Toaster } from 'sonner';
