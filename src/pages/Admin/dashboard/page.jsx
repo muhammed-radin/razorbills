@@ -115,11 +115,11 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6 max-w-7xl mx-auto">
+    <div className="p-6">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight mb-2">
-          Admin Dashboard
+          Dashboard Overview
         </h1>
         <p className="text-muted-foreground">
           Manage your e-commerce platform from here
