@@ -68,11 +68,11 @@ const navItems = [
   },
 ]
 
-export function AdminSidebar() {
+export function AdminSidebar({ collapsible, variant, side, ...props }) {
   const location = useLocation()
 
   return (
-    <Sidebar>
+    <Sidebar collapsible={collapsible} variant={variant} side={side} {...props} >
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">

@@ -121,7 +121,7 @@ SidebarProvider.displayName = "SidebarProvider"
 const Sidebar = React.forwardRef(({ side = "left", variant = "sidebar", collapsible = "offcanvas", className, children, ...props }, ref) => {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
-  if (collapsible === "none") {
+  if (collapsible === "none" && !isMobile) {
     return (
       <div
         className={cn(
