@@ -29,6 +29,7 @@ import { api } from "@/utils/api";
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState([]);
+  const DEFAULT_PRODUCT_COUNT = 0;
 
   useEffect(() => {
     // Fetch products from the API
@@ -46,7 +47,7 @@ export default function AdminDashboardPage() {
   const metrics = [
     {
       title: "Total Products",
-      value: products.length || 156,
+      value: products.length || DEFAULT_PRODUCT_COUNT,
       icon: Package,
       change: "+12%",
       changeType: "positive",
@@ -288,7 +289,7 @@ export default function AdminDashboardPage() {
                 </TableHeader>
                 <TableBody>
                   {products.slice(0, 10).map((product, index) => (
-                    <TableRow key={index}>
+                    <TableRow key={product.id || product._id || index}>
                       <TableCell className="font-medium">
                         {product.title || product.name}
                       </TableCell>
