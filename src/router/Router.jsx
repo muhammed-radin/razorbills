@@ -13,6 +13,7 @@ import NotFoundPage from '@/pages/notfound/page'
 import RedirectPage from '@/pages/redirect/gprovider'
 import Orderhistory from '@/pages/orderhistory/Orderhistory'
 import Wishlist from '@/pages/wishlist/Wishlist'
+import AdminDashboardPage from '@/pages/admin/page'
 
 export default function Router() {
   return (
@@ -25,6 +26,7 @@ export default function Router() {
         <Route path="login" element={<LoginPage />} />
         <Route path="signup" element={<SignUpPage />} />
         <Route path="privacy" element={<PrivacyPolicyPage />} />
+        <Route path="admin" element={<AdminDashboardPage />} />
         <Route path="404" element={<NotFoundPage />} />
         <Route path="*" element={<NotFoundPage />} />
         <Route path="redirect" element={<> <RedirectPage/> </>} />
