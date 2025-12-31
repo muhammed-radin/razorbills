@@ -9,31 +9,44 @@ import {
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
 import { ThemeProvider } from "@/utils/theme-provider"
+import { createContext, useState } from "react"
+import { LayoutDashboard } from "lucide-react"
+
+const PageInfoContext = createContext();
 
 function AdminApp() {
+  const [currentPageInfo, setCurrentPageInfo] = useState({
+    title: "Dashboard",
+    url: "/admin/dashboard",
+    icon: LayoutDashboard,
+  });
+
   return (
     <ThemeProvider>
-      <SidebarProvider defaultOpen >
-        <AdminSidebar variant="sidebar" collapsible="none" className="h-screen"/>
-        <SidebarInset className="flex flex-col relative overflow-auto h-screen">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background z-10">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Admin Dashboard</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </header>
-          <div>
-            <Outlet />
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <PageInfoContext.Provider value={currentPageInfo}>
+        <SidebarProvider defaultOpen >
+          <AdminSidebar variant="sidebar" collapsible="none" className="h-screen" savePageInfo={setCurrentPageInfo} />
+          <SidebarInset className="flex flex-col relative overflow-auto h-screen">
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 sticky top-0 bg-background z-10">
+              <SidebarTrigger className="-ml-1" />
+              <Separator orientation="vertical" className="mr-2 h-4" />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Admin {currentPageInfo.title}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </header>
+            <div>
+              <Outlet />
+            </div>
+          </SidebarInset>
+        </SidebarProvider>
+      </PageInfoContext.Provider>
     </ThemeProvider>
   );
 }
 
 export default AdminApp;
+export { PageInfoContext };
