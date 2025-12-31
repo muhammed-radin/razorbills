@@ -30,7 +30,7 @@ const NavbarBlock = () => {
           </Button>
 
           {/* avatar or auth buttons */}
-          {user ? (<AvatarMenu name={user.name} img={user.profilePicture} size={40} />) : (<><Link to="./login" className="cursor-pointer">
+          {user ? (<AvatarMenu name={user.name} img={user.profilePicture} user={user} size={40} />) : (<><Link to="./login" className="cursor-pointer">
             <Button variant="outline" className="hidden sm:inline-flex">
               Sign In
             </Button>

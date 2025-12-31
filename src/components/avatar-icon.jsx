@@ -11,7 +11,7 @@ function AvatarIcon({ name, img, size = 40 }) {
 
 
 
-    const image = img ? decrypt(img) : `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=${size * 2}&background=random&rounded=true&bold=true&format=png`;
+    const image = img !== null ? decrypt(img) : `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=${size * 2}&background=random&rounded=true&bold=true&format=png`;
 
     console.log(image);
     return (<Avatar>
