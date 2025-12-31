@@ -29,7 +29,6 @@ import { api } from "@/utils/api";
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Fetch products from the API
@@ -37,11 +36,9 @@ export default function AdminDashboardPage() {
       .get(api.products())
       .then((response) => {
         setProducts(response.data.products || response.data);
-        setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
-        setLoading(false);
       });
   }, []);
 
