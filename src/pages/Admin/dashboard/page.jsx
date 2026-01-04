@@ -100,6 +100,7 @@ const revenueChartConfig = {
 }
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import AvatarIcon from "@/components/avatar-icon";
 
 const chartDataA = [
   { month: "January", desktop: 186, mobile: 80 },
@@ -337,7 +338,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 max-sm:grid-cols-1">
         {/* Revenue Chart - Takes 2 columns */}
         <Card className="lg:col-span-2 border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -401,7 +402,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Orders Table & Quick Stats */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 max-sm:grid-cols-1">
         {/* Recent Orders - Takes 2 columns */}
         <Card className="lg:col-span-2 border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between">
@@ -421,9 +422,7 @@ export default function AdminDashboardPage() {
                 return (
                   <div key={order.id} className="flex items-center justify-between p-4 rounded-xl border bg-card hover:shadow-md transition-all duration-200">
                     <div className="flex items-center gap-4">
-                      <div className="h-11 w-11 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
-                        {order.avatar}
-                      </div>
+                      <AvatarIcon name={order.avatar} decrypted={false} size={40} />
                       <div>
                         <p className="font-medium">{order.customer}</p>
                         <p className="text-sm text-muted-foreground">{order.product}</p>
@@ -520,14 +519,14 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Analytics Section */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-sm:grid-cols-1">
         {/* Browser Distribution */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="text-xl font-semibold">Traffic Sources</CardTitle>
             <CardDescription>Where your visitors come from</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-sm:max-w-[calc(100vw-2rem)]">
             <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[200px] sm:max-h-[250px]">
               <PieChart>
                 <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
