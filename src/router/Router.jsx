@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { Route, Routes } from 'react-router-dom'
 import App from '../App'
@@ -15,6 +14,11 @@ import Orderhistory from '@/pages/orderhistory/Orderhistory'
 import Wishlist from '@/pages/wishlist/Wishlist'
 import AdminDashboardPage from '@/pages/Admin/dashboard/page'
 import AdminApp from '@/pages/Admin/admin.app'
+import AdminProductsPage from '@/pages/Admin/products/page'
+import NewProductPage from '@/pages/Admin/products/new/page'
+import EditProductPage from '@/pages/Admin/products/edit/[id]'
+import OrdersPage from '@/pages/Admin/orders'
+import CustomersPage from '@/pages/Admin/customers'
 
 export default function Router() {
   return (
@@ -36,6 +40,11 @@ export default function Router() {
 
       <Route path="/admin" element={<AdminApp />} >
         <Route path="dashboard" element={<AdminDashboardPage />} />
+        <Route path="products" element={<AdminProductsPage />} />
+        <Route path="products/new" element={<NewProductPage />} />
+        <Route path="products/:id/edit" element={<EditProductPage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="customers" element={<CustomersPage />} />
       </Route>
     </Routes>
   );
