@@ -24,8 +24,7 @@ import {
   SidebarFooter,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { use } from "react"
-import { PageInfoContext } from "@/pages/Admin/admin.app"
+import { useEffect } from "react"
 
 const navItems = [
   {
@@ -72,7 +71,14 @@ const navItems = [
 
 export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...props }) {
   const location = useLocation()
-  const pageInfo = use(PageInfoContext);
+
+  // Update page info when location changes
+  useEffect(() => {
+    const currentNav = navItems.find(item => item.url === location.pathname)
+    if (currentNav) {
+      savePageInfo(currentNav)
+    }
+  }, [location.pathname, savePageInfo])
 
   return (
     <Sidebar collapsible={collapsible} variant={variant} side={side} {...props} >
@@ -87,7 +93,7 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
           </div>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
@@ -95,12 +101,10 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
             <SidebarMenu>
               {navItems.map((item) => {
                 const isActive = location.pathname === item.url;
-                
+
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive} onClick={() => {
-                      savePageInfo(item);
-                    }}>
+                    <SidebarMenuButton asChild isActive={isActive}>
                       <Link to={item.url}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.title}</span>
@@ -127,7 +131,7 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
           </div>
         </div>
       </SidebarFooter>
-      
+
       <SidebarRail />
     </Sidebar>
   )
