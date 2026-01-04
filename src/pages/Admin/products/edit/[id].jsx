@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from "react"
 import { useNavigate, useParams, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
 import {
     ArrowLeft,
     Plus,
@@ -67,6 +65,7 @@ import { api } from "@/utils/api"
 import axios from "axios"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import StyledMd from "@/components/styled-md"
 
 const defaultCategories = [
     "Electronics",
@@ -693,9 +692,7 @@ export default function EditProductPage() {
                                                     <TabsContent value="preview">
                                                         <div className="min-h-[250px] rounded-lg border-2 p-6 prose prose-sm dark:prose-invert max-w-none bg-muted/30">
                                                             {field.value ? (
-                                                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                                    {field.value}
-                                                                </ReactMarkdown>
+                                                                <StyledMd>{field.value}</StyledMd>
                                                             ) : (
                                                                 <p className="text-muted-foreground italic">Nothing to preview</p>
                                                             )}
