@@ -16,6 +16,7 @@ import AdminDashboardPage from '@/pages/Admin/dashboard/page'
 import AdminApp from '@/pages/Admin/admin.app'
 import AdminProductsPage from '@/pages/Admin/products/page'
 import NewProductPage from '@/pages/Admin/products/new/page'
+import EditProductPage from '@/pages/Admin/products/edit/[id]'
 
 export default function Router() {
   return (
@@ -39,6 +40,7 @@ export default function Router() {
         <Route path="dashboard" element={<AdminDashboardPage />} />
         <Route path="products" element={<AdminProductsPage />} />
         <Route path="products/new" element={<NewProductPage />} />
+        <Route path="products/:id/edit" element={<EditProductPage />} />
       </Route>
     </Routes>
   );
