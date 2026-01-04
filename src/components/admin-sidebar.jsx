@@ -23,58 +23,58 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarRail,
+  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { useEffect } from "react"
 
-const navItems = [
-  {
-    title: "Dashboard",
-    url: "/admin/dashboard",
-    icon: LayoutDashboard,
+const navItems = {
+  main: {
+    label: "Main Navigation",
+    items: [
+      {
+        title: "Dashboard",
+        url: "/admin/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Products",
+        url: "/admin/products",
+        icon: Package,
+      },
+      {
+        title: "Orders",
+        url: "/admin/orders",
+        icon: ShoppingCart,
+      },
+      {
+        title: "Customers",
+        url: "/admin/customers",
+        icon: Users,
+      }]
   },
-  {
-    title: "Products",
-    url: "/admin/products",
-    icon: Package,
-  },
-  {
-    title: "Orders",
-    url: "/admin/orders",
-    icon: ShoppingCart,
-  },
-  {
-    title: "Customers",
-    url: "/admin/customers",
-    icon: Users,
-  },
-  {
-    title: "Analytics",
-    url: "/admin/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Categories",
-    url: "/admin/categories",
-    icon: Tags,
-  },
-  {
-    title: "Reports",
-    url: "/admin/reports",
-    icon: FileText,
-  },
-  {
-    title: "Settings",
-    url: "/admin/settings",
-    icon: Settings,
-  },
-]
+  quick: {
+    label: "Quick Actions",
+    items: [
+      {
+        title: "New Product",
+        url: "/admin/products/new",
+        icon: Package,
+      },
+    ]
+  }
+};
+
+const navItemsArray = [...Object.values(navItems).flatMap(group => group.items)];
+
+
 
 export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...props }) {
-  const location = useLocation()
+  const location = useLocation();
+  const navItemsKeys = Object.keys(navItems);
 
   // Update page info when location changes
   useEffect(() => {
-    const currentNav = navItems.find(item => item.url === location.pathname)
+    const currentNav = navItemsArray.find(item => item.url === location.pathname)
     if (currentNav) {
       savePageInfo(currentNav)
     }
@@ -95,30 +95,38 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.url;
+        {navItemsKeys.map((key) => {
+          const group = navItems[key];
+          console.log(group);
 
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+
+          return (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map((item) => {
+                    const isActive = location.pathname === item.url;
+
+                    return (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton asChild isActive={isActive}>
+                          <Link to={item.url}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>)
+        })}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
+        
         <div className="p-4">
           <div className="flex items-center gap-2 text-sm">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
@@ -130,6 +138,18 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
             </div>
           </div>
         </div>
+
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/admin/settings">
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        
       </SidebarFooter>
 
       <SidebarRail />
