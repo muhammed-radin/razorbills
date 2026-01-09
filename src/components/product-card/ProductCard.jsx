@@ -70,7 +70,7 @@ const ProductCard = ({ product, index }) => {
         <Card
             className={cn(
                 "w-35 sm:w-45 h-55 border shadow-none border-none rounded-none p-0 bg-transparent gap-3 cursor-pointer group relative",
-                "transition-all duration-600 ease-out",
+                "transition-all duration-[600ms] ease-out",
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             )}
             onClick={handleProductClick}
@@ -93,7 +93,7 @@ const ProductCard = ({ product, index }) => {
                 
                 {/* Loading State */}
                 <div className={cn(
-                    "w-full h-40 object-cover bg-background flex items-center justify-center",
+                    "w-full h-40 bg-background flex items-center justify-center",
                     { 'hidden': (imageLoaded || imageErr) }
                 )}>
                     <Preloader />
@@ -101,8 +101,8 @@ const ProductCard = ({ product, index }) => {
                 
                 {/* Error State */}
                 <div className={cn(
-                    "w-full h-40 object-cover bg-background flex items-center justify-center",
-                    { 'hidden': !(!imageLoaded && imageErr) }
+                    "w-full h-40 bg-background flex items-center justify-center",
+                    { 'hidden': (imageLoaded || !imageErr) }
                 )}>
                     <ImageOff />
                 </div>
