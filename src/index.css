@@ -200,7 +200,7 @@
 }
 
 /* Hero Section Animations */
-@keyframes fade-in {
+@keyframes hero-fade-in {
   from {
     opacity: 0;
   }
@@ -209,7 +209,7 @@
   }
 }
 
-@keyframes slide-up {
+@keyframes hero-slide-up {
   from {
     opacity: 0;
     transform: translateY(30px);
@@ -220,7 +220,7 @@
   }
 }
 
-@keyframes float {
+@keyframes hero-float {
   0%, 100% {
     transform: translateY(0);
   }
@@ -229,34 +229,48 @@
   }
 }
 
-.animate-fade-in {
-  animation: fade-in 0.8s ease-out forwards;
+.hero-animate-fade-in {
+  animation: hero-fade-in 0.8s ease-out forwards;
 }
 
-.animate-slide-up {
-  animation: slide-up 0.8s ease-out forwards;
+.hero-animate-slide-up {
+  animation: hero-slide-up 0.8s ease-out forwards;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.hero-animate-float {
+  animation: hero-float 3s ease-in-out infinite;
 }
 
-.delay-100 {
+.hero-delay-100 {
   animation-delay: 100ms;
 }
 
-.delay-200 {
+.hero-delay-200 {
   animation-delay: 200ms;
 }
 
-.delay-300 {
+.hero-delay-300 {
   animation-delay: 300ms;
 }
 
-.delay-500 {
+.hero-delay-500 {
   animation-delay: 500ms;
 }
 
-.delay-1000 {
+.hero-delay-1000 {
   animation-delay: 1000ms;
+}
+
+/* Hero Grid Pattern */
+.hero-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .hero-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
 }
