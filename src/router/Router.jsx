@@ -12,6 +12,8 @@ import NotFoundPage from '@/pages/notfound/page'
 import RedirectPage from '@/pages/redirect/gprovider'
 import Orderhistory from '@/pages/orderhistory/Orderhistory'
 import Wishlist from '@/pages/wishlist/Wishlist'
+import SettingsPage from '@/pages/settings/page'
+import AddressBookPage from '@/pages/addressbook/page'
 import AdminDashboardPage from '@/pages/Admin/dashboard/page'
 import AdminApp from '@/pages/Admin/admin.app'
 import AdminProductsPage from '@/pages/Admin/products/page'
@@ -36,6 +38,8 @@ export default function Router() {
         <Route path="redirect" element={<> <RedirectPage /> </>} />
         <Route path="order" element={<Orderhistory />} />
         <Route path="wishlist" element={<Wishlist />} />
+        <Route path="settings" element={<SettingsPage />} />
+        <Route path="addressbook" element={<AddressBookPage />} />
       </Route>
 
       <Route path="/admin" element={<AdminApp />} >
