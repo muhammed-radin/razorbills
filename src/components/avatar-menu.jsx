@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -19,6 +19,7 @@ import {
     ShoppingBag,
     ShoppingCart,
     User,
+    MapPin,
 } from "lucide-react";
 import { api } from "@/utils/api";
 import { toast } from "sonner";
@@ -46,14 +47,25 @@ function AvatarMenu({ name, img, user }) {
                     <User className="mr-1" /> My Profile
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                    <ShoppingCart className="mr-1" /> Cart
+                <DropdownMenuItem asChild>
+                    <Link to="/cart">
+                        <ShoppingCart className="mr-1" /> Cart
+                    </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                    <ShoppingBag className="mr-1" /> Orders
+                <DropdownMenuItem asChild>
+                    <Link to="/order">
+                        <ShoppingBag className="mr-1" /> Orders
+                    </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                    <Settings2 className="mr-1" /> Preferences
+                <DropdownMenuItem asChild>
+                    <Link to="/settings">
+                        <Settings2 className="mr-1" /> Preferences
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link to="/addressbook">
+                        <MapPin className="mr-1" /> Addresses
+                    </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => {
                     // sign out user
