@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 import CategoryList from "@/components/category-tag/CategoryList";
 import ProductCard from "@/components/product-card/ProductCard";
-import { Hero1 } from "@/components/hero/hero";
+import { Hero } from "@/components/hero/hero";
 import SearchBar from "@/components/searchBar/SearchBar";
 import CarouselSlide from "@/components/carousel-10";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
@@ -11,6 +11,7 @@ import ListHorizontalProductCards from "@/components/horizontal-card/list-horizo
 import axios from "axios";
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
+
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -33,7 +34,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen w-full">
       {/* Hero Section */}
-      <Hero1 />
+      {/* <Hero /> */}
       
       {/* Main Content */}
       <div className="p-3 sm:p-3 w-full max-w-7xl mx-auto">
