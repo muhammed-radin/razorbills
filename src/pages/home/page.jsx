@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 import CategoryList from "@/components/category-tag/CategoryList";
 import ProductCard from "@/components/product-card/ProductCard";
-import { Hero1 } from "@/components/hero/hero1";
+import { Hero1 } from "@/components/hero/hero";
 import SearchBar from "@/components/searchBar/SearchBar";
 import CarouselSlide from "@/components/carousel-10";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";

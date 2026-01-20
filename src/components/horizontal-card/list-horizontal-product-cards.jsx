@@ -21,7 +21,7 @@ export default function ListHorizontalProductCards({ products = [] }) {
                 </h2>
                 <div className="w-24 h-0.5 mt-2 bg-gradient-to-r from-transparent via-primary to-transparent rounded-full"></div>
             </header>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 w-full max-w-7xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-1 sm:gap-2 w-full max-w-7xl">
                 {displayProducts.map((product, index) => (
                     <HorizontalProductCard 
                         key={product.id || product.title || index} 
