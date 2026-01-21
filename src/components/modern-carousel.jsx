@@ -484,8 +484,11 @@ export default function ModernCarousel({
                             )}
                         />
                     ))}
-                </div>
+                </div> 
             </div>
         </section>
     );
 }
+
+
+// End of src/components/modern-carousel.jsx
