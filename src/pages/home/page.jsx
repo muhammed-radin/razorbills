@@ -15,6 +15,7 @@ import ModernCarousel from "@/components/modern-carousel";
 import axios from "axios";
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
+import ClassicProcuctsSlider from "@/components/product-card/products-slider";
 
 export default function HomePage() {
   const [products, setProducts] = useState([]);
@@ -67,16 +68,16 @@ export default function HomePage() {
         ) : (
           <>
             {/* Highlighted Image Slider - Full Width Hero Style */}
-            <HighlightedSlider />
+            <HighlightedSlider/>
 
             {/* Featured Products Carousel - Premium Cards */}
-            <FeaturedCarousel title="Featured Collection" />
+            <FeaturedCarousel title="Featured Collection"/>
 
             {/* Content Grid - Categories & Offers */}
             <ContentGrid title="Explore Categories" />
 
-            {/* New Arrivals - Modern Carousel Design */}
-            <ModernCarousel title="New Arrivals" variant="new-arrivals" />
+            {/* New Arrivals - Regular Carousel Design */}
+            <CarouselSlide title="New Arrivals" variant="new-arrivals" />
 
             {/* Product Grid */}
             <div className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto py-6 sm:py-8">
@@ -101,14 +102,7 @@ export default function HomePage() {
             <CarouselSlide title="Trending Now" />
 
             {/* Second Product Grid */}
-            <div className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto py-6 sm:py-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 px-2">Recommended For You</h2>
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
-                {products.slice(0, 8).map((product, index) => (
-                  <ProductCard key={index} product={product} index={index} />
-                ))}
-              </div>
-            </div>
+            <ClassicProcuctsSlider title="Recomended For You" products={products} />
 
             {/* More Horizontal Cards */}
             <ListHorizontalProductCards />

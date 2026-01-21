@@ -17,6 +17,8 @@ import {
     TrendingUp,
     Package
 } from "lucide-react";
+import FruitShowcaseCard from "@/components/showcase-card";
+import FoodMenuCard from "@/components/menu-card";
 
 const defaultItems = [
     {
@@ -275,7 +277,7 @@ export default function ContentGrid({ items, title = "Explore More", showTitle =
     };
 
     return (
-        <section className="relative w-full py-8 sm:py-12">
+        <section className="relative w-full py-8 sm:py-12 max-w-7xl mx-auto">
             <div className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto">
                 {/* Section Header */}
                 {showTitle && (
@@ -297,6 +299,58 @@ export default function ContentGrid({ items, title = "Explore More", showTitle =
                         </Button>
                     </div>
                 )}
+
+                {/* Showcase Cards Row */}
+                <div className="flex flex-col lg:flex-row gap-6 mb-8">
+                    <FruitShowcaseCard
+                        className="flex-1"
+                        items={[
+                            {
+                                id: "electronics",
+                                name: "Electronics",
+                                title: "Power Your Projects",
+                                description: "Discover our wide range of electronic components including resistors, capacitors, LEDs, and microcontrollers. Perfect for hobbyists and professionals alike.",
+                                image: "/products/Battery.png",
+                                color: "#3b82f6"
+                            },
+                            {
+                                id: "audio",
+                                name: "Audio",
+                                title: "Premium Sound",
+                                description: "Experience crystal clear audio with our selection of speakers, headphones, and audio accessories. Designed for immersive listening.",
+                                image: "/products/Speaker.webp",
+                                color: "#8b5cf6"
+                            },
+                            {
+                                id: "lighting",
+                                name: "Lighting",
+                                title: "Illuminate Your Space",
+                                description: "Transform any environment with our LED strips, bulbs, and smart lighting solutions. Energy efficient and vibrant colors.",
+                                image: "/products/LedStrip.webp",
+                                color: "#10b981"
+                            }
+                        ]}
+                    />
+                    <FoodMenuCard
+                        className="lg:max-w-[380px] bg-gradient-to-br from-violet-500 to-purple-600"
+                        items={[
+                            {
+                                id: 1,
+                                name: "Wireless Headphones",
+                                calories: 120,
+                                price: 49.99,
+                                image: "/products/Headphone.jpg"
+                            },
+                            {
+                                id: 2,
+                                name: "LED Strip Lights",
+                                calories: 85,
+                                price: 24.99,
+                                image: "/products/LedStrip.webp"
+                            }
+                        ]}
+                    />
+                </div>
 
                 {/* Grid Layout */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 auto-rows-auto">

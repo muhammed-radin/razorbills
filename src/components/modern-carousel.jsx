@@ -266,7 +266,7 @@ export default function ModernCarousel({
     const accentColor = isNewArrivals ? "primary" : isTopRated ? "amber-500" : "primary";
 
     return (
-        <section className="relative w-full py-6 sm:py-8 md:py-10 overflow-hidden">
+        <section className="relative w-full py-6 sm:py-8 md:py-10 overflow-hidden max-w-7xl mx-auto">
             <div className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto">
                 {/* Section Header */}
                 {showTitle && (

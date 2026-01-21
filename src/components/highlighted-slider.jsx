@@ -205,7 +205,7 @@ export default function HighlightedSlider({ customSlides, autoPlay = true, inter
     const theme = themeColors[current.theme] || themeColors.violet;
 
     return (
-        <section className="relative w-full my-4 sm:my-8 md:my-12 overflow-hidden">
+        <section className="relative w-full my-4 sm:my-8 md:my-12 overflow-hidden max-w-7xl mx-auto">
             <div className="max-w-[98%] sm:max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto">
                 <div
                     ref={sliderRef}

@@ -228,10 +228,11 @@ export default function FeaturedCard({
                 {/* Price & Action */}
                 <div className="flex items-center justify-between pt-2">
                     <div className="space-y-0.5">
-                        <div className="flex items-baseline gap-2">
+                        <div className="flex flex-col items-baseline gap-2">
                             <span className={cn("text-2xl font-bold", colors.text)}>
                                 {currency(price)}
                             </span>
+                            
                             {originalPrice && (
                                 <span className="text-sm text-muted-foreground line-through">
                                     {currency(originalPrice)}

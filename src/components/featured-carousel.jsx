@@ -92,7 +92,7 @@ export default function FeaturedCarousel({
     }, [api]);
 
     return (
-        <section className="relative w-full py-6 sm:py-8 md:py-12 my-2 sm:my-4 overflow-hidden">
+        <section className="relative w-full py-6 sm:py-8 md:py-12 my-2 sm:my-4 overflow-hidden max-w-7xl mx-auto">
             {/* Section Header */}
             {showTitle && (
                 <header className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto mb-6 sm:mb-8 px-2">
@@ -152,7 +152,7 @@ export default function FeaturedCarousel({
                                 key={index}
                                 className={cn(
                                     "pl-3 sm:pl-4 md:pl-5 lg:pl-6",
-                                    "basis-[88%] xs:basis-[80%] sm:basis-[55%] md:basis-[42%] lg:basis-[32%] xl:basis-[26%]"
+                                    "basis-[88%] xs:basis-[80%] sm:basis-[57%] md:basis-[45%] lg:basis-[36%] xl:basis-[30%]"
                                 )}
                             >
                                 <FeaturedCard
