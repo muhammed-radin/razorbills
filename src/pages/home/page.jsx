@@ -5,7 +5,7 @@ import CategoryList from "@/components/category-tag/CategoryList";
 import ProductCard from "@/components/product-card/ProductCard";
 import { Hero } from "@/components/hero/hero";
 import SearchBar from "@/components/searchBar/SearchBar";
-import CarouselSlide from "@/components/carousel-10";
+import CarouselSlide from "@/components/carousel";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 import ListHorizontalProductCards from "@/components/horizontal-card/list-horizontal-product-cards";
 import axios from "axios";
