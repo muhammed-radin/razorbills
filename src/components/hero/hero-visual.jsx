@@ -1,3 +1,5 @@
+import { ArrowRight, Zap, Shield, Truck, Star } from "lucide-react";
+
 export default function HeroVisual({ children }) {
     return (
 

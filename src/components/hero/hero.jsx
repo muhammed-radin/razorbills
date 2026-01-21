@@ -3,7 +3,7 @@ import { ArrowRight, Zap, Shield, Truck, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import HeroVisual, { HeroImage } from "./hero-visual";
 
-const Hero1 = ({
+const Hero = ({
   heading = "Power Your Innovation",
   subheading = "Premium Electronic Components",
   description = "Discover high-quality resistors, diodes, LEDs, sensors, and microcontrollers. Build your next project with confidence.",
@@ -104,8 +104,7 @@ const Hero1 = ({
           </div>
 
           {/* Hero Image/Visual Section */}
-          {/* <HeroVisual/> */}
-          <HeroImage src={"/products/hero.png"}></HeroImage>
+          <HeroVisual />
 
         </div>
       </div>
@@ -113,4 +112,4 @@ const Hero1 = ({
   );
 };
 
-export { Hero1 };
+export { Hero };
