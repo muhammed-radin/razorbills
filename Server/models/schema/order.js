@@ -1,7 +1,6 @@
 const { Schema } = require("mongoose");
 const { Product } = require("../product");
 const mongoose = require("mongoose");
-const { is } = require("zod/v4/locales");
 
 const OrderSchema = new Schema({
   id: { type: String, required: true, unique: true },
@@ -61,6 +60,10 @@ const OrderSchema = new Schema({
 });
 
 /* Utility Methods */
+OrderSchema.pre("save", function (next) {
+  this.updatedAt = new Date();
+  next();
+});
 
 OrderSchema.methods.markAsPaid = function () {
   this.isPaid = true;
@@ -81,7 +84,7 @@ OrderSchema.methods.markAsDelivered = function () {
   this.status = "Delivered";
   this.deliveredAt = new Date();
   return this.save();
-}
+};
 
 OrderSchema.methods.cancelOrder = function () {
   this.isCancelled = true;
@@ -109,6 +112,45 @@ OrderSchema.statics.createOrder = function (orderData) {
   const order = new this(orderData);
   return order.save();
 };
+
+OrderSchema.statics.getOrderById = function (orderId) {
+  return this.findOne({ id: orderId });
+};
+
+OrderSchema.statics.getOrdersByUserId = function (userId) {
+  return this.find({ userId: userId });
+};
+
+// Updtate order status
+OrderSchema.statics.updateOrderStatus = function (orderId, status) {
+  return this.findOneAndUpdate({ id: orderId }, { status: status }, { new: true });
+};
+
+// Delete order
+OrderSchema.statics.deleteOrder = function (orderId) {
+  return this.findOneAndDelete({ id: orderId });
+}
+
+// cancel order
+OrderSchema.statics.cancelOrderById = function (orderId) {
+  return this.findOneAndUpdate({ id: orderId }, { isCancelled: true, status: "Cancelled", cancelledAt: new Date() }, { new: true });
+};
+
+// shipment info update
+OrderSchema.statics.updateShipmentInfo = function (orderId, shipmentInfo) {
+  return this.findOneAndUpdate({ id: orderId }, { deliveryServiceInfo: shipmentInfo }, { new: true });
+};
+
+// events of order
+OrderSchema.statics.getOrdersByStatus = function (status) {
+  return this.find({ status: status }); 
+}
+
+// update estimated delivery date
+OrderSchema.statics.updateEstimatedDelivery = function (orderId, estimatedDate) {
+  return this.findOneAndUpdate({ id: orderId }, { estimatedDelivery: estimatedDate, updatedAt: new Date() }, { new: true });
+};
+
 
 const OrderModel = mongoose.model("Order", OrderSchema, "orders");
 

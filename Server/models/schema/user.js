@@ -20,10 +20,6 @@ const UserSchema = new Schema({
   preferences: { type: Schema.Types.Mixed, default: {} },
   provider: { type: String, default: "local" },
 
-  /// Additional fields for enhanced user profile
-  // wishlist: { type: [String], default: [] },
-  // cart: { type: [String], default: [] },
-
   // orderInfo { orders: 100, lastOrderDate: Date, lastOrderId: String }
   orderInfo: {
     orders: { type: Number, default: 0 },
