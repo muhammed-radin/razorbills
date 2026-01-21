@@ -19,7 +19,9 @@ import {
     TrendingUp,
     Sparkles,
     ArrowRight,
-    Package
+    Package,
+    Eye,
+    Zap
 } from "lucide-react";
 
 const defaultProducts = [
@@ -80,10 +82,11 @@ const defaultProducts = [
     }
 ];
 
-// Compact Product Card for this carousel
+// Unique Floating Card Design
 function CompactProductCard({ product, variant = "default" }) {
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
     const discount = product.originalPrice
         ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -93,146 +96,253 @@ function CompactProductCard({ product, variant = "default" }) {
     const isTopRated = variant === "top-rated";
 
     return (
-        <Card className={cn(
-            "group relative overflow-hidden h-full",
-            "rounded-xl sm:rounded-2xl border",
-            "bg-card hover:bg-accent/5",
-            "transition-all duration-300 ease-out",
-            "hover:shadow-lg hover:-translate-y-1",
-            isNewArrivals && "border-primary/20 hover:border-primary/40",
-            isTopRated && "border-amber-500/20 hover:border-amber-500/40"
-        )}>
-            {/* Image Section */}
-            <div className="relative aspect-square overflow-hidden bg-muted/30">
-                {!imageLoaded && (
-                    <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
-                        <Package className="size-8 text-muted-foreground/30" />
-                    </div>
-                )}
-                <img
-                    src={product.image}
-                    alt={product.title}
-                    className={cn(
-                        "w-full h-full object-cover",
-                        "transition-transform duration-500",
-                        "group-hover:scale-110",
-                        !imageLoaded && "opacity-0"
-                    )}
-                    onLoad={() => setImageLoaded(true)}
-                    draggable={false}
-                />
+        <div
+            className="group relative h-full perspective-1000"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {/* Floating Glow Effect */}
+            <div className={cn(
+                "absolute -inset-1 rounded-3xl opacity-0 blur-xl transition-all duration-500",
+                "group-hover:opacity-60",
+                isNewArrivals && "bg-gradient-to-br from-violet-500/40 via-primary/30 to-fuchsia-500/40",
+                isTopRated && "bg-gradient-to-br from-amber-400/40 via-orange-500/30 to-rose-500/40",
+                !isNewArrivals && !isTopRated && "bg-gradient-to-br from-cyan-500/40 via-blue-500/30 to-indigo-500/40"
+            )} />
 
-                {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-
-                {/* Top Badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    {isNewArrivals && product.isNew && (
-                        <Badge className="bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 gap-0.5">
-                            <Sparkles className="size-2.5" />
-                            New
-                        </Badge>
-                    )}
-                    {isTopRated && product.rating >= 4.8 && (
-                        <Badge className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 gap-0.5">
-                            <Star className="size-2.5 fill-white" />
-                            Top
-                        </Badge>
-                    )}
-                    {discount > 0 && (
-                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5">
-                            -{discount}%
-                        </Badge>
-                    )}
-                </div>
-
-                {/* Wishlist Button */}
-                <Button
-                    size="icon"
-                    variant="secondary"
-                    className={cn(
-                        "absolute top-2 right-2 size-7 sm:size-8 rounded-full",
-                        "bg-background/80 backdrop-blur-sm shadow-sm",
-                        "opacity-0 group-hover:opacity-100 transition-all duration-300",
-                        "hover:scale-110",
-                        isWishlisted && "opacity-100 bg-rose-50 dark:bg-rose-950"
-                    )}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setIsWishlisted(!isWishlisted);
-                    }}
-                >
-                    <Heart className={cn(
-                        "size-3.5 sm:size-4",
-                        isWishlisted ? "fill-rose-500 text-rose-500" : "text-muted-foreground"
-                    )} />
-                </Button>
-
-                {/* Quick Add Button */}
+            {/* Main Card */}
+            <Card className={cn(
+                "relative overflow-hidden h-full",
+                "rounded-2xl sm:rounded-3xl border-0",
+                "bg-gradient-to-b from-background via-background to-muted/20",
+                "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]",
+                "dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)]",
+                "transition-all duration-500 ease-out",
+                "group-hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.25)]",
+                "group-hover:-translate-y-2 group-hover:rotate-[0.5deg]"
+            )}>
+                {/* Diagonal Accent Strip */}
                 <div className={cn(
-                    "absolute bottom-2 left-2 right-2",
-                    "opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0",
-                    "transition-all duration-300"
-                )}>
-                    <Button
-                        size="sm"
-                        className="w-full gap-1.5 rounded-lg text-xs h-8 shadow-lg"
-                    >
-                        <ShoppingCart className="size-3.5" />
-                        Add to Cart
-                    </Button>
-                </div>
-            </div>
+                    "absolute -top-10 -right-10 w-28 h-28 rotate-45",
+                    "transition-all duration-500 group-hover:scale-110",
+                    isNewArrivals && "bg-gradient-to-br from-violet-500 to-fuchsia-500",
+                    isTopRated && "bg-gradient-to-br from-amber-400 to-orange-500",
+                    !isNewArrivals && !isTopRated && "bg-gradient-to-br from-cyan-400 to-blue-500"
+                )} />
 
-            {/* Content Section */}
-            <CardContent className="p-2.5 sm:p-3 space-y-1.5">
-                {/* Category */}
-                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wide">
-                    {product.category}
-                </span>
-
-                {/* Title */}
-                <h3 className="text-xs sm:text-sm font-medium line-clamp-2 leading-snug group-hover:text-primary transition-colors">
-                    {product.title}
-                </h3>
-
-                {/* Rating */}
-                <div className="flex items-center gap-1">
-                    <div className="flex items-center">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                            <Star
-                                key={i}
-                                className={cn(
-                                    "size-3",
-                                    i < Math.floor(product.rating)
-                                        ? "fill-amber-400 text-amber-400"
-                                        : "fill-muted text-muted-foreground/30"
-                                )}
-                            />
-                        ))}
+                {/* Image Container with Unique Shape */}
+                <div className="relative mx-3 mt-3 overflow-hidden rounded-xl sm:rounded-2xl">
+                    {/* Image Background Pattern */}
+                    <div className="absolute inset-0 opacity-50">
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,0,0,0.02)_1px,transparent_1px)] bg-[length:8px_8px]" />
                     </div>
-                    <span className="text-[10px] text-muted-foreground">
-                        ({product.reviews})
-                    </span>
+
+                    {/* Loading State */}
+                    {!imageLoaded && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 animate-pulse flex items-center justify-center aspect-[4/5]">
+                            <div className="relative">
+                                <Package className="size-10 text-muted-foreground/20" />
+                                <Sparkles className="absolute -top-1 -right-1 size-4 text-muted-foreground/30 animate-pulse" />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Product Image */}
+                    <div className="aspect-[4/5] overflow-hidden bg-gradient-to-b from-muted/30 to-muted/10">
+                        <img
+                            src={product.image}
+                            alt={product.title}
+                            className={cn(
+                                "w-full h-full object-cover",
+                                "transition-all duration-700 ease-out",
+                                "group-hover:scale-110 group-hover:rotate-1",
+                                !imageLoaded && "opacity-0"
+                            )}
+                            onLoad={() => setImageLoaded(true)}
+                            draggable={false}
+                        />
+                    </div>
+
+                    {/* Gradient Overlay */}
+                    <div className={cn(
+                        "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+                        "bg-gradient-to-t from-black/60 via-transparent to-transparent"
+                    )} />
+
+                    {/* Floating Discount Badge */}
+                    {discount > 0 && (
+                        <div className={cn(
+                            "absolute top-3 left-3",
+                            "px-2.5 py-1 rounded-full",
+                            "bg-gradient-to-r from-rose-500 to-pink-500",
+                            "text-white text-[10px] sm:text-xs font-bold",
+                            "shadow-lg shadow-rose-500/30",
+                            "flex items-center gap-1",
+                            "animate-in slide-in-from-left duration-300"
+                        )}>
+                            <Zap className="size-3 fill-white" />
+                            {discount}% OFF
+                        </div>
+                    )}
+
+                    {/* Category Pill - Top Right */}
+                    <div className={cn(
+                        "absolute top-3 right-3 z-10",
+                        "transition-all duration-300",
+                        "group-hover:translate-x-0 group-hover:opacity-100",
+                        isHovered ? "translate-x-0 opacity-100" : "translate-x-2 opacity-0"
+                    )}>
+                        <span className={cn(
+                            "px-2.5 py-1 rounded-full text-[10px] font-medium",
+                            "bg-white/90 dark:bg-black/70 backdrop-blur-md",
+                            "text-foreground shadow-sm"
+                        )}>
+                            {product.category}
+                        </span>
+                    </div>
+
+                    {/* New/Top Badge */}
+                    {(isNewArrivals && product.isNew) || (isTopRated && product.rating >= 4.8) ? (
+                        <div className={cn(
+                            "absolute bottom-3 left-3",
+                            "px-2 py-1 rounded-lg",
+                            "backdrop-blur-md shadow-lg",
+                            "flex items-center gap-1.5",
+                            "animate-in fade-in slide-in-from-bottom duration-500",
+                            isNewArrivals && "bg-violet-500/90 text-white",
+                            isTopRated && "bg-amber-500/90 text-white"
+                        )}>
+                            {isNewArrivals ? (
+                                <>
+                                    <Sparkles className="size-3" />
+                                    <span className="text-[10px] font-semibold">NEW</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Star className="size-3 fill-white" />
+                                    <span className="text-[10px] font-semibold">TOP RATED</span>
+                                </>
+                            )}
+                        </div>
+                    ) : null}
+
+                    {/* Action Buttons - Floating */}
+                    <div className={cn(
+                        "absolute bottom-3 right-3 flex flex-col gap-2",
+                        "transition-all duration-300 ease-out",
+                        isHovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                    )}>
+                        <Button
+                            size="icon"
+                            className={cn(
+                                "size-9 rounded-xl shadow-lg",
+                                "bg-white/90 dark:bg-black/70 backdrop-blur-md",
+                                "hover:bg-white dark:hover:bg-black hover:scale-110",
+                                "text-foreground",
+                                "transition-all duration-200",
+                                isWishlisted && "bg-rose-50 dark:bg-rose-950"
+                            )}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsWishlisted(!isWishlisted);
+                            }}
+                        >
+                            <Heart className={cn(
+                                "size-4",
+                                isWishlisted ? "fill-rose-500 text-rose-500" : ""
+                            )} />
+                        </Button>
+                        <Button
+                            size="icon"
+                            className={cn(
+                                "size-9 rounded-xl shadow-lg",
+                                "bg-white/90 dark:bg-black/70 backdrop-blur-md",
+                                "hover:bg-white dark:hover:bg-black hover:scale-110",
+                                "text-foreground",
+                                "transition-all duration-200"
+                            )}
+                        >
+                            <Eye className="size-4" />
+                        </Button>
+                    </div>
                 </div>
 
-                {/* Price */}
-                <div className="flex items-center gap-1.5 pt-1">
-                    <span className={cn(
-                        "text-sm sm:text-base font-bold",
-                        isNewArrivals && "text-primary",
-                        isTopRated && "text-amber-600 dark:text-amber-500"
+                {/* Content Section */}
+                <CardContent className="p-3 sm:p-4 space-y-2">
+                    {/* Title */}
+                    <h3 className={cn(
+                        "text-sm sm:text-base font-semibold line-clamp-2 leading-tight",
+                        "transition-colors duration-300",
+                        "group-hover:text-transparent group-hover:bg-clip-text",
+                        isNewArrivals && "group-hover:bg-gradient-to-r group-hover:from-violet-600 group-hover:to-fuchsia-600",
+                        isTopRated && "group-hover:bg-gradient-to-r group-hover:from-amber-500 group-hover:to-orange-500",
+                        !isNewArrivals && !isTopRated && "group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-500"
                     )}>
-                        {currency(product.price)}
-                    </span>
-                    {product.originalPrice && (
-                        <span className="text-[10px] sm:text-xs text-muted-foreground line-through">
-                            {currency(product.originalPrice)}
+                        {product.title}
+                    </h3>
+
+                    {/* Rating - Unique Style */}
+                    <div className="flex items-center gap-2">
+                        <div className={cn(
+                            "flex items-center gap-1 px-2 py-0.5 rounded-full",
+                            "bg-amber-50 dark:bg-amber-950/50"
+                        )}>
+                            <Star className="size-3 fill-amber-400 text-amber-400" />
+                            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                                {product.rating}
+                            </span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">
+                            {product.reviews} reviews
                         </span>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+                    </div>
+
+                    {/* Price Section */}
+                    <div className="flex items-end justify-between pt-1">
+                        <div className="space-y-0.5">
+                            <span className={cn(
+                                "text-lg sm:text-xl font-bold",
+                                isNewArrivals && "text-violet-600 dark:text-violet-400",
+                                isTopRated && "text-amber-600 dark:text-amber-400",
+                                !isNewArrivals && !isTopRated && "text-foreground"
+                            )}>
+                                {currency(product.price)}
+                            </span>
+                            {product.originalPrice && (
+                                <p className="text-xs text-muted-foreground line-through">
+                                    {currency(product.originalPrice)}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Add to Cart - Circular Button */}
+                        <Button
+                            size="icon"
+                            className={cn(
+                                "size-10 rounded-full shadow-md",
+                                "transition-all duration-300",
+                                "hover:scale-110 hover:shadow-lg",
+                                isNewArrivals && "bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600",
+                                isTopRated && "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600",
+                                !isNewArrivals && !isTopRated && "bg-gradient-to-br from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                            )}
+                        >
+                            <ShoppingCart className="size-4 text-white" />
+                        </Button>
+                    </div>
+                </CardContent>
+
+                {/* Bottom Accent Line */}
+                <div className={cn(
+                    "absolute bottom-0 left-0 right-0 h-1",
+                    "transform scale-x-0 group-hover:scale-x-100",
+                    "transition-transform duration-500 origin-left",
+                    isNewArrivals && "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-pink-500",
+                    isTopRated && "bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500",
+                    !isNewArrivals && !isTopRated && "bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500"
+                )} />
+            </Card>
+        </div>
     );
 }
 
@@ -312,17 +422,18 @@ export default function ModernCarousel({
                     opts={{
                         loop: true,
                         align: "start",
-                        dragFree: false,
+                        dragFree: true,
+                        skipSnaps: true,
                         containScroll: "trimSnaps"
                     }}
                 >
-                    <CarouselContent className="-ml-2 sm:-ml-3 md:-ml-4">
+                    <CarouselContent className="-ml-3 sm:-ml-4 md:-ml-5 lg:-ml-6" >
                         {displayProducts.map((product, index) => (
                             <CarouselItem
                                 key={product.id || index}
                                 className={cn(
-                                    "pl-2 sm:pl-3 md:pl-4",
-                                    "basis-[45%] xs:basis-[40%] sm:basis-[32%] md:basis-[25%] lg:basis-[20%] xl:basis-[16.66%]"
+                                    "pl-3 sm:pl-4 md:pl-5 lg:pl-6",
+                                    "basis-[58%] xs:basis-[45%] sm:basis-[35%] md:basis-[30%] lg:basis-[25%] xl:basis-[22%] 2xl:basis-[20%]"
                                 )}
                             >
                                 <CompactProductCard
@@ -352,8 +463,7 @@ export default function ModernCarousel({
                             "bg-background border shadow-md",
                             "hover:bg-accent hover:scale-105",
                             "transition-all duration-200"
-                        )}
-                    />
+                        )} />
                 </Carousel>
 
                 {/* Mobile Dot Indicators */}

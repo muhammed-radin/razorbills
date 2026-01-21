@@ -86,9 +86,15 @@ export default function FeaturedCarousel({
         setCount(api.scrollSnapList().length);
         setCurrent(api.selectedScrollSnap() + 1);
 
-        api.on("select", () => {
+        const onSelect = () => {
             setCurrent(api.selectedScrollSnap() + 1);
-        });
+        };
+
+        api.on("select", onSelect);
+
+        return () => {
+            api.off("select", onSelect);
+        };
     }, [api]);
 
     return (
@@ -142,26 +148,35 @@ export default function FeaturedCarousel({
                     opts={{
                         loop: true,
                         align: "start",
-                        dragFree: false,
-                        containScroll: "trimSnaps"
+                        dragFree: true,
+                        skipSnaps: true,
+                        duration: 25,
+                        containScroll: "trimSnaps",
+                        inViewThreshold: 0.7
                     }}
                 >
-                    <CarouselContent className="-ml-3 sm:-ml-4 md:-ml-5 lg:-ml-6">
+                    <CarouselContent className="-ml-3 sm:-ml-4 md:-ml-5 lg:-ml-6 [&>*]:transition-transform [&>*]:duration-300 [&>*]:ease-out">
                         {displayProducts.map((product, index) => (
                             <CarouselItem
                                 key={index}
                                 className={cn(
                                     "pl-3 sm:pl-4 md:pl-5 lg:pl-6",
-                                    "basis-[88%] xs:basis-[80%] sm:basis-[57%] md:basis-[45%] lg:basis-[36%] xl:basis-[30%]"
+                                    "basis-[88%] xs:basis-[80%] sm:basis-[57%] md:basis-[45%] lg:basis-[36%] xl:basis-[30%]",
+                                    "will-change-transform"
                                 )}
+                                style={{
+                                    transform: 'translateZ(0)',
+                                    backfaceVisibility: 'hidden'
+                                }}
                             >
                                 <FeaturedCard
                                     {...product}
                                     className={cn(
-                                        "transition-all duration-500",
+                                        "transition-all duration-300 ease-out",
+                                        "transform-gpu",
                                         current === index + 1
                                             ? "scale-100 opacity-100"
-                                            : "scale-[0.99] opacity-95 hover:opacity-100"
+                                            : "scale-[0.98] opacity-90 hover:opacity-100 hover:scale-[0.99]"
                                     )}
                                 />
                             </CarouselItem>
