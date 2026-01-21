@@ -27,7 +27,7 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
   }, [api]);
 
   return (
-    <section className="relative w-full py-6 sm:py-10 md:py-14">
+    <section className="relative w-full py-6 sm:py-10 md:py-14 my-3">
 
       {/* Section Header */}
       {showTitle && (
