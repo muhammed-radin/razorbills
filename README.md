@@ -4,7 +4,15 @@
 
 RazorBills is a modern, responsive e-commerce platform specializing in electronic components and gadgets. Built with cutting-edge web technologies, it provides a seamless shopping experience for electronics enthusiasts, hobbyists, and professionals.
 
-![RazorBills Homepage](https://github.com/user-attachments/assets/5ef364c0-94c7-4a6d-a03c-02a006bff5b5)
+![RazorBills Homepage](https://github.com/user-attachments/assets/30a793b0-d4ee-41ef-bb94-95a9285c74b2)
+
+## 📸 Screenshots
+
+### Login Page
+![RazorBills Login](https://github.com/user-attachments/assets/05422abb-664e-4fb3-8160-933aca673254)
+
+### Sign Up Page
+![RazorBills Sign Up](https://github.com/user-attachments/assets/d4a0f21c-3296-4089-828b-2443b53e4deb)
 
 ## 🚀 Features
 
