@@ -18,7 +18,7 @@ import {
     Package
 } from "lucide-react";
 import FruitShowcaseCard from "@/components/showcase-card";
-import FoodMenuCard from "@/components/menu-card";
+import FoodMenuCard from "@/components/modern-menu-list-card";
 
 const defaultItems = [
     {
@@ -310,7 +310,7 @@ export default function ContentGrid({ items, title = "Explore More", showTitle =
                                 name: "Electronics",
                                 title: "Power Your Projects",
                                 description: "Discover our wide range of electronic components including resistors, capacitors, LEDs, and microcontrollers. Perfect for hobbyists and professionals alike.",
-                                image: "/products/Battery.png",
+                                image: "/products/electronics.png",
                                 color: "#3b82f6"
                             },
                             {
@@ -318,7 +318,7 @@ export default function ContentGrid({ items, title = "Explore More", showTitle =
                                 name: "Audio",
                                 title: "Premium Sound",
                                 description: "Experience crystal clear audio with our selection of speakers, headphones, and audio accessories. Designed for immersive listening.",
-                                image: "/products/Speaker.webp",
+                                image: "/products/headphone.png",
                                 color: "#8b5cf6"
                             },
                             {
@@ -326,13 +326,13 @@ export default function ContentGrid({ items, title = "Explore More", showTitle =
                                 name: "Lighting",
                                 title: "Illuminate Your Space",
                                 description: "Transform any environment with our LED strips, bulbs, and smart lighting solutions. Energy efficient and vibrant colors.",
-                                image: "/products/LedStrip.webp",
+                                image: "/products/joystick.png",
                                 color: "#10b981"
                             }
                         ]}
                     />
                     <FoodMenuCard
-                        className="lg:max-w-[380px] bg-gradient-to-br from-violet-500 to-purple-600"
+                        className="lg:max-w-[380px] bg-gradient-to-br from-amber-300 to-amber-800"
                         items={[
                             {
                                 id: 1,

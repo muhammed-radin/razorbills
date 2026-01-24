@@ -68,7 +68,7 @@ export default function HomePage() {
         ) : (
           <>
             {/* Highlighted Image Slider - Full Width Hero Style */}
-            <HighlightedSlider/>
+            <HighlightedSlider className=""/>
 
             {/* Featured Products Carousel - Premium Cards */}
             <FeaturedCarousel title="Featured Collection"/>

@@ -18,7 +18,7 @@ const slides = [
         title: "Premium Wireless Audio",
         subtitle: "Experience Sound Like Never Before",
         description: "Immerse yourself in crystal-clear audio with our flagship headphones featuring active noise cancellation.",
-        image: "/products/Headphone.jpg",
+        image: "/headphone-mockup.png",
         price: 2999,
         originalPrice: 4999,
         badge: "Best Seller",
@@ -40,7 +40,7 @@ const slides = [
         title: "Portable Power Station",
         subtitle: "Power On The Go",
         description: "Never run out of power with our high-capacity portable battery. Fast charging for all devices.",
-        image: "/products/Battery.png",
+        image: "/mockup-1.png",
         price: 3499,
         originalPrice: 4999,
         badge: "Limited Edition",
@@ -51,7 +51,7 @@ const slides = [
         title: "Premium Sound System",
         subtitle: "Concert Quality Audio",
         description: "Bring the concert home with our powerful speaker system. Deep bass, crisp highs.",
-        image: "/products/Speaker.webp",
+        image: "/speaker-mockup.png",
         price: 5999,
         originalPrice: 7999,
         badge: "Top Rated",
@@ -59,7 +59,7 @@ const slides = [
     }
 ];
 
-export default function HighlightedSlider({ customSlides, autoPlay = true, interval = 5000 }) {
+export default function HighlightedSlider({ customSlides, autoPlay = true, interval = 5000, className }) {
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -205,11 +205,11 @@ export default function HighlightedSlider({ customSlides, autoPlay = true, inter
     const theme = themeColors[current.theme] || themeColors.violet;
 
     return (
-        <section className="relative w-full my-4 sm:my-8 md:my-12 overflow-hidden max-w-7xl mx-auto">
-            <div className="max-w-[98%] sm:max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto">
+        <section className={cn("relative w-full my-4 sm:my-8 md:my-12 overflow-hidden max-w-7xl mx-auto", className)}>
+            <div className="max-w-[95%] sm:max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto">
                 <div
                     ref={sliderRef}
-                    className="relative h-[420px] xs:h-[450px] sm:h-[400px] md:h-[420px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing select-none"
+                    className="relative h-[320px] xs:h-[450px] sm:h-[400px] md:h-[420px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl cursor-grab active:cursor-grabbing select-none"
                     onTouchStart={onTouchStart}
                     onTouchMove={onTouchMove}
                     onTouchEnd={onTouchEnd}

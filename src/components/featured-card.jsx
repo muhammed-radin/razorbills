@@ -93,7 +93,7 @@ export default function FeaturedCard({
         <Card
             className={cn(
                 "group relative overflow-hidden",
-                "min-w-[280px] sm:min-w-[320px] h-[420px] sm:h-[460px]",
+                "min-w-[280px] sm:min-w-[320px] h-[500px] sm:h-[500px]",
                 "rounded-3xl border-2",
                 colors.border,
                 "bg-gradient-to-br from-background via-background to-muted/30",
@@ -168,7 +168,7 @@ export default function FeaturedCard({
             </div>
 
             {/* Image Section */}
-            <div className="relative h-[55%] overflow-hidden">
+            <div className="relative h-[200px] sm:h-[200px] overflow-hidden">
                 {!imageLoaded && (
                     <div className="absolute inset-0 bg-muted animate-pulse flex items-center justify-center">
                         <Package className="size-12 text-muted-foreground/30" />

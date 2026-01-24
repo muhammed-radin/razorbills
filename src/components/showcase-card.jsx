@@ -11,7 +11,7 @@ export default function FruitShowcaseCard({
             name: "Lime",
             title: "The Power of Fruits",
             description: "Sed lectus dolor, fringilla ac dapibus nec, molestie ac neque. Vestibulum efficitur magna nec risus tincidunt venenatis. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur purus sem, dictum vel ultricies at, faucibus sit amet nisl. Cras sodales mauris sit amet egestas posuere.",
-            image: "/products/lime.png",
+            image: "/products/headphone.png",
             color: "#84cc16" // lime green
         },
         {
@@ -44,21 +44,22 @@ export default function FruitShowcaseCard({
                 "rounded-3xl border-0",
                 "bg-white dark:bg-zinc-900",
                 "shadow-xl",
+                "flex flex-col",
                 className
             )}
         >
             {/* Gradient Background on right side */}
             <div
-                className="absolute right-0 top-0 bottom-0 w-[45%] transition-colors duration-500"
+                className="absolute max-sm:left-0 sm:right-0 top-0 bottom-0 max-sm:w-full sm:w-[45%] transition-colors duration-500"
                 style={{
                     background: `linear-gradient(135deg, ${activeItem.color}40 0%, ${activeItem.color}80 50%, ${activeItem.color} 100%)`
                 }}
             />
 
             {/* Product Name Label - Top Right */}
-            <div className="absolute top-4 right-6 z-10">
+            <div className="absolute top-4 sm:right-6 max-sm:left-6 z-10">
                 <span
-                    className="text-xl sm:text-2xl font-light tracking-wider uppercase transition-colors duration-300"
+                    className="text-xl sm:text-2xl font-bold tracking-wider uppercase transition-colors duration-300"
                     style={{ color: activeItem.color }}
                 >
                     {activeItem.name}
@@ -93,11 +94,11 @@ export default function FruitShowcaseCard({
                     </div>
 
                     {/* Title & Description */}
-                    <div className="space-y-3 flex-1 flex flex-col justify-center">
+                    <div className="space-y-3 flex-1 flex flex-col justify-center mt-4">
                         <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                             {activeItem.title}
                         </h2>
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-5">
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed line-clamp-5 max-sm:line-clamp-4 mb-3">
                             {activeItem.description}
                         </p>
                     </div>

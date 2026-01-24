@@ -72,7 +72,8 @@ const defaultProducts = [
 export default function FeaturedCarousel({
     products,
     title = "Featured Collection",
-    showTitle = true
+    showTitle = true,
+    className
 }) {
     const [api, setApi] = useState();
     const [current, setCurrent] = useState(0);
@@ -98,7 +99,7 @@ export default function FeaturedCarousel({
     }, [api]);
 
     return (
-        <section className="relative w-full py-6 sm:py-8 md:py-12 my-2 sm:my-4 overflow-hidden max-w-7xl mx-auto">
+        <section className={cn("relative w-full py-6 sm:py-8 md:py-12 my-2 sm:my-4 overflow-hidden max-w-7xl mx-auto", className)}>
             {/* Section Header */}
             {showTitle && (
                 <header className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto mb-6 sm:mb-8 px-2">
