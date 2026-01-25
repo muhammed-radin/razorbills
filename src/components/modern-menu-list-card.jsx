@@ -26,7 +26,7 @@ function FoodMenuItem({
                 <img
                     src={image}
                     alt={name}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain rounded-md"
                 />
             </div>
 
@@ -76,9 +76,18 @@ export default function FoodMenuCard({
                 "bg-amber-400",
                 "p-4 sm:p-6",
                 "shadow-xl",
+                "relative ",
                 className
             )}
         >
+            {/* background image */}
+            <img
+                src="/yellow-grid.jpg"
+                alt="Food Menu Background"
+                className="absolute top-0 left-0 w-full scale-200
+                 opacity-20 pointer-events-none select-none"
+            />
+
             <div className="space-y-3">
                 {items.map((item) => (
                     <FoodMenuItem
