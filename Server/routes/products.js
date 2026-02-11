@@ -24,31 +24,49 @@ router.get("/", async function (req, res, next) {
     // Build query object
     const query = {};
 
-    // Text search across multiple fields
+    // Helper function to escape regex special characters
+    const escapeRegex = (str) => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+
+    // Text search across multiple fields (with regex escaping)
     if (search) {
+      const escapedSearch = escapeRegex(search);
       query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { brand: { $regex: search, $options: "i" } },
-        { category: { $regex: search, $options: "i" } },
+        { title: { $regex: escapedSearch, $options: "i" } },
+        { description: { $regex: escapedSearch, $options: "i" } },
+        { brand: { $regex: escapedSearch, $options: "i" } },
+        { category: { $regex: escapedSearch, $options: "i" } },
       ];
     }
 
-    // Filter by category
+    // Filter by category (with regex escaping)
     if (category) {
-      query.category = { $regex: category, $options: "i" };
+      query.category = { $regex: escapeRegex(category), $options: "i" };
     }
 
-    // Filter by brand
+    // Filter by brand (with regex escaping)
     if (brand) {
-      query.brand = { $regex: brand, $options: "i" };
+      query.brand = { $regex: escapeRegex(brand), $options: "i" };
     }
 
-    // Filter by price range
+    // Filter by price range (with validation)
     if (minPrice || maxPrice) {
       query.price = {};
-      if (minPrice) query.price.$gte = parseFloat(minPrice);
-      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+      if (minPrice) {
+        const min = parseFloat(minPrice);
+        if (isNaN(min) || min < 0) {
+          return res.status(400).json({ error: "Invalid minPrice parameter" });
+        }
+        query.price.$gte = min;
+      }
+      if (maxPrice) {
+        const max = parseFloat(maxPrice);
+        if (isNaN(max) || max < 0) {
+          return res.status(400).json({ error: "Invalid maxPrice parameter" });
+        }
+        query.price.$lte = max;
+      }
     }
 
     // Filter by tags
@@ -63,14 +81,39 @@ router.get("/", async function (req, res, next) {
       query.keywords = { $in: keywordArray };
     }
 
-    // Pagination
+    // Pagination (with validation)
     const pageNum = parseInt(page) || 1;
     const limitNum = parseInt(limit) || 10;
+    
+    // Validate pagination parameters
+    if (pageNum < 1 || limitNum < 1 || limitNum > 100) {
+      return res.status(400).json({ 
+        error: "Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 100" 
+      });
+    }
+    
     const skip = (pageNum - 1) * limitNum;
 
-    // Sorting
+    // Sorting (with whitelist validation)
+    const allowedSortFields = [
+      "title",
+      "price",
+      "originalPrice",
+      "category",
+      "brand",
+      "rating",
+      "stock",
+      "createdAt",
+      "updatedAt",
+    ];
+    
     let sort = {};
     if (sortBy) {
+      if (!allowedSortFields.includes(sortBy)) {
+        return res.status(400).json({ 
+          error: `Invalid sortBy parameter. Allowed fields: ${allowedSortFields.join(", ")}` 
+        });
+      }
       const sortOrder = order === "desc" ? -1 : 1;
       sort[sortBy] = sortOrder;
     } else {
