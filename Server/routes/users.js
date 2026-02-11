@@ -10,7 +10,7 @@ router.get('/', function(req, res, next) {
 /* POST create a new user */
 router.post('/', async function(req, res, next) {
   try {
-    const { email, password, name, id, provider, profilePicture, role, phoneNumber, address } = req.body;
+    const { email, password, name, id, provider, profilePicture, phoneNumber, address } = req.body;
 
     // Validate required fields
     if (!email || !password || !name) {
@@ -23,7 +23,7 @@ router.post('/', async function(req, res, next) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
 
-    // Create new user
+    // Create new user (password expected to be encrypted by client, role defaults to 'user')
     const newUser = new UserModel({
       id: id || new Date().getTime().toString(),
       email: email,
@@ -31,7 +31,6 @@ router.post('/', async function(req, res, next) {
       name: name,
       profilePicture: profilePicture || null,
       provider: provider || 'local',
-      role: role || 'user',
       phoneNumber: phoneNumber || '',
       address: address || '',
     });
