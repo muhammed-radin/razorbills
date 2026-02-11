@@ -4,10 +4,148 @@ const db = require("../utils/db");
 const ProductModel = require("../models/schema/product").ProductModel;
 
 
-/* GET */
+/* GET with search and query support */
 router.get("/", async function (req, res, next) {
-  const products = await db.collection("products").find({});
-  res.json(await products.toArray());
+  try {
+    const {
+      search,
+      category,
+      brand,
+      minPrice,
+      maxPrice,
+      tags,
+      keywords,
+      sortBy,
+      order,
+      page,
+      limit,
+    } = req.query;
+
+    // Build query object
+    const query = {};
+
+    // Helper function to escape regex special characters
+    const escapeRegex = (str) => {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    };
+
+    // Text search across multiple fields (with regex escaping)
+    if (search) {
+      const escapedSearch = escapeRegex(search);
+      query.$or = [
+        { title: { $regex: escapedSearch, $options: "i" } },
+        { description: { $regex: escapedSearch, $options: "i" } },
+        { brand: { $regex: escapedSearch, $options: "i" } },
+        { category: { $regex: escapedSearch, $options: "i" } },
+      ];
+    }
+
+    // Filter by category (with regex escaping)
+    if (category) {
+      query.category = { $regex: escapeRegex(category), $options: "i" };
+    }
+
+    // Filter by brand (with regex escaping)
+    if (brand) {
+      query.brand = { $regex: escapeRegex(brand), $options: "i" };
+    }
+
+    // Filter by price range (with validation)
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) {
+        const min = parseFloat(minPrice);
+        if (isNaN(min) || min < 0) {
+          return res.status(400).json({ error: "Invalid minPrice parameter" });
+        }
+        query.price.$gte = min;
+      }
+      if (maxPrice) {
+        const max = parseFloat(maxPrice);
+        if (isNaN(max) || max < 0) {
+          return res.status(400).json({ error: "Invalid maxPrice parameter" });
+        }
+        query.price.$lte = max;
+      }
+    }
+
+    // Filter by tags
+    if (tags) {
+      const tagArray = tags.split(",").map((tag) => tag.trim());
+      query.tags = { $in: tagArray };
+    }
+
+    // Filter by keywords
+    if (keywords) {
+      const keywordArray = keywords.split(",").map((keyword) => keyword.trim());
+      query.keywords = { $in: keywordArray };
+    }
+
+    // Pagination (with validation)
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    
+    // Validate pagination parameters
+    if (pageNum < 1 || limitNum < 1 || limitNum > 100) {
+      return res.status(400).json({ 
+        error: "Invalid pagination parameters. Page must be >= 1, limit must be between 1 and 100" 
+      });
+    }
+    
+    const skip = (pageNum - 1) * limitNum;
+
+    // Sorting (with whitelist validation)
+    const allowedSortFields = [
+      "title",
+      "price",
+      "originalPrice",
+      "category",
+      "brand",
+      "rating",
+      "stock",
+      "createdAt",
+      "updatedAt",
+    ];
+    
+    let sort = {};
+    if (sortBy) {
+      if (!allowedSortFields.includes(sortBy)) {
+        return res.status(400).json({ 
+          error: `Invalid sortBy parameter. Allowed fields: ${allowedSortFields.join(", ")}` 
+        });
+      }
+      const sortOrder = order === "desc" ? -1 : 1;
+      sort[sortBy] = sortOrder;
+    } else {
+      sort.createdAt = -1; // Default sort by creation date
+    }
+
+    // Execute query with pagination and sorting
+    const products = await db
+      .collection("products")
+      .find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum);
+
+    const productsArray = await products.toArray();
+
+    // Get total count for pagination
+    const total = await db.collection("products").countDocuments(query);
+
+    res.json({
+      products: productsArray,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
 });
 
 router.get("/:productid", async function (req, res) {
