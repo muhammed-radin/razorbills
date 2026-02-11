@@ -4,10 +4,105 @@ const db = require("../utils/db");
 const ProductModel = require("../models/schema/product").ProductModel;
 
 
-/* GET */
+/* GET with search and query support */
 router.get("/", async function (req, res, next) {
-  const products = await db.collection("products").find({});
-  res.json(await products.toArray());
+  try {
+    const {
+      search,
+      category,
+      brand,
+      minPrice,
+      maxPrice,
+      tags,
+      keywords,
+      sortBy,
+      order,
+      page,
+      limit,
+    } = req.query;
+
+    // Build query object
+    const query = {};
+
+    // Text search across multiple fields
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { brand: { $regex: search, $options: "i" } },
+        { category: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Filter by category
+    if (category) {
+      query.category = { $regex: category, $options: "i" };
+    }
+
+    // Filter by brand
+    if (brand) {
+      query.brand = { $regex: brand, $options: "i" };
+    }
+
+    // Filter by price range
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = parseFloat(minPrice);
+      if (maxPrice) query.price.$lte = parseFloat(maxPrice);
+    }
+
+    // Filter by tags
+    if (tags) {
+      const tagArray = tags.split(",").map((tag) => tag.trim());
+      query.tags = { $in: tagArray };
+    }
+
+    // Filter by keywords
+    if (keywords) {
+      const keywordArray = keywords.split(",").map((keyword) => keyword.trim());
+      query.keywords = { $in: keywordArray };
+    }
+
+    // Pagination
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 10;
+    const skip = (pageNum - 1) * limitNum;
+
+    // Sorting
+    let sort = {};
+    if (sortBy) {
+      const sortOrder = order === "desc" ? -1 : 1;
+      sort[sortBy] = sortOrder;
+    } else {
+      sort.createdAt = -1; // Default sort by creation date
+    }
+
+    // Execute query with pagination and sorting
+    const products = await db
+      .collection("products")
+      .find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum);
+
+    const productsArray = await products.toArray();
+
+    // Get total count for pagination
+    const total = await db.collection("products").countDocuments(query);
+
+    res.json({
+      products: productsArray,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res.status(500).json({ error: "Failed to fetch products" });
+  }
 });
 
 router.get("/:productid", async function (req, res) {
