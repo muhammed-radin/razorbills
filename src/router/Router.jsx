@@ -17,6 +17,7 @@ import AddressBookPage from '@/pages/addressbook/page'
 import AdminDashboardPage from '@/pages/Admin/dashboard/page'
 import AdminApp from '@/pages/Admin/admin.app'
 import AdminProductsPage from '@/pages/Admin/products/page'
+import AboutPage from '@/pages/aboutUs/page'
 import NewProductPage from '@/pages/Admin/products/new/page'
 import EditProductPage from '@/pages/Admin/products/edit/[id]'
 import OrdersPage from '@/pages/Admin/orders'
@@ -40,6 +41,7 @@ export default function Router() {
         <Route path="wishlist" element={<Wishlist />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="addressbook" element={<AddressBookPage />} />
+        <Route path='about' element={<AboutPage />} />
       </Route>
 
       <Route path="/admin" element={<AdminApp />} >

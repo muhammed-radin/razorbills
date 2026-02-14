@@ -61,7 +61,7 @@ const footerSections = [
     links: [
       {
         title: "About Us",
-        href: "#",
+        href: "/about",
       },
       {
         title: "Privacy Policy",
