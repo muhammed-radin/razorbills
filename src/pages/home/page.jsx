@@ -23,14 +23,14 @@ export default function HomePage() {
 
   React.useEffect(() => {
     // Fetch products from the API
-    axios.get(api.products())
-      .then(response => {
+    axios
+      .get(api.products())
+      .then((response) => {
         setProducts(response.data.products || response.data);
         setLoading(false);
-      }
-      )
-      .catch(error => {
-        console.error('Error fetching products:', error);
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
         setLoading(false);
       });
   }, []);
@@ -44,22 +44,26 @@ export default function HomePage() {
       <div className="p-3 sm:p-3 w-full max-w-7xl mx-auto">
         <br />
         <SearchBar />
-        <CategoryList items={[
-          "All",
-          "Resistor",
-          "Diode",
-          "LED",
-          "Transistor",
-          "Battery",
-          "Fuse",
-          "Potentiometer",
-          "Speaker",
-          "Microphone",
-          "Crystal Oscillator",
-          "Connector",
-          "Sensor",
-          "Microcontroller",
-        ]} className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap" tagClassName="max-sm:rounded-md" />
+        <CategoryList
+          items={[
+            "All",
+            "Resistor",
+            "Diode",
+            "LED",
+            "Transistor",
+            "Battery",
+            "Fuse",
+            "Potentiometer",
+            "Speaker",
+            "Microphone",
+            "Crystal Oscillator",
+            "Connector",
+            "Sensor",
+            "Microcontroller",
+          ]}
+          className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap"
+          tagClassName="max-sm:rounded-md"
+        />
       </div>
 
       <div className="w-full">
@@ -68,10 +72,10 @@ export default function HomePage() {
         ) : (
           <>
             {/* Highlighted Image Slider - Full Width Hero Style */}
-            <HighlightedSlider className=""/>
+            <HighlightedSlider className="" />
 
             {/* Featured Products Carousel - Premium Cards */}
-            <FeaturedCarousel title="Featured Collection"/>
+            <FeaturedCarousel title="Featured Collection" />
 
             {/* Content Grid - Categories & Offers */}
             <ContentGrid title="Explore Categories" />
@@ -81,7 +85,9 @@ export default function HomePage() {
 
             {/* Product Grid */}
             <div className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto py-6 sm:py-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 px-2">All Products</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 px-2">
+                All Products
+              </h2>
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
                 {products.map((product, index) => (
                   <ProductCard key={index} product={product} index={index} />
@@ -102,7 +108,10 @@ export default function HomePage() {
             <CarouselSlide title="Trending Now" />
 
             {/* Second Product Grid */}
-            <ClassicProcuctsSlider title="Recomended For You" products={products} />
+            <ClassicProcuctsSlider
+              title="Recomended For You"
+              products={products}
+            />
 
             {/* More Horizontal Cards */}
             <ListHorizontalProductCards />
