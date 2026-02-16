@@ -16,10 +16,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/api", indexRouter);
-
 // validate keys with env vars
-app.use(function (req, res, next) {
+function validateApiKeys(req, res, next) {
   if (
     req.headers["server-api-key"] === process.env.SERVER_API_KEY ||
     process.env.DEV_MODE === "true"
@@ -27,6 +25,7 @@ app.use(function (req, res, next) {
     next();
   } else {
     res.status(403).json({ message: "Forbidden: Invalid API Key" });
+    res.end();
     return;
   }
 
@@ -35,14 +34,17 @@ app.use(function (req, res, next) {
     req.method === "PUT" ||
     req.method === "DELETE"
   ) {
-    if (req.headers["actions-api-key"] === process.env.ACTION_ACESS_TOKEN) {
+    if (req.headers["actions-api-key"] === process.env.ACTION_ACCESS_TOKEN) {
       next();
     } else {
       res.status(403).json({ message: "Forbidden: Invalid Actions API Key" });
+      res.end();
       return;
     }
   }
-});
+}
+
+app.use("/api", validateApiKeys, indexRouter);
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");
