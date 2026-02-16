@@ -1,13 +1,35 @@
 var express = require("express");
 var router = express.Router();
 const db = require("../utils/db");
+const { productStatusCache } = require("../utils/cache/product-status");
+const { FeedMold } = require("../models/feed");
+const { MinimalProduct } = require("../models/schema/product");
+const { productFeedCache } = require("../utils/cache/product-feed");
 const ProductModel = require("../models/schema/product").ProductModel;
-
 
 /* GET */
 router.get("/", async function (req, res, next) {
-  const products = await db.collection("products").find({});
+  let limit = req.query.limit || req.body.limit || 40;
+  const products = await db.collection("products").find({}).limit(limit);
   res.json(await products.toArray());
+});
+
+router.get("/status", async function (req, res) {
+  // if (productStatusCache.get() !== null && req.query.realtime !== "true") {
+  //   return res.json(productStatusCache.get());
+  // }
+
+  await productStatusCache.update(req.query.lowThreshold || 5);
+  res.json(productStatusCache.get());
+});
+
+router.get("/feed", async function (req, res) {
+  if (productFeedCache.get() !== null && req.query.realtime !== "true") {
+    return res.json(productFeedCache.get());
+  }
+
+  await productFeedCache.update();
+  res.json(productFeedCache.get());
 });
 
 router.get("/:productid", async function (req, res) {
@@ -47,88 +69,33 @@ router.get("/:productid", async function (req, res) {
   res.json(await product);
 });
 
-router.get("/set/1", async function (req, res, next) {
-  const ProductModel = require("../models/schema/product").ProductModel;
-  const sample = new ProductModel({
-    id: "1",
-    title: "Wireless Headphones",
-    thumbnail: "/products/Headphone.jpg",
-    price: 99.99,
-    originalPrice: 149.99,
-    description: "High-quality wireless headphones with noise cancellation.",
-    category: "Electronics",
-    stock: 25,
-    brand: "SoundMagic",
-    tax: 5,
-    tags: ["audio", "wireless", "headphones"],
-    keywords: [
-      "wireless headphones",
-      "bluetooth headphones",
-      "noise cancelling headphones",
-    ],
-    detailedDescription:
-      "### Experience the Best Sound Quality\n" +
-      "\n" +
-      "Headphones are personal audio devices, small loudspeaker drivers worn on or around the head, that convert electrical signals into sound for private listening. They are electroacoustic transducers, available in styles like over-ear, on-ear, and in-ear (earbuds), and can connect to audio sources via wires or wireless Bluetooth technology. A headset is a combination of headphones and a microphone for audio and communication purposes\n" +
-      "- **Advanced Noise Cancellation Technology**: Immerse yourself in your music without distractions.\n" +
-      "- **Long Battery Life**: Enjoy up to 30 hours of playback on a single charge.\n" +
-      "- **Comfortable Fit**: Designed for all-day listening with a lightweight and ergonomic over-ear design.\n" +
-      "- **Quick Charge**: Get 2 hours of playback with just a 5-minute charge.\n" +
-      "- **Voice Assistant Compatibility**: Easily integrate with your favorite voice assistants for hands-free control.\n" +
-      "- **Foldable Design**: Conveniently store and carry your headphones wherever you go.\n" +
-      "\n" +
-      "### Physical Details\n" +
-      "| Property   | Value       |\n" +
-      "|------------|-------------|\n" +
-      "| **Width**  | 7.5 inches  |\n" +
-      "| **Height** | 8.5 inches  |\n" +
-      "| **Length** | 3.5 inches  |\n" +
-      "| **Weight** | 250g        |\n" +
-      "| **Extra**  | Foldable design for portability |\n" +
-      "\n" +
-      `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique vestibulum orci sit amet 
-accumsan. Nunc odio augue, egestas eget arcu sit amet, dapibus scelerisque mauris. Donec rutrum eros at justo consectetur mattis eget ut augue. Morbi tempus nulla non diam ultricies laoreet. Pellentesque congue felis enim, eget bibendum lorem molestie vitae. Donec consectetur tristique arcu nec vehicula. Donec porttitor facilisis nisl vitae maximus. Sed sit amet elit sit amet odio varius volutpat. Sed porttitor mattis tellus, ac elementum mi malesuada ac. Duis neque ex, pellentesque quis arcu et, mollis ultrices purus. Nam at posuere orci. Praesent 
-auctor risus mi, at lacinia sem aliquet quis. Praesent rhoncus ultrices enim, sit amet pulvinar leo tincidunt et. Sed ultricies non lorem varius lacinia.\n`,
-    specifications: [
-      { label: "Connectivity", value: "Bluetooth 5.0, USB-C" },
-      { label: "Battery Life", value: "30 hours playback" },
-      { label: "Weight", value: "250g" },
-      { label: "Driver Size", value: "40mm" },
-      { label: "Frequency Response", value: "20Hz - 20kHz" },
-      { label: "Impedance", value: "32 Ohms" },
-    ],
-    features: [
-      "Active Noise Cancellation",
-      "Quick Charge - 5 min charge for 2 hours playback",
-      "Built-in Microphone for Calls",
-      "Comfortable Over-Ear Design",
-      "Foldable for Easy Storage",
-      "Compatible with Voice Assistants",
-    ],
-    dimensions: { width: 0, height: 0, depth: 0 },
-    weight: 0,
-    images: [
-      "/products/Headphone.jpg",
-      "/products/Headphone2.jpg",
-      "/products/Headphone.jpg",
-    ],
-    rating: 4,
-    reviewCount: 45,
-    createdAt: `2025-12-18T08:27:16.235Z`,
-    updatedAt: `2025-12-18T08:27:16.235Z`,
-    isActive: true,
-    currency: "INR",
-    owner: { id: "admin", name: "Admin" },
-    warranty: null,
-    returnPolicy: null,
-    shippingDetails: null,
-    relatedProducts: [],
-    accessories: [],
-    priceHistory: [],
-    sku: "111 122 33",
-  });
-  await sample.save();
-  res.json({ message: "Sample product added." });
+router.post("/new/:productId", async function (req, res) {
+  const productId = req.params.productId;
+
+  const product = await db.collection("products").findOne({ id: productId });
+  if (product) {
+    return res
+      .status(403)
+      .json({ error: "Product aleready found in ID: " + productId });
+  }
+
+  const newProduct = req.body;
+
+  const created = await ProductModel.create(newProduct);
+  res.json(created);
+});
+
+router.put("/:productid", async function (req, res) {
+  const productid = req.params.productid;
+  const product = req.body;
+  const updated = await ProductModel.updateOne({ id: productid }, product);
+  res.json(updated);
+});
+
+router.delete("/:productid", async function (req, res) {
+  const productid = req.params.productid;
+  const deleted = await ProductModel.deleteOne({ id: productid });
+  res.json(deleted);
 });
 
 module.exports = router;
