@@ -22,6 +22,7 @@ import NewProductPage from '@/pages/Admin/products/new/page'
 import EditProductPage from '@/pages/Admin/products/edit/[id]'
 import OrdersPage from '@/pages/Admin/orders'
 import CustomersPage from '@/pages/Admin/customers'
+import TermsAndConditions from '@/pages/TermsAndConditions/TermsAndConditions'
 
 export default function Router() {
   return (
@@ -42,6 +43,7 @@ export default function Router() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="addressbook" element={<AddressBookPage />} />
         <Route path='about' element={<AboutPage />} />
+        <Route path='terms' element={<TermsAndConditions />} />
       </Route>
 
       <Route path="/admin" element={<AdminApp />} >

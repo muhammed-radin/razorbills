@@ -69,7 +69,7 @@ const footerSections = [
       },
       {
         title: "Terms & Conditions",
-        href: "#",
+        href: "/terms",
       },
       
     ],
