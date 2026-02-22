@@ -61,7 +61,7 @@ const footerSections = [
     links: [
       {
         title: "About Us",
-        href: "#",
+        href: "/about",
       },
       {
         title: "Privacy Policy",
@@ -69,7 +69,7 @@ const footerSections = [
       },
       {
         title: "Terms & Conditions",
-        href: "#",
+        href: "/terms",
       },
       
     ],
