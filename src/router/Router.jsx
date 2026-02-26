@@ -23,6 +23,10 @@ import EditProductPage from '@/pages/Admin/products/edit/[id]'
 import OrdersPage from '@/pages/Admin/orders'
 import CustomersPage from '@/pages/Admin/customers'
 import TermsAndConditions from '@/pages/TermsAndConditions/TermsAndConditions'
+import ContactUs from '@/pages/contactus/page'
+import ShippingInfo from '@/pages/shippingInfo/page'
+import Return from '@/pages/return/page'
+
 
 export default function Router() {
   return (
@@ -44,6 +48,9 @@ export default function Router() {
         <Route path="addressbook" element={<AddressBookPage />} />
         <Route path='about' element={<AboutPage />} />
         <Route path='terms' element={<TermsAndConditions />} />
+        <Route path='contact' element={<ContactUs />} />
+        <Route path='shipping' element={<ShippingInfo />} />
+        <Route path='return' element={<Return />} />
       </Route>
 
       <Route path="/admin" element={<AdminApp />} >
