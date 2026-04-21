@@ -2,7 +2,7 @@
 function validateApiKeys(req, res, next) {
   if (
     req.headers["server-api-key"] === process.env.SERVER_API_KEY
-    // || process.env.DEV_MODE === "true"
+    || process.env.DEV_MODE === "true"
   ) {
     if (
       req.method === "POST" ||

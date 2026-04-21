@@ -1,16 +1,65 @@
 var express = require("express");
 var router = express.Router();
 const db = require("../utils/db");
-const { productStatusCache } = require("../utils/cache/product-status");
+const { productStatusCache } = require("../utils/cache-utils/product-status");
 const { FeedMold } = require("../models/feed");
 const { MinimalProduct } = require("../models/schema/product");
-const { productFeedCache } = require("../utils/cache/product-feed");
+const { productFeedCache } = require("../utils/cache-utils/product-feed");
 const ProductModel = require("../models/schema/product").ProductModel;
 
 /* GET */
 router.get("/", async function (req, res, next) {
-  let limit = req.query.limit || req.body.limit || 40;
-  const products = await db.collection("products").find({}).limit(limit);
+  let limit = parseInt(req.query.limit) || parseInt(req.body.limit) || 40;
+  let search = req.query.search || req.body.search || "";
+  let category = req.query.category || req.body.category || "";
+  let priceMin =
+    parseFloat(req.query.priceMin) || parseFloat(req.body.priceMin) || 0;
+  let priceMax =
+    parseFloat(req.query.priceMax) ||
+    parseFloat(req.body.priceMax) ||
+    Number.MAX_VALUE;
+  let keywords = req.query.keywords || req.body.keywords || "";
+  let tags = req.query.tags || req.body.tags || "";
+  let sortBy = req.query.sortBy || req.body.sortBy || "createdAt";
+  let sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+  let ratingMin =
+    parseFloat(req.query.ratingMin) || parseFloat(req.body.ratingMin) || 0;
+  let ratingMax =
+    parseFloat(req.query.ratingMax) || parseFloat(req.body.ratingMax) || 5;
+  let inStock = req.query.inStock || req.query.inStock || false;
+
+  let query = {};
+
+  if (search) {
+    // find in title, category, keywords, tags and description
+    query.$or = [
+      { title: { $regex: search, $options: "i" } },
+      { category: { $regex: search, $options: "i" } },
+      { keywords: { $regex: search, $options: "i" } },
+      { tags: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
+    ];
+  }
+  if (category) {
+    query.category = { $regex: category, $options: "i" };
+  }
+  if (keywords) {
+    query.keywords = { $regex: keywords, $options: "i" };
+  }
+  if (tags) {
+    query.tags = { $regex: tags, $options: "i" };
+  }
+  if (inStock) {
+    query.inStock = inStock === "true";
+  }
+  query.price = { $gte: priceMin, $lte: priceMax };
+  query.rating = { $gte: ratingMin, $lte: ratingMax };
+
+  const products = await db
+    .collection("products")
+    .find(query)
+    // .sort({ [sortBy]: sortOrder, createdAt: -1 })
+    .limit(limit);
   res.json(await products.toArray());
 });
 

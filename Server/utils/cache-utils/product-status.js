@@ -1,5 +1,6 @@
 const { useMemory } = require("../memory");
 
+const db = require("../db");
 const productStatusCache = useMemory(null);
 
 productStatusCache.toUpdate(async (memory, lowThresholdString) => {

@@ -27,12 +27,14 @@ class FeedMold {
 
 class ShowCaseTab {
   constructor(
+    tag = "",
     title = "",
     description = "",
     thumbnail = "",
     link = "",
     color = "",
   ) {
+    this.tag = tag;
     this.title = title;
     this.description = description;
     this.thumbnail = thumbnail;
