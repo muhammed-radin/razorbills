@@ -19,7 +19,7 @@ import { encrypt, encryptStrict } from "@/utils/crypt";
 import axios from "axios";
 import { api } from "@/utils/api";
 
-import { toast } from "sonner"
+import { toast } from "sonner";
 import { useEffect } from "react";
 
 const formSchema = z.object({
@@ -30,7 +30,10 @@ const formSchema = z.object({
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[@$!%*?&#]/, "Password must contain at least one special character"),
+    .regex(
+      /[@$!%*?&#]/,
+      "Password must contain at least one special character",
+    ),
 });
 
 const LoginPage = () => {
@@ -46,8 +49,7 @@ const LoginPage = () => {
 
   const onSubmit = (data) => {
     let { email, password } = data;
-    let encryptedData =
-    {
+    let encryptedData = {
       email: email,
       password: encryptStrict(password),
     };
@@ -59,14 +61,18 @@ const LoginPage = () => {
     toast.promise(
       () =>
         new Promise((resolveui, rejectui) => {
-          axios.post(api.base("/api/auth/login"), data)
+          api.client
+            .post("/api/auth/login", data)
             .then((response) => {
               console.log("user data from", response.data);
               resolveui("Login Successful");
 
               // // Store token in indexedDB
               localStorage.setItem("auth_token", encrypt(response.data.token));
-              localStorage.setItem("user_data", encrypt(JSON.stringify(response.data.user)));
+              localStorage.setItem(
+                "user_data",
+                encrypt(JSON.stringify(response.data.user)),
+              );
 
               navigate("/");
             })
@@ -75,64 +81,61 @@ const LoginPage = () => {
               console.error("There was an error!", error);
 
               setTimeout(() => {
-                form.setValue('password', '');
+                form.setValue("password", "");
               }, 1000);
             });
-        }
-
-        ),
+        }),
       {
         loading: "Logging in...",
         success: (msg) => `${msg}`,
-        error: (err) => `Login failed: ${err.response.data.message || err.message || "Unknown error"}`,
-      }
+        error: (err) =>
+          `Login failed: ${err.response.data.message || err.message || "Unknown error"}`,
+      },
     );
   };
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const email = urlParams.get('email');
-    const pw = urlParams.get('pw');
-    const signup = urlParams.get('signup');
-    
+    const email = urlParams.get("email");
+    const pw = urlParams.get("pw");
+    const signup = urlParams.get("signup");
+
     if (email && pw && signup) {
-      form.setValue('email', decodeURIComponent(email));
-      form.setValue('password', decodeURIComponent(pw));
+      form.setValue("email", decodeURIComponent(email));
+      form.setValue("password", decodeURIComponent(pw));
 
       SumbitForm({
         email: decodeURIComponent(email),
-        password: decodeURIComponent(pw)
+        password: decodeURIComponent(pw),
       });
-    } 
-
-    
+    }
   }, []);
 
-
   const onUserGoogleSignIn = () => {
-    clickToGProvider().then(({ user, token }) => {
-      // extract uid, displayName, photoURL, email,  from user
-      const { uid, displayName, photoURL, email } = user;
-      let password = uid;
-      // You can now use the user info and token as needed
-      let encryptedData = {
-        id: encrypt(uid),
-        name: encrypt(displayName),
-        avatar: encrypt(photoURL),
-        email: email,
-        provider: "google",
-        password: encryptStrict(password), // Using uid as password for Google signups
-      }
+    clickToGProvider()
+      .then(({ user, token }) => {
+        // extract uid, displayName, photoURL, email,  from user
+        const { uid, displayName, photoURL, email } = user;
+        let password = uid;
+        // You can now use the user info and token as needed
+        let encryptedData = {
+          id: encrypt(uid),
+          name: encrypt(displayName),
+          avatar: encrypt(photoURL),
+          email: email,
+          provider: "google",
+          password: encryptStrict(password), // Using uid as password for Google signups
+        };
 
-      SumbitForm(encryptedData);
-
-    }).catch(({ errorCode, errorMessage, email, credential }) => {
-      console.error("Error Code:", errorCode);
-      console.error("Error Message:", errorMessage);
-      console.error("Email:", email);
-      console.error("Credential:", credential);
-    });
-  }
+        SumbitForm(encryptedData);
+      })
+      .catch(({ errorCode, errorMessage, email, credential }) => {
+        console.error("Error Code:", errorCode);
+        console.error("Error Message:", errorMessage);
+        console.error("Email:", email);
+        console.error("Credential:", credential);
+      });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">
