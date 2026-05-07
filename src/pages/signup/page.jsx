@@ -30,7 +30,10 @@ const formSchema = z.object({
     .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
     .regex(/[a-z]/, "Password must contain at least one lowercase letter")
     .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(/[@$!%*?&#]/, "Password must contain at least one special character"),
+    .regex(
+      /[@$!%*?&#]/,
+      "Password must contain at least one special character",
+    ),
 });
 
 const SignUpPage = () => {
@@ -47,13 +50,11 @@ const SignUpPage = () => {
 
   const onSubmit = (data) => {
     let { email, password, name } = data;
-    let encryptedData =
-    {
+    let encryptedData = {
       email: email,
       password: encryptStrict(password),
-      name: encrypt(name)
+      name: encrypt(name),
     };
-
 
     SumbitForm(encryptedData);
   };
@@ -62,51 +63,58 @@ const SignUpPage = () => {
     toast.promise(
       () =>
         new Promise((resolveui, rejectui) => {
-          axios.post(api.base("/api/auth/signup"), data)
+          api.client
+            .post("/api/auth/signup", data)
             .then((response) => {
               resolveui("Sign-up Successful");
-              navigate("/login?email=" + encodeURIComponent(data.email) + "&pw=" + encodeURIComponent(data.password) + "&signup=true");
+              navigate(
+                "/login?email=" +
+                  encodeURIComponent(data.email) +
+                  "&pw=" +
+                  encodeURIComponent(data.password) +
+                  "&signup=true",
+              );
             })
             .catch((error) => {
               rejectui(error);
               console.error("There was an error!", error);
             });
-        }
-
-        ),
+        }),
       {
         loading: "Signing up...",
         success: (msg) => `${msg}`,
-        error: (err) => `Sign-up failed: ${err.response.data.message || err.message || "Unknown error"}`,
-      }
+        error: (err) =>
+          `Sign-up failed: ${err.response.data.message || err.message || "Unknown error"}`,
+      },
     );
-  }
+  };
 
   const onUserGoogleSignUp = () => {
-    clickToGProvider().then(({ user, token }) => {
-      // extract uid, displayName, photoURL, email,  from user
-      const { uid, displayName, photoURL, email } = user;
-      let password = uid;
-      // You can now use the user info and token as needed
-      // uid encrypted for getting uniqe user id
-      let encryptedData = {
-        id: encrypt(uid),
-        name: encrypt(displayName),
-        avatar: encrypt(photoURL),
-        email: email,
-        provider: "google",
-        password: encryptStrict(password), // Using uid as password for Google signups
-      }
+    clickToGProvider()
+      .then(({ user, token }) => {
+        // extract uid, displayName, photoURL, email,  from user
+        const { uid, displayName, photoURL, email } = user;
+        let password = uid;
+        // You can now use the user info and token as needed
+        // uid encrypted for getting uniqe user id
+        let encryptedData = {
+          id: encrypt(uid),
+          name: encrypt(displayName),
+          avatar: encrypt(photoURL),
+          email: email,
+          provider: "google",
+          password: encryptStrict(password), // Using uid as password for Google signups
+        };
 
-      SumbitForm(encryptedData);
-
-    }).catch(({ errorCode, errorMessage, email, credential }) => {
-      console.error("Error Code:", errorCode);
-      console.error("Error Message:", errorMessage);
-      console.error("Email:", email);
-      console.error("Credential:", credential);
-    });
-  }
+        SumbitForm(encryptedData);
+      })
+      .catch(({ errorCode, errorMessage, email, credential }) => {
+        console.error("Error Code:", errorCode);
+        console.error("Error Message:", errorMessage);
+        console.error("Email:", email);
+        console.error("Credential:", credential);
+      });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">

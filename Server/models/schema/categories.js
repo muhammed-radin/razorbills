@@ -1,10 +1,13 @@
 const { Schema } = require("mongoose");
 const { Product } = require("../product");
 const mongoose = require("mongoose");
+const { LogOut } = require("lucide-react");
 
 const CategorySchema = new Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true, unique: true },
+  icon: { type: String, default: "" },
+  Logo: { type: String, default: "" },
   description: { type: String, default: "" },
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },

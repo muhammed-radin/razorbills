@@ -23,6 +23,12 @@ class Memory {
   get() {
     return this._memory;
   }
+
+  expireTimeout(timeout) {
+    setTimeout(() => {
+      this._memory = null;
+    }, timeout);
+  }
 }
 
 // backward-compatible factory

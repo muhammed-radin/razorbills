@@ -1,7 +1,9 @@
 const { Schema } = require("mongoose");
 const { Product } = require("../product");
 const mongoose = require("mongoose");
-const { productStatusCache } = require("../../utils/cache/product-status");
+const {
+  productStatusCache,
+} = require("../../utils/cache-utils/product-status");
 
 const ProductSchema = new Schema({
   id: { type: String, required: true, unique: true },
