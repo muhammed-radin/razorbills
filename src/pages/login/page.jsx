@@ -24,16 +24,7 @@ import { useEffect } from "react";
 
 const formSchema = z.object({
   email: z.string().email(),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters long")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(
-      /[@$!%*?&#]/,
-      "Password must contain at least one special character",
-    ),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
 });
 
 const LoginPage = () => {
@@ -64,6 +55,10 @@ const LoginPage = () => {
           api.client
             .post("/api/auth/login", data)
             .then((response) => {
+              if (response.status !== 200) {
+                rejectui(response.data);
+                return;
+              }
               console.log("user data from", response.data);
               resolveui("Login Successful");
 
@@ -89,7 +84,7 @@ const LoginPage = () => {
         loading: "Logging in...",
         success: (msg) => `${msg}`,
         error: (err) =>
-          `Login failed: ${err.response.data.message || err.message || "Unknown error"}`,
+          `Login failed: ${(err.response && err.response.data.message) || err.message || "Unknown error"}`,
       },
     );
   };
