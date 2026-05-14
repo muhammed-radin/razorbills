@@ -65,7 +65,7 @@ ProductSchema.pre("save", function (next) {
 
 class MinimalProduct {
   constructor({
-    idOrProductObj,
+    id,
     title,
     price,
     thumbnail,
@@ -78,37 +78,52 @@ class MinimalProduct {
     description,
     views,
     specialInfo,
-  }) {
-    if (typeof idOrProductObj === "object" && idOrProductObj !== null) {
-      const product = idOrProductObj;
-      this.id = product.id;
-      this.title = product.title;
-      this.price = product.price;
-      this.thumbnail = product.thumbnail;
-      this.rating = product.rating;
-      this.reviewCount = product.reviewCount;
-      this.currency = product.currency;
-      this.createdAt = product.createdAt;
-      this.updatedAt = product.updatedAt;
-      this.isActive = product.isActive;
-      this.description = product.description.slice(0, 80);
-      this.views = product.views;
-      this.specialInfo = product.specialInfo;
-    } else {
-      this.id = idOrProductObj;
-      this.title = title;
-      this.price = price;
-      this.thumbnail = thumbnail;
-      this.rating = rating;
-      this.reviewCount = reviewCount;
-      this.currency = currency;
-      this.createdAt = createdAt;
-      this.updatedAt = updatedAt;
-      this.isActive = isActive;
-      this.description = (description || "").slice(0, 80);
-      this.views = views;
-      this.specialInfo = specialInfo;
-    }
+    originalPrice,
+    keywords,
+    tags,
+    category,
+  } = {}) {
+    const product =
+      typeof id === "object" && id !== null
+        ? id
+        : {
+            id,
+            title,
+            price,
+            originalPrice,
+            thumbnail,
+            rating,
+            reviewCount,
+            currency,
+            createdAt,
+            updatedAt,
+            isActive,
+            description,
+            views,
+            specialInfo,
+            keywords,
+            tags,
+            category,
+          };
+
+    this.id = product.id;
+    this._id = product.id || product._id;
+    this.title = product.title;
+    this.price = product.price;
+    this.originalPrice = product.originalPrice;
+    this.thumbnail = product.thumbnail;
+    this.rating = product.rating;
+    this.reviewCount = product.reviewCount;
+    this.currency = product.currency;
+    this.createdAt = product.createdAt;
+    this.updatedAt = product.updatedAt;
+    this.isActive = product.isActive;
+    this.description = (product.description || "").slice(0, 80);
+    this.views = product.views;
+    this.specialInfo = product.specialInfo;
+    this.keywords = product.keywords;
+    this.tags = product.tags;
+    this.category = product.category;
   }
 }
 
@@ -125,6 +140,12 @@ ProductSchema.methods.toMinimal = function () {
     updatedAt: this.updatedAt,
     isActive: this.isActive,
     description: this.description,
+    views: this.views,
+    specialInfo: this.specialInfo,
+    originalPrice: this.originalPrice,
+    keywords: this.keywords,
+    tags: this.tags,
+    category: this.category,
   });
 };
 

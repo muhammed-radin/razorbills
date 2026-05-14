@@ -18,15 +18,18 @@ import { api } from "@/utils/api";
 import ClassicProcuctsSlider from "@/components/product-card/products-slider";
 
 export default function HomePage() {
-  const [products, setProducts] = useState([]);
+  const [latestProducts, setlatestProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
     // Fetch products from the API
     api.client
-      .get("/api/products")
+      .get("/api/products/feed")
       .then((response) => {
-        setProducts(response.data.products || response.data);
+        setlatestProducts(response.data.latest);
+        setFeaturedProducts(response.data.featured);
+        console.log(response.data);
         setLoading(false);
       })
       .catch((error) => {
@@ -75,13 +78,20 @@ export default function HomePage() {
             <HighlightedSlider className="" />
 
             {/* Featured Products Carousel - Premium Cards */}
-            <FeaturedCarousel title="Featured Collection" />
+            <FeaturedCarousel
+              title="Featured Collection"
+              products={latestProducts.slice(0, 5)} // Show first 5 products as featured
+            />
 
             {/* Content Grid - Categories & Offers */}
             <ContentGrid title="Explore Categories" />
 
             {/* New Arrivals - Regular Carousel Design */}
-            <CarouselSlide title="New Arrivals" variant="new-arrivals" />
+            <CarouselSlide
+              title="New Arrivals"
+              variant="new-arrivals"
+              products={latestProducts}
+            />
 
             {/* Product Grid */}
             <div className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto py-6 sm:py-8">
@@ -89,32 +99,39 @@ export default function HomePage() {
                 All Products
               </h2>
               <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
-                {products.map((product, index) => (
+                {latestProducts.map((product, index) => (
                   <ProductCard key={index} product={product} index={index} />
                 ))}
               </div>
             </div>
 
             {/* Another Featured Carousel with Different Title */}
-            <FeaturedCarousel title="Best Sellers" />
+            <FeaturedCarousel
+              title="Best Sellers"
+              products={latestProducts.slice(0, 5)}
+            />
 
             {/* Horizontal Product Cards */}
-            <ListHorizontalProductCards />
+            <ListHorizontalProductCards products={latestProducts} />
 
             {/* Top Rated - Modern Carousel Design */}
-            <ModernCarousel title="Top Rated" variant="top-rated" />
+            <ModernCarousel
+              title="Top Rated"
+              variant="top-rated"
+              products={latestProducts}
+            />
 
             {/* Regular Carousel - Trending */}
-            <CarouselSlide title="Trending Now" />
+            <CarouselSlide title="Trending Now" products={latestProducts} />
 
             {/* Second Product Grid */}
             <ClassicProcuctsSlider
               title="Recomended For You"
-              products={products}
+              products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
             />
 
             {/* More Horizontal Cards */}
-            <ListHorizontalProductCards />
+            <ListHorizontalProductCards products={latestProducts} />
           </>
         )}
       </div>

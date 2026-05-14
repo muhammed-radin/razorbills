@@ -13,4 +13,8 @@ router.use("/users", usersRouter);
 var authRouter = require("./auth");
 router.use("/auth", authRouter);
 
+/* Category routes */
+var categoriesRouter = require("./categories");
+router.use("/categories", categoriesRouter);
+
 module.exports = router;

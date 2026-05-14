@@ -2,13 +2,23 @@ import * as React from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import ProductCard from "./product-card/ProductCard";
 import CardProduct from "./carousel-product-card";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 
-export default function CarouselSlide({ title = "Featured Products", showTitle = true }) {
+export default function CarouselSlide({
+  title = "Featured Products",
+  showTitle = true,
+  products = [],
+}) {
   const [api, setApi] = React.useState();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
@@ -28,7 +38,6 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
 
   return (
     <section className="relative w-full py-6 sm:py-10 md:py-14 my-3 max-w-7xl mx-auto overflow-hidden">
-
       {/* Section Header */}
       {showTitle && (
         <header className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto mb-6 sm:mb-8 px-2">
@@ -46,7 +55,10 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
             </div>
 
             {/* Pagination Dots */}
-            <nav className="hidden sm:flex items-center gap-1.5" aria-label="Carousel pagination">
+            <nav
+              className="hidden sm:flex items-center gap-1.5"
+              aria-label="Carousel pagination"
+            >
               {Array.from({ length: Math.min(count, 10) }).map((_, index) => (
                 <Button
                   key={index}
@@ -57,7 +69,7 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
                     "h-2 p-0 rounded-full transition-all duration-300",
                     current === index + 1
                       ? "w-6 bg-primary hover:bg-primary"
-                      : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                      : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50",
                   )}
                   aria-label={`Go to slide ${index + 1}`}
                 />
@@ -80,13 +92,13 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
           }}
         >
           <CarouselContent className="-ml-3 sm:-ml-4">
-            {Array.from({ length: 10 }).map((_, index) => (
+            {products.map((product, index) => (
               <CarouselItem
                 key={index}
                 className={cn(
                   "pl-3 sm:pl-4",
                   // Responsive basis for proper card width
-                  "basis-[85%] xs:basis-[70%] sm:basis-[45%] md:basis-[32%] lg:basis-[24%] xl:basis-[20%]"
+                  "basis-[85%] xs:basis-[70%] sm:basis-[45%] md:basis-[32%] lg:basis-[24%] xl:basis-[20%]",
                 )}
               >
                 <CardProduct
@@ -94,17 +106,17 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
                     "transition-all duration-500 ease-out h-full",
                     current === index + 1
                       ? "scale-100 opacity-100"
-                      : "scale-[0.98] opacity-90 hover:opacity-100 hover:scale-100"
+                      : "scale-[0.98] opacity-90 hover:opacity-100 hover:scale-100",
                   )}
-                  title="Premium Wireless Headphones"
-                  description="Experience crystal-clear audio with active noise cancellation and premium build quality."
-                  rating={4.5}
-                  price={2499}
-                  discount={index % 3 === 0 ? 20 : 0}
-                  isNew={index === 0}
-                  isTrending={index === 1 || index === 2}
-                  stock={index === 3 ? false : true}
-                  thumbnail="/products/Headphone.jpg"
+                  title={product.title}
+                  description={product.description}
+                  rating={product.rating}
+                  price={product.price}
+                  discount={product.discount}
+                  isNew={product.isNew}
+                  isTrending={false}
+                  stock={product.stock}
+                  thumbnail={product.thumbnail}
                 />
               </CarouselItem>
             ))}
@@ -121,7 +133,7 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
               "hover:bg-primary hover:text-primary-foreground hover:border-primary",
               "hover:shadow-xl hover:scale-105",
               "transition-all duration-300",
-              "disabled:opacity-40"
+              "disabled:opacity-40",
             )}
           />
 
@@ -135,7 +147,7 @@ export default function CarouselSlide({ title = "Featured Products", showTitle =
               "hover:bg-primary hover:text-primary-foreground hover:border-primary",
               "hover:shadow-xl hover:scale-105",
               "transition-all duration-300",
-              "disabled:opacity-40"
+              "disabled:opacity-40",
             )}
           />
         </Carousel>
