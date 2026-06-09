@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -9,7 +9,7 @@ import {
   Tags,
   FileText,
   ChevronRight,
-} from "lucide-react"
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -24,8 +24,8 @@ import {
   SidebarFooter,
   SidebarRail,
   SidebarSeparator,
-} from "@/components/ui/sidebar"
-import { useEffect } from "react"
+} from "@/components/ui/sidebar";
+import { useEffect } from "react";
 
 const navItems = {
   main: {
@@ -33,55 +33,64 @@ const navItems = {
     items: [
       {
         title: "Dashboard",
-        url: "/admin/dashboard",
+        url: "/auth/admin/dashboard",
         icon: LayoutDashboard,
       },
       {
         title: "Products",
-        url: "/admin/products",
+        url: "/auth/admin/products",
         icon: Package,
       },
       {
         title: "Orders",
-        url: "/admin/orders",
+        url: "/auth/admin/orders",
         icon: ShoppingCart,
       },
       {
         title: "Customers",
-        url: "/admin/customers",
+        url: "/auth/admin/customers",
         icon: Users,
-      }]
+      },
+    ],
   },
   quick: {
     label: "Quick Actions",
     items: [
       {
         title: "New Product",
-        url: "/admin/products/new",
+        url: "/auth/admin/products/new",
         icon: Package,
       },
-    ]
-  }
+    ],
+  },
 };
 
-const navItemsArray = [...Object.values(navItems).flatMap(group => group.items)];
+const navItemsArray = [
+  ...Object.values(navItems).flatMap((group) => group.items),
+];
 
-
-
-export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...props }) {
+export function AdminSidebar({
+  collapsible,
+  variant,
+  side,
+  savePageInfo,
+  ...props
+}) {
   const location = useLocation();
   const navItemsKeys = Object.keys(navItems);
 
   // Update page info when location changes
   useEffect(() => {
-    const currentNav = navItemsArray.find(item => item.url === location.pathname)
+    const currentNav = navItemsArray.find(
+      (item) => item.url === location.pathname,
+    );
     if (currentNav) {
-      savePageInfo(currentNav)
+      savePageInfo(currentNav);
     }
-  }, [location.pathname, savePageInfo])
+  }, [location.pathname, savePageInfo]);
 
   return (
-    <Sidebar collapsible={collapsible} variant={variant} side={side} {...props} >
+    <Sidebar collapsible={collapsible} variant={variant} side={side} {...props}>
       <SidebarHeader className="border-b border-sidebar-border">
         <div className="flex items-center gap-2 px-2 py-4">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -98,7 +107,6 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
         {navItemsKeys.map((key) => {
           const group = navItems[key];
           console.log(group);
-
 
           return (
             <SidebarGroup key={group.label}>
@@ -117,16 +125,16 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
-                    )
+                    );
                   })}
                 </SidebarMenu>
               </SidebarGroupContent>
-            </SidebarGroup>)
+            </SidebarGroup>
+          );
         })}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
-        
         <div className="p-4">
           <div className="flex items-center gap-2 text-sm">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
@@ -134,7 +142,9 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
             </div>
             <div className="flex flex-col">
               <span className="font-medium">Admin User</span>
-              <span className="text-xs text-muted-foreground">admin@razorbills.com</span>
+              <span className="text-xs text-muted-foreground">
+                admin@razorbills.com
+              </span>
             </div>
           </div>
         </div>
@@ -149,10 +159,9 @@ export function AdminSidebar({ collapsible, variant, side, savePageInfo, ...prop
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        
       </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

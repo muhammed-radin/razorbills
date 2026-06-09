@@ -13,6 +13,10 @@ router.use("/users", usersRouter);
 var authRouter = require("./auth");
 router.use("/auth", authRouter);
 
+/* Admin routes */
+var adminAuthRouter = require("./admin-auth");
+router.use("/admin-auth", adminAuthRouter);
+
 /* Category routes */
 var categoriesRouter = require("./categories");
 router.use("/categories", categoriesRouter);
