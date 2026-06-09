@@ -1,4 +1,3 @@
-<<<<<<< feat/implement
 import React from "react";
 import { Route, Routes } from "react-router-dom";
 import App from "../App";
@@ -23,37 +22,11 @@ import EditProductPage from "@/pages/Admin/products/edit/[id]";
 import OrdersPage from "@/pages/Admin/orders";
 import CustomersPage from "@/pages/Admin/customers";
 import AdminAuth from "@/pages/Admin/auth/page.index";
-=======
-import React from 'react'
-import { Route, Routes } from 'react-router-dom'
-import App from '../App'
-import HomePage from '../pages/home/page'
-import LoginPage from '@/pages/login/page'
-import SignUpPage from '@/pages/signup/page'
-import ProductSearchPage from '@/pages/search/page'
-import ProductDetailsPage from '@/pages/product/page'
-import CartPage from '@/pages/cart/page'
-import PrivacyPolicyPage from '@/pages/privacy/page'
-import NotFoundPage from '@/pages/notfound/page'
-import RedirectPage from '@/pages/redirect/gprovider'
-import Orderhistory from '@/pages/orderhistory/Orderhistory'
-import Wishlist from '@/pages/wishlist/Wishlist'
-import SettingsPage from '@/pages/settings/page'
-import AddressBookPage from '@/pages/addressbook/page'
-import AdminDashboardPage from '@/pages/Admin/dashboard/page'
-import AdminApp from '@/pages/Admin/admin.app'
-import AdminProductsPage from '@/pages/Admin/products/page'
 import AboutPage from '@/pages/aboutUs/page'
-import NewProductPage from '@/pages/Admin/products/new/page'
-import EditProductPage from '@/pages/Admin/products/edit/[id]'
-import OrdersPage from '@/pages/Admin/orders'
-import CustomersPage from '@/pages/Admin/customers'
 import TermsAndConditions from '@/pages/TermsAndConditions/TermsAndConditions'
 import ContactUs from '@/pages/contactus/page'
 import ShippingInfo from '@/pages/shippingInfo/page'
 import Return from '@/pages/return/page'
-
->>>>>>> main
 
 export default function Router() {
   return (
