@@ -1,9 +1,6 @@
 // validate keys with env vars
 function validateApiKeys(req, res, next) {
-  if (
-    req.headers["server-api-key"] === process.env.SERVER_API_KEY
-    || process.env.DEV_MODE === "true"
-  ) {
+  if (req.headers["server-api-key"] === process.env.SERVER_API_KEY) {
     if (
       req.method === "POST" ||
       req.method === "PUT" ||
