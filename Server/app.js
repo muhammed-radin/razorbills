@@ -7,6 +7,8 @@ require("dotenv").config();
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var cors = require("cors");
+
+const { db, connectToDatabase } = require("./utils/db");
 const { validateApiKeys } = require("./utils/key");
 
 var app = express();
@@ -17,7 +19,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/api", validateApiKeys, indexRouter);
+// start api after db connection is established
+connectToDatabase().then(() => {
+  console.log("Database connection established. Starting API...");
+  app.use("/api", validateApiKeys, indexRouter);
+});
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");

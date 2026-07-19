@@ -17,16 +17,16 @@ import AddressBookPage from "@/pages/addressbook/page";
 import AdminDashboardPage from "@/pages/Admin/dashboard/page";
 import AdminApp from "@/pages/Admin/admin.app";
 import AdminProductsPage from "@/pages/Admin/products/page";
-import NewProductPage from "@/pages/Admin/products/new/page";
-import EditProductPage from "@/pages/Admin/products/edit/[id]";
+import NewProductPage from "@/pages/Admin/products/pages/new/page";
+import EditProductPage from "@/pages/Admin/products/pages/edit/[id]";
 import OrdersPage from "@/pages/Admin/orders";
 import CustomersPage from "@/pages/Admin/customers";
 import AdminAuth from "@/pages/Admin/auth/page.index";
-import AboutPage from '@/pages/aboutUs/page'
-import TermsAndConditions from '@/pages/TermsAndConditions/TermsAndConditions'
-import ContactUs from '@/pages/contactus/page'
-import ShippingInfo from '@/pages/shippingInfo/page'
-import Return from '@/pages/return/page'
+import AboutPage from "@/pages/aboutUs/page";
+import TermsAndConditions from "@/pages/TermsAndConditions/TermsAndConditions";
+import ContactUs from "@/pages/contactus/page";
+import ShippingInfo from "@/pages/shippingInfo/page";
+import Return from "@/pages/return/page";
 
 export default function Router() {
   return (
@@ -54,11 +54,11 @@ export default function Router() {
         <Route path="wishlist" element={<Wishlist />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="addressbook" element={<AddressBookPage />} />
-        <Route path='about' element={<AboutPage />} />
-        <Route path='terms' element={<TermsAndConditions />} />
-        <Route path='contact' element={<ContactUs />} />
-        <Route path='shipping' element={<ShippingInfo />} />
-        <Route path='return' element={<Return />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="terms" element={<TermsAndConditions />} />
+        <Route path="contact" element={<ContactUs />} />
+        <Route path="shipping" element={<ShippingInfo />} />
+        <Route path="return" element={<Return />} />
       </Route>
 
       <Route path="/auth" element={<AdminAuth />}>

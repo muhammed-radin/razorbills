@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express.Router();
-const db = require("../utils/db");
+const { db } = require("../utils/db");
 const { productStatusCache } = require("../utils/cache-utils/product-status");
 const { FeedMold } = require("../models/feed");
 const { MinimalProduct } = require("../models/schema/product");
