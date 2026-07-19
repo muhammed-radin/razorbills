@@ -1,5 +1,10 @@
 // validate keys with env vars
 function validateApiKeys(req, res, next) {
+  if (process.env.NODE_ENV === "development") {
+    next();
+    return 0;
+  }
+
   if (req.headers["server-api-key"] === process.env.SERVER_API_KEY) {
     if (req.headers["actions-api-key"] === process.env.ACTION_ACCESS_TOKEN) {
       next();
