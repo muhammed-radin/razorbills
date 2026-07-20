@@ -2,14 +2,11 @@ var express = require("express");
 var router = express.Router();
 const CryptoJS = require("crypto-js");
 const { decryptStrict } = require("../utils/crypt");
+var uuid = require("uuid").v4;
 
 router.post("/", async function (req, res, next) {
   try {
     const { username, password } = req.body;
-
-    console.log(username, password);
-    console.log(decryptStrict(username), decryptStrict(password));
-    console.log("================================");
 
     if (!username || !password) {
       return res
@@ -22,7 +19,11 @@ router.post("/", async function (req, res, next) {
       decryptStrict(username) === process.env.ADMIN_USERNAME &&
       decryptStrict(password) === process.env.ADMIN_PASSWORD
     ) {
-      return res.status(200).json({ message: "Admin login successful" });
+      return res.status(200).json({
+        message: "Admin login successful",
+        success: true,
+        token: uuid,
+      });
     } else {
       return res.status(400).json({ message: "Invalid admin credentials" });
     }

@@ -1,29 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Plus,
-  Search,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Eye,
-  Package,
-  AlertCircle,
-  TrendingUp,
-  Filter,
-  Grid3X3,
-  List,
-} from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Card,
   CardContent,
@@ -43,11 +22,14 @@ import { Preloader } from "@/components/LoaderScreen";
 import StatsCards from "./components/stats-cards.admin";
 import ListViewAdmin from "./components/list-view.admin";
 import GridViewAdmin from "./components/grid-view.admin";
+import AlertDeleteProductDialog from "./components/alert-delete.admin";
+import { toast, Toaster } from "sonner";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [statics, setStatics] = useState(false);
+  const [isOpenDeleteConfirm, setIsOpenDeleteConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // grid or list
@@ -95,15 +77,40 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (productId) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      try {
-        await axios.delete(api.products(productId));
-        fetchProducts();
-      } catch (error) {
-        console.error("Error deleting product:", error);
-      }
+  const handleDelete = (productId) => {
+    setIsOpenDeleteConfirm(productId); // Open the confirmation dialog
+  };
+
+  const deleteProduct = async (productId) => {
+    try {
+      toast.promise(
+        () =>
+          new Promise((resolveui, rejectui) => {
+            api.client
+              .delete(api.products(productId))
+              .then((response) => {
+                if (response.status !== 200) {
+                  rejectui(response.data);
+                  return;
+                }
+                resolveui("Product deleted successfully");
+                fetchProducts(); // Refresh the product list after deletion
+              })
+              .catch((error) => {
+                rejectui(error);
+                console.error("There was an error!", error);
+              });
+          }),
+        {
+          loading: "Deleting product...",
+          success: "Product deleted successfully",
+          error: "Error deleting product",
+        },
+      );
+    } catch (error) {
+      console.error("Error deleting product:", error);
     }
+    setIsOpenDeleteConfirm(false);
   };
 
   const getStockStatus = (stock) => {
@@ -128,6 +135,9 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Toaster */}
+      <Toaster position="top-right" theme="dark" richColors />
+
       <div className="container mx-auto p-6 space-y-8">
         {/* Hero Header */}
         <HeroHeader />
@@ -200,6 +210,13 @@ export default function AdminProductsPage() {
           />
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDeleteProductDialog
+        isOpen={isOpenDeleteConfirm}
+        onClose={() => setIsOpenDeleteConfirm(false)}
+        onConfirm={() => deleteProduct(isOpenDeleteConfirm)}
+      />
     </div>
   );
 }
