@@ -56,7 +56,10 @@ router.post("/validate", async function (req, res, next) {
   }
 
   // Check if the token is valid
-  if (getMemory("adminToken").get() === token) {
+  if (
+    getMemory("adminToken")?.get() === token ||
+    req.cookies.adminToken === token
+  ) {
     return res.status(200).json({ message: "Admin token is valid" });
   } else {
     return res.status(401).json({ message: "Invalid admin token" });
