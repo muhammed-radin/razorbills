@@ -7,8 +7,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
-import { Eye, MoreHorizontal } from "lucide-react";
+} from "@/components/ui/dropdown-menu";
+import { Edit, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 function ListViewAdmin({
