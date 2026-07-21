@@ -4,8 +4,6 @@ const CryptoJS = require("crypto-js");
 const { decryptStrict } = require("../utils/crypt");
 const { useMemory, getMemory } = require("../utils/memory");
 
-var uuid = require("uuid").v4;
-
 router.post("/", async function (req, res, next) {
   try {
     const { username, password } = req.body;
@@ -21,6 +19,7 @@ router.post("/", async function (req, res, next) {
       decryptStrict(username) === process.env.ADMIN_USERNAME &&
       decryptStrict(password) === process.env.ADMIN_PASSWORD
     ) {
+      let { v4: uuid } = await import("uuid");
       const token = uuid();
 
       // Set the admin token in a cookie
