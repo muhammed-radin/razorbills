@@ -40,4 +40,57 @@ router.post("/", function (req, res) {
     });
 });
 
+router.get("/:id", function (req, res) {
+  const categoryId = req.params.id;
+
+  Category.findOne({ id: categoryId })
+    .then((category) => {
+      if (!category) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(category);
+    })
+    .catch((err) => {
+      console.error("Error fetching category:", err);
+      res.status(500).json({ error: "Failed to fetch category" });
+    });
+});
+
+router.put("/:id", function (req, res) {
+  const categoryId = req.params.id;
+  const { name, icon, Logo, description } = req.body;
+
+  Category.findOneAndUpdate(
+    { id: categoryId },
+    { name, icon, Logo, description },
+    { new: true },
+  )
+    .then((updatedCategory) => {
+      if (!updatedCategory) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json(updatedCategory);
+    })
+    .catch((err) => {
+      console.error("Error updating category:", err);
+      res.status(500).json({ error: "Failed to update category" });
+    });
+});
+
+router.delete("/:id", function (req, res) {
+  const categoryId = req.params.id;
+
+  Category.findOneAndDelete({ id: categoryId })
+    .then((deletedCategory) => {
+      if (!deletedCategory) {
+        return res.status(404).json({ error: "Category not found" });
+      }
+      res.json({ message: "Category deleted successfully" });
+    })
+    .catch((err) => {
+      console.error("Error deleting category:", err);
+      res.status(500).json({ error: "Failed to delete category" });
+    });
+});
+
 module.exports = router;

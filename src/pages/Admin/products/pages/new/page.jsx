@@ -23,18 +23,7 @@ import DimensionsWeightSection from "./sections/dimensions-weight";
 import TagsKeywordsSection from "./sections/tags-keywords";
 import AdditionalInformationSection from "./sections/additional-information";
 
-const defaultCategories = [
-  "Electronics",
-  "Accessories",
-  "Audio",
-  "Lighting",
-  "Mobile",
-  "Computers",
-  "Gaming",
-  "Home Appliances",
-  "Wearables",
-  "Other",
-];
+const defaultCategories = [];
 
 // Cloudinary configuration - update these with your credentials
 const CLOUDINARY_UPLOAD_PRESET = "your_upload_preset";

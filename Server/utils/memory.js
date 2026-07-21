@@ -58,11 +58,14 @@ class Memory {
 
 const CacheTable = {};
 
-function useMemory(data, id, timeout) {
+function useMemory(data, id, timeout, updateFn) {
   if (id) {
     CacheTable[id] = new Memory(data);
     if (timeout) {
       CacheTable[id].expireTimeout(timeout);
+    }
+    if (updateFn) {
+      CacheTable[id].toUpdate(updateFn);
     }
     return CacheTable[id];
   }
