@@ -19,11 +19,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-// start api after db connection is established
 connectToDatabase().then(() => {
   console.log("Database connection established. Starting API...");
-  app.use("/api", validateApiKeys, indexRouter);
 });
+
+function checkDatabaseConnection(req, res, next) {
+  if (!db) {
+    return res
+      .status(503)
+      .json({ message: "Database connection not established" });
+  }
+  next();
+}
+
+// start api after db connection is established
+app.use("/api", validateApiKeys, checkDatabaseConnection, indexRouter);
 
 app.listen(3000, () => {
   console.log("Server is running on http://localhost:3000");
