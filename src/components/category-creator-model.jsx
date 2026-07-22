@@ -96,6 +96,7 @@ function CategoryCreatorModel({
                       .then((response) => {
                         if (response.status === 201) {
                           resolveui(response);
+                          setCategoryCreateModel(false);
                         } else {
                           rejectui(new Error("Failed to create category"));
                         }
@@ -104,7 +105,7 @@ function CategoryCreatorModel({
                   {
                     loading: "Creating category...",
                     success: "Category created successfully",
-                    error: "Failed to create category",
+                    error: (err) => "Error: " + err.message,
                   },
                 )
                 .then(() => {

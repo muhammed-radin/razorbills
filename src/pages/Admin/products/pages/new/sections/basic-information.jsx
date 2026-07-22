@@ -39,6 +39,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import dynamicIconImports from "lucide-react/dynamicIconImports";
 import CategoryCreatorModel from "@/components/category-creator-model";
 
+import {
+  MDXEditor,
+  headingsPlugin,
+  listsPlugin,
+  quotePlugin,
+  thematicBreakPlugin,
+  markdownShortcutPlugin,
+  toolbarPlugin,
+  UndoRedo,
+  BoldItalicUnderlineToggles,
+  BlockTypeSelect,
+  CodeToggle,
+  CreateLink,
+  InsertCodeBlock,
+  InsertImage,
+  ListsToggle,
+  InsertTable,
+  Separator,
+  linkDialogPlugin,
+  imagePlugin,
+  diffSourcePlugin,
+  DiffSourceToggleWrapper,
+} from "@mdxeditor/editor";
+import "@mdxeditor/editor/style.css";
+
 export default function BasicInformationSection({
   form,
   categories,
@@ -283,11 +308,41 @@ export default function BasicInformationSection({
                       <TabsTrigger value="preview">Preview</TabsTrigger>
                     </TabsList>
                     <TabsContent value="write">
-                      <Textarea
+                      {/* <Textarea
                         placeholder="Write detailed description using Markdown..."
                         className="min-h-[200px] font-mono"
                         {...field}
-                      />
+                      /> */}
+                      <MDXEditor
+                        markdown="# Hello world"
+                        className="min-h-[200px] font-mono bg-background rounded-lg p-2 border border-border/50 dark:bg-background dark:border-border/30 dark "
+                        onChange={field.onChange}
+                        contentEditableClassName="markdown-style"
+                        plugins={[
+                          headingsPlugin(),
+                          listsPlugin(),
+                          quotePlugin(),
+                          thematicBreakPlugin(),
+                          markdownShortcutPlugin(),
+                          linkDialogPlugin(),
+                          imagePlugin(),
+                          toolbarPlugin({
+                            toolbarClassName: "flex flex-wrap gap-2",
+                            toolbarContents: () => (
+                              <>
+                                <UndoRedo />
+                                <BoldItalicUnderlineToggles />
+                                <BlockTypeSelect />
+                                <CreateLink />
+                                <InsertImage />
+                                <InsertTable />
+                                <ListsToggle />
+                                <Separator />
+                              </>
+                            ),
+                          }),
+                        ]}
+                      ></MDXEditor>
                     </TabsContent>
                     <TabsContent value="preview">
                       <div className="min-h-[200px] rounded-md border p-4 prose prose-sm dark:prose-invert max-w-none">
@@ -317,7 +372,7 @@ export default function BasicInformationSection({
       <CategoryCreatorModel
         isCategoryCreateModelOpen={isCategoryCreateModelOpen}
         setCategoryCreateModel={setCategoryCreateModel}
-        categorySearchInputValue={categorySearchInput?.value}
+        categorySearchInputValue={categorySearchInput.current?.value}
         onAddCategory={addNewCategory}
       />
     </>

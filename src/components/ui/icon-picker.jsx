@@ -310,7 +310,7 @@ const IconPicker = React.forwardRef(
 
       return (
         <div
-          className="relative w-full overscroll-contain"
+          className="relative w-full overscroll-contain max-h-30"
           style={{
             height: `${virtualizer.getTotalSize()}px`,
           }}
