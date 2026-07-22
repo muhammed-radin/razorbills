@@ -53,7 +53,6 @@ export default function NewProductPage() {
   // Category combobox states
   const [categories, setCategories] = useState(defaultCategories);
   const [categoryOpen, setCategoryOpen] = useState(false);
-  const [categorySearch, setCategorySearch] = useState("");
 
   const thumbnailInputRef = useRef(null);
   const additionalImageInputRef = useRef(null);
@@ -85,6 +84,17 @@ export default function NewProductPage() {
       sku: "",
     },
   });
+
+  const loadCategories = async () => {
+    try {
+      const response = await api.client.get(api.categories());
+      console.log(response.data);
+      setCategories(response.data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Failed to load categories");
+    }
+  };
 
   // Prevent form submission on Enter key
   const handleKeyDown = (e) => {
@@ -223,7 +233,7 @@ export default function NewProductPage() {
   };
 
   // Add new category
-  const addNewCategory = (newCategory) => {
+  const addNewCategory = async (newCategory) => {
     if (newCategory && !categories.includes(newCategory)) {
       setCategories([...categories, newCategory]);
     }
@@ -324,9 +334,8 @@ export default function NewProductPage() {
                   categories={categories}
                   categoryOpen={categoryOpen}
                   setCategoryOpen={setCategoryOpen}
-                  categorySearch={categorySearch}
-                  setCategorySearch={setCategorySearch}
                   addNewCategory={addNewCategory}
+                  loadCategories={loadCategories}
                 />
               </AccordionContent>
             </AccordionItem>

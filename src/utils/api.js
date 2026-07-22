@@ -31,6 +31,12 @@ const api = {
     // }
     return path;
   },
+  categories(id) {
+    if (id) {
+      return api.base("/api/categories/" + id);
+    }
+    return api.base("/api/categories");
+  },
   products(id) {
     if (id) {
       return api.base("/api/products/" + id);
