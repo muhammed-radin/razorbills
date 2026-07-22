@@ -61,6 +61,7 @@ import {
   imagePlugin,
   diffSourcePlugin,
   DiffSourceToggleWrapper,
+  tablePlugin,
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
 
@@ -314,23 +315,30 @@ export default function BasicInformationSection({
                         {...field}
                       /> */}
                       <MDXEditor
-                        markdown="# Hello world"
-                        className="min-h-[200px] font-mono bg-background rounded-lg p-2 border border-border/50 dark:bg-background dark:border-border/30 dark "
+                        markdown={field.value}
+                        className="min-h-[200px] font-mono bg-background rounded-xl p-1 border border-border/50 dark:bg-background dark:border-border/30 dark"
                         onChange={field.onChange}
                         contentEditableClassName="markdown-style"
                         plugins={[
                           headingsPlugin(),
                           listsPlugin(),
                           quotePlugin(),
+                          tablePlugin(),
                           thematicBreakPlugin(),
                           markdownShortcutPlugin(),
                           linkDialogPlugin(),
                           imagePlugin(),
+                          diffSourcePlugin({
+                            diffMarkdown: "",
+                            viewMode: "rich-text",
+                          }),
                           toolbarPlugin({
                             toolbarClassName: "flex flex-wrap gap-2",
                             toolbarContents: () => (
                               <>
-                                <UndoRedo />
+                                <DiffSourceToggleWrapper>
+                                  <UndoRedo />
+                                </DiffSourceToggleWrapper>
                                 <BoldItalicUnderlineToggles />
                                 <BlockTypeSelect />
                                 <CreateLink />
