@@ -184,7 +184,12 @@ export default function BasicInformationSection({
                 <Popover
                   open={categoryOpen}
                   onOpenChange={(bool) => {
-                    if (bool) loadCategories();
+                    if (bool) {
+                      setIsLoadingCategories(true);
+                      loadCategories()
+                        .then(() => setIsLoadingCategories(false))
+                        .catch(() => setIsLoadingCategories(false));
+                    }
                     setCategoryOpen(bool);
                   }}
                 >
