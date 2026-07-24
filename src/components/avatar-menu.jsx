@@ -25,8 +25,43 @@ import { api } from "@/utils/api";
 import { toast } from "sonner";
 import AvatarIcon from "./avatar-icon";
 import { decrypt } from "@/utils/crypt";
+import React, { useMemo, useCallback } from "react";
 
-function AvatarMenu({ name, img, user }) {
+const AvatarMenu = ({ name, img, user }) => {
+  const decryptedUserName = useMemo(() => {
+    try {
+      return decrypt(user.name);
+    } catch (e) {
+      console.error("Failed to decrypt user name:", e);
+      return user.name;
+    }
+  }, [user.name]);
+
+  const handleLogout = useCallback(() => {
+    toast.promise(
+      () =>
+        new Promise((resolve, reject) => {
+          api.actions
+            .logOut()
+            .then(() => {
+              resolve("Signed Out Successfully");
+              setTimeout(() => {
+                window.location.reload();
+              }, 1000);
+            })
+            .catch((err) => {
+              reject(err);
+            });
+        }),
+      {
+        loading: "Signing Out...",
+        success: (msg) => `${msg}`,
+        error: (err) =>
+          `Log-out failed: ${err.response?.data?.message || err.message || "Unknown error"}`,
+      },
+    );
+  }, []);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-3">
@@ -36,7 +71,7 @@ function AvatarMenu({ name, img, user }) {
         <DropdownMenuItem className="py-3">
           <AvatarIcon name={name} img={img} />
           <div className="ml-1 flex flex-col">
-            <p className="text-sm font-medium">{decrypt(user.name)}</p>
+            <p className="text-sm font-medium">{decryptedUserName}</p>
             <p className="text-xs text-muted-foreground">{user.email}</p>
           </div>
         </DropdownMenuItem>
@@ -65,38 +100,12 @@ function AvatarMenu({ name, img, user }) {
             <MapPin className="mr-1" /> Addresses
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            // sign out user
-            toast.promise(
-              () =>
-                new Promise((resolve, reject) => {
-                  api.actions
-                    .logOut()
-                    .then(() => {
-                      resolve("Signed Out Successfully");
-                      setTimeout(() => {
-                        window.location.reload();
-                      }, 1000);
-                    })
-                    .catch((err) => {
-                      reject(err);
-                    });
-                }),
-              {
-                loading: "Signing Out...",
-                success: (msg) => `${msg}`,
-                error: (err) =>
-                  `Log-out failed: ${err.response.data.message || err.message || "Unknown error"}`,
-              },
-            );
-          }}
-        >
+        <DropdownMenuItem onClick={handleLogout}>
           <LogOut className="mr-1" /> Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};
 
-export default AvatarMenu;
+export default React.memo(AvatarMenu);

@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { limitWords } from "@/utils/string";
+import React from "react";
 
-export function OrderProductCard({ variant, className }) {
+const OrderProductCardComponent = ({ variant, className }) => {
   let varientStyle = "";
   if (variant === "borderless") {
     varientStyle = "border-0 shadow-none";
@@ -42,6 +43,10 @@ export function OrderProductCard({ variant, className }) {
       </CardContent>
     </Card>
   );
-}
+};
+
+OrderProductCardComponent.displayName = 'OrderProductCard';
+
+export const OrderProductCard = React.memo(OrderProductCardComponent);
 
 export default OrderProductCard;

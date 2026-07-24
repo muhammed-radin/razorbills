@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,14 +89,7 @@ const defaultItems = [
   },
 ];
 
-export default function ContentGrid({
-  items,
-  title = "Explore More",
-  showTitle = true,
-}) {
-  const displayItems = items || defaultItems;
-
-  const themeColors = {
+const themeColors = {
     rose: {
       gradient: "from-rose-500 to-pink-600",
       bg: "bg-rose-500/10",
@@ -139,9 +132,9 @@ export default function ContentGrid({
       text: "text-pink-500",
       glow: "group-hover:shadow-pink-500/20",
     },
-  };
+};
 
-  const GridCard = ({ item, index }) => {
+const GridCard = React.memo(({ item, index }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const theme = themeColors[item.theme] || themeColors.violet;
@@ -150,6 +143,10 @@ export default function ContentGrid({
     const isLarge = item.size === "large";
     const isMedium = item.size === "medium";
     const isSmall = item.size === "small";
+
+    const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+    const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+    const handleImageLoad = useCallback(() => setImageLoaded(true), []);
 
     return (
       <Card
@@ -166,8 +163,8 @@ export default function ContentGrid({
           isMedium && "col-span-1 row-span-1 min-h-[200px]",
           isSmall && "col-span-1 row-span-1 min-h-[160px]",
         )}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Background Image for Large/Medium Cards */}
         {item.image && (isLarge || isMedium) && (
@@ -184,7 +181,7 @@ export default function ContentGrid({
                 "group-hover:scale-110",
                 !imageLoaded && "opacity-0",
               )}
-              onLoad={() => setImageLoaded(true)}
+              onLoad={handleImageLoad}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
           </>
@@ -290,7 +287,15 @@ export default function ContentGrid({
         />
       </Card>
     );
-  };
+});
+GridCard.displayName = 'GridCard';
+
+export default function ContentGrid({
+  items,
+  title = "Explore More",
+  showTitle = true,
+}) {
+  const displayItems = items || defaultItems;
 
   return (
     <section className="relative w-full py-8 sm:py-12 max-w-7xl mx-auto">

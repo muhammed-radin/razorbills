@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -21,36 +21,36 @@ const ProductCard = ({ product, index }) => {
     return () => clearTimeout(timer);
   }, [index]);
 
-  const handleProductClick = () => {
+  const handleProductClick = useCallback(() => {
     console.log("Product clicked:", product);
     const productId = product.id;
     navigate(`/product/${productId}`);
-  };
+  }, [navigate, product]);
 
-  function onImageLoad() {
+  const onImageLoad = useCallback(() => {
     setLoadedState(true);
-  }
+  }, []);
 
-  function onImageError() {
+  const onImageError = useCallback(() => {
     setImageErr(true);
-  }
+  }, []);
 
-  const handleFavoriteClick = (e) => {
+  const handleFavoriteClick = useCallback((e) => {
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
-  };
+    setIsFavorite((prev) => !prev);
+  }, []);
 
-  const handleQuickView = (e) => {
+  const handleQuickView = useCallback((e) => {
     e.stopPropagation();
     // Quick view functionality can be implemented here
     console.log("Quick view:", product.id);
-  };
+  }, [product.id]);
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = useCallback((e) => {
     e.stopPropagation();
     // Add to cart functionality can be implemented here
     console.log("Add to cart:", product.id);
-  };
+  }, [product.id]);
 
   // Calculate discount percentage
   const discountPercentage =
@@ -133,6 +133,7 @@ const ProductCard = ({ product, index }) => {
         {/* Favorite Button */}
         <button
           onClick={handleFavoriteClick}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           className={cn(
             "absolute top-2 right-2 z-10 p-2 rounded-full",
             "backdrop-blur-md bg-white/30 dark:bg-black/30",
@@ -160,12 +161,14 @@ const ProductCard = ({ product, index }) => {
         >
           <button
             onClick={handleQuickView}
+            aria-label="Quick view"
             className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:scale-110 transition-transform duration-200"
           >
             <Eye className="w-4 h-4 text-gray-700 dark:text-gray-200" />
           </button>
           <button
             onClick={handleAddToCart}
+            aria-label="Add to cart"
             className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:scale-110 transition-transform duration-200"
           >
             <ShoppingCart className="w-4 h-4 text-gray-700 dark:text-gray-200" />
@@ -227,4 +230,4 @@ const ProductCard = ({ product, index }) => {
   );
 };
 
-export default ProductCard;
+export default React.memo(ProductCard);

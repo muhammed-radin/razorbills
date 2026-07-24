@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -9,13 +9,14 @@ import {
 import { cn } from "@/lib/utils"
 import { limitWords } from "@/utils/string"
 import { Heart, ShoppingCart, Eye, Star, ImageOff } from "lucide-react"
+import React from "react"
 
-export function HorizontalProductCard({ 
+const HorizontalProductCardComponent = ({ 
     variant, 
     className, 
     product = null,
     index = 0 
-}) {
+}) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isFavorite, setIsFavorite] = useState(false);
     const [imageError, setImageError] = useState(false);
@@ -40,29 +41,33 @@ export function HorizontalProductCard({
         reviews: 128
     };
 
-    const discountPercentage = productData.originalPrice && productData.originalPrice !== productData.price
+    const discountPercentage = useMemo(() => productData.originalPrice && productData.originalPrice !== productData.price
         ? Math.round(((productData.originalPrice - productData.price) / productData.originalPrice) * 100)
-        : 0;
+        : 0, [productData.originalPrice, productData.price]);
 
     let variantStyle = '';
     if (variant === 'borderless') {
         variantStyle = 'border-0 shadow-none bg-transparent';
     }
 
-    const handleFavoriteClick = (e) => {
+    const handleFavoriteClick = useCallback((e) => {
         e.stopPropagation();
-        setIsFavorite(!isFavorite);
-    };
+        setIsFavorite(prev => !prev);
+    }, []);
 
-    const handleAddToCart = (e) => {
+    const handleAddToCart = useCallback((e) => {
         e.stopPropagation();
         console.log('Add to cart:', productData.title);
-    };
+    }, [productData.title]);
 
-    const handleQuickView = (e) => {
+    const handleQuickView = useCallback((e) => {
         e.stopPropagation();
         console.log('Quick view:', productData.title);
-    };
+    }, [productData.title]);
+
+    const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+    const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+    const handleImageError = useCallback(() => setImageError(true), []);
 
     return (
         <Card 
@@ -90,8 +95,8 @@ export function HorizontalProductCard({
                 variantStyle, 
                 className
             )}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
             {/* Image Container */}
             <div className="relative w-[120px] sm:w-[140px] md:w-[160px] flex-shrink-0 overflow-hidden">
@@ -99,7 +104,7 @@ export function HorizontalProductCard({
                 <img 
                     src={productData.image || productData.thumbnail || "/products/Headphone.jpg"} 
                     alt={productData.title}
-                    onError={() => setImageError(true)}
+                    onError={handleImageError}
                     className={cn(
                         "w-full h-full object-cover bg-muted",
                         "transition-all duration-700 ease-out",
@@ -145,6 +150,7 @@ export function HorizontalProductCard({
                 )}>
                     <button
                         onClick={handleQuickView}
+                        aria-label="Quick view"
                         className={cn(
                             "p-2.5 rounded-full",
                             "bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm",
@@ -211,6 +217,7 @@ export function HorizontalProductCard({
                     {/* Favorite Button */}
                     <button
                         onClick={handleFavoriteClick}
+                        aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                         className={cn(
                             "p-1.5 sm:p-2 rounded-full flex-shrink-0",
                             "bg-muted/50 hover:bg-muted",
@@ -293,5 +300,8 @@ export function HorizontalProductCard({
         </Card>
     )
 }
+HorizontalProductCardComponent.displayName = 'HorizontalProductCard';
+
+export const HorizontalProductCard = React.memo(HorizontalProductCardComponent);
 
 export default HorizontalProductCard;

@@ -1,8 +1,18 @@
 import { StarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import React from "react";
 
-function RatingStar({ filled, label, size }) {
-    size = size || '4'; // Default size if not provided
+const sizeMap = {
+    '1': 'w-1 h-1',
+    '2': 'w-2 h-2',
+    '3': 'w-3 h-3',
+    '4': 'w-4 h-4',
+    '5': 'w-5 h-5',
+    '6': 'w-6 h-6',
+};
+
+const RatingStar = React.memo(function RatingStar({ filled, label, size = '4' }) {
+    const starSizeClass = sizeMap[size] || 'w-4 h-4';
 
     return (
         <div className="flex items-center">
@@ -11,7 +21,7 @@ function RatingStar({ filled, label, size }) {
                     <StarIcon
                         key={star}
                         className={cn(
-                            ('w-'+ size +' h-'+ size),
+                            starSizeClass,
                             star <= Math.round(filled)
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
@@ -24,6 +34,6 @@ function RatingStar({ filled, label, size }) {
             </span>}
         </div>
     )
-}
+});
 
 export default RatingStar;

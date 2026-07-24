@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 
 import CategoryList from "@/components/category-tag/CategoryList";
@@ -35,6 +36,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen w-full">
+      <Helmet>
+        <title>RazorBills - High-Quality Electronic Components</title>
+        <meta name="description" content="Your one-stop shop for the latest and greatest electronics. Industrial-grade electronic components for engineers, makers, startups, and institutions." />
+        <meta name="keywords" content="electronics, components, resistor, diode, led, transistor, battery, fuse, potentiometer, speaker, microphone, microcontroller" />
+      </Helmet>
       {/* Hero Section */}
       {/* <Hero /> */}
 

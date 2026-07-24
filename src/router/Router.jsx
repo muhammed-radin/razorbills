@@ -1,78 +1,116 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
+
+// Eagerly loaded layout/wrapper shells (Keep these fast)
 import App from "../App";
-import HomePage from "../pages/home/page";
-import LoginPage from "@/pages/login/page";
-import SignUpPage from "@/pages/signup/page";
-import ProductSearchPage from "@/pages/search/page";
-import ProductDetailsPage from "@/pages/product/page";
-import CartPage from "@/pages/cart/page";
-import PrivacyPolicyPage from "@/pages/privacy/page";
-import NotFoundPage from "@/pages/notfound/page";
-import RedirectPage from "@/pages/redirect/gprovider";
-import Orderhistory from "@/pages/orderhistory/Orderhistory";
-import Wishlist from "@/pages/wishlist/Wishlist";
-import SettingsPage from "@/pages/settings/page";
-import AddressBookPage from "@/pages/addressbook/page";
-import AdminDashboardPage from "@/pages/Admin/dashboard/page";
-import AdminApp from "@/pages/Admin/admin.app";
-import AdminProductsPage from "@/pages/Admin/products/page";
-import NewProductPage from "@/pages/Admin/products/pages/new/page";
-import EditProductPage from "@/pages/Admin/products/pages/edit/[id]";
-import OrdersPage from "@/pages/Admin/orders";
-import CustomersPage from "@/pages/Admin/customers";
 import AdminAuth from "@/pages/Admin/auth/page.index";
-import AboutPage from "@/pages/aboutUs/page";
-import TermsAndConditions from "@/pages/TermsAndConditions/TermsAndConditions";
-import ContactUs from "@/pages/contactus/page";
-import ShippingInfo from "@/pages/shippingInfo/page";
-import Return from "@/pages/return/page";
+import AdminApp from "@/pages/Admin/admin.app";
+import { LoaderScreen } from "@/components/LoaderScreen";
+
+// --- LAZY IMPORT MAPS ---
+
+// Main Client Pages
+const HomePage = lazy(() => import("../pages/home/page"));
+const ProductSearchPage = lazy(() => import("@/pages/search/page"));
+const ProductDetailsPage = lazy(() => import("@/pages/product/page"));
+const CartPage = lazy(() => import("@/pages/cart/page"));
+const LoginPage = lazy(() => import("@/pages/login/page"));
+const SignUpPage = lazy(() => import("@/pages/signup/page"));
+const PrivacyPolicyPage = lazy(() => import("@/pages/privacy/page"));
+const NotFoundPage = lazy(() => import("@/pages/notfound/page"));
+const RedirectPage = lazy(() => import("@/pages/redirect/gprovider"));
+const Orderhistory = lazy(() => import("@/pages/orderhistory/Orderhistory"));
+const Wishlist = lazy(() => import("@/pages/wishlist/Wishlist"));
+const SettingsPage = lazy(() => import("@/pages/settings/page"));
+const AddressBookPage = lazy(() => import("@/pages/addressbook/page"));
+const AboutPage = lazy(() => import("@/pages/aboutUs/page"));
+const TermsAndConditions = lazy(
+  () => import("@/pages/TermsAndConditions/TermsAndConditions"),
+);
+const ContactUs = lazy(() => import("@/pages/contactus/page"));
+const ShippingInfo = lazy(() => import("@/pages/shippingInfo/page"));
+const Return = lazy(() => import("@/pages/return/page"));
+
+// Admin Pages
+const AdminDashboardPage = lazy(() => import("@/pages/Admin/dashboard/page"));
+const AdminProductsPage = lazy(() => import("@/pages/Admin/products/page"));
+const NewProductPage = lazy(
+  () => import("@/pages/Admin/products/pages/new/page"),
+);
+const EditProductPage = lazy(
+  () => import("@/pages/Admin/products/pages/edit/[id]"),
+);
+const OrdersPage = lazy(() => import("@/pages/Admin/orders"));
+const CustomersPage = lazy(() => import("@/pages/Admin/customers"));
+
+// --- ROUTE CONFIGURATION MAPS ---
+
+const clientRoutes = [
+  { index: true, element: <HomePage /> },
+  { path: "search", element: <ProductSearchPage /> },
+  { path: "product/:id", element: <ProductDetailsPage /> },
+  { path: "cart", element: <CartPage /> },
+  { path: "login", element: <LoginPage /> },
+  { path: "signup", element: <SignUpPage /> },
+  { path: "privacy", element: <PrivacyPolicyPage /> },
+  { path: "404", element: <NotFoundPage /> },
+  { path: "*", element: <NotFoundPage /> },
+  { path: "redirect", element: <RedirectPage /> },
+  { path: "order", element: <Orderhistory /> },
+  { path: "wishlist", element: <Wishlist /> },
+  { path: "settings", element: <SettingsPage /> },
+  { path: "addressbook", element: <AddressBookPage /> },
+  { path: "about", element: <AboutPage /> },
+  { path: "terms", element: <TermsAndConditions /> },
+  { path: "contact", element: <ContactUs /> },
+  { path: "shipping", element: <ShippingInfo /> },
+  { path: "return", element: <Return /> },
+];
+
+const adminSubRoutes = [
+  { index: true, element: <AdminDashboardPage /> },
+  { path: "dashboard", element: <AdminDashboardPage /> },
+  { path: "products", element: <AdminProductsPage /> },
+  { path: "products/new", element: <NewProductPage /> },
+  { path: "products/:id/edit", element: <EditProductPage /> },
+  { path: "orders", element: <OrdersPage /> },
+  { path: "customers", element: <CustomersPage /> },
+];
+
+// --- MAIN ROUTER COMPONENT ---
 
 export default function Router() {
   return (
-    <Routes>
-      <Route path="/" element={<App />}>
-        <Route index element={<HomePage />} />
-        <Route path="search" element={<ProductSearchPage />} />
-        <Route path="product/:id" element={<ProductDetailsPage />} />
-        <Route path="cart" element={<CartPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="signup" element={<SignUpPage />} />
-        <Route path="privacy" element={<PrivacyPolicyPage />} />
-        <Route path="404" element={<NotFoundPage />} />
-        <Route path="*" element={<NotFoundPage />} />
-        <Route
-          path="redirect"
-          element={
-            <>
-              {" "}
-              <RedirectPage />{" "}
-            </>
-          }
-        />
-        <Route path="order" element={<Orderhistory />} />
-        <Route path="wishlist" element={<Wishlist />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="addressbook" element={<AddressBookPage />} />
-        <Route path="about" element={<AboutPage />} />
-        <Route path="terms" element={<TermsAndConditions />} />
-        <Route path="contact" element={<ContactUs />} />
-        <Route path="shipping" element={<ShippingInfo />} />
-        <Route path="return" element={<Return />} />
-      </Route>
-
-      <Route path="/auth" element={<AdminAuth />}>
-        <Route path="admin" element={<AdminApp />}>
-          <Route index element={<AdminDashboardPage />} />
-          <Route path="dashboard" element={<AdminDashboardPage />} />
-          <Route path="products" element={<AdminProductsPage />} />
-          <Route path="products/new" element={<NewProductPage />} />
-          <Route path="products/:id/edit" element={<EditProductPage />} />
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="customers" element={<CustomersPage />} />
+    // Global fallback loader while any lazy route chunk is being downloaded
+    <Suspense fallback={<LoaderScreen />}>
+      <Routes>
+        {/* Client Layout Shell */}
+        <Route path="/" element={<App />}>
+          {clientRoutes.map((route, index) => (
+            <Route
+              key={route.path || `client-${index}`}
+              index={route.index}
+              path={route.path}
+              element={route.element}
+            />
+          ))}
         </Route>
-      </Route>
-      {/* End of Admin Routes */}
-    </Routes>
+
+        {/* Admin Authentication Shell */}
+        <Route path="/auth" element={<AdminAuth />}>
+          {/* Admin Application Layout Shell */}
+          <Route path="admin" element={<AdminApp />}>
+            {adminSubRoutes.map((route, index) => (
+              <Route
+                key={route.path || `admin-${index}`}
+                index={route.index}
+                path={route.path}
+                element={route.element}
+              />
+            ))}
+          </Route>
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }

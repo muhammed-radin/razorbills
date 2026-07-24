@@ -1,16 +1,16 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Flame } from "lucide-react";
 import { currency } from "@/utils/currency";
 
-function FoodMenuItem({
+const FoodMenuItem = React.memo(({
     name,
     calories,
     price,
     image,
     onClick
-}) {
+}) => {
     return (
         <div
             className={cn(
@@ -45,7 +45,8 @@ function FoodMenuItem({
             </div>
         </div>
     );
-}
+});
+FoodMenuItem.displayName = 'FoodMenuItem';
 
 export default function FoodMenuCard({
     className,
@@ -67,6 +68,10 @@ export default function FoodMenuCard({
     ],
     onItemClick
 }) {
+    const handleItemClick = useCallback((item) => {
+        onItemClick?.(item);
+    }, [onItemClick]);
+
     return (
         <Card
             className={cn(
@@ -96,7 +101,7 @@ export default function FoodMenuCard({
                         calories={item.calories}
                         price={item.price}
                         image={item.image}
-                        onClick={() => onItemClick?.(item)}
+                        onClick={() => handleItemClick(item)}
                     />
                 ))}
             </div>

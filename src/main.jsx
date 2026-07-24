@@ -1,14 +1,22 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { HashRouter } from "react-router-dom";
 import App from "./App.jsx";
 import "./index.css";
+import { HashRouter as BrowserRouter } from "react-router-dom";
 import Router from "./router/Router.jsx";
+import { ThemeProvider } from "./utils/theme-provider.jsx";
+import { Toaster } from "sonner";
+import { HelmetProvider } from "react-helmet-async";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <HashRouter>
-      <Router/>
-    </HashRouter>
-  </React.StrictMode>
+    <HelmetProvider>
+      <BrowserRouter>
+        <ThemeProvider>
+          <Toaster richColors position="top-right" />
+          <Router />
+        </ThemeProvider>
+      </BrowserRouter>
+    </HelmetProvider>
+  </React.StrictMode>,
 );

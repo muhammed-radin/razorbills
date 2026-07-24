@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import {
   Package,
   Shield,
@@ -15,10 +16,15 @@ export default function RazorbillsAbout() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-black/10 dark:text-gray-100">
+      <Helmet>
+        <title>About Us - RazorBills</title>
+        <meta name="description" content="Learn about RazorBills, our mission to provide industrial-grade electronic components for engineers, makers, startups, and institutions with a focus on accessibility and affordability." />
+        <meta name="keywords" content="about us, razorbills, electronics, components, mission, vision, industrial-grade" />
+      </Helmet>
       {/* Header*/}
       <div className="relative overflow-hidden border-b dark:border-neutral-700">
         <div className="absolute inset-0"></div>
-
+        
         <div className="relative max-w-7xl  mx-auto px-6 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 dark:text-white">

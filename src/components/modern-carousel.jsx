@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,25 +83,33 @@ const defaultProducts = [
 ];
 
 // Unique Floating Card Design
-function CompactProductCard({ product, variant = "default" }) {
+const CompactProductCard = React.memo(({ product, variant = "default" }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const discount = product.originalPrice
+  const discount = useMemo(() => product.originalPrice
     ? Math.round(
         ((product.originalPrice - product.price) / product.originalPrice) * 100,
       )
-    : 0;
+    : 0, [product.originalPrice, product.price]);
 
   const isNewArrivals = variant === "new-arrivals";
   const isTopRated = variant === "top-rated";
 
+  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+  const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  const handleImageLoad = useCallback(() => setImageLoaded(true), []);
+  const handleWishlistClick = useCallback((e) => {
+    e.stopPropagation();
+    setIsWishlisted(prev => !prev);
+  }, []);
+
   return (
     <div
       className="group relative h-full perspective-1000"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Floating Glow Effect */}
       <div
@@ -172,7 +180,7 @@ function CompactProductCard({ product, variant = "default" }) {
                 "group-hover:scale-110 group-hover:rotate-1",
                 !imageLoaded && "opacity-0",
               )}
-              onLoad={() => setImageLoaded(true)}
+              onLoad={handleImageLoad}
               draggable={false}
             />
           </div>
@@ -273,10 +281,7 @@ function CompactProductCard({ product, variant = "default" }) {
                 "transition-all duration-200",
                 isWishlisted && "bg-rose-50 dark:bg-rose-950",
               )}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsWishlisted(!isWishlisted);
-              }}
+              onClick={handleWishlistClick}
             >
               <Heart
                 className={cn(
@@ -397,7 +402,8 @@ function CompactProductCard({ product, variant = "default" }) {
       </Card>
     </div>
   );
-}
+});
+CompactProductCard.displayName = 'CompactProductCard';
 
 export default function ModernCarousel({
   products,

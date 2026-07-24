@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Helmet } from "react-helmet-async";
 
 export default function ContactUs() {
   const contactMethods = [
@@ -50,6 +51,11 @@ export default function ContactUs() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-black/10 dark:text-gray-100">
+      <Helmet>
+        <title>Contact Us - RazorBills</title>
+        <meta name="description" content="Get in touch with RazorBills for support, inquiries, and feedback. We're here to help with product questions, orders, and general inquiries." />
+        <meta name="keywords" content="contact us, razorbills, support, email, phone, address, contact form" />
+      </Helmet>
       {/* Hero Section */}
       <div className="relative overflow-hidden border-b dark:border-neutral-700">
         <div className="absolute inset-0"></div>
