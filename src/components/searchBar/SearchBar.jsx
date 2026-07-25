@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LucideSearch } from "lucide-react";
 
@@ -6,20 +6,20 @@ export default function SearchBar() {
     const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
 
-    const handleSearch = (e) => {
+    const handleSearch = useCallback((e) => {
         e.preventDefault();
         if (searchTerm.trim()) {
             navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
         } else {
             navigate("/search");
         }
-    };
+    }, [navigate, searchTerm]);
 
-    const handleKeyPress = (e) => {
+    const handleKeyPress = useCallback((e) => {
         if (e.key === 'Enter') {
             handleSearch(e);
         }
-    };
+    }, [handleSearch]);
 
     return (
         <div className="w-full mb-5 my-2">
@@ -34,6 +34,7 @@ export default function SearchBar() {
                 />
                 <button
                     type="submit"
+                    aria-label="Search"
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                     <LucideSearch size={20} />

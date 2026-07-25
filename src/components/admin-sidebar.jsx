@@ -106,7 +106,6 @@ export function AdminSidebar({
       <SidebarContent>
         {navItemsKeys.map((key) => {
           const group = navItems[key];
-          console.log(group);
 
           return (
             <SidebarGroup key={group.label}>

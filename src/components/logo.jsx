@@ -1,6 +1,7 @@
 import React from "react";
 
-export const Logo = ({ className = "", ...props }) => (
+export const Logo = React.memo(({ className = "", ...props }) => {
+  return (
   <div className="flex flex-row justify-center items-center">
     <svg
       id="svg2"
@@ -63,5 +64,5 @@ export const Logo = ({ className = "", ...props }) => (
       </g>
     </svg>
     <h3 className="font-lg color-red font-semibold sm:font-normal font-bakbak font-[Bakbak_One]">RazorBills</h3>
-  </div>
-);
+  </div>)
+});

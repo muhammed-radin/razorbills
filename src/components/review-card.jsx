@@ -2,8 +2,9 @@ import { cn } from "@/lib/utils";
 import RatingStar from "./rating-star";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import React from "react";
 
-function ReviewCard({ review, className }) {
+const ReviewCard = React.memo(function ReviewCard({ review, className }) {
   return (
     <Card className={cn("mb-4", className)}>
       <CardHeader className="flex flex-row ">
@@ -25,6 +26,6 @@ function ReviewCard({ review, className }) {
       </CardContent>
     </Card>
   );
-}
+});
 
 export default ReviewCard;

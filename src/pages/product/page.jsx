@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
+import { Helmet } from "react-helmet-async";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ const ProductDetailsPage = () => {
   const [product, setProduct] = useState({ loading: true });
   const navigate = useNavigate();
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Fetch products from the API
     api.client
       .get(api.products(id))
@@ -71,30 +72,40 @@ const ProductDetailsPage = () => {
         }
         console.error("Error fetching products:", error);
       });
-  }, []);
+  }, [id, navigate]);
+
+  const discount = useMemo(() => {
+    if (!product || !product.originalPrice || !product.price) return 0;
+    return Math.round(
+      ((product.originalPrice - product.price) / product.originalPrice) * 100,
+    );
+  }, [product]);
+
+  const handleQuantityChange = useCallback((change) => {
+    setQuantity(prevQuantity => {
+        const newQuantity = prevQuantity + change;
+        if (newQuantity >= 1 && newQuantity <= product.stock) {
+            return newQuantity;
+        }
+        return prevQuantity;
+    });
+  }, [product.stock]);
 
   if (product.loading) {
     return <LoaderScreen />;
   }
 
   if (!product || !product.id) {
-    alert("Product not found!");
-    navigate("/404");
+    return null;
   }
-
-  const discount = Math.round(
-    ((product.originalPrice - product.price) / product.originalPrice) * 100,
-  );
-
-  const handleQuantityChange = (change) => {
-    const newQuantity = quantity + change;
-    if (newQuantity >= 1 && newQuantity <= product.stock) {
-      setQuantity(newQuantity);
-    }
-  };
 
   return (
     <div className="min-h-screen p-3 sm:p-6 lg:p-8 flex flex-col justify-center">
+      <Helmet>
+        <title>{`${product.title} - RazorBills`}</title>
+        <meta name="description" content={product.description} />
+        <meta name="keywords" content={`${product.title}, ${product.category}, ${product.brand}, ${product.tags.join(', ')}`} />
+      </Helmet>
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground max-w-7xl mx-auto">
         <Breadcrumb>

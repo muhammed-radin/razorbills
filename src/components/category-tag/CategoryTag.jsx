@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 import React from "react";
 
-export default function CategoryTag({ label, selected, onClick, className }) {
+const CategoryTag = React.memo(function CategoryTag({ label, selected, onClick, className }) {
   return (
     <button
       onClick={onClick}
@@ -16,4 +16,6 @@ export default function CategoryTag({ label, selected, onClick, className }) {
       {label}
     </button>
   );
-}
+});
+
+export default CategoryTag;

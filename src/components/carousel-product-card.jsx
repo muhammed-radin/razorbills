@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { currency } from "@/utils/currency"
 import { Star, Heart, ShoppingCart, Eye, Sparkles, Flame, Package } from "lucide-react"
-import { useState } from "react"
+import { useState, useMemo, useCallback } from "react"
 
 export default function CardProduct({
     className,
@@ -31,9 +31,9 @@ export default function CardProduct({
     const [isHovered, setIsHovered] = useState(false)
     const [imageLoaded, setImageLoaded] = useState(false)
 
-    const discountedPrice = discount ? price - (price * discount / 100) : price
+    const discountedPrice = useMemo(() => discount ? price - (price * discount / 100) : price, [price, discount]);
 
-    const renderStars = () => {
+    const renderStars = useMemo(() => {
         return Array.from({ length: 5 }, (_, index) => {
             const starValue = index + 1
             const isFilled = rating >= starValue
@@ -51,7 +51,26 @@ export default function CardProduct({
                 />
             )
         })
-    }
+    }, [rating]);
+
+    const handleWishlistClick = useCallback((e) => {
+        e.stopPropagation();
+        setIsWishlisted(prev => !prev);
+    }, []);
+
+    const handleViewDetails = useCallback((e) => {
+        e.stopPropagation();
+        onViewDetails?.();
+    }, [onViewDetails]);
+
+    const handleAddToCart = useCallback((e) => {
+        e.stopPropagation();
+        onAddToCart?.();
+    }, [onAddToCart]);
+
+    const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+    const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+    const handleImageLoad = useCallback(() => setImageLoaded(true), []);
 
     return (
         <Card
@@ -64,8 +83,8 @@ export default function CardProduct({
                 "hover:-translate-y-1",
                 className
             )}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
             {/* Floating Badges */}
             <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
@@ -101,6 +120,7 @@ export default function CardProduct({
             <Button
                 size="icon"
                 variant="secondary"
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
                 className={cn(
                     "absolute top-2 right-2 z-10",
                     "size-7 sm:size-8 rounded-full",
@@ -109,10 +129,7 @@ export default function CardProduct({
                     "hover:scale-110 transition-all duration-300",
                     isWishlisted && "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800"
                 )}
-                onClick={(e) => {
-                    e.stopPropagation()
-                    setIsWishlisted(!isWishlisted)
-                }}
+                onClick={handleWishlistClick}
             >
                 <Heart
                     className={cn(
@@ -143,7 +160,7 @@ export default function CardProduct({
                                 "group-hover:scale-110",
                                 !imageLoaded && "opacity-0"
                             )}
-                            onLoad={() => setImageLoaded(true)}
+                            onLoad={handleImageLoad}
                         />
                         <AvatarFallback className="w-full h-full rounded-none bg-muted">
                             <Package className="size-10 text-muted-foreground/40" />
@@ -176,10 +193,7 @@ export default function CardProduct({
                             size="sm"
                             variant="secondary"
                             className="flex-1 gap-1 h-8 bg-background/95 backdrop-blur-sm hover:bg-background shadow-lg text-xs"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onViewDetails?.()
-                            }}
+                            onClick={handleViewDetails}
                         >
                             <Eye className="size-3.5" />
                             View
@@ -187,10 +201,7 @@ export default function CardProduct({
                         <Button
                             size="sm"
                             className="flex-1 gap-1 h-8 shadow-lg text-xs"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onAddToCart?.()
-                            }}
+                            onClick={handleAddToCart}
                             disabled={!stock}
                         >
                             <ShoppingCart className="size-3.5" />
@@ -221,7 +232,7 @@ export default function CardProduct({
                 {/* Rating */}
                 <div className="flex items-center gap-1">
                     <div className="flex items-center">
-                        {renderStars()}
+                        {renderStars}
                     </div>
                     <span className="text-[10px] font-medium text-muted-foreground">
                         ({rating.toFixed(1)})
@@ -246,10 +257,7 @@ export default function CardProduct({
                         size="sm"
                         variant="outline"
                         className="sm:hidden h-7 px-2 gap-1 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground text-xs"
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            onAddToCart?.()
-                        }}
+                        onClick={handleAddToCart}
                         disabled={!stock}
                     >
                         <ShoppingCart className="size-3" />

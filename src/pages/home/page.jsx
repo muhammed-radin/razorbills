@@ -1,18 +1,14 @@
 import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 
 import CategoryList from "@/components/category-tag/CategoryList";
 import ProductCard from "@/components/product-card/ProductCard";
-import { Hero } from "@/components/hero/hero";
 import SearchBar from "@/components/searchBar/SearchBar";
 import CarouselSlide from "@/components/carousel";
-import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 import ListHorizontalProductCards from "@/components/horizontal-card/list-horizontal-product-cards";
-import FeaturedCarousel from "@/components/featured-carousel";
-import HighlightedSlider from "@/components/highlighted-slider";
 import ContentGrid from "@/components/content-grid";
 import ModernCarousel from "@/components/modern-carousel";
-import axios from "axios";
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
 import ClassicProcuctsSlider from "@/components/product-card/products-slider";
@@ -40,6 +36,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen w-full">
+      <Helmet>
+        <title>RazorBills - High-Quality Electronic Components</title>
+        <meta name="description" content="Your one-stop shop for the latest and greatest electronics. Industrial-grade electronic components for engineers, makers, startups, and institutions." />
+        <meta name="keywords" content="electronics, components, resistor, diode, led, transistor, battery, fuse, potentiometer, speaker, microphone, microcontroller" />
+      </Helmet>
       {/* Hero Section */}
       {/* <Hero /> */}
 
@@ -75,13 +76,13 @@ export default function HomePage() {
         ) : (
           <>
             {/* Highlighted Image Slider - Full Width Hero Style */}
-            <HighlightedSlider className="" />
+            {/* <HighlightedSlider className="" /> */}
 
             {/* Featured Products Carousel - Premium Cards */}
-            <FeaturedCarousel
+            {/* <FeaturedCarousel
               title="Featured Collection"
               products={latestProducts.slice(0, 5)} // Show first 5 products as featured
-            />
+            /> */}
 
             {/* Content Grid - Categories & Offers */}
             <ContentGrid title="Explore Categories" />
@@ -106,10 +107,10 @@ export default function HomePage() {
             </div>
 
             {/* Another Featured Carousel with Different Title */}
-            <FeaturedCarousel
+            {/* <FeaturedCarousel
               title="Best Sellers"
               products={latestProducts.slice(0, 5)}
-            />
+            /> */}
 
             {/* Horizontal Product Cards */}
             <ListHorizontalProductCards products={latestProducts} />

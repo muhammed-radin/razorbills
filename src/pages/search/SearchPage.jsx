@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,7 @@ import FilterSidebar from "./filters/filter-sidebar";
 const allProducts = [
   {
     id: 1,
-    name: "Wireless Headphones Premium",
+    title: "Wireless Headphones Premium",
     category: "Electronics",
     description: "High-quality wireless headphones with noise cancellation.",
     price: 199.99,
@@ -51,7 +51,7 @@ const allProducts = [
   },
   {
     id: 2,
-    name: "Bluetooth Speaker Pro",
+    title: "Bluetooth Speaker Pro",
     category: "Speaker",
     description: "Portable Bluetooth speaker with deep bass and long battery life.",
     price: 89.99,
@@ -64,7 +64,7 @@ const allProducts = [
   },
   {
     id: 3,
-    name: "Rechargeable Battery Pack 10000mAh",
+    title: "Rechargeable Battery Pack 10000mAh",
     category: "Battery",
     description: "High-capacity power bank with fast charging support.",
     price: 39.99,
@@ -77,7 +77,7 @@ const allProducts = [
   },
   {
     id: 4,
-    name: "RGB LED Light Strip 5m",
+    title: "RGB LED Light Strip 5m",
     category: "LED",
     description: "Smart RGB LED strip with app control and multiple effects.",
     price: 29.99,
@@ -90,7 +90,7 @@ const allProducts = [
   },
   {
     id: 5,
-    name: "Professional Microphone",
+    title: "Professional Microphone",
     category: "Microphone",
     description: "Studio-grade condenser microphone for recording.",
     price: 149.99,
@@ -103,7 +103,7 @@ const allProducts = [
   },
   {
     id: 6,
-    name: "Arduino Compatible Board",
+    title: "Arduino Compatible Board",
     category: "Microcontroller",
     description: "Open-source microcontroller board for electronics projects.",
     price: 24.99,
@@ -116,7 +116,7 @@ const allProducts = [
   },
   {
     id: 7,
-    name: "Precision Resistor Set",
+    title: "Precision Resistor Set",
     category: "Resistor",
     description: "Complete set of precision resistors for electronic projects.",
     price: 19.99,
@@ -129,7 +129,7 @@ const allProducts = [
   },
   {
     id: 8,
-    name: "High-Brightness LED Diodes",
+    title: "High-Brightness LED Diodes",
     category: "Diode",
     description: "Pack of high-efficiency LED diodes in various colors.",
     price: 12.99,
@@ -224,7 +224,7 @@ export default function SearchPage() {
         filtered.sort((a, b) => b.rating - a.rating);
         break;
       case "name":
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
         break;
       case "newest":
         // For demo, just reverse the order
@@ -238,14 +238,14 @@ export default function SearchPage() {
     return filtered;
   }, [searchQuery, selectedCategory, sortBy, priceRange, minRating, showOnlyInStock]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchQuery("");
     setSelectedCategory("All");
     setSortBy("relevance");
     setPriceRange([0, 300]);
     setMinRating(0);
     setShowOnlyInStock(false);
-  };
+  }, []);
 
   const activeFiltersCount = [
     selectedCategory !== "All",
@@ -332,13 +332,7 @@ export default function SearchPage() {
                 {filteredAndSortedProducts.map(product => (
                   <ProductCard
                     key={product.id}
-                    product={{
-                      name: product.title,
-                      category: product.category,
-                      description: product.description,
-                      price: product.price,
-                      image: product.image
-                    }}
+                    product={product}
                   />
                 ))}
               </div>
