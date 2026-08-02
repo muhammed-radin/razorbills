@@ -1,11 +1,14 @@
 import React, { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
-// Eagerly loaded layout/wrapper shells (Keep these fast)
+// Eagerly loaded layout/wrapper shell (Keep fast for client)
 import App from "../App";
-import AdminAuth from "@/pages/Admin/auth/page.index";
-import AdminApp from "@/pages/Admin/admin.app";
 import { LoaderScreen } from "@/components/LoaderScreen";
+
+// Lazy load Admin shells to isolate heavy dependencies (mdxeditor, recharts, etc.)
+const AdminAuth = lazy(() => import("@/pages/Admin/auth/page.index"));
+const AdminApp = lazy(() => import("@/pages/Admin/admin.app"));
+
 
 // --- LAZY IMPORT MAPS ---
 

@@ -25,7 +25,7 @@ const NavbarBlock = () => {
 
         <div className="flex items-center gap-3">
           {/* theme button */}
-          <Button size="icon" variant="outline" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+          <Button size="icon" variant="outline" aria-label="Toggle theme" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
             {theme === "light" ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
           </Button>
 

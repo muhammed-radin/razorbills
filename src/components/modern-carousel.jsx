@@ -174,6 +174,8 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
             <img
               src={product.thumbnail || product.image}
               alt={product.title}
+              loading="lazy"
+              decoding="async"
               className={cn(
                 "w-full h-full object-cover",
                 "transition-all duration-700 ease-out",

@@ -175,6 +175,8 @@ const GridCard = React.memo(({ item, index }) => {
             <img
               src={item.image}
               alt={item.title}
+              loading="lazy"
+              decoding="async"
               className={cn(
                 "absolute inset-0 w-full h-full object-cover",
                 "transition-all duration-700 ease-out",
