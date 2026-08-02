@@ -125,7 +125,6 @@ const AdminAuth = () => {
   return (
     <StrictMode>
       <ThemeProvider>
-        <Toaster position="top-right" theme="dark" richColors />
         {isAuthenticated ? (
           <Outlet />
         ) : (

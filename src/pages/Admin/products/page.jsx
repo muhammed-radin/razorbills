@@ -136,7 +136,6 @@ export default function AdminProductsPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Toaster */}
-      <Toaster position="top-right" theme="dark" richColors />
 
       <div className="container mx-auto p-6 space-y-8">
         {/* Hero Header */}

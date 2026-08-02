@@ -13,7 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <HelmetProvider>
       <BrowserRouter>
         <ThemeProvider>
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-right" theme="dark" />
           <Router />
         </ThemeProvider>
       </BrowserRouter>
