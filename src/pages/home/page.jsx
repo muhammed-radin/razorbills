@@ -87,10 +87,9 @@ export default function HomePage() {
             <HighlightedSlider className="" />
 
             {/* Featured Products Carousel - Premium Cards */}
-            <FeaturedCarousel
-              title="Featured Collection"
-              products={latestProducts.slice(0, 5)} // Show first 5 products as featured
-            />
+            {featuredProducts.length > 0 && (
+              <FeaturedCarousel title="Featured Collection" />
+            )}
 
             {/* Content Grid - Categories & Offers */}
             <ContentGrid title="Explore Categories" />
@@ -103,16 +102,10 @@ export default function HomePage() {
             />
 
             {/* Product Grid */}
-            <div className="max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto py-6 sm:py-8">
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 px-2">
-                All Products
-              </h2>
-              <div className="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
-                {latestProducts.map((product, index) => (
-                  <ProductCard key={index} product={product} index={index} />
-                ))}
-              </div>
-            </div>
+            <ClassicProcuctsSlider
+              title="All Products"
+              products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
+            />
 
             {/* Another Featured Carousel with Different Title */}
             {/* <FeaturedCarousel

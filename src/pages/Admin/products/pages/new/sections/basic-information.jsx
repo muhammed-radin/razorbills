@@ -64,6 +64,7 @@ import {
   tablePlugin,
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
+import { basicDark } from "cm6-theme-basic-dark";
 
 export default function BasicInformationSection({
   form,
@@ -325,6 +326,7 @@ export default function BasicInformationSection({
                         className="min-h-[200px] font-mono bg-background rounded-xl p-1 border border-border/50 dark:bg-background dark:border-border/30 dark"
                         onChange={field.onChange}
                         contentEditableClassName="markdown-style"
+                        placeholder="Write detailed description using Markdown..."
                         plugins={[
                           headingsPlugin(),
                           listsPlugin(),
@@ -337,6 +339,7 @@ export default function BasicInformationSection({
                           diffSourcePlugin({
                             diffMarkdown: "",
                             viewMode: "rich-text",
+                            codeMirrorExtensions: [basicDark],
                           }),
                           toolbarPlugin({
                             toolbarClassName: "flex flex-wrap gap-2",

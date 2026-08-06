@@ -450,3 +450,8 @@
     padding-bottom: 0.5rem;
   }
 }
+
+/* Prevent MDXEditor overlay containers from rendering visually */
+.mdxeditor-popup-container {
+  display: none !important;
+}

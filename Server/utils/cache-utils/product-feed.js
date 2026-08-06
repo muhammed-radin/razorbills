@@ -49,9 +49,12 @@ productFeedCache.toUpdate(async function populateFeed(memory) {
   );
   Feed.trending = minimalTrendingProducts;
 
-  // find featured by featured in specialInfo
+  // find featured by featured in specialInfo or featured in keywords
   const featuredProducts = await ProductModel.find({
-    "specialInfo.featured": true,
+    $or: [
+      { "specialInfo.featured": true },
+      { keywords: { $in: ["featured"] } },
+    ],
   }).limit(20);
   const minimalFeaturedProducts = featuredProducts.map(
     (product) => new MinimalProduct(product),
