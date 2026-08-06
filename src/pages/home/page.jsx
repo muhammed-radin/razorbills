@@ -129,11 +129,11 @@ export default function HomePage() {
             {/* Regular Carousel - Trending */}
             <CarouselSlide title="Trending Now" products={latestProducts} />
 
-            {/* Second Product Grid */}
+            {/* Second Product Grid
             <ClassicProcuctsSlider
               title="Recomended For You"
               products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
-            />
+            /> */}
 
             {/* More Horizontal Cards */}
             <ListHorizontalProductCards products={latestProducts} />
