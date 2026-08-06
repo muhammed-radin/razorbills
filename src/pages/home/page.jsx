@@ -88,7 +88,10 @@ export default function HomePage() {
 
             {/* Featured Products Carousel - Premium Cards */}
             {featuredProducts.length > 0 && (
-              <FeaturedCarousel title="Featured Collection" />
+              <FeaturedCarousel
+                title="Featured Collection"
+                products={featuredProducts}
+              />
             )}
 
             {/* Content Grid - Categories & Offers */}
