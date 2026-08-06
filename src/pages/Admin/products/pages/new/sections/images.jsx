@@ -8,7 +8,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Upload, X, Trash2, Link as LinkIcon } from "lucide-react";
+import {
+  Upload,
+  X,
+  Trash2,
+  Link as LinkIcon,
+  XIcon,
+  Check,
+} from "lucide-react";
 
 import {
   Attachment,
@@ -20,6 +27,7 @@ import {
   AttachmentMedia,
   AttachmentTitle,
 } from "@/components/ui/attachment";
+import { Preloader } from "@/components/LoaderScreen";
 
 export default function ImagesSection({
   thumbnail,
@@ -98,62 +106,81 @@ export default function ImagesSection({
         {/* Additional Images */}
         <div className="space-y-4">
           <Label>Additional Images</Label>
-          <div className="flex gap-2 flex-wrap">
-            {additionalImages.map((img, index) => (
-              <div key={index} className="space-y-2">
-                {img.preview ? (
-                  /*<div className="relative w-24 h-24 rounded-md overflow-hidden border">
-                                        <img
-                                            src={img.preview}
-                                            alt={`Additional image ${index + 1}`}
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="icon"
-                                            className="absolute top-1 right-1 h-6 w-6"
-                                            onClick={() => removeAdditionalImage(index)}
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </Button>
-                                    </div>*/
-                  <AttachmentGroup>
-                    <Attachment key={img.name} orientation="vertical">
-                      <AttachmentMedia variant="image">
-                        <img src={img.src} alt={img.alt} />
-                      </AttachmentMedia>
-                      <AttachmentContent>
-                        <AttachmentTitle>{img.name}</AttachmentTitle>
-                        <AttachmentDescription>
-                          {img.meta}
-                        </AttachmentDescription>
-                      </AttachmentContent>
-                    </Attachment>
-                  </AttachmentGroup>
-                ) : (
-                  <div className="flex gap-2 items-center">
-                    <Input
-                      value={img.url}
-                      onChange={(e) =>
-                        updateAdditionalImageUrl(index, e.target.value)
+          <AttachmentGroup className="flex flex-wrap w-full flex-row gap-3">
+            {additionalImages.map((img, index) => {
+              let imagePreview = img.preview || img.url;
+              let imageName =
+                img.name || img.meta?.name || `Image ${index + 1}`;
+
+              let imageSize = img.meta?.size
+                ? `${(img.meta.size / 1024).toFixed(2)} KB`
+                : img.file?.size
+                  ? `${(img.file?.size / 1024).toFixed(2)} KB`
+                  : "URL Image";
+              let imageType = img.meta?.type || img.file?.type || "Image";
+
+              return img.preview ? (
+                <Attachment key={imageName} orientation="vertical">
+                  <AttachmentMedia variant="image">
+                    <img src={imagePreview} alt={imageName} />
+                  </AttachmentMedia>
+                  <AttachmentContent>
+                    <AttachmentTitle>{imageName}</AttachmentTitle>
+                    <AttachmentDescription>
+                      {img.meta?.type || "Image"} -{" "}
+                      {imageType && <span>{imageSize}</span>}
+                    </AttachmentDescription>
+                    <AttachmentActions>
+                      <AttachmentAction
+                        onClick={() => removeAdditionalImage(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </AttachmentAction>
+                    </AttachmentActions>
+                  </AttachmentContent>
+                </Attachment>
+              ) : (
+                <div className="flex gap-2 items-center" key={index}>
+                  <Input
+                    value={img.url}
+                    onChange={(e) => {
+                      updateAdditionalImageUrl(index, e.target.value);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        updateAdditionalImageUrl(
+                          index,
+                          e.target.value,
+                          e.key === "Enter" || e.keyCode === 13,
+                        );
                       }
-                      placeholder="https://example.com/image.jpg"
-                      className="w-64"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeAdditionalImage(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                    }}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-64"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      updateAdditionalImageUrl(index, img.url, true)
+                    }
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeAdditionalImage(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              );
+            })}
+          </AttachmentGroup>
           <div className="flex gap-2">
             <input
               type="file"

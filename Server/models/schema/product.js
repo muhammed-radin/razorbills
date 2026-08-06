@@ -60,7 +60,9 @@ const ProductSchema = new Schema({
 ProductSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   productStatusCache.update();
-  next();
+  if (typeof next === "function") {
+    next();
+  }
 });
 
 class MinimalProduct {

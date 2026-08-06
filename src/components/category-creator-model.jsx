@@ -73,48 +73,41 @@ function CategoryCreatorModel({
           <Button
             type="submit"
             onClick={() => {
-              toast
-                .promise(
-                  new Promise((resolveui, rejectui) => {
-                    if (
-                      !categoryName ||
-                      !categoryIcon ||
-                      !categoryDescription
-                    ) {
-                      rejectui(new Error("Please fill in all fields"));
-                      return;
-                    }
+              toast.promise(
+                new Promise((resolveui, rejectui) => {
+                  if (!categoryName || !categoryIcon || !categoryDescription) {
+                    rejectui(new Error("Please fill in all fields"));
+                    return;
+                  }
 
-                    api.client
-                      .post(api.categories(), {
-                        name: categoryName,
-                        icon: categoryIcon,
-                        id: categoryName.toLowerCase().replace(/\s+/g, "-"),
-                        logo: "",
-                        description: categoryDescription,
-                      })
-                      .then((response) => {
-                        if (response.status === 201) {
-                          resolveui(response);
-                          setCategoryCreateModel(false);
-                        } else {
-                          rejectui(new Error("Failed to create category"));
-                        }
-                      });
-                  }),
-                  {
-                    loading: "Creating category...",
-                    success: "Category created successfully",
-                    error: (err) => "Error: " + err.message,
-                  },
-                )
-                .then(() => {
-                  onAddCategory(
-                    categoryName,
-                    categoryIcon,
-                    categoryDescription,
-                  );
-                });
+                  api.client
+                    .post(api.categories(), {
+                      name: categoryName,
+                      icon: categoryIcon,
+                      id: categoryName.toLowerCase().replace(/\s+/g, "-"),
+                      logo: "",
+                      description: categoryDescription,
+                    })
+                    .then((response) => {
+                      if (response.status === 201) {
+                        resolveui(response);
+                        setCategoryCreateModel(false);
+                        onAddCategory(
+                          categoryName,
+                          categoryIcon,
+                          categoryDescription,
+                        );
+                      } else {
+                        rejectui(new Error("Failed to create category"));
+                      }
+                    });
+                }),
+                {
+                  loading: "Creating category...",
+                  success: "Category created successfully",
+                  error: (err) => "Error: " + err.message,
+                },
+              );
             }}
           >
             Save changes

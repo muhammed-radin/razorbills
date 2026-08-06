@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, Plus, Save, Loader2 } from "lucide-react";
@@ -26,8 +26,8 @@ import AdditionalInformationSection from "./sections/additional-information";
 const defaultCategories = [];
 
 // Cloudinary configuration - update these with your credentials
-const CLOUDINARY_UPLOAD_PRESET = "your_upload_preset";
-const CLOUDINARY_CLOUD_NAME = "your_cloud_name";
+const CLOUDINARY_UPLOAD_PRESET = "products"; // Replace with your upload preset
+const CLOUDINARY_CLOUD_NAME = "drv6qpv56";
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 export default function NewProductPage() {
@@ -84,6 +84,20 @@ export default function NewProductPage() {
       sku: "",
     },
   });
+
+  useEffect(() => {
+    // load all inputs values from local storage on mount early stored if found
+    if (localStorage.getItem("newProductForm")) {
+      const savedValues = JSON.parse(localStorage.getItem("newProductForm"));
+      form.reset(savedValues);
+    }
+    // save all inputs values to local storage on change
+    const subscription = form.watch((value) => {
+      localStorage.setItem("newProductForm", JSON.stringify(value));
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const loadCategories = async () => {
     try {
@@ -182,12 +196,12 @@ export default function NewProductPage() {
     const file = e.target.files[0];
     if (file) {
       const preview = URL.createObjectURL(file);
-      setThumbnail({ url: "", file, preview });
+      setThumbnail({ url: "", file, preview, status: "uploading" });
     }
   };
 
   const handleThumbnailUrlChange = (url) => {
-    setThumbnail({ url, file: null, preview: url });
+    setThumbnail({ url, file: null, preview: url, status: "uploaded" });
   };
 
   const handleAdditionalImageFileChange = (e) => {
@@ -196,6 +210,7 @@ export default function NewProductPage() {
       url: "",
       file,
       preview: URL.createObjectURL(file),
+      meta: { name: file.name, size: file.size, type: file.type },
     }));
     setAdditionalImages([...additionalImages, ...newImages]);
   };
@@ -203,13 +218,23 @@ export default function NewProductPage() {
   const addAdditionalImageUrl = () => {
     setAdditionalImages([
       ...additionalImages,
-      { url: "", file: null, preview: "" },
+      {
+        url: "",
+        file: null,
+        preview: "",
+        meta: { name: "", size: 0, type: "" },
+      },
     ]);
   };
 
-  const updateAdditionalImageUrl = (index, url) => {
+  const updateAdditionalImageUrl = (index, url, confirm = false) => {
     const updated = [...additionalImages];
-    updated[index] = { url, file: null, preview: url };
+    updated[index] = {
+      url,
+      file: null,
+      preview: confirm ? url : null,
+      meta: { name: "", size: 0, type: "" },
+    };
     setAdditionalImages(updated);
   };
 
@@ -285,9 +310,31 @@ export default function NewProductPage() {
       delete productData.height;
       delete productData.depth;
 
-      await axios.post(api.products(), productData);
-      toast.success("Product created successfully!");
-      navigate("/admin/products");
+      await api.client
+        .post(
+          api.products(
+            "new/" +
+              (form.getValues("id") ||
+                data.id ||
+                Math.floor(Math.random() * 1000000)),
+          ),
+          productData,
+        )
+        .then((response) => {
+          if (response.status === 200) {
+            toast.success("Product created successfully!");
+            localStorage.removeItem("newProductForm");
+            navigate("/auth/admin/products");
+          } else {
+            toast.error(response.data.message || "Failed to create product");
+          }
+        })
+        .catch((error) => {
+          toast.error(
+            error.response?.data?.message || "Failed to create product",
+          );
+          console.error("Error creating product:", error);
+        });
     } catch (error) {
       console.error("Error creating product:", error);
       toast.error(error.response?.data?.message || "Failed to create product");

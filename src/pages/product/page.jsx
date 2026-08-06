@@ -81,15 +81,18 @@ const ProductDetailsPage = () => {
     );
   }, [product]);
 
-  const handleQuantityChange = useCallback((change) => {
-    setQuantity(prevQuantity => {
+  const handleQuantityChange = useCallback(
+    (change) => {
+      setQuantity((prevQuantity) => {
         const newQuantity = prevQuantity + change;
         if (newQuantity >= 1 && newQuantity <= product.stock) {
-            return newQuantity;
+          return newQuantity;
         }
         return prevQuantity;
-    });
-  }, [product.stock]);
+      });
+    },
+    [product.stock],
+  );
 
   if (product.loading) {
     return <LoaderScreen />;
@@ -104,7 +107,10 @@ const ProductDetailsPage = () => {
       <Helmet>
         <title>{`${product.title} - RazorBills`}</title>
         <meta name="description" content={product.description} />
-        <meta name="keywords" content={`${product.title}, ${product.category}, ${product.brand}, ${product.tags.join(', ')}`} />
+        <meta
+          name="keywords"
+          content={`${product.title}, ${product.category}, ${product.brand}, ${product.tags.join(", ")}`}
+        />
       </Helmet>
       {/* Breadcrumb */}
       <nav className="mb-6 text-sm text-muted-foreground max-w-7xl mx-auto">
@@ -140,7 +146,7 @@ const ProductDetailsPage = () => {
           </div>
 
           {/* Thumbnail Images */}
-          {product.images.length > 1 && (
+          {product.images.length >= 1 && (
             <div className="flex space-x-3">
               {product.images.map((image, index) => (
                 <button

@@ -115,6 +115,7 @@ export default function BasicInformationSection({
                     size="sm"
                     variant="link"
                     className="ml-2 mt-2"
+                    type="button"
                     onClick={() => {
                       const randomId = Math.random()
                         .toString(36)

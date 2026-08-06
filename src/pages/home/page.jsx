@@ -12,6 +12,8 @@ import ModernCarousel from "@/components/modern-carousel";
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
 import ClassicProcuctsSlider from "@/components/product-card/products-slider";
+import HighlightedSlider from "@/components/highlighted-slider";
+import FeaturedCarousel from "@/components/featured-carousel";
 
 export default function HomePage() {
   const [latestProducts, setlatestProducts] = useState([]);
@@ -38,8 +40,14 @@ export default function HomePage() {
     <div className="min-h-screen w-full">
       <Helmet>
         <title>RazorBills - High-Quality Electronic Components</title>
-        <meta name="description" content="Your one-stop shop for the latest and greatest electronics. Industrial-grade electronic components for engineers, makers, startups, and institutions." />
-        <meta name="keywords" content="electronics, components, resistor, diode, led, transistor, battery, fuse, potentiometer, speaker, microphone, microcontroller" />
+        <meta
+          name="description"
+          content="Your one-stop shop for the latest and greatest electronics. Industrial-grade electronic components for engineers, makers, startups, and institutions."
+        />
+        <meta
+          name="keywords"
+          content="electronics, components, resistor, diode, led, transistor, battery, fuse, potentiometer, speaker, microphone, microcontroller"
+        />
       </Helmet>
       {/* Hero Section */}
       {/* <Hero /> */}
@@ -76,13 +84,13 @@ export default function HomePage() {
         ) : (
           <>
             {/* Highlighted Image Slider - Full Width Hero Style */}
-            {/* <HighlightedSlider className="" /> */}
+            <HighlightedSlider className="" />
 
             {/* Featured Products Carousel - Premium Cards */}
-            {/* <FeaturedCarousel
+            <FeaturedCarousel
               title="Featured Collection"
               products={latestProducts.slice(0, 5)} // Show first 5 products as featured
-            /> */}
+            />
 
             {/* Content Grid - Categories & Offers */}
             <ContentGrid title="Explore Categories" />
