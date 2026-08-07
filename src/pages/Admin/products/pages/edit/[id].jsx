@@ -32,6 +32,63 @@ const CLOUDINARY_UPLOAD_PRESET = "thumbs"; // Replace with your upload preset
 const CLOUDINARY_CLOUD_NAME = "drv6qpv56";
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
+const EDIT_PRODUCT_IMAGES_DB = "editProductImagesDB";
+const EDIT_PRODUCT_IMAGES_DB_VERSION = 2;
+const EDIT_PRODUCT_IMAGES_STORE = "images";
+
+function openImagesDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(
+      EDIT_PRODUCT_IMAGES_DB,
+      EDIT_PRODUCT_IMAGES_DB_VERSION,
+    );
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains(EDIT_PRODUCT_IMAGES_STORE)) {
+        db.createObjectStore(EDIT_PRODUCT_IMAGES_STORE, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+      }
+    };
+
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+
+      // Safety net for older/corrupt DB states
+      if (!db.objectStoreNames.contains(EDIT_PRODUCT_IMAGES_STORE)) {
+        db.close();
+        indexedDB.deleteDatabase(EDIT_PRODUCT_IMAGES_DB);
+        const recreate = indexedDB.open(
+          EDIT_PRODUCT_IMAGES_DB,
+          EDIT_PRODUCT_IMAGES_DB_VERSION,
+        );
+
+        recreate.onupgradeneeded = (e) => {
+          const recreatedDb = e.target.result;
+          if (
+            !recreatedDb.objectStoreNames.contains(EDIT_PRODUCT_IMAGES_STORE)
+          ) {
+            recreatedDb.createObjectStore(EDIT_PRODUCT_IMAGES_STORE, {
+              keyPath: "id",
+              autoIncrement: true,
+            });
+          }
+        };
+
+        recreate.onsuccess = (e) => resolve(e.target.result);
+        recreate.onerror = () => reject(recreate.error);
+        return;
+      }
+
+      resolve(db);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export default function EditProductPage() {
   const navigate = useNavigate();
   const id = useParams().id; // Get the product ID from the URL params if needed
@@ -123,90 +180,71 @@ export default function EditProductPage() {
   }, [id]);
 
   // save images into indexedDB ( stores thumbnail and additional images with blob and url ).
-  function saveImages() {
-    let saveData = { data: [thumbnail, ...additionalImages], id: 0 };
+  async function saveImages() {
+    const saveData = { data: [thumbnail, ...additionalImages], id: 0 };
 
     if (saveData.data.length === 0) {
       return;
     }
-    // store in indexedDB
-    const request = indexedDB.open("editProductImagesDB", 1);
-    request.onupgradeneeded = function (event) {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains("images")) {
-        db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
-      }
-    };
-    request.onsuccess = function (event) {
-      const db = event.target.result;
-      const transaction = db.transaction("images", "readwrite");
-      const store = transaction.objectStore("images");
-      // saveData.forEach((image, index) => {
-      //   image.id = index; // Assign a unique ID for each image
-      //   // store.put(image);
-      // });
+
+    try {
+      const db = await openImagesDB();
+      const transaction = db.transaction(
+        EDIT_PRODUCT_IMAGES_STORE,
+        "readwrite",
+      );
+      const store = transaction.objectStore(EDIT_PRODUCT_IMAGES_STORE);
       store.put(saveData);
-    };
-    request.onerror = function (event) {
-      console.error("IndexedDB error:", event.target.error);
+    } catch (error) {
+      console.error("IndexedDB save error:", error);
       toast.warning("Failed to save images to DB");
-    };
+    }
   }
 
-  function loadImages() {
-    const request = indexedDB.open("editProductImagesDB", 1);
-    request.onsuccess = function (event) {
-      const db = event.target.result;
-      const transaction = db.transaction("images", "readonly");
-      const store = transaction.objectStore("images");
+  async function loadImages() {
+    try {
+      const db = await openImagesDB();
+      const transaction = db.transaction(EDIT_PRODUCT_IMAGES_STORE, "readonly");
+      const store = transaction.objectStore(EDIT_PRODUCT_IMAGES_STORE);
       const getAllRequest = store.getAll();
-      getAllRequest.onsuccess = function (event) {
+
+      getAllRequest.onsuccess = (event) => {
         const images = event.target.result;
         if (images.length > 0) {
-          if (images[0].data[0].isThumbnail) {
-            setThumbnail(images[0].data[0]);
-          }
-          if (thumbnail.file) {
-            thumbnail.preview = URL.createObjectURL(thumbnail.file);
+          const saved = images[0].data || [];
+
+          if (saved[0]?.isThumbnail) {
+            setThumbnail(saved[0]);
           }
 
-          let imagesData = images[0].data.slice(1);
-          imagesData.forEach((image) => {
+          const imagesData = saved.slice(1).map((image) => {
             if (image.file) {
               image.preview = URL.createObjectURL(image.file);
             }
+            return image;
           });
+
           setAdditionalImages(imagesData);
-        } else {
-          console.log("No images found in DB");
         }
       };
-    };
-    request.onerror = function (event) {
-      console.error("IndexedDB error:", event.target.error);
+    } catch (error) {
+      console.error("IndexedDB load error:", error);
       toast.warning("Failed to load images from DB");
-    };
+    }
   }
 
-  function clearImages() {
-    const request = indexedDB.open("editProductImagesDB", 1);
-    request.onsuccess = function (event) {
-      const db = event.target.result;
-      const transaction = db.transaction("images", "readwrite");
-      const store = transaction.objectStore("images");
-      const clearRequest = store.clear();
-      clearRequest.onsuccess = function () {
-        console.log("Cleared images from DB");
-      };
-      clearRequest.onerror = function (event) {
-        console.error("IndexedDB error:", event.target.error);
-        toast.warning("Failed to clear images from DB");
-      };
-    };
-    request.onerror = function (event) {
-      console.error("IndexedDB error:", event.target.error);
-      toast.warning("Failed to open DB for clearing images");
-    };
+  async function clearImages() {
+    try {
+      const db = await openImagesDB();
+      const transaction = db.transaction(
+        EDIT_PRODUCT_IMAGES_STORE,
+        "readwrite",
+      );
+      const store = transaction.objectStore(EDIT_PRODUCT_IMAGES_STORE);
+      store.clear();
+    } catch (error) {
+      console.error("IndexedDB clear error:", error);
+    }
   }
 
   const firstLoadRef = useRef(true);
@@ -596,36 +634,28 @@ export default function EditProductPage() {
       delete productData.depth;
 
       await api.client
-        .post(
-          api.products(
-            "new/" +
-              (form.getValues("id") ||
-                data.id ||
-                Math.floor(Math.random() * 1000000)),
-          ),
-          productData,
-        )
+        .put(api.products(id), productData)
         .then((response) => {
           if (response.status === 200) {
-            toast.success("Product created successfully!");
+            toast.success("Product updated successfully!");
             localStorage.removeItem("editProductForm");
             clearLocalStorage();
             clearImages();
             setIsSubmitting(false);
             navigate("/auth/admin/products");
           } else {
-            toast.error(response.data.message || "Failed to create product");
+            toast.error(response.data.message || "Failed to update product");
           }
         })
         .catch((error) => {
           toast.error(
-            error.response?.data?.message || "Failed to create product",
+            error.response?.data?.message || "Failed to update product",
           );
-          console.error("Error creating product:", error);
+          console.error("Error updating product:", error);
         });
     } catch (error) {
-      console.error("Error creating product:", error);
-      toast.error(error.response?.data?.message || "Failed to create product");
+      console.error("Error updating product:", error);
+      toast.error(error.response?.data?.message || "Failed to update product");
     } finally {
       setIsSubmitting(false);
     }
