@@ -27,13 +27,14 @@ import { productSchema } from "@/utils/product_zod";
 const defaultCategories = [];
 
 // Cloudinary configuration - update these with your credentials
-const CLOUDINARY_UPLOAD_PRESET = "products"; // Replace with your upload preset
+const CLOUDINARY_UPLOAD_PRESET = "thumbs"; // Replace with your upload preset
 const CLOUDINARY_CLOUD_NAME = "drv6qpv56";
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 export default function NewProductPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [specifications, setSpecifications] = useState([
     { label: "", value: "" },
   ]);
@@ -366,13 +367,42 @@ export default function NewProductPage() {
   };
 
   // Upload image to Cloudinary
-  const uploadToCloudinary = async (file) => {
+  const uploadToCloudinary = (file) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-    const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData);
-    return response.data.secure_url;
+    return new Promise((resolve, reject) => {
+      toast.promise(
+        () =>
+          new Promise((resolveui, rejectui) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", CLOUDINARY_UPLOAD_URL);
+            xhr.upload.onprogress = (e) => {
+              const progress = Math.round((e.loaded / e.total) * 100);
+              setUploadProgress(progress);
+            };
+            xhr.onload = () => {
+              if (xhr.status === 200) {
+                resolveui("Image uploaded successfully:" + file?.name);
+                resolve(JSON.parse(xhr.response).secure_url);
+              } else {
+                rejectui(new Error("Cloudinary upload failed"));
+                reject(new Error("Cloudinary upload failed"));
+              }
+            };
+            xhr.onerror = () => {
+              rejectui(new Error("Cloudinary upload failed"));
+              reject(new Error("Cloudinary upload failed"));
+            };
+            xhr.send(formData);
+          }),
+        {
+          loading: "Uploading image...",
+          success: "Image uploaded successfully",
+          error: "Error uploading image",
+        },
+      );
+    });
   };
 
   // Add new category
@@ -406,15 +436,32 @@ export default function NewProductPage() {
     try {
       // Upload thumbnail if it's a file
       let thumbnailUrl = thumbnail.url;
-      if (thumbnail.file) {
+      if (thumbnail.file && thumbnail.url === "") {
         thumbnailUrl = await uploadToCloudinary(thumbnail.file);
+        URL.revokeObjectURL(thumbnail.preview);
+        thumbnail.preview = thumbnailUrl;
+        thumbnail.file = null;
+        thumbnail.url = thumbnailUrl;
+        setThumbnail({
+          ...thumbnail,
+          url: thumbnailUrl,
+        });
+        console.log("Thumbnail uploaded:", thumbnail);
       }
 
       // Upload additional images
       const imageUrls = await Promise.all(
-        additionalImages.map(async (img) => {
-          if (img.file) {
-            return await uploadToCloudinary(img.file);
+        additionalImages.map(async (img, index) => {
+          if (img.file && img.url === "") {
+            let uploadedUrl = await uploadToCloudinary(img.file);
+            URL.revokeObjectURL(img.preview);
+            console.log("Uploaded additional image:", uploadedUrl);
+            img.preview = uploadedUrl;
+            img.file = null;
+            img.url = uploadedUrl;
+            updateAdditionalImageUrl(index, uploadedUrl, true);
+
+            return uploadedUrl;
           }
           return img.url;
         }),
