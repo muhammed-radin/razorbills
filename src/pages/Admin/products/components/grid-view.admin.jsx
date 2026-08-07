@@ -61,7 +61,7 @@ function GridViewAdmin({
                     className="shadow-lg"
                     asChild
                   >
-                    <Link to={`/admin/products/${product.id}/edit`}>
+                    <Link to={`/auth/admin/products/${product.id}/edit`}>
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>
