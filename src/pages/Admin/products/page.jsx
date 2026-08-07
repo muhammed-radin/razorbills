@@ -182,7 +182,7 @@ export default function AdminProductsPage() {
               </p>
               {!searchQuery && (
                 <Button asChild className="mt-6">
-                  <Link to="/admin/products/new">
+                  <Link to="/auth/admin/products/new">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Your First Product
                   </Link>

@@ -22,89 +22,19 @@ import FeaturesSection from "./sections/features";
 import DimensionsWeightSection from "./sections/dimensions-weight";
 import TagsKeywordsSection from "./sections/tags-keywords";
 import AdditionalInformationSection from "./sections/additional-information";
-
-import * as z from "zod";
+import { productSchema } from "@/utils/product_zod";
 
 const defaultCategories = [];
 
 // Cloudinary configuration - update these with your credentials
-const CLOUDINARY_UPLOAD_PRESET = "products"; // Replace with your upload preset
+const CLOUDINARY_UPLOAD_PRESET = "thumbs"; // Replace with your upload preset
 const CLOUDINARY_CLOUD_NAME = "drv6qpv56";
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
-
-const productSchema = z.object({
-  id: z.string().min(8, "ID must be at least 8 characters long"),
-  title: z.string().min(6, "Title must be at least 6 characters long"),
-  price: z.number().min(1, "Price must be greater than 0"),
-  originalPrice: z.number().min(1, "Original price must be greater than 0"),
-  thumbnail: z.string().min(2, "Thumbnail must be at least 2 characters long"),
-  description: z
-    .string()
-    .min(10, "Description must be at least 10 characters long"),
-  category: z.string().min(2, "Category must be at least 2 characters long"),
-  stock: z.number().min(0, "Stock must be a non-negative number"),
-  brand: z.string().min(2, "Brand must be at least 2 characters long"),
-  tax: z.number().default(0),
-  tags: z
-    .array(z.string())
-    .min(3, "At least three tag is required")
-    .default([]),
-  keywords: z.array(z.string()).optional().default([]),
-  detailedDescription: z
-    .string()
-    .min(10, "Detailed description must be at least 10 characters long")
-    .max(1200, "Detailed description must be at most 1200 characters long")
-    .default(""),
-  specifications: z
-    .array(
-      z.object({
-        label: z.string().min(2, "Label must be at least 2 characters long"),
-        value: z.string().min(2, "Value must be at least 2 characters long"),
-      }),
-    )
-    .default([]),
-  features: z
-    .array(z.string())
-    .min(3, "At least three feature is required")
-    .default([]),
-  images: z
-    .array(z.string())
-    .min(1, "At least one image is required")
-    .default([]),
-  rating: z.number().optional().default(0),
-  reviewCount: z.number().optional().default(0),
-  dimensions: z
-    .object({
-      width: z.number().optional().default(0),
-      height: z.number().optional().default(0),
-      depth: z.number().optional().default(0),
-    })
-    .optional(),
-  weight: z.number().optional().default(0),
-  createdAt: z.date().default(Date.now),
-  updatedAt: z.date().default(Date.now),
-  isActive: z.boolean().default(true),
-  currency: z.string().optional().default("INR"),
-  owner: z
-    .object({
-      id: z.string().default("admin"),
-      name: z.string().default("Admin"),
-    })
-    .optional(),
-  warranty: z.string().optional().default(null),
-  returnPolicy: z.string().optional().default(null),
-  shippingDetails: z.string().optional().default(null),
-  relatedProducts: z.array(z.string()).optional().default([]),
-  accessories: z.array(z.string()).optional().default([]),
-  priceHistory: z.array(z.number()).optional().default([]),
-  sku: z.string().min(2, "SKU must be at least 2 characters long").default(""),
-  views: z.number().default(0),
-  specialInfo: z.record(z.any()).optional().default({}),
-});
 
 export default function NewProductPage() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [specifications, setSpecifications] = useState([
     { label: "", value: "" },
   ]);
@@ -119,8 +49,107 @@ export default function NewProductPage() {
     url: "",
     file: null,
     preview: "",
+    isThumbnail: true,
   });
   const [additionalImages, setAdditionalImages] = useState([]);
+
+  // save images into indexedDB ( stores thumbnail and additional images with blob and url ).
+  function saveImages() {
+    let saveData = { data: [thumbnail, ...additionalImages], id: 0 };
+
+    if (saveData.data.length === 0) {
+      return;
+    }
+    // store in indexedDB
+    const request = indexedDB.open("productImagesDB", 1);
+    request.onupgradeneeded = function (event) {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains("images")) {
+        db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
+      }
+    };
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction("images", "readwrite");
+      const store = transaction.objectStore("images");
+      // saveData.forEach((image, index) => {
+      //   image.id = index; // Assign a unique ID for each image
+      //   // store.put(image);
+      // });
+      store.put(saveData);
+    };
+    request.onerror = function (event) {
+      console.error("IndexedDB error:", event.target.error);
+      toast.warning("Failed to save images to DB");
+    };
+  }
+
+  function loadImages() {
+    const request = indexedDB.open("productImagesDB", 1);
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction("images", "readonly");
+      const store = transaction.objectStore("images");
+      const getAllRequest = store.getAll();
+      getAllRequest.onsuccess = function (event) {
+        const images = event.target.result;
+        if (images.length > 0) {
+          if (images[0].data[0].isThumbnail) {
+            setThumbnail(images[0].data[0]);
+          }
+          if (thumbnail.file) {
+            thumbnail.preview = URL.createObjectURL(thumbnail.file);
+          }
+
+          let imagesData = images[0].data.slice(1);
+          imagesData.forEach((image) => {
+            if (image.file) {
+              image.preview = URL.createObjectURL(image.file);
+            }
+          });
+          setAdditionalImages(imagesData);
+        } else {
+          console.log("No images found in DB");
+        }
+      };
+    };
+    request.onerror = function (event) {
+      console.error("IndexedDB error:", event.target.error);
+      toast.warning("Failed to load images from DB");
+    };
+  }
+
+  function clearImages() {
+    const request = indexedDB.open("productImagesDB", 1);
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction("images", "readwrite");
+      const store = transaction.objectStore("images");
+      const clearRequest = store.clear();
+      clearRequest.onsuccess = function () {
+        console.log("Cleared images from DB");
+      };
+      clearRequest.onerror = function (event) {
+        console.error("IndexedDB error:", event.target.error);
+        toast.warning("Failed to clear images from DB");
+      };
+    };
+    request.onerror = function (event) {
+      console.error("IndexedDB error:", event.target.error);
+      toast.warning("Failed to open DB for clearing images");
+    };
+  }
+
+  const firstLoadRef = useRef(true);
+  useEffect(() => {
+    if (!(thumbnail.url || thumbnail.file) && !additionalImages.length > 0) {
+      if (firstLoadRef.current) {
+        loadImages();
+        firstLoadRef.current = false;
+      }
+    }
+    saveImages();
+  }, [thumbnail, additionalImages]);
 
   // Category combobox states
   const [categories, setCategories] = useState(defaultCategories);
@@ -165,16 +194,52 @@ export default function NewProductPage() {
     }
     // save all inputs values to local storage on change
     const subscription = form.watch((value) => {
-      localStorage.setItem("newProductForm", JSON.stringify(value));
+      let saveData = { ...value };
+      localStorage.setItem("newProductForm", JSON.stringify(saveData));
     });
 
     return () => subscription.unsubscribe();
   }, [form]);
 
+  const isLoadedFromLocalStorageRef = useRef(false);
+
+  const clearLocalStorage = () => {
+    localStorage.removeItem("newProductForm");
+    localStorage.removeItem("arrayDataForm");
+  };
+
+  useEffect(() => {
+    if (
+      localStorage.getItem("arrayDataForm") &&
+      !isLoadedFromLocalStorageRef.current
+    ) {
+      const savedValues = JSON.parse(localStorage.getItem("arrayDataForm"));
+      setSpecifications(savedValues.specifications);
+      setFeatures(savedValues.features);
+      setTags(savedValues.tags);
+      setKeywords(savedValues.keywords);
+      isLoadedFromLocalStorageRef.current = true;
+    }
+
+    if (
+      specifications.length > 0 ||
+      features.length > 0 ||
+      tags.length > 0 ||
+      keywords.length > 0
+    ) {
+      let arrData = {
+        specifications: specifications,
+        features: features,
+        tags: tags,
+        keywords: keywords,
+      };
+      localStorage.setItem("arrayDataForm", JSON.stringify(arrData));
+    }
+  }, [specifications, features, tags, keywords]);
+
   const loadCategories = async () => {
     try {
       const response = await api.client.get(api.categories());
-      console.log(response.data);
       setCategories(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -268,12 +333,24 @@ export default function NewProductPage() {
     const file = e.target.files[0];
     if (file) {
       const preview = URL.createObjectURL(file);
-      setThumbnail({ url: "", file, preview, status: "uploading" });
+      setThumbnail({
+        url: "",
+        file,
+        preview,
+        status: "uploading",
+        isThumbnail: true,
+      });
     }
   };
 
   const handleThumbnailUrlChange = (url) => {
-    setThumbnail({ url, file: null, preview: url, status: "uploaded" });
+    setThumbnail({
+      url,
+      file: null,
+      preview: url,
+      status: "uploaded",
+      isThumbnail: true,
+    });
   };
 
   const handleAdditionalImageFileChange = (e) => {
@@ -320,13 +397,42 @@ export default function NewProductPage() {
   };
 
   // Upload image to Cloudinary
-  const uploadToCloudinary = async (file) => {
+  const uploadToCloudinary = (file) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-
-    const response = await axios.post(CLOUDINARY_UPLOAD_URL, formData);
-    return response.data.secure_url;
+    return new Promise((resolve, reject) => {
+      toast.promise(
+        () =>
+          new Promise((resolveui, rejectui) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", CLOUDINARY_UPLOAD_URL);
+            xhr.upload.onprogress = (e) => {
+              const progress = Math.round((e.loaded / e.total) * 100);
+              setUploadProgress(progress);
+            };
+            xhr.onload = () => {
+              if (xhr.status === 200) {
+                resolveui("Image uploaded successfully:" + file?.name);
+                resolve(JSON.parse(xhr.response).secure_url);
+              } else {
+                rejectui(new Error("Cloudinary upload failed"));
+                reject(new Error("Cloudinary upload failed"));
+              }
+            };
+            xhr.onerror = () => {
+              rejectui(new Error("Cloudinary upload failed"));
+              reject(new Error("Cloudinary upload failed"));
+            };
+            xhr.send(formData);
+          }),
+        {
+          loading: "Uploading image...",
+          success: "Image uploaded successfully",
+          error: "Error uploading image",
+        },
+      );
+    });
   };
 
   // Add new category
@@ -340,7 +446,6 @@ export default function NewProductPage() {
     // validate data using zod schema
     const validatedData = productSchema.safeParse(data);
     if (!validatedData.success) {
-      console.log(validatedData);
       setIsSubmitting(false);
       toast.warning("Validation failed");
       toast.warning(
@@ -360,15 +465,30 @@ export default function NewProductPage() {
     try {
       // Upload thumbnail if it's a file
       let thumbnailUrl = thumbnail.url;
-      if (thumbnail.file) {
+      if (thumbnail.file && thumbnail.url === "") {
         thumbnailUrl = await uploadToCloudinary(thumbnail.file);
+        URL.revokeObjectURL(thumbnail.preview);
+        thumbnail.preview = thumbnailUrl;
+        thumbnail.file = null;
+        thumbnail.url = thumbnailUrl;
+        setThumbnail({
+          ...thumbnail,
+          url: thumbnailUrl,
+        });
       }
 
       // Upload additional images
       const imageUrls = await Promise.all(
-        additionalImages.map(async (img) => {
-          if (img.file) {
-            return await uploadToCloudinary(img.file);
+        additionalImages.map(async (img, index) => {
+          if (img.file && img.url === "") {
+            let uploadedUrl = await uploadToCloudinary(img.file);
+            URL.revokeObjectURL(img.preview);
+            img.preview = uploadedUrl;
+            img.file = null;
+            img.url = uploadedUrl;
+            updateAdditionalImageUrl(index, uploadedUrl, true);
+
+            return uploadedUrl;
           }
           return img.url;
         }),
@@ -420,6 +540,9 @@ export default function NewProductPage() {
           if (response.status === 200) {
             toast.success("Product created successfully!");
             localStorage.removeItem("newProductForm");
+            clearLocalStorage();
+            clearImages();
+            setIsSubmitting(false);
             navigate("/auth/admin/products");
           } else {
             toast.error(response.data.message || "Failed to create product");
@@ -445,7 +568,7 @@ export default function NewProductPage() {
 
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link to="/admin/products">
+          <Link to="/auth/admin/products">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
@@ -579,7 +702,7 @@ export default function NewProductPage() {
             {/* Submit Button */}
             <div className="flex justify-end gap-4">
               <Button type="button" variant="outline" asChild>
-                <Link to="/admin/products">Cancel</Link>
+                <Link to="/auth/admin/products">Cancel</Link>
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting ? (

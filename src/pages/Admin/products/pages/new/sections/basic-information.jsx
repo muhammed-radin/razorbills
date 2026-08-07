@@ -36,7 +36,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { lazy, Suspense, useMemo, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import dynamicIconImports from "lucide-react/dynamicIconImports";
 import CategoryCreatorModel from "@/components/category-creator-model";
 
 import {
@@ -79,16 +78,6 @@ export default function BasicInformationSection({
   const [categorySearch, setCategorySearch] = useState("");
 
   const categorySearchInput = useRef(null);
-
-  const iconsNames = useMemo(() => {
-    console.log(icons);
-    return Object.keys(dynamicIconImports).map((iconName) => {
-      return {
-        label: iconName,
-        value: iconName,
-      };
-    });
-  }, []);
 
   return (
     <>

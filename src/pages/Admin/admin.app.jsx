@@ -20,7 +20,7 @@ const PageInfoContext = createContext();
 function AdminApp() {
   const [currentPageInfo, setCurrentPageInfo] = useState({
     title: "Dashboard",
-    url: "/admin/dashboard",
+    url: "/auth/admin/dashboard",
     icon: LayoutDashboard,
   });
 

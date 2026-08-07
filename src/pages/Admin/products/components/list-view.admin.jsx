@@ -91,7 +91,7 @@ function ListViewAdmin({
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
-                      to={`/admin/products/${product.id}/edit`}
+                      to={`/auth/admin/products/${product.id}/edit`}
                       className="flex items-center"
                     >
                       <Edit className="mr-2 h-4 w-4" />

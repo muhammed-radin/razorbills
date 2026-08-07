@@ -134,7 +134,6 @@ export default function HomePage() {
               title="Recomended For You"
               products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
             /> */}
-            {/* temp comment  */}
 
             {/* More Horizontal Cards */}
             <ListHorizontalProductCards products={latestProducts} />

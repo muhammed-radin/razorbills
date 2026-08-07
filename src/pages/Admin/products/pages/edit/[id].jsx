@@ -210,7 +210,7 @@ export default function EditProductPage() {
         } catch (error) {
             console.error("Error fetching product:", error)
             toast.error("Failed to load product")
-            navigate("/admin/products")
+            navigate("/auth/admin/products")
         } finally {
             setIsLoading(false)
         }
@@ -404,7 +404,7 @@ export default function EditProductPage() {
 
             await axios.put(api.products(id), productData)
             toast.success("Product updated successfully!")
-            navigate("/admin/products")
+            navigate("/auth/admin/products")
         } catch (error) {
             console.error("Error updating product:", error)
             toast.error(error.response?.data?.message || "Failed to update product")
@@ -448,7 +448,7 @@ export default function EditProductPage() {
                                 className="h-12 w-12 rounded-full shadow-xl hover:scale-110 transition-transform duration-300"
                                 asChild
                             >
-                                <Link to="/admin/products">
+                                <Link to="/auth/admin/products">
                                     <ArrowLeft className="h-5 w-5" />
                                 </Link>
                             </Button>
@@ -1367,7 +1367,7 @@ export default function EditProductPage() {
                                             className="flex-1 sm:flex-none h-12 border-2"
                                             asChild
                                         >
-                                            <Link to="/admin/products">
+                                            <Link to="/auth/admin/products">
                                                 <X className="mr-2 h-4 w-4" />
                                                 Cancel
                                             </Link>
