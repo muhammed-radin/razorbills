@@ -202,6 +202,12 @@ export default function NewProductPage() {
   }, [form]);
 
   const isLoadedFromLocalStorageRef = useRef(false);
+
+  const clearLocalStorage = () => {
+    localStorage.removeItem("newProductForm");
+    localStorage.removeItem("arrayDataForm");
+  };
+
   useEffect(() => {
     if (
       localStorage.getItem("arrayDataForm") &&
@@ -534,6 +540,9 @@ export default function NewProductPage() {
           if (response.status === 200) {
             toast.success("Product created successfully!");
             localStorage.removeItem("newProductForm");
+            clearLocalStorage();
+            clearImages();
+            setIsSubmitting(false);
             navigate("/auth/admin/products");
           } else {
             toast.error(response.data.message || "Failed to create product");
