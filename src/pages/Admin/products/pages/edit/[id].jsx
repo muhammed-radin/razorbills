@@ -23,6 +23,7 @@ import DimensionsWeightSection from "./sections/dimensions-weight";
 import TagsKeywordsSection from "./sections/tags-keywords";
 import AdditionalInformationSection from "./sections/additional-information";
 import { productSchema } from "@/utils/product_zod";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const defaultCategories = [];
 
@@ -34,6 +35,7 @@ const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOU
 export default function EditProductPage() {
   const navigate = useNavigate();
   const id = useParams().id; // Get the product ID from the URL params if needed
+  const [loadedProduct, setLoadedProduct] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [specifications, setSpecifications] = useState([
@@ -54,6 +56,72 @@ export default function EditProductPage() {
   });
   const [additionalImages, setAdditionalImages] = useState([]);
 
+  function fetchProduct() {
+    api.client
+      .get(api.products(id))
+      .then((response) => {
+        if (response.status === 200) {
+          const product = response.data;
+          form.reset({
+            id: product.id,
+            title: product.title,
+            price: product.price,
+            originalPrice: product.originalPrice,
+            thumbnail: product.thumbnail,
+            description: product.description,
+            category: product.category,
+            stock: product.stock,
+            brand: product.brand,
+            tax: product.tax,
+            detailedDescription: product.detailedDescription,
+            rating: product.rating,
+            reviewCount: product.reviewCount,
+            width: product.dimensions?.width || 0,
+            height: product.dimensions?.height || 0,
+            depth: product.dimensions?.depth || 0,
+            weight: product.weight || 0,
+            isActive: product.isActive,
+            currency: product.currency || "INR",
+            warranty: product.warranty || "",
+            returnPolicy: product.returnPolicy || "",
+            shippingDetails: product.shippingDetails || "",
+            sku: product.sku || "",
+          });
+          setSpecifications(product.specifications || []);
+          setFeatures(product.features || []);
+          setTags(product.tags || []);
+          setKeywords(product.keywords || []);
+          setThumbnail({
+            url: product.thumbnail,
+            file: null,
+            preview: product.thumbnail,
+            isThumbnail: true,
+          });
+          setAdditionalImages(
+            (product.images || []).map((img, index) => ({
+              url: img,
+              file: null,
+              preview: img,
+              meta: { name: "Image " + index, size: 0, type: "" },
+            })),
+          );
+          setLoadedProduct(product);
+        } else {
+          toast.error(response.data.message || "Failed to load product");
+        }
+      })
+      .catch((error) => {
+        toast.error(error.response?.data?.message || "Failed to load product");
+        console.error("Error loading product:", error);
+      });
+  }
+
+  useEffect(() => {
+    setTimeout(() => {
+      fetchProduct();
+    }, 1000);
+  }, [id]);
+
   // save images into indexedDB ( stores thumbnail and additional images with blob and url ).
   function saveImages() {
     let saveData = { data: [thumbnail, ...additionalImages], id: 0 };
@@ -62,7 +130,7 @@ export default function EditProductPage() {
       return;
     }
     // store in indexedDB
-    const request = indexedDB.open("productImagesDB", 1);
+    const request = indexedDB.open("editProductImagesDB", 1);
     request.onupgradeneeded = function (event) {
       const db = event.target.result;
       if (!db.objectStoreNames.contains("images")) {
@@ -86,7 +154,7 @@ export default function EditProductPage() {
   }
 
   function loadImages() {
-    const request = indexedDB.open("productImagesDB", 1);
+    const request = indexedDB.open("editProductImagesDB", 1);
     request.onsuccess = function (event) {
       const db = event.target.result;
       const transaction = db.transaction("images", "readonly");
@@ -121,7 +189,7 @@ export default function EditProductPage() {
   }
 
   function clearImages() {
-    const request = indexedDB.open("productImagesDB", 1);
+    const request = indexedDB.open("editProductImagesDB", 1);
     request.onsuccess = function (event) {
       const db = event.target.result;
       const transaction = db.transaction("images", "readwrite");
@@ -206,15 +274,15 @@ export default function EditProductPage() {
 
   const clearLocalStorage = () => {
     localStorage.removeItem("editProductForm");
-    localStorage.removeItem("arrayDataForm");
+    localStorage.removeItem("editArrayDataForm");
   };
 
   useEffect(() => {
     if (
-      localStorage.getItem("arrayDataForm") &&
+      localStorage.getItem("editArrayDataForm") &&
       !isLoadedFromLocalStorageRef.current
     ) {
-      const savedValues = JSON.parse(localStorage.getItem("arrayDataForm"));
+      const savedValues = JSON.parse(localStorage.getItem("editArrayDataForm"));
       setSpecifications(savedValues.specifications);
       setFeatures(savedValues.features);
       setTags(savedValues.tags);
@@ -234,7 +302,7 @@ export default function EditProductPage() {
         tags: tags,
         keywords: keywords,
       };
-      localStorage.setItem("arrayDataForm", JSON.stringify(arrData));
+      localStorage.setItem("editArrayDataForm", JSON.stringify(arrData));
     }
   }, [specifications, features, tags, keywords]);
 
@@ -581,147 +649,163 @@ export default function EditProductPage() {
         </div>
       </div>
 
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          onKeyDown={handleKeyDown}
-          className="space-y-6"
-        >
-          <Accordion
-            defaultValue={["basic"]}
-            type="single"
-            className="space-y-4"
+      {!loadedProduct ? (
+        <div className="flex gap-3 flex-wrap flex-row">
+          <Skeleton className="h-8 w-80 rounded-md max-sm:w-56" />
+          <Skeleton className="h-8 w-80 rounded-md max-sm:w-36" />
+          <Skeleton className="h-8 w-120 rounded-md max-sm:w-56" />
+          <Skeleton className="h-8 w-30 rounded-md max-sm:w-36" />
+          <Skeleton className="h-8 w-70 rounded-md max-sm:w-78" />
+          <Skeleton className="h-8 w-25 rounded-md max-sm:w-56" />
+          <Skeleton className="h-8 w-90 rounded-md max-sm:w-22" />
+          <Skeleton className="h-8 w-34 rounded-md max-sm:w-56" />
+          <div className="w-full">
+            <Skeleton className="h-24 w-180 rounded-md max-md:w-full" />
+          </div>
+        </div>
+      ) : (
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            onKeyDown={handleKeyDown}
+            className="space-y-6"
           >
-            {/* Basic Information */}
-            <AccordionItem value="basic">
-              <AccordionTrigger>Basic Information</AccordionTrigger>
-              <AccordionContent>
-                <BasicInformationSection
-                  form={form}
-                  categories={categories}
-                  categoryOpen={categoryOpen}
-                  setCategoryOpen={setCategoryOpen}
-                  addNewCategory={addNewCategory}
-                  loadCategories={loadCategories}
-                />
-              </AccordionContent>
-            </AccordionItem>
+            <Accordion
+              defaultValue={["basic"]}
+              type="single"
+              className="space-y-4"
+            >
+              {/* Basic Information */}
+              <AccordionItem value="basic">
+                <AccordionTrigger>Basic Information</AccordionTrigger>
+                <AccordionContent>
+                  <BasicInformationSection
+                    form={form}
+                    categories={categories}
+                    categoryOpen={categoryOpen}
+                    setCategoryOpen={setCategoryOpen}
+                    addNewCategory={addNewCategory}
+                    loadCategories={loadCategories}
+                  />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Pricing & Inventory */}
-            <AccordionItem value="pricing">
-              <AccordionTrigger>Pricing & Inventory</AccordionTrigger>
-              <AccordionContent>
-                <PricingInventorySection form={form} />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Pricing & Inventory */}
+              <AccordionItem value="pricing">
+                <AccordionTrigger>Pricing & Inventory</AccordionTrigger>
+                <AccordionContent>
+                  <PricingInventorySection form={form} />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Images */}
-            <AccordionItem value="Images">
-              <AccordionTrigger>Images</AccordionTrigger>
-              <AccordionContent>
-                <ImagesSection
-                  thumbnail={thumbnail}
-                  setThumbnail={setThumbnail}
-                  handleThumbnailUrlChange={handleThumbnailUrlChange}
-                  handleThumbnailFileChange={handleThumbnailFileChange}
-                  thumbnailInputRef={thumbnailInputRef}
-                  additionalImages={additionalImages}
-                  removeAdditionalImage={removeAdditionalImage}
-                  updateAdditionalImageUrl={updateAdditionalImageUrl}
-                  handleAdditionalImageFileChange={
-                    handleAdditionalImageFileChange
-                  }
-                  additionalImageInputRef={additionalImageInputRef}
-                  addAdditionalImageUrl={addAdditionalImageUrl}
-                />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Images */}
+              <AccordionItem value="Images">
+                <AccordionTrigger>Images</AccordionTrigger>
+                <AccordionContent>
+                  <ImagesSection
+                    thumbnail={thumbnail}
+                    setThumbnail={setThumbnail}
+                    handleThumbnailUrlChange={handleThumbnailUrlChange}
+                    handleThumbnailFileChange={handleThumbnailFileChange}
+                    thumbnailInputRef={thumbnailInputRef}
+                    additionalImages={additionalImages}
+                    removeAdditionalImage={removeAdditionalImage}
+                    updateAdditionalImageUrl={updateAdditionalImageUrl}
+                    handleAdditionalImageFileChange={
+                      handleAdditionalImageFileChange
+                    }
+                    additionalImageInputRef={additionalImageInputRef}
+                    addAdditionalImageUrl={addAdditionalImageUrl}
+                  />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Specifications */}
-            <AccordionItem value="specifications">
-              <AccordionTrigger>Specifications</AccordionTrigger>
-              <AccordionContent>
-                <SpecificationsSection
-                  specifications={specifications}
-                  updateSpecification={updateSpecification}
-                  removeSpecification={removeSpecification}
-                  addSpecification={addSpecification}
-                />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Specifications */}
+              <AccordionItem value="specifications">
+                <AccordionTrigger>Specifications</AccordionTrigger>
+                <AccordionContent>
+                  <SpecificationsSection
+                    specifications={specifications}
+                    updateSpecification={updateSpecification}
+                    removeSpecification={removeSpecification}
+                    addSpecification={addSpecification}
+                  />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Features */}
-            <AccordionItem value="features">
-              <AccordionTrigger>Features</AccordionTrigger>
-              <AccordionContent>
-                <FeaturesSection
-                  features={features}
-                  updateFeature={updateFeature}
-                  removeFeature={removeFeature}
-                  addFeature={addFeature}
-                />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Features */}
+              <AccordionItem value="features">
+                <AccordionTrigger>Features</AccordionTrigger>
+                <AccordionContent>
+                  <FeaturesSection
+                    features={features}
+                    updateFeature={updateFeature}
+                    removeFeature={removeFeature}
+                    addFeature={addFeature}
+                  />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Dimensions & Weight */}
-            <AccordionItem value="dimensions-weight">
-              <AccordionTrigger>Dimensions & Weight</AccordionTrigger>
-              <AccordionContent>
-                <DimensionsWeightSection form={form} />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Dimensions & Weight */}
+              <AccordionItem value="dimensions-weight">
+                <AccordionTrigger>Dimensions & Weight</AccordionTrigger>
+                <AccordionContent>
+                  <DimensionsWeightSection form={form} />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Tags & Keywords */}
-            <AccordionItem value="tags-keywords">
-              <AccordionTrigger>Tags & Keywords</AccordionTrigger>
-              <AccordionContent>
-                <TagsKeywordsSection
-                  tagInput={tagInput}
-                  setTagInput={setTagInput}
-                  handleTagInputKeyDown={handleTagInputKeyDown}
-                  addTagsFromInput={addTagsFromInput}
-                  tags={tags}
-                  removeTag={removeTag}
-                  keywordInput={keywordInput}
-                  setKeywordInput={setKeywordInput}
-                  handleKeywordInputKeyDown={handleKeywordInputKeyDown}
-                  addKeywordsFromInput={addKeywordsFromInput}
-                  keywords={keywords}
-                  removeKeyword={removeKeyword}
-                />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Tags & Keywords */}
+              <AccordionItem value="tags-keywords">
+                <AccordionTrigger>Tags & Keywords</AccordionTrigger>
+                <AccordionContent>
+                  <TagsKeywordsSection
+                    tagInput={tagInput}
+                    setTagInput={setTagInput}
+                    handleTagInputKeyDown={handleTagInputKeyDown}
+                    addTagsFromInput={addTagsFromInput}
+                    tags={tags}
+                    removeTag={removeTag}
+                    keywordInput={keywordInput}
+                    setKeywordInput={setKeywordInput}
+                    handleKeywordInputKeyDown={handleKeywordInputKeyDown}
+                    addKeywordsFromInput={addKeywordsFromInput}
+                    keywords={keywords}
+                    removeKeyword={removeKeyword}
+                  />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Additional Information */}
-            <AccordionItem value="additional-information">
-              <AccordionTrigger>Additional Information</AccordionTrigger>
-              <AccordionContent>
-                <AdditionalInformationSection form={form} />
-              </AccordionContent>
-            </AccordionItem>
+              {/* Additional Information */}
+              <AccordionItem value="additional-information">
+                <AccordionTrigger>Additional Information</AccordionTrigger>
+                <AccordionContent>
+                  <AdditionalInformationSection form={form} />
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Submit Button */}
-            <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" asChild>
-                <Link to="/auth/admin/products">Cancel</Link>
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Update Product
-                  </>
-                )}
-              </Button>
-            </div>
-          </Accordion>
-        </form>
-      </Form>
+              {/* Submit Button */}
+              <div className="flex justify-end gap-4">
+                <Button type="button" variant="outline" asChild>
+                  <Link to="/auth/admin/products">Cancel</Link>
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Update Product
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Accordion>
+          </form>
+        </Form>
+      )}
     </div>
   );
 }
