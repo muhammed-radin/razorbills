@@ -14,10 +14,13 @@ const productSchema = z.object({
   brand: z.string().min(2, "Brand must be at least 2 characters long"),
   tax: z.number().default(0),
   tags: z
-    .array(z.string())
+    .array(z.string().min(2, "Tag must be at least 2 characters long"))
     .min(3, "At least three tag is required")
     .default([]),
-  keywords: z.array(z.string()).optional().default([]),
+  keywords: z
+    .array(z.string().min(2, "Keyword must be at least 2 characters long"))
+    .optional()
+    .default([]),
   detailedDescription: z
     .string()
     .min(10, "Detailed description must be at least 10 characters long")
@@ -32,11 +35,11 @@ const productSchema = z.object({
     )
     .default([]),
   features: z
-    .array(z.string())
-    .min(3, "At least three feature is required")
+    .array(z.string().min(2, "Feature must be at least 2 characters long"))
+    .min(2, "At least two feature is required")
     .default([]),
   images: z
-    .array(z.string())
+    .array(z.string().min(8, "Image URL must be at least 8 characters long"))
     .min(1, "At least one image is required")
     .default([]),
   rating: z.number().optional().default(0),
@@ -48,7 +51,7 @@ const productSchema = z.object({
       depth: z.number().optional().default(0),
     })
     .optional(),
-  weight: z.number().optional().default(0),
+  weight: z.number().min(0, "Weight must be a non-negative number").default(0),
   createdAt: z.date().default(Date.now),
   updatedAt: z.date().default(Date.now),
   isActive: z.boolean().default(true),

@@ -48,8 +48,104 @@ export default function NewProductPage() {
     url: "",
     file: null,
     preview: "",
+    isThumbnail: true,
   });
   const [additionalImages, setAdditionalImages] = useState([]);
+
+  // save images into indexedDB ( stores thumbnail and additional images with blob and url ).
+  function saveImages() {
+    let saveData = { data: [thumbnail, ...additionalImages], id: 0 };
+
+    if (saveData.data.length === 0) {
+      return;
+    }
+    // store in indexedDB
+    const request = indexedDB.open("productImagesDB", 1);
+    request.onupgradeneeded = function (event) {
+      const db = event.target.result;
+      if (!db.objectStoreNames.contains("images")) {
+        db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
+      }
+    };
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction("images", "readwrite");
+      const store = transaction.objectStore("images");
+      // saveData.forEach((image, index) => {
+      //   image.id = index; // Assign a unique ID for each image
+      //   // store.put(image);
+      // });
+      store.put(saveData);
+    };
+    request.onerror = function (event) {
+      console.error("IndexedDB error:", event.target.error);
+      toast.warning("Failed to save images to DB");
+    };
+  }
+
+  function loadImages() {
+    const request = indexedDB.open("productImagesDB", 1);
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction("images", "readonly");
+      const store = transaction.objectStore("images");
+      const getAllRequest = store.getAll();
+      getAllRequest.onsuccess = function (event) {
+        const images = event.target.result;
+        console.log("Loaded images from DB:", images[0]);
+        if (images.length > 0) {
+          if (images[0].data[0].isThumbnail) {
+            setThumbnail(images[0].data[0]);
+          }
+          if (thumbnail.file) {
+            thumbnail.preview = URL.createObjectURL(thumbnail.file);
+          }
+
+          let imagesData = images[0].data.slice(1);
+          imagesData.forEach((image) => {
+            if (image.file) {
+              image.preview = URL.createObjectURL(image.file);
+            }
+          });
+          setAdditionalImages(imagesData);
+        } else {
+          console.log("No images found in DB");
+        }
+      };
+    };
+    request.onerror = function (event) {
+      console.error("IndexedDB error:", event.target.error);
+      toast.warning("Failed to load images from DB");
+    };
+  }
+
+  function clearImages() {
+    const request = indexedDB.open("productImagesDB", 1);
+    request.onsuccess = function (event) {
+      const db = event.target.result;
+      const transaction = db.transaction("images", "readwrite");
+      const store = transaction.objectStore("images");
+      const clearRequest = store.clear();
+      clearRequest.onsuccess = function () {
+        console.log("Cleared images from DB");
+      };
+      clearRequest.onerror = function (event) {
+        console.error("IndexedDB error:", event.target.error);
+        toast.warning("Failed to clear images from DB");
+      };
+    };
+    request.onerror = function (event) {
+      console.error("IndexedDB error:", event.target.error);
+      toast.warning("Failed to open DB for clearing images");
+    };
+  }
+
+  useEffect(() => {
+    if (!(thumbnail.url || thumbnail.file) && !additionalImages.length > 0) {
+      loadImages();
+    }
+    saveImages();
+  }, [thumbnail, additionalImages]);
 
   // Category combobox states
   const [categories, setCategories] = useState(defaultCategories);
@@ -90,11 +186,16 @@ export default function NewProductPage() {
     // load all inputs values from local storage on mount early stored if found
     if (localStorage.getItem("newProductForm")) {
       const savedValues = JSON.parse(localStorage.getItem("newProductForm"));
+      setSpecifications(savedValues.specifications || []);
+      setFeatures(savedValues.features || []);
+      setTags(savedValues.tags || []);
+      setKeywords(savedValues.keywords || []);
       form.reset(savedValues);
     }
     // save all inputs values to local storage on change
     const subscription = form.watch((value) => {
-      localStorage.setItem("newProductForm", JSON.stringify(value));
+      let saveData = { ...value, specifications, features, tags, keywords };
+      localStorage.setItem("newProductForm", JSON.stringify(saveData));
     });
 
     return () => subscription.unsubscribe();
@@ -197,12 +298,24 @@ export default function NewProductPage() {
     const file = e.target.files[0];
     if (file) {
       const preview = URL.createObjectURL(file);
-      setThumbnail({ url: "", file, preview, status: "uploading" });
+      setThumbnail({
+        url: "",
+        file,
+        preview,
+        status: "uploading",
+        isThumbnail: true,
+      });
     }
   };
 
   const handleThumbnailUrlChange = (url) => {
-    setThumbnail({ url, file: null, preview: url, status: "uploaded" });
+    setThumbnail({
+      url,
+      file: null,
+      preview: url,
+      status: "uploaded",
+      isThumbnail: true,
+    });
   };
 
   const handleAdditionalImageFileChange = (e) => {
