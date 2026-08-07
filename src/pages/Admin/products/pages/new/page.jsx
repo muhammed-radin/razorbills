@@ -140,9 +140,13 @@ export default function NewProductPage() {
     };
   }
 
+  const firstLoadRef = useRef(true);
   useEffect(() => {
     if (!(thumbnail.url || thumbnail.file) && !additionalImages.length > 0) {
-      loadImages();
+      if (firstLoadRef.current) {
+        firstLoadRef.current = false;
+        loadImages();
+      }
     }
     saveImages();
   }, [thumbnail, additionalImages]);
