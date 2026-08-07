@@ -93,7 +93,6 @@ export default function NewProductPage() {
       const getAllRequest = store.getAll();
       getAllRequest.onsuccess = function (event) {
         const images = event.target.result;
-        console.log("Loaded images from DB:", images[0]);
         if (images.length > 0) {
           if (images[0].data[0].isThumbnail) {
             setThumbnail(images[0].data[0]);
@@ -145,8 +144,8 @@ export default function NewProductPage() {
   useEffect(() => {
     if (!(thumbnail.url || thumbnail.file) && !additionalImages.length > 0) {
       if (firstLoadRef.current) {
-        firstLoadRef.current = false;
         loadImages();
+        firstLoadRef.current = false;
       }
     }
     saveImages();
@@ -191,25 +190,50 @@ export default function NewProductPage() {
     // load all inputs values from local storage on mount early stored if found
     if (localStorage.getItem("newProductForm")) {
       const savedValues = JSON.parse(localStorage.getItem("newProductForm"));
-      setSpecifications(savedValues.specifications || []);
-      setFeatures(savedValues.features || []);
-      setTags(savedValues.tags || []);
-      setKeywords(savedValues.keywords || []);
       form.reset(savedValues);
     }
     // save all inputs values to local storage on change
     const subscription = form.watch((value) => {
-      let saveData = { ...value, specifications, features, tags, keywords };
+      let saveData = { ...value };
       localStorage.setItem("newProductForm", JSON.stringify(saveData));
     });
 
     return () => subscription.unsubscribe();
   }, [form]);
 
+  const isLoadedFromLocalStorageRef = useRef(false);
+  useEffect(() => {
+    if (
+      localStorage.getItem("arrayDataForm") &&
+      !isLoadedFromLocalStorageRef.current
+    ) {
+      const savedValues = JSON.parse(localStorage.getItem("arrayDataForm"));
+      setSpecifications(savedValues.specifications);
+      setFeatures(savedValues.features);
+      setTags(savedValues.tags);
+      setKeywords(savedValues.keywords);
+      isLoadedFromLocalStorageRef.current = true;
+    }
+
+    if (
+      specifications.length > 0 ||
+      features.length > 0 ||
+      tags.length > 0 ||
+      keywords.length > 0
+    ) {
+      let arrData = {
+        specifications: specifications,
+        features: features,
+        tags: tags,
+        keywords: keywords,
+      };
+      localStorage.setItem("arrayDataForm", JSON.stringify(arrData));
+    }
+  }, [specifications, features, tags, keywords]);
+
   const loadCategories = async () => {
     try {
       const response = await api.client.get(api.categories());
-      console.log(response.data);
       setCategories(response.data);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -416,7 +440,6 @@ export default function NewProductPage() {
     // validate data using zod schema
     const validatedData = productSchema.safeParse(data);
     if (!validatedData.success) {
-      console.log(validatedData);
       setIsSubmitting(false);
       toast.warning("Validation failed");
       toast.warning(
@@ -446,7 +469,6 @@ export default function NewProductPage() {
           ...thumbnail,
           url: thumbnailUrl,
         });
-        console.log("Thumbnail uploaded:", thumbnail);
       }
 
       // Upload additional images
@@ -455,7 +477,6 @@ export default function NewProductPage() {
           if (img.file && img.url === "") {
             let uploadedUrl = await uploadToCloudinary(img.file);
             URL.revokeObjectURL(img.preview);
-            console.log("Uploaded additional image:", uploadedUrl);
             img.preview = uploadedUrl;
             img.file = null;
             img.url = uploadedUrl;
