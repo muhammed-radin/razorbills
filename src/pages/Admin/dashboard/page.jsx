@@ -5,7 +5,7 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -42,7 +42,16 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import { api } from "@/utils/api";
-import { Pie, PieChart, Cell, ResponsiveContainer, Area, AreaChart, Line, LineChart } from "recharts"
+import {
+  Pie,
+  PieChart,
+  Cell,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+  Line,
+  LineChart,
+} from "recharts";
 
 import {
   ChartContainer,
@@ -50,9 +59,9 @@ import {
   ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
-export const description = "A beautiful admin dashboard"
+export const description = "A beautiful admin dashboard";
 
 const chartData = [
   { browser: "chrome", visitors: 275, fill: "#22c55e" },
@@ -60,7 +69,7 @@ const chartData = [
   { browser: "firefox", visitors: 187, fill: "#f97316" },
   { browser: "edge", visitors: 173, fill: "#8b5cf6" },
   { browser: "other", visitors: 90, fill: "#ec4899" },
-]
+];
 
 const chartConfig = {
   visitors: {
@@ -86,7 +95,7 @@ const chartConfig = {
     label: "Other",
     color: "#ec4899",
   },
-}
+};
 
 const revenueChartConfig = {
   revenue: {
@@ -97,9 +106,9 @@ const revenueChartConfig = {
     label: "Orders",
     color: "#22c55e",
   },
-}
+};
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import AvatarIcon from "@/components/avatar-icon";
 
 const chartDataA = [
@@ -109,7 +118,7 @@ const chartDataA = [
   { month: "April", desktop: 73, mobile: 190 },
   { month: "May", desktop: 209, mobile: 130 },
   { month: "June", desktop: 214, mobile: 140 },
-]
+];
 
 const revenueData = [
   { month: "Jan", revenue: 4500, orders: 120 },
@@ -118,7 +127,7 @@ const revenueData = [
   { month: "Apr", revenue: 6100, orders: 178 },
   { month: "May", revenue: 5800, orders: 165 },
   { month: "Jun", revenue: 7200, orders: 210 },
-]
+];
 
 const chartConfigA = {
   desktop: {
@@ -129,7 +138,7 @@ const chartConfigA = {
     label: "Mobile",
     color: "#22d3ee",
   },
-}
+};
 
 export default function AdminDashboardPage() {
   const [products, setProducts] = useState([]);
@@ -248,25 +257,70 @@ export default function AdminDashboardPage() {
   ];
 
   const recentActivity = [
-    { type: "order", message: "New order #ORD-006 received", time: "2 min ago", icon: ShoppingCart },
-    { type: "user", message: "New user registered: Alex Turner", time: "15 min ago", icon: Users },
-    { type: "product", message: "Product 'Arduino Nano' is low on stock", time: "1 hour ago", icon: AlertCircle },
-    { type: "payment", message: "Payment confirmed for order #ORD-005", time: "2 hours ago", icon: CreditCard },
-    { type: "review", message: "New 5-star review on 'Raspberry Pi 4'", time: "3 hours ago", icon: Sparkles },
+    {
+      type: "order",
+      message: "New order #ORD-006 received",
+      time: "2 min ago",
+      icon: ShoppingCart,
+    },
+    {
+      type: "user",
+      message: "New user registered: Alex Turner",
+      time: "15 min ago",
+      icon: Users,
+    },
+    {
+      type: "product",
+      message: "Product 'Arduino Nano' is low on stock",
+      time: "1 hour ago",
+      icon: AlertCircle,
+    },
+    {
+      type: "payment",
+      message: "Payment confirmed for order #ORD-005",
+      time: "2 hours ago",
+      icon: CreditCard,
+    },
+    {
+      type: "review",
+      message: "New 5-star review on 'Raspberry Pi 4'",
+      time: "3 hours ago",
+      icon: Sparkles,
+    },
   ];
 
   const getStatusConfig = (status) => {
     switch (status) {
       case "Delivered":
-        return { color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", icon: CheckCircle2 };
+        return {
+          color:
+            "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+          icon: CheckCircle2,
+        };
       case "Shipped":
-        return { color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: Package };
+        return {
+          color:
+            "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+          icon: Package,
+        };
       case "Processing":
-        return { color: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400", icon: RefreshCcw };
+        return {
+          color:
+            "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+          icon: RefreshCcw,
+        };
       case "Pending":
-        return { color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400", icon: Clock };
+        return {
+          color:
+            "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
+          icon: Clock,
+        };
       default:
-        return { color: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400", icon: AlertCircle };
+        return {
+          color:
+            "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
+          icon: AlertCircle,
+        };
     }
   };
 
@@ -282,17 +336,24 @@ export default function AdminDashboardPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-5 w-5 text-yellow-300" />
-              <span className="text-sm font-medium text-white/80">Welcome back!</span>
+              <span className="text-sm font-medium text-white/80">
+                Welcome back!
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
               Good morning, Admin! 👋
             </h1>
             <p className="text-white/80 max-w-md">
-              Here's what's happening with your store today. You have <span className="font-semibold text-white">12 new orders</span> waiting.
+              Here's what's happening with your store today. You have{" "}
+              <span className="font-semibold text-white">12 new orders</span>{" "}
+              waiting.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border-0 text-white">
+            <Button
+              variant="secondary"
+              className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border-0 text-white"
+            >
               <Eye className="h-4 w-4 mr-2" />
               View Reports
             </Button>
@@ -310,24 +371,41 @@ export default function AdminDashboardPage() {
           const Icon = metric.icon;
           const isPositive = metric.changeType === "positive";
           return (
-            <Card key={index} className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-              <div className={`absolute inset-0 bg-gradient-to-br ${metric.bgGradient} opacity-50`} />
+            <Card
+              key={index}
+              className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            >
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${metric.bgGradient} opacity-50`}
+              />
               <CardContent className="relative p-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">
                       {metric.title}
                     </p>
-                    <p className="text-3xl font-bold tracking-tight">{metric.value}</p>
+                    <p className="text-3xl font-bold tracking-tight">
+                      {metric.value}
+                    </p>
                     <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1 text-xs font-semibold ${isPositive ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                      <span
+                        className={`inline-flex items-center gap-1 text-xs font-semibold ${isPositive ? "text-emerald-600" : "text-red-600"}`}
+                      >
+                        {isPositive ? (
+                          <ArrowUpRight className="h-3 w-3" />
+                        ) : (
+                          <ArrowDownRight className="h-3 w-3" />
+                        )}
                         {metric.change}
                       </span>
-                      <span className="text-xs text-muted-foreground">{metric.description}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {metric.description}
+                      </span>
                     </div>
                   </div>
-                  <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${metric.gradient} flex items-center justify-center shadow-lg`}>
+                  <div
+                    className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${metric.gradient} flex items-center justify-center shadow-lg`}
+                  >
                     <Icon className="h-6 w-6 text-white" />
                   </div>
                 </div>
@@ -343,8 +421,12 @@ export default function AdminDashboardPage() {
         <Card className="lg:col-span-2 border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-xl font-semibold">Revenue Overview</CardTitle>
-              <CardDescription>Monthly revenue and orders trend</CardDescription>
+              <CardTitle className="text-xl font-semibold">
+                Revenue Overview
+              </CardTitle>
+              <CardDescription>
+                Monthly revenue and orders trend
+              </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="h-8">
@@ -354,19 +436,48 @@ export default function AdminDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={revenueChartConfig} className="h-[250px] sm:h-[300px] w-full">
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ChartContainer
+              config={revenueChartConfig}
+              className="h-[250px] sm:h-[300px] w-full"
+            >
+              <AreaChart
+                data={revenueData}
+                margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
                     <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} tick={{ fill: '#6b7280', fontSize: 12 }} />
-                <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => `$${value}`} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#e5e7eb"
+                />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tick={{ fill: "#6b7280", fontSize: 12 }}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => `$${value}`}
+                  tick={{ fill: "#6b7280", fontSize: 12 }}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="revenue" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorRevenue)" strokeWidth={3} />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#8b5cf6"
+                  fillOpacity={1}
+                  fill="url(#colorRevenue)"
+                  strokeWidth={3}
+                />
               </AreaChart>
             </ChartContainer>
           </CardContent>
@@ -376,7 +487,9 @@ export default function AdminDashboardPage() {
         <Card className="border-0 shadow-lg">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-semibold">Recent Activity</CardTitle>
+              <CardTitle className="text-xl font-semibold">
+                Recent Activity
+              </CardTitle>
               <Button variant="ghost" size="sm" className="h-8">
                 View all
               </Button>
@@ -386,13 +499,20 @@ export default function AdminDashboardPage() {
             {recentActivity.map((activity, index) => {
               const Icon = activity.icon;
               return (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors">
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
+                >
                   <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                     <Icon className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium leading-tight">{activity.message}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
+                    <p className="text-sm font-medium leading-tight">
+                      {activity.message}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {activity.time}
+                    </p>
                   </div>
                 </div>
               );
@@ -407,8 +527,12 @@ export default function AdminDashboardPage() {
         <Card className="lg:col-span-2 border-0 shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-xl font-semibold">Recent Orders</CardTitle>
-              <CardDescription>Latest customer orders and their status</CardDescription>
+              <CardTitle className="text-xl font-semibold">
+                Recent Orders
+              </CardTitle>
+              <CardDescription>
+                Latest customer orders and their status
+              </CardDescription>
             </div>
             <Button variant="outline" size="sm">
               View All Orders
@@ -420,19 +544,32 @@ export default function AdminDashboardPage() {
                 const statusConfig = getStatusConfig(order.status);
                 const StatusIcon = statusConfig.icon;
                 return (
-                  <div key={order.id} className="flex items-center justify-between p-4 rounded-xl border bg-card hover:shadow-md transition-all duration-200">
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between p-4 rounded-xl border bg-card hover:shadow-md transition-all duration-200"
+                  >
                     <div className="flex items-center gap-4">
-                      <AvatarIcon name={order.avatar} decrypted={false} size={40} />
+                      <AvatarIcon
+                        name={order.avatar}
+                        decrypted={false}
+                        size={40}
+                      />
                       <div>
                         <p className="font-medium">{order.customer}</p>
-                        <p className="text-sm text-muted-foreground">{order.product}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {order.product}
+                        </p>
                       </div>
                     </div>
                     <div className="text-right hidden sm:block">
                       <p className="font-semibold">{order.amount}</p>
-                      <p className="text-xs text-muted-foreground">{order.date}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {order.date}
+                      </p>
                     </div>
-                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${statusConfig.color}`}>
+                    <div
+                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${statusConfig.color}`}
+                    >
                       <StatusIcon className="h-3.5 w-3.5" />
                       {order.status}
                     </div>
@@ -456,7 +593,9 @@ export default function AdminDashboardPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Conversion Rate</span>
-                <span className="text-sm font-bold text-emerald-600">3.24%</span>
+                <span className="text-sm font-bold text-emerald-600">
+                  3.24%
+                </span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
                 <div className="h-full w-[32.4%] rounded-full bg-gradient-to-r from-emerald-500 to-teal-500" />
@@ -475,7 +614,9 @@ export default function AdminDashboardPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Customer Satisfaction</span>
+                <span className="text-sm font-medium">
+                  Customer Satisfaction
+                </span>
                 <span className="text-sm font-bold text-violet-600">94.8%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -494,7 +635,11 @@ export default function AdminDashboardPage() {
                     <p className="text-xs text-muted-foreground">12 products</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 text-amber-600 hover:text-amber-700">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-amber-600 hover:text-amber-700"
+                >
                   View
                 </Button>
               </div>
@@ -509,7 +654,11 @@ export default function AdminDashboardPage() {
                     <p className="text-xs text-muted-foreground">247 online</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 text-emerald-600 hover:text-emerald-700">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 text-emerald-600 hover:text-emerald-700"
+                >
                   View
                 </Button>
               </div>
@@ -523,13 +672,21 @@ export default function AdminDashboardPage() {
         {/* Browser Distribution */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Traffic Sources</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              Traffic Sources
+            </CardTitle>
             <CardDescription>Where your visitors come from</CardDescription>
           </CardHeader>
           <CardContent className="max-sm:max-w-[calc(100vw-2rem)]">
-            <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[200px] sm:max-h-[250px]">
+            <ChartContainer
+              config={chartConfig}
+              className="mx-auto aspect-square max-h-[200px] sm:max-h-[250px]"
+            >
               <PieChart>
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
                 <Pie
                   data={chartData}
                   dataKey="visitors"
@@ -544,9 +701,16 @@ export default function AdminDashboardPage() {
             <div className="mt-4 grid grid-cols-2 gap-2">
               {chartData.map((item) => (
                 <div key={item.browser} className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.fill }} />
-                  <span className="text-xs text-muted-foreground capitalize">{item.browser}</span>
-                  <span className="text-xs font-semibold ml-auto">{item.visitors}</span>
+                  <div
+                    className="h-3 w-3 rounded-full"
+                    style={{ backgroundColor: item.fill }}
+                  />
+                  <span className="text-xs text-muted-foreground capitalize">
+                    {item.browser}
+                  </span>
+                  <span className="text-xs font-semibold ml-auto">
+                    {item.visitors}
+                  </span>
                 </div>
               ))}
             </div>
@@ -556,12 +720,21 @@ export default function AdminDashboardPage() {
         {/* Device Analytics */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Device Analytics</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              Device Analytics
+            </CardTitle>
             <CardDescription>Desktop vs Mobile traffic</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer config={chartConfigA} className="h-[200px] sm:h-[250px] w-full">
-              <BarChart accessibilityLayer data={chartDataA} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+            <ChartContainer
+              config={chartConfigA}
+              className="h-[200px] sm:h-[250px] w-full"
+            >
+              <BarChart
+                accessibilityLayer
+                data={chartDataA}
+                margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="colorDesktop" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#6366f1" stopOpacity={1} />
@@ -572,18 +745,33 @@ export default function AdminDashboardPage() {
                     <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.8} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
+                <CartesianGrid
+                  vertical={false}
+                  stroke="#e5e7eb"
+                  strokeDasharray="3 3"
+                />
                 <XAxis
                   dataKey="month"
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
                   tickFormatter={(value) => value.slice(0, 3)}
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  tick={{ fill: "#6b7280", fontSize: 12 }}
                 />
-                <ChartTooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} content={<ChartTooltipContent indicator="dashed" />} />
-                <Bar dataKey="desktop" fill="url(#colorDesktop)" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="mobile" fill="url(#colorMobile)" radius={[6, 6, 0, 0]} />
+                <ChartTooltip
+                  cursor={{ fill: "rgba(0,0,0,0.05)" }}
+                  content={<ChartTooltipContent indicator="dashed" />}
+                />
+                <Bar
+                  dataKey="desktop"
+                  fill="url(#colorDesktop)"
+                  radius={[6, 6, 0, 0]}
+                />
+                <Bar
+                  dataKey="mobile"
+                  fill="url(#colorMobile)"
+                  radius={[6, 6, 0, 0]}
+                />
               </BarChart>
             </ChartContainer>
             <div className="mt-4 flex justify-center gap-6">
@@ -611,24 +799,51 @@ export default function AdminDashboardPage() {
         {/* Top Products */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-xl font-semibold">Top Products</CardTitle>
+            <CardTitle className="text-xl font-semibold">
+              Top Products
+            </CardTitle>
             <CardDescription>Best selling items this month</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-              { name: "Raspberry Pi 4", sales: 142, revenue: "$7,810", trend: "+12%" },
-              { name: "Arduino Uno R3", sales: 98, revenue: "$2,548", trend: "+8%" },
-              { name: "ESP32 Module", sales: 87, revenue: "$1,087", trend: "+15%" },
-              { name: "LED Strip 5m", sales: 76, revenue: "$1,443", trend: "+5%" },
+              {
+                name: "Raspberry Pi 4",
+                sales: 142,
+                revenue: "$7,810",
+                trend: "+12%",
+              },
+              {
+                name: "Arduino Uno R3",
+                sales: 98,
+                revenue: "$2,548",
+                trend: "+8%",
+              },
+              {
+                name: "ESP32 Module",
+                sales: 87,
+                revenue: "$1,087",
+                trend: "+15%",
+              },
+              {
+                name: "LED Strip 5m",
+                sales: 76,
+                revenue: "$1,443",
+                trend: "+5%",
+              },
             ].map((product, index) => (
-              <div key={index} className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors">
+              <div
+                key={index}
+                className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-colors"
+              >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-violet-600">
                     #{index + 1}
                   </div>
                   <div>
                     <p className="text-sm font-medium">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">{product.sales} sales</p>
+                    <p className="text-xs text-muted-foreground">
+                      {product.sales} sales
+                    </p>
                   </div>
                 </div>
                 <div className="text-right">
