@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import ListViewAdmin from "./components/list-view.admin";
 import GridViewAdmin from "./components/grid-view.admin";
 import AlertDeleteProductDialog from "./components/alert-delete.admin";
 import { toast, Toaster } from "sonner";
+import PaginationWithPrimaryButton from "@/components/customized/pagination/pagination-02";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
@@ -33,6 +34,14 @@ export default function AdminProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [viewMode, setViewMode] = useState("grid"); // grid or list
+  const [totalPages, setTotalPages] = useState(5);
+  const { current: itemsPerPage } = useRef(10);
+
+  const [currentPage, setCurrentPage] = useSearchParams();
+
+  if (!currentPage.get("page")) {
+    currentPage.set("page", "1");
+  }
 
   useEffect(() => {
     fetchProducts();
@@ -209,6 +218,15 @@ export default function AdminProductsPage() {
           />
         )}
       </div>
+
+      {/* Pagination */}
+      <PaginationWithPrimaryButton
+        className="w-full"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(pageNum) => setCurrentPage({ page: pageNum })}
+        setCurrentPage={setCurrentPage}
+      />
 
       {/* Delete Confirmation Modal */}
       <AlertDeleteProductDialog
