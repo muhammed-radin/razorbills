@@ -312,7 +312,7 @@ export default function HighlightedSlider({
 
             <h2
               className={cn(
-                "text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 sm:mb-4",
+                "text-2xl xs:text-3xl sm:text-4xl md:text-4xl lg:text-4xl font-bold text-white mb-2 sm:mb-4",
                 "leading-tight",
                 "transition-all duration-500 delay-150",
                 isAnimating
