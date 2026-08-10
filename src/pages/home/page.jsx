@@ -24,8 +24,11 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { FolderCode } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const EmptyProductsSection = memo(function EmptyProductsRender() {
+  const navigate = useNavigate();
+
   return (
     <Empty>
       <EmptyHeader>
@@ -39,8 +42,10 @@ const EmptyProductsSection = memo(function EmptyProductsRender() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        <Button>Contact Admin</Button>
-        <Button variant="outline">Request Product</Button>
+        <Button onClick={() => navigate("/contact")}>Contact Admin</Button>
+        <Button variant="outline" onClick={() => navigate("/contact")}>
+          Request Product
+        </Button>
       </EmptyContent>
     </Empty>
   );

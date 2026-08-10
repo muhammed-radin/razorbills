@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import ProductCard from "./product-card/ProductCard";
 import CardProduct from "./carousel-product-card";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { useIsMobile } from "@/utils/hooks/useIsMobile";
+import { Badge } from "@/components/ui/badge";
 
 export default function CarouselSlide({
   title = "Featured Products",
@@ -22,6 +24,8 @@ export default function CarouselSlide({
   const [api, setApi] = React.useState();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
+
+  const isMobile = useIsMobile(640);
 
   React.useEffect(() => {
     if (!api) {
@@ -80,106 +84,159 @@ export default function CarouselSlide({
       )}
 
       {/* Carousel Container */}
-      <div className="relative max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto">
-        <Carousel
-          setApi={setApi}
-          className="w-full"
-          opts={{
-            loop: true,
-            align: "start",
-            skipSnaps: false,
-            dragFree: true,
-          }}
-        >
-          <CarouselContent className="-ml-3 sm:-ml-4">
-            {products.map((product, index) => (
-              <CarouselItem
-                key={index}
-                className={cn(
-                  "pl-3 sm:pl-4",
-                  // Responsive basis for proper card width
-                  "basis-[85%] xs:basis-[70%] sm:basis-[45%] md:basis-[32%] lg:basis-[24%] xl:basis-[20%]",
-                )}
+      {isMobile ? (
+        <div className="relative  sm:hidden mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 p-2">
+          {products.map((product) => {
+            return (
+              <Card
+                className="gap-3 bg-background py-0 shadow-none border-border/50"
+                key={product.title}
+                variant="ghost"
               >
-                <CardProduct
-                  className={cn(
-                    "transition-all duration-500 ease-out h-full",
-                    current === index + 1
-                      ? "scale-100 opacity-100"
-                      : "scale-[0.98] opacity-90 hover:opacity-100 hover:scale-100",
-                  )}
-                  title={product.title}
-                  description={product.description}
-                  rating={product.rating}
-                  price={product.price}
-                  discount={product.discount}
-                  isNew={product.isNew}
-                  isTrending={false}
-                  stock={product.stock}
-                  thumbnail={product.thumbnail}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
+                <CardHeader className="p-1.5 pb-0">
+                  <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+                    <img
+                      alt={product.title}
+                      className="object-cover object-center"
+                      // fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      src={product.thumbnail}
+                    />
+                  </div>
+                </CardHeader>
+                <CardContent className="px-4 pt-0 pb-5">
+                  <Badge variant="secondary">{product.category}</Badge>
 
-          {/* Desktop Navigation */}
-          <CarouselPrevious
-            className={cn(
-              "hidden lg:flex",
-              "absolute -left-3 xl:-left-5 top-1/2 -translate-y-1/2",
-              "size-11 xl:size-12 rounded-full",
-              "bg-background/95 backdrop-blur-md",
-              "border border-border/50 shadow-lg",
-              "hover:bg-primary hover:text-primary-foreground hover:border-primary",
-              "hover:shadow-xl hover:scale-105",
-              "transition-all duration-300",
-              "disabled:opacity-40",
-            )}
-          />
+                  <h3 className="mt-4 font-medium text-[1.4rem] text-xl tracking-[-0.02em]">
+                    {product.title}
+                  </h3>
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <img
+                        alt={"Razorbillls"}
+                        className="size-8 rounded-full object-cover"
+                        height={32}
+                        src={
+                          "https://razorbills.vercel.app/favicon_io/favicon-32x32.png"
+                        }
+                        width={32}
+                      />
+                      <span className="font-medium text-muted-foreground">
+                        RazorBills
+                      </span>
+                    </div>
 
-          <CarouselNext
-            className={cn(
-              "hidden lg:flex",
-              "absolute -right-3 xl:-right-5 top-1/2 -translate-y-1/2",
-              "size-11 xl:size-12 rounded-full",
-              "bg-background/95 backdrop-blur-md",
-              "border border-border/50 shadow-lg",
-              "hover:bg-primary hover:text-primary-foreground hover:border-primary",
-              "hover:shadow-xl hover:scale-105",
-              "transition-all duration-300",
-              "disabled:opacity-40",
-            )}
-          />
-        </Carousel>
-
-        {/* Mobile Navigation */}
-        <div className="flex lg:hidden justify-center items-center gap-4 mt-5">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => api?.scrollPrev()}
-            className="size-10 rounded-full shadow-md hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
-          >
-            <ChevronLeft className="size-5" />
-          </Button>
-
-          {/* Mobile Progress */}
-          <span className="text-sm text-muted-foreground font-medium tabular-nums">
-            <span className="text-primary font-bold">{current}</span>
-            <span className="mx-1">/</span>
-            <span>{count}</span>
-          </span>
-
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => api?.scrollNext()}
-            className="size-10 rounded-full shadow-md hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
-          >
-            <ChevronRight className="size-5" />
-          </Button>
+                    <span className="text-muted-foreground text-sm">
+                      {new Date(product.createdAt).toDateString()}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-      </div>
+      ) : (
+        <div className="relative max-w-[95%] lg:max-w-[90%] xl:max-w-[85%] mx-auto max-sm:hidden">
+          <Carousel
+            setApi={setApi}
+            className="w-full"
+            opts={{
+              loop: true,
+              align: "start",
+              skipSnaps: false,
+              dragFree: true,
+            }}
+          >
+            <CarouselContent className="-ml-3 sm:-ml-4">
+              {products.map((product, index) => (
+                <CarouselItem
+                  key={index}
+                  className={cn(
+                    "pl-3 sm:pl-4",
+                    // Responsive basis for proper card width
+                    "basis-[85%] xs:basis-[70%] sm:basis-[45%] md:basis-[32%] lg:basis-[24%] xl:basis-[20%]",
+                  )}
+                >
+                  <CardProduct
+                    className={cn(
+                      "transition-all duration-500 ease-out h-full",
+                      current === index + 1
+                        ? "scale-100 opacity-100"
+                        : "scale-[0.98] opacity-90 hover:opacity-100 hover:scale-100",
+                    )}
+                    title={product.title}
+                    description={product.description}
+                    rating={product.rating}
+                    price={product.price}
+                    discount={product.discount}
+                    isNew={product.isNew}
+                    isTrending={false}
+                    stock={product.stock}
+                    thumbnail={product.thumbnail}
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+
+            {/* Desktop Navigation */}
+            <CarouselPrevious
+              className={cn(
+                "hidden lg:flex",
+                "absolute -left-3 xl:-left-5 top-1/2 -translate-y-1/2",
+                "size-11 xl:size-12 rounded-full",
+                "bg-background/95 backdrop-blur-md",
+                "border border-border/50 shadow-lg",
+                "hover:bg-primary hover:text-primary-foreground hover:border-primary",
+                "hover:shadow-xl hover:scale-105",
+                "transition-all duration-300",
+                "disabled:opacity-40",
+              )}
+            />
+
+            <CarouselNext
+              className={cn(
+                "hidden lg:flex",
+                "absolute -right-3 xl:-right-5 top-1/2 -translate-y-1/2",
+                "size-11 xl:size-12 rounded-full",
+                "bg-background/95 backdrop-blur-md",
+                "border border-border/50 shadow-lg",
+                "hover:bg-primary hover:text-primary-foreground hover:border-primary",
+                "hover:shadow-xl hover:scale-105",
+                "transition-all duration-300",
+                "disabled:opacity-40",
+              )}
+            />
+          </Carousel>
+
+          {/* Mobile Navigation */}
+          <div className="flex lg:hidden justify-center items-center gap-4 mt-5">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => api?.scrollPrev()}
+              className="size-10 rounded-full shadow-md hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+            >
+              <ChevronLeft className="size-5" />
+            </Button>
+
+            {/* Mobile Progress */}
+            <span className="text-sm text-muted-foreground font-medium tabular-nums">
+              <span className="text-primary font-bold">{current}</span>
+              <span className="mx-1">/</span>
+              <span>{count}</span>
+            </span>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => api?.scrollNext()}
+              className="size-10 rounded-full shadow-md hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all"
+            >
+              <ChevronRight className="size-5" />
+            </Button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
