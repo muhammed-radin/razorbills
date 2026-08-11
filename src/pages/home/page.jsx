@@ -93,22 +93,6 @@ export default function HomePage() {
         <br />
         <SearchBar />
         <CategoryList
-          items={[
-            "All",
-            "Resistor",
-            "Diode",
-            "LED",
-            "Transistor",
-            "Battery",
-            "Fuse",
-            "Potentiometer",
-            "Speaker",
-            "Microphone",
-            "Crystal Oscillator",
-            "Connector",
-            "Sensor",
-            "Microcontroller",
-          ]}
           className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap"
           tagClassName="max-sm:rounded-md"
         />
