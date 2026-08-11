@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Preloader } from "../LoaderScreen";
 import { ImageIcon, ImageOff, Heart, Eye, ShoppingCart } from "lucide-react";
+import { currency } from "@/utils/currency";
 
 const ProductCard = ({ product, index }) => {
   const navigate = useNavigate();
@@ -40,17 +41,23 @@ const ProductCard = ({ product, index }) => {
     setIsFavorite((prev) => !prev);
   }, []);
 
-  const handleQuickView = useCallback((e) => {
-    e.stopPropagation();
-    // Quick view functionality can be implemented here
-    console.log("Quick view:", product.id);
-  }, [product.id]);
+  const handleQuickView = useCallback(
+    (e) => {
+      e.stopPropagation();
+      // Quick view functionality can be implemented here
+      console.log("Quick view:", product.id);
+    },
+    [product.id],
+  );
 
-  const handleAddToCart = useCallback((e) => {
-    e.stopPropagation();
-    // Add to cart functionality can be implemented here
-    console.log("Add to cart:", product.id);
-  }, [product.id]);
+  const handleAddToCart = useCallback(
+    (e) => {
+      e.stopPropagation();
+      // Add to cart functionality can be implemented here
+      console.log("Add to cart:", product.id);
+    },
+    [product.id],
+  );
 
   // Calculate discount percentage
   const discountPercentage =
@@ -74,9 +81,13 @@ const ProductCard = ({ product, index }) => {
         "transition-all duration-[600ms] ease-out",
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
       )}
-      onClick={handleProductClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => {
+        setIsHovered(true);
+        setTimeout(() => setIsHovered(false), 3000);
+      }} // Hide after 3 seconds on touch devices
+      onDblClick={() => handleProductClick()}
     >
       <CardHeader className="h-40 border-1 max-sm:border-2 rounded-2xl p-0 m-0 overflow-hidden bg-center relative">
         {/* Image */}
@@ -124,7 +135,7 @@ const ProductCard = ({ product, index }) => {
         {/* Discount Badge */}
         {discountPercentage > 0 && (
           <div className="absolute top-2 left-2 z-10">
-            <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
+            <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
               -{discountPercentage}%
             </div>
           </div>
@@ -160,7 +171,7 @@ const ProductCard = ({ product, index }) => {
           )}
         >
           <button
-            onClick={handleQuickView}
+            onClick={handleProductClick}
             aria-label="Quick view"
             className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:scale-110 transition-transform duration-200"
           >
@@ -176,10 +187,10 @@ const ProductCard = ({ product, index }) => {
         </div>
 
         {/* Progress Bar at Bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-transparent dark:bg-transparent overflow-hidden">
           <div
             className={cn(
-              "h-full bg-gradient-to-r from-blue-500 to-purple-500",
+              "h-full bg-gradient-to-r from-amber-500 to-amber-700",
               "transition-all duration-500 ease-out",
               isHovered ? "w-full" : "w-0",
             )}
@@ -190,7 +201,7 @@ const ProductCard = ({ product, index }) => {
       <CardContent className="p-0 m-0">
         {/* Title with 2 line clamp */}
         <h2 className="text-sm font-semibold line-clamp-2 mb-1">
-          {product.title}
+          <Link to={`/products/${product.id}`}>{product.title}</Link>
         </h2>
 
         {/* Enhanced Price Section */}
@@ -204,26 +215,26 @@ const ProductCard = ({ product, index }) => {
                 isHovered ? "scale-105" : "scale-100",
               )}
             >
-              ${product.price}
+              {currency(product.price)}
             </span>
 
             {/* Original Price */}
             {product.originalPrice &&
               product.originalPrice !== product.price && (
                 <span className="text-xs text-red-950 dark:text-red-300 line-through">
-                  ${product.originalPrice}
+                  {currency(product.originalPrice)}
                 </span>
               )}
           </div>
 
-          {/* Savings Badge */}
+          {/* Savings Badge
           {savingsAmount > 0 && (
             <div className="inline-flex w-fit">
               <span className="text-xs font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
-                Save ${savingsAmount}
+                Save {currency(savingsAmount)}
               </span>
             </div>
-          )}
+          )} */}
         </div>
       </CardContent>
     </Card>
