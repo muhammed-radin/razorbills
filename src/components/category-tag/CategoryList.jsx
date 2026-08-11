@@ -1,5 +1,5 @@
 import { use, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CategoryTag from "./CategoryTag";
 import React from "react";
 import { cn } from "@/lib/utils";
@@ -21,11 +21,10 @@ export default function CategoryList(params) {
   const fetchCategories = async () => {
     if (loading == false) setLoading(true);
     try {
-      const response = await api.client.get("/api/categories");
+      const response = await api.client.get("/api/categories?limit=20");
       const fetchedCategories = response.data;
       setCategories([AllCategory, ...fetchedCategories]);
       console.log("Fetched categories:", fetchedCategories); // Log the fetched categories
-
       setLoading(false);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -68,9 +67,16 @@ export default function CategoryList(params) {
           categories.map((category) => (
             <CategoryTag
               key={category.id}
-              label={category.name}
+              label={
+                category.name === "All" ? (
+                  <Link to={`/search?categories=all`}>All</Link>
+                ) : (
+                  <Link to={`/search?category=${category.name}`}>
+                    {category.name}
+                  </Link>
+                )
+              } // Use Link component with the correct route category.name}
               selected={active === category.name}
-              onClick={() => handleCategoryClick(category.name)}
               className={params.tagClassName}
             />
           ))
