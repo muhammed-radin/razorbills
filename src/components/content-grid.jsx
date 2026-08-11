@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,9 @@ import {
   Sparkles,
   TrendingUp,
   Package,
+  Languages,
+  Heart,
+  ZapIcon,
 } from "lucide-react";
 import FruitShowcaseCard from "@/components/showcase-card";
 import FoodMenuCard from "@/components/modern-menu-list-card";
@@ -39,45 +42,44 @@ const defaultItems = [
     title: "New Arrivals",
     subtitle: "Fresh Collection",
     description: "Discover the latest additions",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9fDEYq5xVNdswJ8tYDc2nTo4s1Kq4d45mp8TmK2RaoPqxAO-MfOmYx4LA&s=10",
-    badge: "New",
+    image: null,
+    // "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS9fDEYq5xVNdswJ8tYDc2nTo4s1Kq4d45mp8TmK2RaoPqxAO-MfOmYx4LA&s=10",
+    badge: null,
     icon: Sparkles,
-    theme: "violet",
-    size: "medium",
+    theme: "amber",
+    size: "small",
   },
   {
     id: 3,
-    title: "Top Rated",
-    subtitle: "Customer Favorites",
+    title: "Try Malayalam",
+    subtitle: "We support multiple languages",
     description: "Highly rated by our community",
-    image:
-      "https://cdn.shopify.com/s/files/1/1603/9553/files/Harmonics_Twins_S10_Mobile_headphones_best_tws_earphones_480x480.webp?v=1722323783",
-    badge: "★ 4.9",
-    icon: Star,
+    image: null,
+    badge: null,
+    icon: Languages,
     theme: "amber",
-    size: "medium",
+    size: "small",
   },
   {
     id: 4,
-    title: "Free Shipping",
-    subtitle: "On Orders $50+",
-    description: "Fast & reliable delivery",
+    title: "AI Assistant",
+    subtitle: "Easy & Smart Shopping",
+    description: "Chat with our AI assistant for product recommendations",
     image: null,
-    badge: null,
-    icon: Truck,
-    theme: "emerald",
+    badge: "New",
+    icon: Zap,
+    theme: "amber",
     size: "small",
   },
   {
     id: 5,
-    title: "Warranty",
-    subtitle: "2 Year Coverage",
-    description: "Peace of mind guaranteed",
+    title: "Whishlists",
+    subtitle: "Save your favorites",
+    description: "Create and manage your wishlists",
     image: null,
     badge: null,
-    icon: Shield,
-    theme: "blue",
+    icon: Heart,
+    theme: "amber",
     size: "small",
   },
 ];
@@ -139,6 +141,10 @@ const GridCard = React.memo(({ item, index }) => {
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  const handleTouchStart = useCallback(() => {
+    setIsHovered(true);
+    setTimeout(() => setIsHovered(false), 3000);
+  }, []);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
 
   return (
@@ -158,6 +164,7 @@ const GridCard = React.memo(({ item, index }) => {
       )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
     >
       {/* Background Image for Large/Medium Cards */}
       {item.image && (isLarge || isMedium) && (
@@ -204,7 +211,7 @@ const GridCard = React.memo(({ item, index }) => {
         {item.badge && (
           <Badge
             className={cn(
-              "absolute top-4 left-4 px-3 py-1 text-xs font-semibold",
+              "absolute top-2 left-4 px-3 py-1 text-xs font-semibold",
               "bg-gradient-to-r text-white shadow-lg",
               theme.gradient,
             )}
@@ -285,7 +292,7 @@ const GridCard = React.memo(({ item, index }) => {
 });
 GridCard.displayName = "GridCard";
 
-export default function ContentGrid({
+export default memo(function ContentGrid({
   items,
   title = "Explore More",
   showTitle = true,
@@ -380,4 +387,4 @@ export default function ContentGrid({
       </div>
     </section>
   );
-}
+});

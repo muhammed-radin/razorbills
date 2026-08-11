@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { memo, useCallback, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +14,9 @@ import {
   TrendingUp,
   Package,
 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function FeaturedCard({
+export default memo(function FeaturedCard({
   className,
   title = "Premium Product",
   description = "Discover amazing quality and features",
@@ -24,14 +25,20 @@ export default function FeaturedCard({
   rating = 4.8,
   reviews = 128,
   thumbnail = "/products/Headphone.jpg",
+  productId,
   badge = "Featured",
   accentColor = "primary", // primary, rose, amber, emerald, violet
-  onAddToCart,
-  onViewDetails,
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleAddToCart = useCallback((e) => {
+    // Add to cart functionality can be implemented here
+    console.log("Add to cart:", title);
+  }, []);
 
   const discount = originalPrice
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
@@ -106,8 +113,12 @@ export default function FeaturedCard({
         "hover:-translate-y-2 hover:scale-[1.02]",
         className,
       )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={useCallback(() => setIsHovered(true), [])}
+      onMouseLeave={useCallback(() => setIsHovered(false), [])}
+      onTouchStart={useCallback(() => {
+        setIsHovered(true);
+        setTimeout(() => setIsHovered(false), 3000);
+      }, [])}
     >
       {/* Animated Background Gradient */}
       <div
@@ -182,6 +193,7 @@ export default function FeaturedCard({
             <Package className="size-12 text-muted-foreground/30" />
           </div>
         )}
+
         <img
           src={thumbnail}
           alt={title}
@@ -192,6 +204,9 @@ export default function FeaturedCard({
             !imageLoaded && "opacity-0",
           )}
           onLoad={() => setImageLoaded(true)}
+          onClick={useCallback(() => {
+            navigate(`/product/${productId}`);
+          }, [productId])}
         />
 
         {/* Gradient Overlay */}
@@ -218,12 +233,12 @@ export default function FeaturedCard({
             `group-hover:${colors.text}`,
           )}
         >
-          {title}
+          <Link to={`/product/${productId}`}>{title}</Link>
         </h3>
 
         {/* Description */}
         <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-          {description}
+          <Link to={`/product/${productId}`}>{description}</Link>
         </p>
 
         {/* Rating & Reviews */}
@@ -266,7 +281,7 @@ export default function FeaturedCard({
             )}
             onClick={(e) => {
               e.stopPropagation();
-              onAddToCart?.();
+              handleAddToCart();
             }}
           >
             <ShoppingCart className="size-4" />
@@ -286,4 +301,4 @@ export default function FeaturedCard({
       />
     </Card>
   );
-}
+});

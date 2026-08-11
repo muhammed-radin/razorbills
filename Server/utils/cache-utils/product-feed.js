@@ -2,7 +2,7 @@ const { FeedMold, ShowCaseTab } = require("../../models/feed");
 const { ProductModel, MinimalProduct } = require("../../models/schema/product");
 const { useMemory } = require("../memory");
 
-const productFeedCache = useMemory(null);
+const productFeedCache = useMemory(null, "productFeedCache", 60);
 
 productFeedCache.toUpdate(async function populateFeed(memory) {
   const Feed = new FeedMold();

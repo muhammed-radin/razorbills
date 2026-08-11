@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -13,8 +13,10 @@ import { cn } from "@/lib/utils";
 import ProductCard from "./product-card/ProductCard";
 import CardProduct from "./carousel-product-card";
 import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { useIsMobile } from "@/utils/hooks/useIsMobile";
+import { Badge } from "@/components/ui/badge";
 
-export default function CarouselSlide({
+export default React.memo(function CarouselSlide({
   title = "Featured Products",
   showTitle = true,
   products = [],
@@ -22,6 +24,8 @@ export default function CarouselSlide({
   const [api, setApi] = React.useState();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
+
+  const isMobile = useIsMobile(640);
 
   React.useEffect(() => {
     if (!api) {
@@ -116,6 +120,7 @@ export default function CarouselSlide({
                   isNew={product.isNew}
                   isTrending={false}
                   stock={product.stock}
+                  id={product.id}
                   thumbnail={product.thumbnail}
                 />
               </CarouselItem>
@@ -182,4 +187,4 @@ export default function CarouselSlide({
       </div>
     </section>
   );
-}
+});

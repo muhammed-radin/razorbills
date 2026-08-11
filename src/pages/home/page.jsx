@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 
@@ -15,10 +15,47 @@ import ClassicProcuctsSlider from "@/components/product-card/products-slider";
 import HighlightedSlider from "@/components/highlighted-slider";
 import FeaturedCarousel from "@/components/featured-carousel";
 
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { FolderCode } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const EmptyProductsSection = memo(function EmptyProductsRender() {
+  const navigate = useNavigate();
+
+  return (
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <FolderCode />
+        </EmptyMedia>
+        <EmptyTitle>No Products Yet</EmptyTitle>
+        <EmptyDescription>
+          There are no products available at the moment. Please check back later
+          or contact our support team.
+        </EmptyDescription>
+      </EmptyHeader>
+      <EmptyContent className="flex-row justify-center gap-2">
+        <Button onClick={() => navigate("/contact")}>Contact Admin</Button>
+        <Button variant="outline" onClick={() => navigate("/contact")}>
+          Request Product
+        </Button>
+      </EmptyContent>
+    </Empty>
+  );
+});
+
 export default function HomePage() {
   const [latestProducts, setlatestProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const isEmpty = latestProducts.length === 0 && featuredProducts.length === 0;
 
   React.useEffect(() => {
     // Fetch products from the API
@@ -27,7 +64,6 @@ export default function HomePage() {
       .then((response) => {
         setlatestProducts(response.data.latest);
         setFeaturedProducts(response.data.featured);
-        console.log(response.data);
         setLoading(false);
       })
       .catch((error) => {
@@ -57,22 +93,6 @@ export default function HomePage() {
         <br />
         <SearchBar />
         <CategoryList
-          items={[
-            "All",
-            "Resistor",
-            "Diode",
-            "LED",
-            "Transistor",
-            "Battery",
-            "Fuse",
-            "Potentiometer",
-            "Speaker",
-            "Microphone",
-            "Crystal Oscillator",
-            "Connector",
-            "Sensor",
-            "Microcontroller",
-          ]}
           className="w-[90%] sm:w-2/3 mx-auto max-sm:flex-row max-sm:flex-nowrap max-sm:justify-start max-sm:items-center max-sm:overflow-x-auto max-sm:p-0 whitespace-nowrap"
           tagClassName="max-sm:rounded-md"
         />
@@ -97,46 +117,44 @@ export default function HomePage() {
             {/* Content Grid - Categories & Offers */}
             <ContentGrid title="Explore Categories" />
 
+            {/* Blank Section */}
+            {isEmpty && <EmptyProductsSection />}
+
             {/* New Arrivals - Regular Carousel Design */}
-            <CarouselSlide
-              title="New Arrivals"
-              variant="new-arrivals"
-              products={latestProducts}
-            />
+            {latestProducts.length > 0 && (
+              <CarouselSlide
+                title="New Arrivals"
+                variant="new-arrivals"
+                products={latestProducts}
+              />
+            )}
 
             {/* Product Grid */}
-            <ClassicProcuctsSlider
-              title="All Products"
-              products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
-            />
-
-            {/* Another Featured Carousel with Different Title */}
-            {/* <FeaturedCarousel
-              title="Best Sellers"
-              products={latestProducts.slice(0, 5)}
-            /> */}
+            {latestProducts.length > 0 && (
+              <ClassicProcuctsSlider
+                title="All Products"
+                products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
+              />
+            )}
 
             {/* Horizontal Product Cards */}
-            <ListHorizontalProductCards products={latestProducts} />
+            {latestProducts.length > 0 && (
+              <ListHorizontalProductCards products={latestProducts} />
+            )}
 
             {/* Top Rated - Modern Carousel Design */}
-            <ModernCarousel
-              title="Top Rated"
-              variant="top-rated"
-              products={latestProducts}
-            />
-
-            {/* Regular Carousel - Trending */}
-            <CarouselSlide title="Trending Now" products={latestProducts} />
-
-            {/* Second Product Grid
-            <ClassicProcuctsSlider
-              title="Recomended For You"
-              products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
-            /> */}
+            {latestProducts.length > 0 && (
+              <ModernCarousel
+                title="Top Rated"
+                variant="top-rated"
+                products={latestProducts}
+              />
+            )}
 
             {/* More Horizontal Cards */}
-            <ListHorizontalProductCards products={latestProducts} />
+            {latestProducts.length > 0 && (
+              <ListHorizontalProductCards products={latestProducts} />
+            )}
           </>
         )}
       </div>
