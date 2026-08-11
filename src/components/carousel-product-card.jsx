@@ -19,9 +19,10 @@ import {
   Flame,
   Package,
 } from "lucide-react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-export default function CardProduct({
+export default memo(function CardProduct({
   className,
   title,
   description,
@@ -32,12 +33,13 @@ export default function CardProduct({
   isNew,
   isTrending,
   stock = true,
-  onAddToCart,
-  onViewDetails,
+  id,
 }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  const navigate = useNavigate();
 
   const discountedPrice = useMemo(
     () => (discount ? price - (price * discount) / 100 : price),
@@ -65,28 +67,30 @@ export default function CardProduct({
   }, [rating]);
 
   const handleWishlistClick = useCallback((e) => {
-    e.stopPropagation();
     setIsWishlisted((prev) => !prev);
   }, []);
 
   const handleViewDetails = useCallback(
     (e) => {
-      e.stopPropagation();
-      onViewDetails?.();
+      navigate(`/product/${id}`);
     },
-    [onViewDetails],
+    [id],
   );
 
   const handleAddToCart = useCallback(
     (e) => {
-      e.stopPropagation();
-      onAddToCart?.();
+      // Add to cart functionality can be implemented here
+      console.log("Add to cart:", id);
     },
-    [onAddToCart],
+    [id],
   );
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  const handleTouchStart = useCallback(() => {
+    setIsHovered(true);
+    setTimeout(() => setIsHovered(false), 3000);
+  }, []); // Hide after 3 seconds on touch devices
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
 
   return (
@@ -102,6 +106,7 @@ export default function CardProduct({
       )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
     >
       {/* Floating Badges */}
       <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
@@ -217,7 +222,7 @@ export default function CardProduct({
               size="sm"
               variant="secondary"
               className="flex-1 gap-1 h-8 bg-background/95 backdrop-blur-sm hover:bg-background shadow-lg text-xs"
-              onClick={handleViewDetails}
+              onClick={() => handleViewDetails()}
             >
               <Eye className="size-3.5" />
               View
@@ -245,13 +250,13 @@ export default function CardProduct({
             "group-hover:text-primary transition-colors duration-300",
           )}
         >
-          {title}
+          <Link to={`/product/${id}`}>{title}</Link>
         </CardTitle>
 
         {/* Description */}
         {description && (
           <CardDescription className="text-xs line-clamp-2 leading-snug text-muted-foreground/80">
-            {description}
+            <Link to={`/product/${id}`}>{description}</Link>
           </CardDescription>
         )}
 
@@ -291,4 +296,4 @@ export default function CardProduct({
       </CardContent>
     </Card>
   );
-}
+});

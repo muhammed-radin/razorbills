@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -141,6 +141,10 @@ const GridCard = React.memo(({ item, index }) => {
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  const handleTouchStart = useCallback(() => {
+    setIsHovered(true);
+    setTimeout(() => setIsHovered(false), 3000);
+  }, []);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
 
   return (
@@ -160,6 +164,7 @@ const GridCard = React.memo(({ item, index }) => {
       )}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
     >
       {/* Background Image for Large/Medium Cards */}
       {item.image && (isLarge || isMedium) && (
@@ -287,7 +292,7 @@ const GridCard = React.memo(({ item, index }) => {
 });
 GridCard.displayName = "GridCard";
 
-export default function ContentGrid({
+export default memo(function ContentGrid({
   items,
   title = "Explore More",
   showTitle = true,
@@ -382,4 +387,4 @@ export default function ContentGrid({
       </div>
     </section>
   );
-}
+});

@@ -16,7 +16,7 @@ import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useIsMobile } from "@/utils/hooks/useIsMobile";
 import { Badge } from "@/components/ui/badge";
 
-export default function CarouselSlide({
+export default React.memo(function CarouselSlide({
   title = "Featured Products",
   showTitle = true,
   products = [],
@@ -120,6 +120,7 @@ export default function CarouselSlide({
                   isNew={product.isNew}
                   isTrending={false}
                   stock={product.stock}
+                  id={product.id}
                   thumbnail={product.thumbnail}
                 />
               </CarouselItem>
@@ -186,4 +187,4 @@ export default function CarouselSlide({
       </div>
     </section>
   );
-}
+});

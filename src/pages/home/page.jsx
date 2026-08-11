@@ -64,7 +64,6 @@ export default function HomePage() {
       .then((response) => {
         setlatestProducts(response.data.latest);
         setFeaturedProducts(response.data.featured);
-        console.log(response.data);
         setLoading(false);
       })
       .catch((error) => {

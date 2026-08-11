@@ -87,7 +87,7 @@ const ProductCard = ({ product, index }) => {
         setIsHovered(true);
         setTimeout(() => setIsHovered(false), 3000);
       }} // Hide after 3 seconds on touch devices
-      onDblClick={() => handleProductClick()}
+      onDoubleClick={() => handleProductClick()}
     >
       <CardHeader className="h-40 border-1 max-sm:border-2 rounded-2xl p-0 m-0 overflow-hidden bg-center relative">
         {/* Image */}
@@ -95,7 +95,7 @@ const ProductCard = ({ product, index }) => {
           src={product.image || product.thumbnail}
           alt={product.title}
           className={cn(
-            "w-full h-40 object-cover bg-background transition-all duration-500 ease-out",
+            "w-full h-40 object-cover object-center  bg-background transition-all duration-500 ease-out",
             "group-hover:scale-110 group-hover:rotate-1",
             { hidden: !imageLoaded || imageErr },
           )}
@@ -135,7 +135,7 @@ const ProductCard = ({ product, index }) => {
         {/* Discount Badge */}
         {discountPercentage > 0 && (
           <div className="absolute top-2 left-2 z-10">
-            <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse">
+            <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold px-2 py-1 rounded-xl shadow-lg animate-pulse">
               -{discountPercentage}%
             </div>
           </div>
@@ -201,7 +201,7 @@ const ProductCard = ({ product, index }) => {
       <CardContent className="p-0 m-0">
         {/* Title with 2 line clamp */}
         <h2 className="text-sm font-semibold line-clamp-2 mb-1">
-          <Link to={`/products/${product.id}`}>{product.title}</Link>
+          <Link to={`/product/${product.id}`}>{product.title}</Link>
         </h2>
 
         {/* Enhanced Price Section */}

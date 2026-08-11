@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,64 +23,9 @@ import {
   Eye,
   Zap,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const defaultProducts = [
-  {
-    id: 1,
-    title: "Wireless Earbuds Pro",
-    price: 1499,
-    originalPrice: 2499,
-    rating: 4.8,
-    reviews: 234,
-    image: "/products/Headphone.jpg",
-    isNew: true,
-    category: "Audio",
-  },
-  {
-    id: 2,
-    title: "Smart LED Strip Lights",
-    price: 899,
-    originalPrice: 1299,
-    rating: 4.6,
-    reviews: 189,
-    image: "/products/LedStrip.webp",
-    isNew: true,
-    category: "Lighting",
-  },
-  {
-    id: 3,
-    title: "Power Bank 20000mAh",
-    price: 1999,
-    originalPrice: 2999,
-    rating: 4.9,
-    reviews: 456,
-    image: "/products/Battery.png",
-    isNew: false,
-    category: "Power",
-  },
-  {
-    id: 4,
-    title: "Bluetooth Speaker",
-    price: 2499,
-    originalPrice: 3499,
-    rating: 4.7,
-    reviews: 312,
-    image: "/products/Speaker.webp",
-    isNew: true,
-    category: "Audio",
-  },
-  {
-    id: 5,
-    title: "Studio Headphones",
-    price: 3999,
-    originalPrice: 5999,
-    rating: 4.9,
-    reviews: 567,
-    image: "/products/Headphone2.jpg",
-    isNew: false,
-    category: "Audio",
-  },
-];
+const defaultProducts = [];
 
 // Unique Floating Card Design
 const CompactProductCard = React.memo(({ product, variant = "default" }) => {
@@ -88,21 +33,30 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
-  const discount = useMemo(() => product.originalPrice
-    ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100,
-      )
-    : 0, [product.originalPrice, product.price]);
+  const discount = useMemo(
+    () =>
+      product.originalPrice
+        ? Math.round(
+            ((product.originalPrice - product.price) / product.originalPrice) *
+              100,
+          )
+        : 0,
+    [product.originalPrice, product.price],
+  );
 
   const isNewArrivals = variant === "new-arrivals";
   const isTopRated = variant === "top-rated";
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+  const handleTouchStart = useCallback(() => {
+    setIsHovered(true);
+    setTimeout(() => setIsHovered(false), 3000);
+  }, []);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
   const handleWishlistClick = useCallback((e) => {
     e.stopPropagation();
-    setIsWishlisted(prev => !prev);
+    setIsWishlisted((prev) => !prev);
   }, []);
 
   return (
@@ -110,6 +64,7 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
       className="group relative h-full perspective-1000"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchStart}
     >
       {/* Floating Glow Effect */}
       <div
@@ -292,18 +247,20 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
                 )}
               />
             </Button>
-            <Button
-              size="icon"
-              className={cn(
-                "size-9 rounded-xl shadow-lg",
-                "bg-white/90 dark:bg-black/70 backdrop-blur-md",
-                "hover:bg-white dark:hover:bg-black hover:scale-110",
-                "text-foreground",
-                "transition-all duration-200",
-              )}
-            >
-              <Eye className="size-4" />
-            </Button>
+            <Link to={`/product/${product.id}`}>
+              <Button
+                size="icon"
+                className={cn(
+                  "size-9 rounded-xl shadow-lg",
+                  "bg-white/90 dark:bg-black/70 backdrop-blur-md",
+                  "hover:bg-white dark:hover:bg-black hover:scale-110",
+                  "text-foreground",
+                  "transition-all duration-200",
+                )}
+              >
+                <Eye className="size-4" />
+              </Button>
+            </Link>
           </div>
         </div>
 
@@ -324,26 +281,28 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
                 "group-hover:bg-gradient-to-r group-hover:from-cyan-500 group-hover:to-blue-500",
             )}
           >
-            {product.title}
+            <Link to={`/product/${product.id}`}>{product.title}</Link>
           </h3>
 
           {/* Rating - Unique Style */}
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "flex items-center gap-1 px-2 py-0.5 rounded-full",
-                "bg-amber-50 dark:bg-amber-950/50",
-              )}
-            >
-              <Star className="size-3 fill-amber-400 text-amber-400" />
-              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
-                {product.rating}
+          <Link to={`/product/${product.id}?tab=reviews`} className="group">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  "flex items-center gap-1 px-2 py-0.5 rounded-full",
+                  "bg-amber-50 dark:bg-amber-950/50",
+                )}
+              >
+                <Star className="size-3 fill-amber-400 text-amber-400" />
+                <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                  {product.rating}
+                </span>
+              </div>
+              <span className="text-[10px] text-muted-foreground">
+                {product.reviews} reviews
               </span>
             </div>
-            <span className="text-[10px] text-muted-foreground">
-              {product.reviews} reviews
-            </span>
-          </div>
+          </Link>
 
           {/* Price Section */}
           <div className="flex items-end justify-between pt-1">
@@ -405,9 +364,9 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
     </div>
   );
 });
-CompactProductCard.displayName = 'CompactProductCard';
+CompactProductCard.displayName = "CompactProductCard";
 
-export default function ModernCarousel({
+export default memo(function ModernCarousel({
   products,
   title = "New Arrivals",
   variant = "new-arrivals", // "new-arrivals" | "top-rated"
@@ -555,6 +514,6 @@ export default function ModernCarousel({
       </div>
     </section>
   );
-}
+});
 
 // End of src/components/modern-carousel.jsx

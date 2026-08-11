@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -11,68 +11,9 @@ import { cn } from "@/lib/utils";
 import FeaturedCard from "./featured-card";
 import { ChevronLeft, ChevronRight, Crown } from "lucide-react";
 
-const defaultProducts = [
-  {
-    title: "Premium Wireless Headphones",
-    description:
-      "Experience crystal-clear audio with active noise cancellation and 40-hour battery life.",
-    price: 2499,
-    originalPrice: 3999,
-    rating: 4.9,
-    reviews: 256,
-    thumbnail: "/products/Headphone.jpg",
-    badge: "Best Seller",
-    accentColor: "violet",
-  },
-  {
-    title: "Smart LED Light Strip",
-    description:
-      "Transform any space with 16 million colors and smart app control.",
-    price: 1299,
-    originalPrice: 1999,
-    rating: 4.7,
-    reviews: 189,
-    thumbnail: "/products/LedStrip.webp",
-    badge: "Popular",
-    accentColor: "emerald",
-  },
-  {
-    title: "Portable Power Bank",
-    description:
-      "20000mAh capacity with fast charging support for all your devices.",
-    price: 1999,
-    originalPrice: 2999,
-    rating: 4.8,
-    reviews: 342,
-    thumbnail: "/products/Battery.png",
-    badge: "Featured",
-    accentColor: "amber",
-  },
-  {
-    title: "Bluetooth Speaker Pro",
-    description: "360° surround sound with deep bass and waterproof design.",
-    price: 3499,
-    originalPrice: 4999,
-    rating: 4.6,
-    reviews: 178,
-    thumbnail: "/products/Speaker.webp",
-    badge: "Top Rated",
-    accentColor: "rose",
-  },
-  {
-    title: "Studio Headphones Elite",
-    description: "Professional-grade audio for musicians and audiophiles.",
-    price: 4999,
-    originalPrice: 6999,
-    rating: 4.9,
-    reviews: 94,
-    thumbnail: "/products/Headphone2.jpg",
-    badge: "Premium",
-    accentColor: "primary",
-  },
-];
+const defaultProducts = [];
 
-export default function FeaturedCarousel({
+export default memo(function FeaturedCarousel({
   products,
   title = "Featured Collection",
   showTitle = true,
@@ -180,6 +121,7 @@ export default function FeaturedCarousel({
               >
                 <FeaturedCard
                   {...product}
+                  productId={product.id} // Ensure each product has a unique ID
                   className={cn(
                     "transition-all duration-300 ease-out",
                     "transform-gpu",
@@ -242,4 +184,4 @@ export default function FeaturedCarousel({
       </div>
     </section>
   );
-}
+});
