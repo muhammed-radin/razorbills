@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/drawer";
 import FilterSidebar from "./filters/filter-sidebar";
 import PaginationWithPrimaryButton from "@/components/customized/pagination/pagination-02";
+import { api } from "@/utils/api";
 
 // Mock data - in a real app, this would come from an API
 const allProducts = [
@@ -144,24 +145,6 @@ const allProducts = [
   },
 ];
 
-const categories = [
-  "All",
-  "Electronics",
-  "Speaker",
-  "Battery",
-  "LED",
-  "Microphone",
-  "Microcontroller",
-  "Resistor",
-  "Diode",
-  "Transistor",
-  "Fuse",
-  "Potentiometer",
-  "Crystal Oscillator",
-  "Connector",
-  "Sensor",
-];
-
 const sortOptions = [
   { value: "relevance", label: "Best Match" },
   { value: "price-low", label: "Price: Low to High" },
@@ -181,6 +164,7 @@ export default function SearchPage() {
   const [showOnlyInStock, setShowOnlyInStock] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  const [categories, setCategories] = useState([]);
   const [totalPages, setTotalPages] = useState(5); // For demo purposes, set a fixed total pages
 
   const handlePageChange = (page) => {
@@ -201,6 +185,14 @@ export default function SearchPage() {
     setSearchQuery(queryFromUrl);
     setSelectedCategory(categoryFromUrl);
   }, [searchParams]);
+
+  useEffect(() => {
+    // load categories from API
+    api.client.get("/api/categories?limit=100").then((response) => {
+      const fetchedCategories = response.data;
+      setCategories(fetchedCategories);
+    });
+  }, []);
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
