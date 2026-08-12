@@ -24,7 +24,6 @@ export default function CategoryList(params) {
       const response = await api.client.get("/api/categories?limit=20");
       const fetchedCategories = response.data;
       setCategories([AllCategory, ...fetchedCategories]);
-      console.log("Fetched categories:", fetchedCategories); // Log the fetched categories
       setLoading(false);
     } catch (error) {
       console.error("Error fetching categories:", error);

@@ -8,7 +8,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,7 @@ import {
   SlidersHorizontal,
   Star,
   X,
-  CircleX
+  CircleX,
 } from "lucide-react";
 import {
   Drawer,
@@ -31,8 +31,9 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
 import FilterSidebar from "./filters/filter-sidebar";
+import PaginationWithPrimaryButton from "@/components/customized/pagination/pagination-02";
 
 // Mock data - in a real app, this would come from an API
 const allProducts = [
@@ -47,20 +48,21 @@ const allProducts = [
     rating: 4.5,
     reviews: 128,
     inStock: true,
-    tags: ["wireless", "premium", "noise-cancelling"]
+    tags: ["wireless", "premium", "noise-cancelling"],
   },
   {
     id: 2,
     title: "Bluetooth Speaker Pro",
     category: "Speaker",
-    description: "Portable Bluetooth speaker with deep bass and long battery life.",
+    description:
+      "Portable Bluetooth speaker with deep bass and long battery life.",
     price: 89.99,
     originalPrice: 119.99,
     image: "/products/Speaker.webp",
     rating: 4.2,
     reviews: 95,
     inStock: true,
-    tags: ["bluetooth", "portable", "waterproof"]
+    tags: ["bluetooth", "portable", "waterproof"],
   },
   {
     id: 3,
@@ -73,7 +75,7 @@ const allProducts = [
     rating: 4.1,
     reviews: 203,
     inStock: true,
-    tags: ["powerbank", "fast-charging", "portable"]
+    tags: ["powerbank", "fast-charging", "portable"],
   },
   {
     id: 4,
@@ -86,7 +88,7 @@ const allProducts = [
     rating: 4.4,
     reviews: 156,
     inStock: true,
-    tags: ["rgb", "smart", "app-controlled"]
+    tags: ["rgb", "smart", "app-controlled"],
   },
   {
     id: 5,
@@ -99,7 +101,7 @@ const allProducts = [
     rating: 4.7,
     reviews: 87,
     inStock: false,
-    tags: ["studio", "condenser", "professional"]
+    tags: ["studio", "condenser", "professional"],
   },
   {
     id: 6,
@@ -112,7 +114,7 @@ const allProducts = [
     rating: 4.6,
     reviews: 341,
     inStock: true,
-    tags: ["arduino", "microcontroller", "diy"]
+    tags: ["arduino", "microcontroller", "diy"],
   },
   {
     id: 7,
@@ -125,7 +127,7 @@ const allProducts = [
     rating: 4.3,
     reviews: 76,
     inStock: true,
-    tags: ["precision", "electronic-components", "diy"]
+    tags: ["precision", "electronic-components", "diy"],
   },
   {
     id: 8,
@@ -138,8 +140,8 @@ const allProducts = [
     rating: 4.0,
     reviews: 45,
     inStock: true,
-    tags: ["led", "high-brightness", "components"]
-  }
+    tags: ["led", "high-brightness", "components"],
+  },
 ];
 
 const categories = [
@@ -157,7 +159,7 @@ const categories = [
   "Potentiometer",
   "Crystal Oscillator",
   "Connector",
-  "Sensor"
+  "Sensor",
 ];
 
 const sortOptions = [
@@ -166,11 +168,11 @@ const sortOptions = [
   { value: "price-high", label: "Price: High to Low" },
   { value: "rating", label: "Customer Rating" },
   { value: "name", label: "Name A-Z" },
-  { value: "newest", label: "Newest First" }
+  { value: "newest", label: "Newest First" },
 ];
 
 export default function SearchPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [sortBy, setSortBy] = useState("relevance");
@@ -179,10 +181,22 @@ export default function SearchPage() {
   const [showOnlyInStock, setShowOnlyInStock] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  const [totalPages, setTotalPages] = useState(5); // For demo purposes, set a fixed total pages
+
+  const handlePageChange = (page) => {
+    searchParams.set("page", page);
+    setSearchParams(searchParams);
+  };
+
   // Initialize search query and category from URL parameters
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
     const categoryFromUrl = searchParams.get("category") || "All";
+
+    if (!searchParams.get("page")) {
+      searchParams.set("page", "1");
+      setSearchParams(searchParams);
+    }
 
     setSearchQuery(queryFromUrl);
     setSelectedCategory(categoryFromUrl);
@@ -190,18 +204,23 @@ export default function SearchPage() {
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = allProducts.filter(product => {
+    let filtered = allProducts.filter((product) => {
       // Text search
-      const searchMatches = searchQuery === "" ||
+      const searchMatches =
+        searchQuery === "" ||
         product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+        product.tags.some((tag) =>
+          tag.toLowerCase().includes(searchQuery.toLowerCase()),
+        );
 
       // Category filter
-      const categoryMatches = selectedCategory === "All" || product.category === selectedCategory;
+      const categoryMatches =
+        selectedCategory === "All" || product.category === selectedCategory;
 
       // Price range filter
-      const priceMatches = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const priceMatches =
+        product.price >= priceRange[0] && product.price <= priceRange[1];
 
       // Rating filter
       const ratingMatches = product.rating >= minRating;
@@ -209,7 +228,13 @@ export default function SearchPage() {
       // Stock filter
       const stockMatches = !showOnlyInStock || product.inStock;
 
-      return searchMatches && categoryMatches && priceMatches && ratingMatches && stockMatches;
+      return (
+        searchMatches &&
+        categoryMatches &&
+        priceMatches &&
+        ratingMatches &&
+        stockMatches
+      );
     });
 
     // Sort products
@@ -236,7 +261,14 @@ export default function SearchPage() {
     }
 
     return filtered;
-  }, [searchQuery, selectedCategory, sortBy, priceRange, minRating, showOnlyInStock]);
+  }, [
+    searchQuery,
+    selectedCategory,
+    sortBy,
+    priceRange,
+    minRating,
+    showOnlyInStock,
+  ]);
 
   const clearFilters = useCallback(() => {
     setSearchQuery("");
@@ -251,7 +283,7 @@ export default function SearchPage() {
     selectedCategory !== "All",
     priceRange[0] > 0 || priceRange[1] < 300,
     minRating > 0,
-    showOnlyInStock
+    showOnlyInStock,
   ].filter(Boolean).length;
 
   return (
@@ -260,13 +292,18 @@ export default function SearchPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Search Products</h1>
-          <p className="text-gray-600">Find the perfect electronic components and gadgets</p>
+          <p className="text-gray-600">
+            Find the perfect electronic components and gadgets
+          </p>
         </div>
 
         {/* Search Bar */}
         <div className="relative mb-6">
           <div className="relative w-full max-w-2xl">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" size={20} />
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
+              size={20}
+            />
             <Input
               type="text"
               placeholder="Search products, categories, or keywords..."
@@ -281,7 +318,8 @@ export default function SearchPage() {
           {/* Filters Sidebar */}
           <FilterSidebar
             activeFiltersCount={activeFiltersCount}
-            categories={categories} clearFilters={clearFilters}
+            categories={categories}
+            clearFilters={clearFilters}
             minRating={minRating}
             priceRange={priceRange}
             selectedCategory={selectedCategory}
@@ -303,20 +341,20 @@ export default function SearchPage() {
                   {filteredAndSortedProducts.length} Products Found
                 </h2>
                 {searchQuery && (
-                  <p className="text-gray-600">
-                    Results for "{searchQuery}"
-                  </p>
+                  <p className="text-gray-600">Results for "{searchQuery}"</p>
                 )}
               </div>
 
               <div className="flex items-center space-x-2">
-                <Label htmlFor="sort" className="text-sm whitespace-nowrap">Sort by:</Label>
+                <Label htmlFor="sort" className="text-sm whitespace-nowrap">
+                  Sort by:
+                </Label>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {sortOptions.map(option => (
+                    {sortOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -329,11 +367,8 @@ export default function SearchPage() {
             {/* Products Grid */}
             {filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
-                {filteredAndSortedProducts.map(product => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                  />
+                {filteredAndSortedProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
                 ))}
               </div>
             ) : (
@@ -342,7 +377,9 @@ export default function SearchPage() {
                 <div className="mb-4">
                   <Search size={64} className="mx-auto text-gray-300" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No products found</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  No products found
+                </h3>
                 <p className="text-gray-600 mb-6">
                   Try adjusting your search criteria or filters
                 </p>
@@ -352,6 +389,15 @@ export default function SearchPage() {
               </div>
             )}
           </div>
+        </div>
+        {/* Pagination */}
+        <div className="mt-6 sm:p-1">
+          <PaginationWithPrimaryButton
+            className="w-full"
+            currentPage={searchParams}
+            totalPages={totalPages}
+            onPageChange={(pageNum) => handlePageChange(pageNum)}
+          />
         </div>
       </div>
     </div>
