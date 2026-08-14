@@ -15,7 +15,15 @@ import { Link, useNavigate } from "react-router-dom";
 const HorizontalProductCardComponent = ({
   variant,
   className,
-  product = null,
+  product = {
+    title: "Sample Product",
+    description: "This is a sample product description.",
+    price: 49.99,
+    originalPrice: 59.99,
+    image:null,
+    thumbnail: null,
+    id: 134,
+  },
   index = 0,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -34,19 +42,22 @@ const HorizontalProductCardComponent = ({
 
   // Default product data if not provided
   const productData = product?.[0] || product;
-
+  
   const discountPercentage = useMemo(
-    () =>
-      productData.originalPrice &&
-      productData.originalPrice !== productData.price
+    () => 
+       productData.originalPrice &&
+        productData.originalPrice !== productData.price
         ? Math.round(
-            ((productData.originalPrice - productData.price) /
-              productData.originalPrice) *
-              100,
-          )
+          ((productData.originalPrice - productData.price) /
+            productData.originalPrice) *
+          100,
+        )
         : 0,
+
+    
     [productData.originalPrice, productData.price],
   );
+
 
   let variantStyle = "";
   if (variant === "borderless") {
@@ -273,7 +284,7 @@ const HorizontalProductCardComponent = ({
             {" "}
             {limitWords(
               productData.description ||
-                "Premium quality product with exceptional features.",
+              "Premium quality product with exceptional features.",
               12,
             )}{" "}
           </Link>
