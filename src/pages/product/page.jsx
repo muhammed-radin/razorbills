@@ -51,6 +51,10 @@ import HorizontalProductCard from "@/components/horizontal-card/horizontal-card"
 import axios from "axios";
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
+import { MessageSquare } from "lucide-react";
+
+
+const reviews = [];
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -102,6 +106,8 @@ const ProductDetailsPage = () => {
     return null;
   }
 
+
+
   return (
     <div className="min-h-screen p-3 sm:p-6 lg:p-8 flex flex-col justify-center">
       <Helmet>
@@ -113,7 +119,7 @@ const ProductDetailsPage = () => {
         />
       </Helmet>
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm text-muted-foreground max-w-7xl mx-auto">
+      <nav className="mb-6 text-sm text-muted-foreground max-w-7xl  sm:mx-[220px]">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -310,7 +316,7 @@ const ProductDetailsPage = () => {
       </div>
 
       {/* Product Details Tabs */}
-      <div className="max-w-7xl mx-auto mt-12 space-y-8">
+      <div className="max-w-7xl mt-12 space-y-8 sm:ml-[220px]">
         <Separator />
         {/* Detailed Description */}
         <div className="sm:max-w-3xl max-sm:max-w-full">
@@ -321,56 +327,55 @@ const ProductDetailsPage = () => {
           </StyledMd>
         </div>
 
-        <br />
 
-        <div className="flex flex-col lg:flex-row lg:items-stretch lg:justify-stretch lg:space-x-4 space-y-6 lg:space-y-0">
-          {/* Specifications */}
-          <Card className="shrink-0 flex-1">
-            <CardHeader>
-              <CardTitle>Specifications</CardTitle>
-              <CardDescription>
-                Technical specifications and details
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {product.specifications &&
-                  product.specifications.map((spec, index) => (
-                    <div
-                      key={index}
-                      className="flex justify-between py-2 border-b last:border-b-0"
-                    >
-                      <span className="font-medium text-sm">{spec.label}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {spec.value}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            </CardContent>
-          </Card>
+        {/* Specifications */}
+        <Card className="w-full ">
+          <CardHeader>
+            <CardTitle>Specifications</CardTitle>
+            <CardDescription>
+              Technical specifications and details
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4">
+              {product.specifications &&
+                product.specifications.map((spec, index) => (
+                  <div
+                    key={index}
+                    className="flex justify-between py-2 border-b last:border-b-0 gap-2"
+                  >
+                    <span className="font-medium text-sm">{spec.label}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {spec.value}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Features */}
-          <Card className="flex-1">
-            <CardHeader>
-              <CardTitle>Features</CardTitle>
-              <CardDescription>Key features and benefits</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {product.features &&
-                  product.features.map((feature, index) => (
-                    <li key={index} className="flex items-start space-x-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Features */}
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Features</CardTitle>
+            <CardDescription>Key features and benefits</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul className="grid grid-cols-1  gap-3">
+              {product.features &&
+                product.features.map((feature, index) => (
+                  <li key={index} className="flex items-start space-x-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                    <span className="text-sm">{feature}</span>
+                  </li>
+                ))}
+            </ul>
+          </CardContent>
+        </Card>
+
       </div>
 
+    
       {/* Review */}
       {/* Reviews Section */}
       <div className="max-w-7xl mx-auto mt-12 space-y-8">
@@ -414,28 +419,40 @@ const ProductDetailsPage = () => {
                 <Separator className="my-2" />
               </CardHeader>
               <CardContent className="w-full">
-                <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9].map(
-                    (it, index) => {
-                      return (
-                        <ReviewCard
-                          review={{
-                            date: new Date(),
-                            author: "John Doe",
-                            comment:
-                              "Great product! Highly recommend it.".repeat(
-                                index,
-                              ),
-                            title: "Excellent Quality",
-                            rating: Math.floor(Math.random() * 5),
-                          }}
-                          className="w-[350px]"
-                          key={index}
-                        />
-                      );
-                    },
-                  )}
-                </div>
+                {reviews && reviews.length > 0 ? (
+                  <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
+                    {reviews.map(
+                      (it, index) => {
+                        return (
+                          <ReviewCard
+                            review={{
+                              date: new Date(),
+                              author: "John Doe",
+                              comment:
+                                "Great product! Highly recommend it.".repeat(
+                                  index,
+                                ),
+                              title: "Excellent Quality",
+                              rating: Math.floor(Math.random() * 5),
+                            }}
+                            className="w-[350px]"
+                            key={index}
+                          />
+                        );
+                      },
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <MessageSquare className="h-10 w-10 text-muted-foreground mb-3" />
+                    <p className="text-sm font-medium text-muted-foreground">
+                      No Comments Yet
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Be the first to share your thoughts on this product.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
