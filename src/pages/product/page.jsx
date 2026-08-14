@@ -327,58 +327,58 @@ const ProductDetailsPage = () => {
           </StyledMd>
         </div>
 
+        <section className=" flex-row w-full sm:w-[100%] sm:gap-4 sm:flex ">
+          {/* Specifications */}
+          <Card className="w-full sm:w-1/2">
+            <CardHeader>
+              <CardTitle>Specifications</CardTitle>
+              <CardDescription>
+                Technical specifications and details
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 gap-4">
+                {product.specifications &&
+                  product.specifications.map((spec, index) => (
+                    <div
+                      key={index}
+                      className="flex justify-between py-2 border-b last:border-b-0 gap-2"
+                    >
+                      <span className="font-medium text-sm">{spec.label}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {spec.value}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Specifications */}
-        <Card className="w-full ">
-          <CardHeader>
-            <CardTitle>Specifications</CardTitle>
-            <CardDescription>
-              Technical specifications and details
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4">
-              {product.specifications &&
-                product.specifications.map((spec, index) => (
-                  <div
-                    key={index}
-                    className="flex justify-between py-2 border-b last:border-b-0 gap-2"
-                  >
-                    <span className="font-medium text-sm">{spec.label}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {spec.value}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Features */}
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Features</CardTitle>
-            <CardDescription>Key features and benefits</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ul className="grid grid-cols-1  gap-3">
-              {product.features &&
-                product.features.map((feature, index) => (
-                  <li key={index} className="flex items-start space-x-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-            </ul>
-          </CardContent>
-        </Card>
-
+          {/* Features */}
+          <Card className="sm:w-1/2 w-full mt-4 sm:mt-0">
+            <CardHeader>
+              <CardTitle>Features</CardTitle>
+              <CardDescription>Key features and benefits</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="grid grid-cols-1  gap-3">
+                {product.features &&
+                  product.features.map((feature, index) => (
+                    <li key={index} className="flex items-start space-x-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0"></div>
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+              </ul>
+            </CardContent>
+          </Card>
+        </section>
       </div>
 
     
       {/* Review */}
       {/* Reviews Section */}
-      <div className="max-w-7xl mx-auto mt-12 space-y-8">
+      <div className="max-full ml-[220px] mt-12 space-y-8">
         <Tabs defaultValue="review">
           <TabsList>
             <TabsTrigger value="review">Reviews</TabsTrigger>
