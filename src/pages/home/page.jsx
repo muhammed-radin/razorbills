@@ -87,6 +87,8 @@ export default function HomePage() {
       </Helmet>
       {/* Hero Section */}
       {/* <Hero /> */}
+      {/* Highlighted Image Slider - Full Width Hero Style */}
+      <HighlightedSlider className="" />
 
       {/* Main Content */}
       <div className="p-3 sm:p-3 w-full max-w-7xl mx-auto">
@@ -103,9 +105,6 @@ export default function HomePage() {
           <LoaderScreen />
         ) : (
           <>
-            {/* Highlighted Image Slider - Full Width Hero Style */}
-            <HighlightedSlider className="" />
-
             {/* Featured Products Carousel - Premium Cards */}
             {featuredProducts.length > 0 && (
               <FeaturedCarousel

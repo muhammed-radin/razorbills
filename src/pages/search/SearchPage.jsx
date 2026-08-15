@@ -1,4 +1,9 @@
-import React, { useState, useMemo, useEffect, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useDeferredValue,
+} from "react";
 import { useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,140 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import ProductCard from "@/components/product-card/ProductCard";
-import {
-  Search,
-  Filter,
-  SlidersHorizontal,
-  Star,
-  X,
-  CircleX,
-} from "lucide-react";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { Search } from "lucide-react";
 import FilterSidebar from "./filters/filter-sidebar";
 import PaginationWithPrimaryButton from "@/components/customized/pagination/pagination-02";
 import { api } from "@/utils/api";
-
-// Mock data - in a real app, this would come from an API
-const allProducts = [
-  {
-    id: 1,
-    title: "Wireless Headphones Premium",
-    category: "Electronics",
-    description: "High-quality wireless headphones with noise cancellation.",
-    price: 199.99,
-    originalPrice: 249.99,
-    image: "/products/Headphone.jpg",
-    rating: 4.5,
-    reviews: 128,
-    inStock: true,
-    tags: ["wireless", "premium", "noise-cancelling"],
-  },
-  {
-    id: 2,
-    title: "Bluetooth Speaker Pro",
-    category: "Speaker",
-    description:
-      "Portable Bluetooth speaker with deep bass and long battery life.",
-    price: 89.99,
-    originalPrice: 119.99,
-    image: "/products/Speaker.webp",
-    rating: 4.2,
-    reviews: 95,
-    inStock: true,
-    tags: ["bluetooth", "portable", "waterproof"],
-  },
-  {
-    id: 3,
-    title: "Rechargeable Battery Pack 10000mAh",
-    category: "Battery",
-    description: "High-capacity power bank with fast charging support.",
-    price: 39.99,
-    originalPrice: 59.99,
-    image: "/products/Battery.png",
-    rating: 4.1,
-    reviews: 203,
-    inStock: true,
-    tags: ["powerbank", "fast-charging", "portable"],
-  },
-  {
-    id: 4,
-    title: "RGB LED Light Strip 5m",
-    category: "LED",
-    description: "Smart RGB LED strip with app control and multiple effects.",
-    price: 29.99,
-    originalPrice: 39.99,
-    image: "/products/LedStrip.webp",
-    rating: 4.4,
-    reviews: 156,
-    inStock: true,
-    tags: ["rgb", "smart", "app-controlled"],
-  },
-  {
-    id: 5,
-    title: "Professional Microphone",
-    category: "Microphone",
-    description: "Studio-grade condenser microphone for recording.",
-    price: 149.99,
-    originalPrice: 199.99,
-    image: "/products/Headphone.jpg", // placeholder
-    rating: 4.7,
-    reviews: 87,
-    inStock: false,
-    tags: ["studio", "condenser", "professional"],
-  },
-  {
-    id: 6,
-    title: "Arduino Compatible Board",
-    category: "Microcontroller",
-    description: "Open-source microcontroller board for electronics projects.",
-    price: 24.99,
-    originalPrice: 34.99,
-    image: "/products/Battery.png", // placeholder
-    rating: 4.6,
-    reviews: 341,
-    inStock: true,
-    tags: ["arduino", "microcontroller", "diy"],
-  },
-  {
-    id: 7,
-    title: "Precision Resistor Set",
-    category: "Resistor",
-    description: "Complete set of precision resistors for electronic projects.",
-    price: 19.99,
-    originalPrice: 29.99,
-    image: "/products/LedStrip.jpg", // placeholder
-    rating: 4.3,
-    reviews: 76,
-    inStock: true,
-    tags: ["precision", "electronic-components", "diy"],
-  },
-  {
-    id: 8,
-    title: "High-Brightness LED Diodes",
-    category: "Diode",
-    description: "Pack of high-efficiency LED diodes in various colors.",
-    price: 12.99,
-    originalPrice: 18.99,
-    image: "/products/LedStrip.webp", // placeholder
-    rating: 4.0,
-    reviews: 45,
-    inStock: true,
-    tags: ["led", "high-brightness", "components"],
-  },
-];
+import { create } from "zustand";
+import { Preloader } from "@/components/LoaderScreen";
 
 const sortOptions = [
   { value: "relevance", label: "Best Match" },
@@ -154,18 +32,128 @@ const sortOptions = [
   { value: "newest", label: "Newest First" },
 ];
 
+// migrating to zustand for state management
+const useStore = create((set) => ({
+  searchQuery: "",
+  selectedCategory: null,
+  sortBy: "relevance",
+  priceRange: [0, 50000],
+  minRating: 0,
+  showOnlyInStock: false,
+  showFilters: false,
+  fixedPriceRange: [0, 50000],
+  setShowFilters: (show) => set({ showFilters: show }),
+  setSearchQuery: (query) => set({ searchQuery: query }),
+  setSelectedCategory: (category) => set({ selectedCategory: category }),
+  setSortBy: (sort) => set({ sortBy: sort }),
+  setPriceRange: (range) => set({ priceRange: range }),
+  setMinRating: (rating) => set({ minRating: rating }),
+  setShowOnlyInStock: (inStock) => set({ showOnlyInStock: inStock }),
+  setFixedPriceRange: (range) => set({ fixedPriceRange: range }),
+}));
+
+export { useStore };
+
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [sortBy, setSortBy] = useState("relevance");
-  const [priceRange, setPriceRange] = useState([0, 300]);
-  const [minRating, setMinRating] = useState(0);
-  const [showOnlyInStock, setShowOnlyInStock] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-
   const [categories, setCategories] = useState([]);
   const [totalPages, setTotalPages] = useState(5); // For demo purposes, set a fixed total pages
+  const [totalProducts, setTotalProducts] = useState(0);
+
+  const {
+    searchQuery,
+    selectedCategory,
+    sortBy,
+    priceRange,
+    minRating,
+    showOnlyInStock,
+    showFilters,
+    fixedPriceRange,
+    setShowFilters,
+    setSearchQuery,
+    setSelectedCategory,
+    setSortBy,
+    setPriceRange,
+    setMinRating,
+    setShowOnlyInStock,
+    setFixedPriceRange,
+  } = useStore();
+
+  const deferedSearchQuery = useDeferredValue(searchQuery);
+  const [preloaderEnabled, setPreloader] = useState(false);
+
+  const [filteredAndSortedProducts, setFilteredAndSortedProducts] = useState(
+    [],
+  );
+
+  useEffect(() => {
+    // if (deferedSearchQuery) {
+    searchParams.set("q", deferedSearchQuery);
+    setPreloader(true);
+
+    let timeout = setTimeout(() => {
+      setSearchParams(searchParams);
+
+      api.client
+        .get("/api/products", {
+          search: deferedSearchQuery,
+          params: {
+            search: deferedSearchQuery,
+            category: selectedCategory !== null ? selectedCategory : undefined,
+            priceMin: priceRange[0],
+            priceMax: priceRange[1],
+            ratingMin: minRating,
+            inStock: showOnlyInStock,
+            sortBy:
+              sortBy === "relevance"
+                ? "createdAt"
+                : sortBy === "name"
+                  ? "title"
+                  : sortBy === "newest"
+                    ? "createdAt"
+                    : sortBy === "price-low"
+                      ? "price"
+                      : sortBy === "price-high"
+                        ? "price"
+                        : sortBy === "rating"
+                          ? "rating"
+                          : undefined,
+            sortOrder:
+              sortBy === "price-low"
+                ? "asc"
+                : sortBy === "price-high"
+                  ? "desc"
+                  : sortBy === "rating"
+                    ? "desc"
+                    : sortBy === "name"
+                      ? "desc"
+                      : sortBy === "newest"
+                        ? "desc"
+                        : undefined,
+            page: searchParams.get("page") || 1,
+          },
+        })
+        .then((response) => {
+          const fetched = response.data;
+          setPreloader(false);
+          setTotalPages(fetched.totalPages);
+          setTotalProducts(fetched.count);
+          // Update the products state with the fetched data
+          setFilteredAndSortedProducts(fetched.products);
+        });
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+    // }
+  }, [
+    deferedSearchQuery,
+    selectedCategory,
+    priceRange,
+    minRating,
+    showOnlyInStock,
+    sortBy,
+    searchParams,
+  ]);
 
   const handlePageChange = (page) => {
     searchParams.set("page", page);
@@ -175,7 +163,7 @@ export default function SearchPage() {
   // Initialize search query and category from URL parameters
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
-    const categoryFromUrl = searchParams.get("category") || "All";
+    const categoryFromUrl = searchParams.get("category");
 
     if (!searchParams.get("page")) {
       searchParams.set("page", "1");
@@ -194,86 +182,18 @@ export default function SearchPage() {
     });
   }, []);
 
-  // Filter and sort products
-  const filteredAndSortedProducts = useMemo(() => {
-    let filtered = allProducts.filter((product) => {
-      // Text search
-      const searchMatches =
-        searchQuery === "" ||
-        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.tags.some((tag) =>
-          tag.toLowerCase().includes(searchQuery.toLowerCase()),
-        );
-
-      // Category filter
-      const categoryMatches =
-        selectedCategory === "All" || product.category === selectedCategory;
-
-      // Price range filter
-      const priceMatches =
-        product.price >= priceRange[0] && product.price <= priceRange[1];
-
-      // Rating filter
-      const ratingMatches = product.rating >= minRating;
-
-      // Stock filter
-      const stockMatches = !showOnlyInStock || product.inStock;
-
-      return (
-        searchMatches &&
-        categoryMatches &&
-        priceMatches &&
-        ratingMatches &&
-        stockMatches
-      );
-    });
-
-    // Sort products
-    switch (sortBy) {
-      case "price-low":
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case "rating":
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case "name":
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case "newest":
-        // For demo, just reverse the order
-        filtered.reverse();
-        break;
-      default: // relevance
-        // Keep original order for relevance
-        break;
-    }
-
-    return filtered;
-  }, [
-    searchQuery,
-    selectedCategory,
-    sortBy,
-    priceRange,
-    minRating,
-    showOnlyInStock,
-  ]);
-
   const clearFilters = useCallback(() => {
     setSearchQuery("");
-    setSelectedCategory("All");
+    setSelectedCategory(null);
     setSortBy("relevance");
-    setPriceRange([0, 300]);
+    setPriceRange([0, 50000]);
     setMinRating(0);
     setShowOnlyInStock(false);
   }, []);
 
   const activeFiltersCount = [
-    selectedCategory !== "All",
-    priceRange[0] > 0 || priceRange[1] < 300,
+    selectedCategory !== null,
+    priceRange[0] > 0 || priceRange[1] < 50000,
     minRating > 0,
     showOnlyInStock,
   ].filter(Boolean).length;
@@ -330,7 +250,7 @@ export default function SearchPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
               <div>
                 <h2 className="text-xl font-semibold">
-                  {filteredAndSortedProducts.length} Products Found
+                  {totalProducts} Products Found
                 </h2>
                 {searchQuery && (
                   <p className="text-gray-600">Results for "{searchQuery}"</p>
@@ -357,7 +277,11 @@ export default function SearchPage() {
             </div>
 
             {/* Products Grid */}
-            {filteredAndSortedProducts.length > 0 ? (
+            {preloaderEnabled ? (
+              <div className="w-full h-1/2 flex justify-center items-center">
+                <Preloader />
+              </div>
+            ) : filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
                 {filteredAndSortedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />

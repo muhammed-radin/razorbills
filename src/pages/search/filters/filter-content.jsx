@@ -5,6 +5,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
+  SelectGroup,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,9 @@ import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { SelectLabel } from "@radix-ui/react-select";
+import { currency } from "@/utils/currency";
+import { useStore } from "../SearchPage";
 
 function FilterContent({
   showFilters,
@@ -26,6 +30,8 @@ function FilterContent({
   setShowOnlyInStock,
   className,
 }) {
+  const { fixedPriceRange } = useStore();
+
   return (
     <div>
       <div
@@ -42,11 +48,22 @@ function FilterContent({
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.name}>
-                  {category.name}
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel className="text-muted-foreground p-1">
+                  Categories
+                </SelectLabel>
+                {categories.length === 0 ? (
+                  <SelectLabel className="text-muted-foreground p-1">
+                    No Categories Found
+                  </SelectLabel>
+                ) : (
+                  categories.map((category) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>
@@ -54,20 +71,20 @@ function FilterContent({
         {/* Price Range Filter */}
         <div>
           <Label className="text-sm font-medium mb-3 block">
-            Price Range: ${priceRange[0]} - ${priceRange[1]}
+            Price Range: {currency(priceRange[0])} - {currency(priceRange[1])}
           </Label>
           <Slider
             value={priceRange}
             onValueChange={setPriceRange}
-            max={300}
-            min={0}
-            step={10}
+            max={fixedPriceRange[1]}
+            min={fixedPriceRange[0]}
+            step={(fixedPriceRange[1] - fixedPriceRange[0]) / 100}
             className="w-full"
             dualThumb={true}
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>$0</span>
-            <span>$300</span>
+            <span>{currency(priceRange[0])}</span>
+            <span>{currency(priceRange[1])}</span>
           </div>
         </div>
 

@@ -57,13 +57,33 @@ const markdownComponents = {
     <th className="px-4 py-2 text-left font-medium" {...props} />
   ),
   td: ({ node, ...props }) => <td className="px-4 py-2" {...props} />,
+  a: ({ node, ...props }) => (
+    <a
+      className="text-primary underline underline-offset-4"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    />
+  ),
+  code: ({ node, ...props }) => (
+    <code
+      className="bg-primary text-primary-foreground rounded-md px-1 py-0.5"
+      {...props}
+    />
+  ),
+  blockquote: ({ node, ...props }) => (
+    <blockquote
+      className="border-l-4 border-primary pl-4 italic text-muted-foreground my-4"
+      {...props}
+    />
+  ),
 };
 
 function StyledMd({ children }) {
   return (
     <Markdown
       remarkPlugins={[remarkGfm]}
-      disallowedElements={["code"]}
+      disallowedElements={["script", "style"]}
       components={markdownComponents}
     >
       {children}
