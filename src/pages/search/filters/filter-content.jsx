@@ -43,7 +43,11 @@ function FilterContent({
         {/* Category Filter */}
         <div>
           <Label className="text-sm font-medium mb-3 block">Category</Label>
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <Select
+            defaultValue="all"
+            value={selectedCategory}
+            onValueChange={setSelectedCategory}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -52,6 +56,7 @@ function FilterContent({
                 <SelectLabel className="text-muted-foreground p-1">
                   Categories
                 </SelectLabel>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categories.length === 0 ? (
                   <SelectLabel className="text-muted-foreground p-1">
                     No Categories Found

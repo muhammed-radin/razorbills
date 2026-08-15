@@ -35,7 +35,7 @@ const sortOptions = [
 // migrating to zustand for state management
 const useStore = create((set) => ({
   searchQuery: "",
-  selectedCategory: null,
+  selectedCategory: "all",
   sortBy: "relevance",
   priceRange: [0, 50000],
   minRating: 0,
@@ -99,7 +99,7 @@ export default function SearchPage() {
           search: deferedSearchQuery,
           params: {
             search: deferedSearchQuery,
-            category: selectedCategory !== null ? selectedCategory : undefined,
+            category: selectedCategory !== "all" ? selectedCategory : undefined,
             priceMin: priceRange[0],
             priceMax: priceRange[1],
             ratingMin: minRating,
@@ -164,6 +164,7 @@ export default function SearchPage() {
   useEffect(() => {
     const queryFromUrl = searchParams.get("q") || "";
     const categoryFromUrl = searchParams.get("category");
+    let category = categoryFromUrl ? categoryFromUrl : "all";
 
     if (!searchParams.get("page")) {
       searchParams.set("page", "1");
@@ -171,7 +172,7 @@ export default function SearchPage() {
     }
 
     setSearchQuery(queryFromUrl);
-    setSelectedCategory(categoryFromUrl);
+    setSelectedCategory(category);
   }, [searchParams]);
 
   useEffect(() => {
@@ -184,7 +185,7 @@ export default function SearchPage() {
 
   const clearFilters = useCallback(() => {
     setSearchQuery("");
-    setSelectedCategory(null);
+    setSelectedCategory("all");
     setSortBy("relevance");
     setPriceRange([0, 50000]);
     setMinRating(0);
@@ -192,7 +193,7 @@ export default function SearchPage() {
   }, []);
 
   const activeFiltersCount = [
-    selectedCategory !== null,
+    selectedCategory !== "all",
     priceRange[0] > 0 || priceRange[1] < 50000,
     minRating > 0,
     showOnlyInStock,
