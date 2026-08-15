@@ -16,7 +16,8 @@ import OrderProductCard from "./Order-product-card";
 export default function OrderCard() {
   return (
 
-    <main className="  max-w-3xl  p-4  ">
+
+    <main className="  max-w-3xl ">
       <Card className="w-full">
         <CardHeader>
           <div className="flex justify-center mb-6">
@@ -64,6 +65,7 @@ export default function OrderCard() {
         </CardFooter>
       </Card>
     </main>
+
 
   );
 }
