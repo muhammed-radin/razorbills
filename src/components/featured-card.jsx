@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from "react";
+import React, { memo, useCallback, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +8,10 @@ import {
   Star,
   Heart,
   ShoppingCart,
-  ArrowRight,
   Zap,
   Award,
-  TrendingUp,
   Package,
+  PackageX,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -28,12 +27,17 @@ export default memo(function FeaturedCard({
   productId,
   badge = "Featured",
   accentColor = "primary", // primary, rose, amber, emerald, violet
+  stock,
 }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const navigate = useNavigate();
+
+  const isStockOut = useMemo(() => {
+    return stock <= 0;
+  }, [stock]);
 
   const handleAddToCart = useCallback((e) => {
     // Add to cart functionality can be implemented here
@@ -144,21 +148,37 @@ export default memo(function FeaturedCard({
 
       {/* Top Section - Badge & Wishlist */}
       <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start">
-        <Badge
-          className={cn(
-            "px-3 py-1.5 text-xs font-bold uppercase tracking-wide",
-            "bg-gradient-to-r shadow-lg",
-            accentColor === "primary" && "from-primary to-primary/80",
-            accentColor === "rose" && "from-rose-500 to-pink-500",
-            accentColor === "amber" && "from-amber-500 to-orange-500",
-            accentColor === "emerald" && "from-emerald-500 to-teal-500",
-            accentColor === "violet" && "from-violet-500 to-purple-500",
-            "text-white",
+        <div className="flex flex-col gap-2">
+          <Badge
+            className={cn(
+              "px-3 py-1.5 text-xs font-bold uppercase tracking-wide",
+              "bg-gradient-to-r shadow-lg",
+              accentColor === "primary" && "from-primary to-primary/80",
+              accentColor === "rose" && "from-rose-500 to-pink-500",
+              accentColor === "amber" && "from-amber-500 to-orange-500",
+              accentColor === "emerald" && "from-emerald-500 to-teal-500",
+              accentColor === "violet" && "from-violet-500 to-purple-500",
+              "text-white",
+            )}
+          >
+            <Award className="size-3 mr-1" />
+            {badge}
+          </Badge>
+
+          {isStockOut && (
+            <Badge
+              className={cn(
+                "px-3 py-1.5 text-xs font-bold uppercase tracking-wide",
+                "bg-gradient-to-r shadow-lg",
+                "from-rose-500 to-pink-500",
+                "text-white",
+              )}
+            >
+              <PackageX className="size-3 mr-1" />
+              Stock Out
+            </Badge>
           )}
-        >
-          <Award className="size-3 mr-1" />
-          {badge}
-        </Badge>
+        </div>
 
         <Button
           size="icon"
@@ -266,27 +286,42 @@ export default memo(function FeaturedCard({
             </div>
           </div>
 
-          <Button
-            size="lg"
-            className={cn(
-              "rounded-full px-5 gap-2 shadow-lg",
-              "transition-all duration-300",
-              "hover:scale-105 hover:shadow-xl",
-              accentColor === "primary" && "bg-primary hover:bg-primary/90",
-              accentColor === "rose" && "bg-rose-500 hover:bg-rose-600",
-              accentColor === "amber" && "bg-amber-500 hover:bg-amber-600",
-              accentColor === "emerald" &&
-                "bg-emerald-500 hover:bg-emerald-600",
-              accentColor === "violet" && "bg-violet-500 hover:bg-violet-600",
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-          >
-            <ShoppingCart className="size-4" />
-            Add
-          </Button>
+          {isStockOut === false ? (
+            <Button
+              size="lg"
+              className={cn(
+                "rounded-full px-5 gap-2 shadow-lg",
+                "transition-all duration-300",
+                "hover:scale-105 hover:shadow-xl",
+                accentColor === "primary" && "bg-primary hover:bg-primary/90",
+                accentColor === "rose" && "bg-rose-500 hover:bg-rose-600",
+                accentColor === "amber" && "bg-amber-500 hover:bg-amber-600",
+                accentColor === "emerald" &&
+                  "bg-emerald-500 hover:bg-emerald-600",
+                accentColor === "violet" && "bg-violet-500 hover:bg-violet-600",
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart();
+              }}
+            >
+              <ShoppingCart className="size-4" />
+              Add
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              className={cn(
+                "rounded-full px-5 gap-2 shadow-lg",
+                "transition-all duration-300",
+                "hover:scale-105 hover:shadow-xl",
+                "bg-rose-500 hover:bg-rose-600 text-white",
+              )}
+            >
+              <PackageX className="size-4" />
+              Out of Stock
+            </Button>
+          )}
         </div>
       </CardContent>
 

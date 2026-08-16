@@ -52,12 +52,41 @@ class Memory {
 
     return mb;
   }
+
+  locals = {};
+
+  setLocalMemory(url, data, timeout) {
+    url = url.toLowerCase();
+    this.locals[url] = data;
+    if (timeout) {
+      setTimeout(() => {
+        delete this.locals[url];
+      }, timeout * 1000); // Convert seconds to milliseconds
+    }
+  }
+  getLocalMemory(url) {
+    url = url.toLowerCase();
+    return this.locals[url] || null;
+  }
+  clearLocalMemory(url) {
+    url = url.toLowerCase();
+    if (this.locals[url]) {
+      delete this.locals[url];
+    }
+  }
 }
 
 // backward-compatible factory
 
 const CacheTable = {};
 
+/**
+ * @param {object} data
+ * @param {string} id
+ * @param {number} timeout
+ * @param {function} updateFn
+ * @returns {Memory}
+ */
 function useMemory(data, id, timeout, updateFn) {
   if (id) {
     CacheTable[id] = new Memory(data);

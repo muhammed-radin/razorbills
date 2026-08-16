@@ -84,6 +84,7 @@ class MinimalProduct {
     keywords,
     tags,
     category,
+    stock,
   } = {}) {
     const product =
       typeof id === "object" && id !== null
@@ -106,6 +107,7 @@ class MinimalProduct {
             keywords,
             tags,
             category,
+            stock,
           };
 
     this.id = product.id;
@@ -126,6 +128,7 @@ class MinimalProduct {
     this.keywords = product.keywords;
     this.tags = product.tags;
     this.category = product.category;
+    this.stock = product.stock;
   }
 }
 
@@ -148,6 +151,7 @@ ProductSchema.methods.toMinimal = function () {
     keywords: this.keywords,
     tags: this.tags,
     category: this.category,
+    stock: this.stock,
   });
 };
 

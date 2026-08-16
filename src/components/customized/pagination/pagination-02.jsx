@@ -9,8 +9,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useNavigate } from "react-router-dom";
+import { memo } from "react";
 
-export default function PaginationWithPrimaryButton({
+export default memo(function PaginationWithPrimaryButton({
   className,
   currentPage,
   totalPages,
@@ -26,14 +27,8 @@ export default function PaginationWithPrimaryButton({
   const previousPage = Math.max(currentPageNumber - 1, 1);
   const nextPage = Math.min(currentPageNumber + 1, totalPages);
 
-  console.log(
-    currentPage,
-    "currentPageNumber",
-    currentPageNumber,
-    "previousPage",
-    previousPage,
-    "nextPage",
-    nextPage,
+  console.warn(
+    "TODO: Remove this auto upadation each time parent changes, in search page",
   );
 
   return (
@@ -90,4 +85,4 @@ export default function PaginationWithPrimaryButton({
       </PaginationContent>
     </Pagination>
   );
-}
+});
