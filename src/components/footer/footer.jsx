@@ -1,11 +1,5 @@
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "../logo";
-import {
-  DribbbleIcon,
-  GithubIcon,
-  TwitchIcon,
-  TwitterIcon,
-} from "lucide-react";
 import { Link } from "react-router-dom";
 const footerSections = [
   {

@@ -214,12 +214,12 @@ export default function SearchPage() {
     <div className="min-h-screen p-3 sm:p-7 max-sm:p-4 max-sm:mt-3">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
+        <header className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Search Products</h1>
           <p className="text-gray-600">
             Find the perfect electronic components and gadgets
           </p>
-        </div>
+        </header>
 
         {/* Search Bar */}
         <div className="relative mb-6 flex flex-row items-center gap-1">
