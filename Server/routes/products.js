@@ -48,6 +48,9 @@ router.get("/", async function (req, res, next) {
 
   let query = {};
 
+  // Default: only show isActive products
+  query.isActive = true;
+
   if (search) {
     // find in title, category, keywords, tags and description
     query.$or = [

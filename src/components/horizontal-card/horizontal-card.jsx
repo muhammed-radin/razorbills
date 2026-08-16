@@ -11,6 +11,7 @@ import { limitWords } from "@/utils/string";
 import { Heart, ShoppingCart, Eye, Star, ImageOff } from "lucide-react";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { currency } from "@/utils/currency";
 
 const HorizontalProductCardComponent = ({
   variant,
@@ -34,6 +35,10 @@ const HorizontalProductCardComponent = ({
 
   // Default product data if not provided
   const productData = product?.[0] || product;
+
+  const isStockOut = useMemo(() => {
+    return productData?.stock <= 0;
+  }, [productData?.stock]);
 
   const discountPercentage = useMemo(
     () =>
@@ -290,41 +295,43 @@ const HorizontalProductCardComponent = ({
                   "text-green-600 dark:text-green-400",
                   "transition-transform duration-300",
                   isHovered ? "scale-105" : "scale-100",
+                  isStockOut && "text-red-600 dark:text-red-400",
                 )}
               >
-                ${productData.price}
+                {isStockOut ? "Out of Stock" : currency(productData.price)}
               </span>
               {productData.originalPrice &&
                 productData.originalPrice !== productData.price && (
                   <span className="text-[10px] sm:text-xs text-muted-foreground line-through">
-                    ${productData.originalPrice}
+                    {isStockOut ? "" : currency(productData.originalPrice)}
                   </span>
                 )}
             </div>
-            {discountPercentage > 0 && (
+            {discountPercentage > 0 && isStockOut === false && (
               <span className="text-[10px] font-medium text-green-600 dark:text-green-400">
-                Save $
-                {(productData.originalPrice - productData.price).toFixed(2)}
+                Save {currency(productData.originalPrice - productData.price)}
               </span>
             )}
           </div>
 
           {/* Add to Cart Button */}
-          <Button
-            onClick={handleAddToCart}
-            size="sm"
-            className={cn(
-              "gap-1.5 px-3 sm:px-4 h-8 sm:h-9",
-              "bg-gradient-to-r from-primary to-primary/90",
-              "hover:from-primary/90 hover:to-primary",
-              "shadow-md hover:shadow-lg",
-              "transition-all duration-300",
-              "hover:scale-105",
-            )}
-          >
-            <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="hidden sm:inline text-xs font-medium">Add</span>
-          </Button>
+          {isStockOut === false && (
+            <Button
+              onClick={handleAddToCart}
+              size="sm"
+              className={cn(
+                "gap-1.5 px-3 sm:px-4 h-8 sm:h-9",
+                "bg-gradient-to-r from-primary to-primary/90",
+                "hover:from-primary/90 hover:to-primary",
+                "shadow-md hover:shadow-lg",
+                "transition-all duration-300",
+                "hover:scale-105",
+              )}
+            >
+              <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline text-xs font-medium">Add</span>
+            </Button>
+          )}
         </div>
       </CardContent>
 
@@ -344,4 +351,4 @@ HorizontalProductCardComponent.displayName = "HorizontalProductCard";
 
 export const HorizontalProductCard = React.memo(HorizontalProductCardComponent);
 
-export default HorizontalProductCard;
+export default React.memo(HorizontalProductCard);

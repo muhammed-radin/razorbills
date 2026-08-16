@@ -44,6 +44,10 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
     [product.originalPrice, product.price],
   );
 
+  const isStockOut = useMemo(() => {
+    return product.stock <= 0;
+  }, [product.stock]);
+
   const isNewArrivals = variant === "new-arrivals";
   const isTopRated = variant === "top-rated";
 
@@ -313,35 +317,38 @@ const CompactProductCard = React.memo(({ product, variant = "default" }) => {
                   isNewArrivals && "text-violet-600 dark:text-violet-400",
                   isTopRated && "text-amber-600 dark:text-amber-400",
                   !isNewArrivals && !isTopRated && "text-foreground",
+                  isStockOut && "text-red-600 dark:text-red-400",
                 )}
               >
-                {currency(product.price)}
+                {isStockOut ? "Stock Out" : currency(product.price)}
               </span>
               {product.originalPrice && (
                 <p className="text-xs text-muted-foreground line-through">
-                  {currency(product.originalPrice)}
+                  {isStockOut ? "" : currency(product.originalPrice)}
                 </p>
               )}
             </div>
 
             {/* Add to Cart - Circular Button */}
-            <Button
-              size="icon"
-              className={cn(
-                "size-10 rounded-full shadow-md",
-                "transition-all duration-300",
-                "hover:scale-110 hover:shadow-lg",
-                isNewArrivals &&
-                  "bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600",
-                isTopRated &&
-                  "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600",
-                !isNewArrivals &&
-                  !isTopRated &&
-                  "bg-gradient-to-br from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600",
-              )}
-            >
-              <ShoppingCart className="size-4 text-white" />
-            </Button>
+            {isStockOut ? null : (
+              <Button
+                size="icon"
+                className={cn(
+                  "size-10 rounded-full shadow-md",
+                  "transition-all duration-300",
+                  "hover:scale-110 hover:shadow-lg",
+                  isNewArrivals &&
+                    "bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600",
+                  isTopRated &&
+                    "bg-gradient-to-br from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600",
+                  !isNewArrivals &&
+                    !isTopRated &&
+                    "bg-gradient-to-br from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600",
+                )}
+              >
+                <ShoppingCart className="size-4 text-white" />
+              </Button>
+            )}
           </div>
         </CardContent>
 

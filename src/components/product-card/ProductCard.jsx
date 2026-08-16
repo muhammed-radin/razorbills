@@ -13,6 +13,7 @@ const ProductCard = ({ product, index }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  console.log("Rendering ProductCard for product:", product);
 
   // Staggered animation on mount
   useEffect(() => {
