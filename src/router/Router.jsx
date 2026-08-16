@@ -9,7 +9,6 @@ import { LoaderScreen } from "@/components/LoaderScreen";
 const AdminAuth = lazy(() => import("@/pages/Admin/auth/page.index"));
 const AdminApp = lazy(() => import("@/pages/Admin/admin.app"));
 
-
 // --- LAZY IMPORT MAPS ---
 
 // Main Client Pages
@@ -33,6 +32,7 @@ const TermsAndConditions = lazy(
 const ContactUs = lazy(() => import("@/pages/contactus/page"));
 const ShippingInfo = lazy(() => import("@/pages/shippingInfo/page"));
 const Return = lazy(() => import("@/pages/return/page"));
+const CategoriesPage = lazy(() => import("@/pages/categories/categories.page"));
 
 // Admin Pages
 const AdminDashboardPage = lazy(() => import("@/pages/Admin/dashboard/page"));
@@ -68,6 +68,7 @@ const clientRoutes = [
   { path: "contact", element: <ContactUs /> },
   { path: "shipping", element: <ShippingInfo /> },
   { path: "return", element: <Return /> },
+  { path: "categories", element: <CategoriesPage /> },
 ];
 
 const adminSubRoutes = [

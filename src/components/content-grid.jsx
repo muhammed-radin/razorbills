@@ -129,7 +129,7 @@ const themeColors = {
   },
 };
 
-const GridCard = React.memo(({ item, index }) => {
+const GridCard = ({ item, index, ...params }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const theme = themeColors[item.theme] || themeColors.violet;
@@ -146,6 +146,20 @@ const GridCard = React.memo(({ item, index }) => {
     setTimeout(() => setIsHovered(false), 3000);
   }, []);
   const handleImageLoad = useCallback(() => setImageLoaded(true), []);
+
+  const renderIcon = useCallback(
+    (className) => {
+      if (React.isValidElement(Icon)) {
+        return React.cloneElement(Icon, {
+          className: cn(Icon.props?.className, className),
+        });
+      }
+
+      const IconComponent = Icon;
+      return <IconComponent className={className} />;
+    },
+    [Icon],
+  );
 
   return (
     <Card
@@ -165,6 +179,7 @@ const GridCard = React.memo(({ item, index }) => {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
+      {...params}
     >
       {/* Background Image for Large/Medium Cards */}
       {item.image && (isLarge || isMedium) && (
@@ -196,7 +211,7 @@ const GridCard = React.memo(({ item, index }) => {
             "absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500",
           )}
         >
-          <Icon className="size-40" />
+          {renderIcon("size-40")}
         </div>
       )}
 
@@ -229,7 +244,7 @@ const GridCard = React.memo(({ item, index }) => {
               theme.gradient,
             )}
           >
-            <Icon className="size-7 text-white" />
+            {renderIcon("size-7 text-white")}
           </div>
         )}
 
@@ -289,7 +304,12 @@ const GridCard = React.memo(({ item, index }) => {
       />
     </Card>
   );
-});
+};
+
+const GridCardMemo = React.memo(GridCard);
+
+export { GridCard };
+
 GridCard.displayName = "GridCard";
 
 export default memo(function ContentGrid({
@@ -381,7 +401,7 @@ export default memo(function ContentGrid({
         {/* Grid Layout */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 auto-rows-auto">
           {displayItems.map((item, index) => (
-            <GridCard key={item.id} item={item} index={index} />
+            <GridCardMemo key={item.id} item={item} index={index} />
           ))}
         </div>
       </div>

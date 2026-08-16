@@ -8,8 +8,7 @@ import { Link } from "react-router-dom";
 
 export const NavMenu = (props) => (
   <NavigationMenu {...props}>
-    <NavigationMenuList
-      className="gap-3 space-x-0 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start data-[orientation=vertical]:justify-start">
+    <NavigationMenuList className="gap-3 space-x-0 data-[orientation=vertical]:flex-col data-[orientation=vertical]:items-start data-[orientation=vertical]:justify-start">
       <NavigationMenuItem>
         <NavigationMenuLink asChild>
           <Link to="/">Products</Link>
@@ -22,12 +21,12 @@ export const NavMenu = (props) => (
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild>
-          <Link to="#">Categories</Link>
+          <Link to="/categories">Categories</Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
         <NavigationMenuLink asChild>
-         <Link to="/order">Order</Link>
+          <Link to="/order">Order</Link>
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>

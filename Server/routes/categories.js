@@ -1,11 +1,17 @@
 var express = require("express");
 const { Category } = require("../models/schema/categories");
+const { globalMemory } = require("../utils/cache-utils/global-cache");
 var router = express.Router();
 
 /* GET users listing. */
 router.get("/", function (req, res) {
+  if (globalMemory?.getLocalMemory("categories")) {
+    return res.json(globalMemory.getLocalMemory("categories"));
+  }
+
   Category.find({})
     .then((categories) => {
+      globalMemory.setLocalMemory("categories", categories, 60 * 60); // Cache for 1 hour
       res.json(categories);
     })
     .catch((err) => {
