@@ -103,6 +103,15 @@ const ProductCard = ({ product, index }) => {
           onError={onImageError}
         />
 
+        {/* Stock Out */}
+        {product.stock === 0 && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+            <span className="text-white text-sm font-semibold">
+              Out of Stock
+            </span>
+          </div>
+        )}
+
         {/* Loading State */}
         <div
           className={cn(
@@ -213,16 +222,17 @@ const ProductCard = ({ product, index }) => {
                 "text-base font-bold text-green-600 dark:text-green-400",
                 "transition-transform duration-200",
                 isHovered ? "scale-105" : "scale-100",
+                product.stock === 0 && "text-red-600 dark:text-red-400",
               )}
             >
-              {currency(product.price)}
+              {product.stock === 0 ? "Out of Stock" : currency(product.price)}
             </span>
 
             {/* Original Price */}
             {product.originalPrice &&
               product.originalPrice !== product.price && (
                 <span className="text-xs text-red-950 dark:text-red-300 line-through">
-                  {currency(product.originalPrice)}
+                  {product.stock === 0 ? "" : currency(product.originalPrice)}
                 </span>
               )}
           </div>

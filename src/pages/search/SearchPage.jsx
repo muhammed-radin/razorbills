@@ -57,7 +57,7 @@ export { useStore };
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
-  const [totalPages, setTotalPages] = useState(5); // For demo purposes, set a fixed total pages
+  const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
 
   const {
@@ -86,8 +86,7 @@ export default function SearchPage() {
     [],
   );
 
-  useEffect(() => {
-    // if (deferedSearchQuery) {
+  const searchProducts = () => {
     searchParams.set("q", deferedSearchQuery);
     setPreloader(true);
 
@@ -140,13 +139,23 @@ export default function SearchPage() {
           setTotalProducts(fetched.count);
           // Update the products state with the fetched data
           setFilteredAndSortedProducts(fetched.products);
+        })
+        .catch((error) => {
+          console.error("Error fetching products:", error);
+          setPreloader(false);
+          toast.error("Failed to load products");
+          setTotalPages(1);
+          setTotalProducts(0);
+          setFilteredAndSortedProducts([]);
         });
     }, 1000);
 
     return () => clearTimeout(timeout);
-    // }
+  };
+
+  useEffect(() => {
+    searchProducts();
   }, [
-    deferedSearchQuery,
     selectedCategory,
     priceRange,
     minRating,
@@ -187,14 +196,14 @@ export default function SearchPage() {
     setSearchQuery("");
     setSelectedCategory("all");
     setSortBy("relevance");
-    setPriceRange([0, 50000]);
+    setPriceRange(fixedPriceRange);
     setMinRating(0);
     setShowOnlyInStock(false);
   }, []);
 
   const activeFiltersCount = [
     selectedCategory !== "all",
-    priceRange[0] > 0 || priceRange[1] < 50000,
+    priceRange[0] > fixedPriceRange[0] || priceRange[1] < fixedPriceRange[1],
     minRating > 0,
     showOnlyInStock,
   ].filter(Boolean).length;
@@ -211,7 +220,7 @@ export default function SearchPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-6">
+        <div className="relative mb-6 flex flex-row items-center gap-1">
           <div className="relative w-full max-w-2xl">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground"
@@ -222,9 +231,17 @@ export default function SearchPage() {
               placeholder="Search products, categories, or keywords..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  searchProducts();
+                }
+              }}
               className="pl-10 h-10 text-base"
             />
           </div>
+          <Button onClick={searchProducts} variant="outline" className="h-10">
+            <Search />
+          </Button>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
@@ -253,8 +270,10 @@ export default function SearchPage() {
                 <h2 className="text-xl font-semibold">
                   {totalProducts} Products Found
                 </h2>
-                {searchQuery && (
-                  <p className="text-gray-600">Results for "{searchQuery}"</p>
+                {searchParams.get("q") && (
+                  <p className="text-gray-600">
+                    Results for "{searchParams.get("q")}"
+                  </p>
                 )}
               </div>
 
@@ -298,10 +317,18 @@ export default function SearchPage() {
                   No products found
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Try adjusting your search criteria or filters
+                  Try adjusting your search criteria or filters, Check your
+                  internet connection.
                 </p>
-                <Button onClick={clearFilters} variant="outline">
+                <Button onClick={clearFilters} variant="default">
                   Clear All Filters
+                </Button>
+                <Button
+                  onClick={searchProducts}
+                  variant="outline"
+                  className="ml-2"
+                >
+                  Try Again
                 </Button>
               </div>
             )}
