@@ -87,7 +87,9 @@ export default function SearchPage() {
   );
 
   const searchProducts = () => {
-    searchParams.set("q", deferedSearchQuery);
+    if (deferedSearchQuery && deferedSearchQuery !== searchParams.get("q")) {
+      searchParams.set("q", deferedSearchQuery);
+    }
     setPreloader(true);
 
     let timeout = setTimeout(() => {
