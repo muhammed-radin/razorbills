@@ -1,0 +1,1 @@
+import{aC as e}from"./index-jNnzGNci.js";const c=[["path",{d:"M15 9.4a4 4 0 1 0 0 5.2",key:"1makmb"}],["path",{d:"M7 12h5",key:"gblrwe"}],["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}]],a=e("circle-euro",c);export{c as __iconNode,a as default};

@@ -1,0 +1,1 @@
+import{aC as e}from"./index-jNnzGNci.js";const t=[["path",{d:"M21 5H3",key:"1fi0y6"}],["path",{d:"M21 12H9",key:"dn1m92"}],["path",{d:"M21 19H7",key:"4cu937"}]],d=e("text-align-end",t);export{t as __iconNode,d as default};
