@@ -23,7 +23,7 @@ const slides = [
     price: 2999,
     originalPrice: 4999,
     badge: "Best Seller",
-    theme: "violet",
+    theme: "amber",
   },
   {
     id: 2,
@@ -36,7 +36,7 @@ const slides = [
     price: 1499,
     originalPrice: 2499,
     badge: "New Arrival",
-    theme: "emerald",
+    theme: "amber",
   },
   {
     id: 3,
@@ -60,7 +60,7 @@ const slides = [
     price: 5999,
     originalPrice: 7999,
     badge: "Top Rated",
-    theme: "rose",
+    theme: "amber",
   },
 ];
 
@@ -269,9 +269,8 @@ export default function HighlightedSlider({
               theme.glow,
             )}
           />
-
-          <div className="relative z-10 h-full flex flex-col justify-center p-4 xs:p-5 sm:p-8 md:p-12 lg:p-14 max-w-2xl">
-            <div
+          <div className="relative z-10 h-full flex flex-col justify-end pb-13 max-sm:pb-13 p-4 xs:p-5 sm:p-8 md:p-12 lg:p-14 max-w-2xl">
+            {/* <div
               className={cn(
                 "inline-flex items-center gap-2 w-fit mb-3 sm:mb-4",
                 "transition-all duration-500",
@@ -295,7 +294,7 @@ export default function HighlightedSlider({
                   {discount}% OFF
                 </Badge>
               )}
-            </div>
+            </div> */}
 
             <p
               className={cn(
@@ -335,7 +334,7 @@ export default function HighlightedSlider({
               {current.description}
             </p>
 
-            <div
+            {/* <div
               className={cn(
                 "flex items-baseline gap-2 sm:gap-3 mb-4 sm:mb-6",
                 "transition-all duration-500 delay-250",
@@ -352,7 +351,7 @@ export default function HighlightedSlider({
                   {currency(current.originalPrice)}
                 </span>
               )}
-            </div>
+            </div> */}
 
             <div
               className={cn(

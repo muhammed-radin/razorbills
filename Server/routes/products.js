@@ -5,10 +5,15 @@ const { productStatusCache } = require("../utils/cache-utils/product-status");
 const { FeedMold } = require("../models/feed");
 const { MinimalProduct } = require("../models/schema/product");
 const { productFeedCache } = require("../utils/cache-utils/product-feed");
+const { productMemoryCache } = require("../utils/cache-utils/product-data");
 const ProductModel = require("../models/schema/product").ProductModel;
 
 /* GET */
 router.get("/", async function (req, res, next) {
+  if (productMemoryCache.getLocalMemory(req.url)) {
+    return res.json(productMemoryCache.getLocalMemory(req.url));
+  }
+
   let limit = parseInt(req.query.limit) || parseInt(req.body.limit) || 40;
   let search = req.query.search || req.body.search || "";
   let category = req.query.category || req.body.category || "";
@@ -26,9 +31,25 @@ router.get("/", async function (req, res, next) {
     parseFloat(req.query.ratingMin) || parseFloat(req.body.ratingMin) || 0;
   let ratingMax =
     parseFloat(req.query.ratingMax) || parseFloat(req.body.ratingMax) || 5;
-  let inStock = req.query.inStock || req.query.inStock || false;
+  let inStock =
+    req.query.inStock == "true" || req.body.inStock == "true" || false;
+
+  let productStartIndex =
+    parseInt(req.query.startIndex) || parseInt(req.body.startIndex) || 0;
+
+  let page = parseInt(req.query.page) || parseInt(req.body.page) || 1;
+
+  let minimize =
+    req.query.minimize === "true" || req.body.minimize === "true" || false;
+
+  if (page > 1) {
+    productStartIndex = (page - 1) * limit;
+  }
 
   let query = {};
+
+  // Default: only show isActive products
+  query.isActive = true;
 
   if (search) {
     // find in title, category, keywords, tags and description
@@ -50,17 +71,55 @@ router.get("/", async function (req, res, next) {
     query.tags = { $regex: tags, $options: "i" };
   }
   if (inStock) {
-    query.inStock = inStock === "true";
+    query.stock = { $gt: 0 };
   }
   query.price = { $gte: priceMin, $lte: priceMax };
   query.rating = { $gte: ratingMin, $lte: ratingMax };
 
+  // example: using full query to test URL
+  // /api/products?search=electronics&category=electronics&priceMin=10&priceMax=100&keywords=wireless&tags=wireless,bluetooth&sortBy=price&sortOrder=asc&ratingMin=3&ratingMax=5&inStock=true
+
   const products = await db
     .collection("products")
     .find(query)
-    // .sort({ [sortBy]: sortOrder, createdAt: -1 })
-    .limit(limit);
-  res.json(await products.toArray());
+    .sort({ [sortBy]: sortOrder, createdAt: -1 })
+    .limit(limit)
+    .skip(productStartIndex);
+
+  let findedProducts = await products.toArray();
+
+  if (minimize) {
+    findedProducts = findedProducts.map((product) => {
+      const minimalProduct = new MinimalProduct(product);
+      return minimalProduct;
+    });
+  }
+  let totalCount = await db.collection("products").countDocuments(query);
+
+  let responseData = {
+    products: findedProducts,
+    count: totalCount,
+    page: page,
+    limit: limit,
+    totalPages: Math.ceil(totalCount / limit),
+    next: page < Math.ceil(totalCount / limit) ? page + 1 : null,
+    previous: page > 1 ? page - 1 : null,
+    startIndex: productStartIndex,
+    endIndex: productStartIndex + findedProducts.length - 1,
+    sort: {
+      by: sortBy,
+      order: sortOrder,
+    },
+    fromCache: false,
+  };
+
+  productMemoryCache.setLocalMemory(
+    req.url,
+    { ...responseData, fromCache: true },
+    60 * 2, // two minutes
+  );
+
+  res.json(responseData);
 });
 
 router.get("/status", async function (req, res) {
@@ -83,7 +142,7 @@ router.get("/feed", async function (req, res) {
 
 router.get("/:productid", async function (req, res) {
   const productid = req.params.productid;
-  const { title, price, tags, keywords, originalPrice } = req.query;
+  const { title, price, tags, keywords, originalPrice, minimize } = req.query;
   if (!productid) {
     return res.status(400).json({ error: "Product ID is required" });
   }
@@ -114,6 +173,10 @@ router.get("/:productid", async function (req, res) {
   const product = await ProductModel.findOne(query);
   if (!product) {
     return res.status(404).json({ error: "Product not found" });
+  }
+  if (minimize === "true") {
+    const minimalProduct = new MinimalProduct(product);
+    return res.json(minimalProduct);
   }
   res.json(await product);
 });

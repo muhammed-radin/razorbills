@@ -21,10 +21,9 @@ export default function CategoryList(params) {
   const fetchCategories = async () => {
     if (loading == false) setLoading(true);
     try {
-      const response = await api.client.get("/api/categories?limit=20");
+      const response = await api.client.get("/api/categories?limit=13");
       const fetchedCategories = response.data;
       setCategories([AllCategory, ...fetchedCategories]);
-      console.log("Fetched categories:", fetchedCategories); // Log the fetched categories
       setLoading(false);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -64,22 +63,32 @@ export default function CategoryList(params) {
             <Skeleton className="h-8 w-20 rounded-md" />
           </>
         ) : (
-          categories.map((category) => (
+          <>
+            {categories.map((category) => (
+              <CategoryTag
+                key={category.id}
+                label={
+                  category.name === "All" ? (
+                    <Link to={`/search?categories=all`}>All</Link>
+                  ) : (
+                    <Link to={`/search?category=${category.name}`}>
+                      {category.name}
+                    </Link>
+                  )
+                } // Use Link component with the correct route category.name}
+                selected={active === category.name}
+                className={params.tagClassName}
+              />
+            ))}
             <CategoryTag
-              key={category.id}
-              label={
-                category.name === "All" ? (
-                  <Link to={`/search?categories=all`}>All</Link>
-                ) : (
-                  <Link to={`/search?category=${category.name}`}>
-                    {category.name}
-                  </Link>
-                )
-              } // Use Link component with the correct route category.name}
-              selected={active === category.name}
-              className={params.tagClassName}
+              label={<Link to={`/categories`}>View More</Link>} // Use Link component with the correct route category.name}
+              selected={false}
+              className={cn(
+                params.tagClassName,
+                "border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
             />
-          ))
+          </>
         )}
       </div>
     </>
