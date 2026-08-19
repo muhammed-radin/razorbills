@@ -20,7 +20,7 @@ const OrderProductCardComponent = ({ variant, className }) => {
   return (
     <Card
       className={cn(
-        "w-[400px] min-w-[300px] max-sm:max-w-[300px] relative flex flex-row items-start justify-start p-4 pl-0 gap-3 mb-5",
+        " w-full  relative flex flex-row items-start justify-start p-4 pl-0 gap-3 mb-5",
         varientStyle,
         className
       )}
