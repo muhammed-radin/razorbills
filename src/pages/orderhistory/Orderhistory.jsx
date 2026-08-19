@@ -10,7 +10,7 @@ export default function Orderhistory() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pb-5 w-full min-w-0">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pb-5 w-full min-w-0">
         <OrderCard />
         <OrderCard />
         <OrderCard />

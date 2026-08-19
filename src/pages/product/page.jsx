@@ -316,7 +316,7 @@ const ProductDetailsPage = () => {
       </div>
 
       {/* Product Details Tabs */}
-      <div className="max-w-7xl mt-12 space-y-8 sm:ml-[220px]">
+      <div className="max-w-7xl mt-12 space-y-8 ">
         <Separator />
         {/* Detailed Description */}
         <div className="sm:max-w-3xl max-sm:max-w-full">
