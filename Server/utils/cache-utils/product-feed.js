@@ -41,6 +41,8 @@ productFeedCache.toUpdate(async function populateFeed(memory) {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
   const trendingProducts = await ProductModel.find({
     createdAt: { $gte: sevenDaysAgo },
+    isActive: true,
+    views: { $gt: 0 },
   })
     .sort({ views: -1 })
     .limit(20);
@@ -63,7 +65,10 @@ productFeedCache.toUpdate(async function populateFeed(memory) {
 
   // find highlight by highlight in specialInfo. highlight is string contains image url in specialInfo
   const highlightProducts = await ProductModel.find({
-    "specialInfo.highlight": { $exists: true, $ne: "" },
+    $or: [
+      { "specialInfo.highlight": { $exists: true, $ne: "" } },
+      { keywords: { $in: ["highlight"] } },
+    ],
   }).limit(20);
   const minimalHighlightProducts = highlightProducts.map(
     (product) => new MinimalProduct(product),

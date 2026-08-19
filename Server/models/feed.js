@@ -23,7 +23,6 @@ class FeedMold {
   };
 
   grid_categories = [{}];
-  categories = []; // CategorySchema minimal here
 }
 
 class ShowCaseTab {
