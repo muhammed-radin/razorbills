@@ -88,6 +88,11 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
+    if (api.getUser()) {
+      navigate("/");
+      return;
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     const email = urlParams.get("email");
     const pw = urlParams.get("pw");

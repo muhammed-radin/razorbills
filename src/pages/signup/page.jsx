@@ -18,6 +18,7 @@ import { api } from "@/utils/api";
 import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -113,6 +114,13 @@ const SignUpPage = () => {
         );
       });
   };
+
+  useEffect(() => {
+    if (api.getUser()) {
+      navigate("/");
+      return;
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">
