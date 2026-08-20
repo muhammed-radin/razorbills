@@ -1,1 +1,0 @@
-import{aC as e}from"./index-CebNj6wW.js";const a=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M16 8.9V7H8l4 5-4 5h8v-1.9",key:"9nih0i"}]],i=e("square-sigma",a);export{a as __iconNode,i as default};

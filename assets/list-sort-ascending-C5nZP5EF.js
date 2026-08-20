@@ -1,0 +1,1 @@
+import{aM as t}from"./index-J7LC7ugf.js";const a=[["path",{d:"M3 19h18",key:"awlh7x"}],["path",{d:"M15 12H3",key:"6jk70r"}],["path",{d:"M9 5H3",key:"15j2za"}]],o=t("list-sort-ascending",a);export{a as __iconNode,o as default};

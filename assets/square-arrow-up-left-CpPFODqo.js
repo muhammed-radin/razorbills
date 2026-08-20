@@ -1,1 +1,0 @@
-import{aC as e}from"./index-CebNj6wW.js";const r=[["path",{d:"M15 15 9 9",key:"qb9ybb"}],["path",{d:"M9 15V9h6",key:"1pdr5l"}],["rect",{x:"3",y:"3",width:"18",height:"18",rx:"2",key:"h1oib"}]],o=e("square-arrow-up-left",r);export{r as __iconNode,o as default};

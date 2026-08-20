@@ -1,0 +1,1 @@
+import{aM as a}from"./index-J7LC7ugf.js";const e=[["path",{d:"M6 11h8a4 4 0 0 0 0-8H9v18",key:"18ai8t"}],["path",{d:"M6 15h8",key:"1y8f6l"}]],o=a("russian-ruble",e);export{e as __iconNode,o as default};

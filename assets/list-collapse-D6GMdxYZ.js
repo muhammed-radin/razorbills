@@ -1,1 +1,0 @@
-import{aC as e}from"./index-CebNj6wW.js";const a=[["path",{d:"M10 5h11",key:"1hkqpe"}],["path",{d:"M10 12h11",key:"6m4ad9"}],["path",{d:"M10 19h11",key:"14g2nv"}],["path",{d:"m3 10 3-3-3-3",key:"i7pm08"}],["path",{d:"m3 20 3-3-3-3",key:"20gx1n"}]],p=e("list-collapse",a);export{a as __iconNode,p as default};

@@ -1,0 +1,1 @@
+import{aM as a}from"./index-J7LC7ugf.js";const e=[["path",{d:"M5 21v-6",key:"1hz6c0"}],["path",{d:"M12 21V9",key:"uvy0l4"}],["path",{d:"M19 21V3",key:"11j9sm"}]],c=a("chart-no-axes-column-increasing",e);export{e as __iconNode,c as default};

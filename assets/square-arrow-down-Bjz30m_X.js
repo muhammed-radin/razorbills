@@ -1,0 +1,1 @@
+import{aM as e}from"./index-J7LC7ugf.js";const a=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M12 8v8",key:"napkw2"}],["path",{d:"m8 12 4 4 4-4",key:"k98ssh"}]],r=e("square-arrow-down",a);export{a as __iconNode,r as default};

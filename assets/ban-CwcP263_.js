@@ -1,0 +1,1 @@
+import{aM as c}from"./index-J7LC7ugf.js";const a=[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["path",{d:"M4.929 4.929 19.07 19.071",key:"196cmz"}]],o=c("ban",a);export{a as __iconNode,o as default};

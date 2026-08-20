@@ -1,1 +1,0 @@
-import{aC as t}from"./index-CebNj6wW.js";const e=[["path",{d:"M12 2q2 2.5 0 5t0 5 0 5 0 5",key:"13jdbg"}],["path",{d:"M19 2q2 2.5 0 5t0 5 0 5 0 5",key:"1ozhzu"}],["path",{d:"M5 2q2 2.5 0 5t0 5 0 5 0 5",key:"1bi6v5"}]],o=t("waves-vertical",e);export{e as __iconNode,o as default};
