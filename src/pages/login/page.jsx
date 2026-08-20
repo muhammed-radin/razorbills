@@ -13,10 +13,9 @@ import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { set, z } from "zod";
+import { z } from "zod";
 import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
-import axios from "axios";
 import { api } from "@/utils/api";
 
 import { toast } from "sonner";
@@ -59,7 +58,6 @@ const LoginPage = () => {
                 rejectui(response.data);
                 return;
               }
-              console.log("user data from", response.data);
               resolveui("Login Successful");
 
               // // Store token in indexedDB
@@ -125,10 +123,10 @@ const LoginPage = () => {
         SumbitForm(encryptedData);
       })
       .catch(({ errorCode, errorMessage, email, credential }) => {
-        console.error("Error Code:", errorCode);
-        console.error("Error Message:", errorMessage);
-        console.error("Email:", email);
-        console.error("Credential:", credential);
+        console.error(errorCode, errorMessage, email, credential);
+        toast.error(
+          `Google Sign-In failed: ${errorMessage || "Unknown error"}`,
+        );
       });
   };
 

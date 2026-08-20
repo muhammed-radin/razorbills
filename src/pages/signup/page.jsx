@@ -14,11 +14,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import CryptoJS from "crypto-js";
 import { api } from "@/utils/api";
 import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
-import axios from "axios";
 import { toast } from "sonner";
 
 const formSchema = z.object({
@@ -109,10 +107,10 @@ const SignUpPage = () => {
         SumbitForm(encryptedData);
       })
       .catch(({ errorCode, errorMessage, email, credential }) => {
-        console.error("Error Code:", errorCode);
-        console.error("Error Message:", errorMessage);
-        console.error("Email:", email);
-        console.error("Credential:", credential);
+        console.error(errorCode, errorMessage, email, credential);
+        toast.error(
+          `Google Sign-Up failed: ${errorMessage || "Unknown error"}`,
+        );
       });
   };
 

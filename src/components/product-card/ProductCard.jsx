@@ -13,7 +13,6 @@ const ProductCard = ({ product, index }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  console.log("Rendering ProductCard for product:", product);
 
   // Staggered animation on mount
   useEffect(() => {
@@ -24,7 +23,6 @@ const ProductCard = ({ product, index }) => {
   }, [index]);
 
   const handleProductClick = useCallback(() => {
-    console.log("Product clicked:", product);
     const productId = product.id;
     navigate(`/product/${productId}`);
   }, [navigate, product]);
@@ -44,16 +42,15 @@ const ProductCard = ({ product, index }) => {
 
   const handleQuickView = useCallback(
     (e) => {
-      e.stopPropagation();
+      e?.stopPropagation();
       // Quick view functionality can be implemented here
-      console.log("Quick view:", product.id);
     },
     [product.id],
   );
 
   const handleAddToCart = useCallback(
     (e) => {
-      e.stopPropagation();
+      e?.stopPropagation();
       // Add to cart functionality can be implemented here
       console.log("Add to cart:", product.id);
     },
