@@ -2,6 +2,7 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
+  verifyBeforeUpdateEmail,
 } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
@@ -23,10 +24,58 @@ const analytics = getAnalytics(app);
 
 const provider = new GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
+provider.addScope("email");
+
+const sendVerificationToUnverifiedUser = async () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (!user) {
+    console.error("No logged-in user found.");
+    return;
+  }
+
+  try {
+    // 1. Grab the unverified email from Google's fallback payload
+    const googleProfile = user.providerData.find(
+      (p) => p.providerId === "google.com",
+    );
+    const hiddenEmail = googleProfile?.email;
+
+    if (!hiddenEmail) {
+      throw new Error(
+        "Could not extract any email from the Google OAuth payload.",
+      );
+    }
+
+    // 2. Safely trigger the verification flow without throwing operation-not-allowed
+
+    await verifyBeforeUpdateEmail(user, hiddenEmail);
+
+    alert(
+      `A verification link has been sent to ${hiddenEmail}. Please check your inbox to complete your account setup.`,
+    );
+    alert(
+      "Also, please check your spam/junk folder if you don't see it in your inbox.",
+    );
+    return true;
+  } catch (error) {
+    console.error("Error setting up verification:", error);
+
+    if (error.code === "auth/requires-recent-login") {
+      alert(
+        "For security reasons, please log out, sign back in, and try clicking verify immediately.",
+      );
+    } else {
+      alert(`Failed: ${error.message}`);
+    }
+
+    return false;
+  }
+};
 
 function clickToGProvider() {
   return new Promise((resolve, reject) => {
-
     const auth = getAuth();
     signInWithPopup(auth, provider)
       .then((result) => {
@@ -36,8 +85,33 @@ function clickToGProvider() {
         // The signed-in user info.
         const user = result.user;
         // IdP data available using getAdditionalUserInfo(result)
-        // ...
-        resolve({ user, token });
+
+        if (user) {
+          if (user.emailVerified) {
+            // User is verified, resolve the promise with user and token
+            resolve({ user, token });
+          } else {
+            // 1. Alert the user they must verify their email
+            alert("Please verify your email address before logging in.");
+
+            const confirmed = window.confirm(
+              "Would you like us to send a verification email to your inbox?",
+            );
+            // 2. Trigger a Firebase verification email to their inbox
+            if (confirmed) {
+              sendVerificationToUnverifiedUser(user)
+                .then(() => console.log("Verification email sent!"))
+                .catch((err) =>
+                  console.error("Error sending verification:", err),
+                );
+            } else {
+              reject({
+                errorCode: "email-not-verified",
+                errorMessage: "User email not verified.",
+              });
+            }
+          }
+        }
       })
       .catch((error) => {
         // Handle Errors here.
