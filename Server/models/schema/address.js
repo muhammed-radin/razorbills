@@ -1,8 +1,7 @@
-const { Schema } = require("mongoose");
-const { Product } = require("../product");
-const mongoose = require("mongoose");
+import mongoose, { Schema } from "mongoose";
+import { Product } from "../product.js";
 
-const AddressSchema = new Schema({
+export const AddressSchema = new Schema({
     id: { type: String, required: true, unique: true },
     userId: { type: String, required: true },
     name: { type: String, required: true },
@@ -19,6 +18,6 @@ const AddressSchema = new Schema({
     isActive: { type: Boolean, default: true },
 });
 
-const AddressBook = mongoose.model("AddressBook", AddressSchema, "addressbooks");
+export const AddressBook = mongoose.model("AddressBook", AddressSchema, "addressbooks");
 
-module.exports = { AddressSchema, AddressBook };
+export default { AddressSchema, AddressBook };

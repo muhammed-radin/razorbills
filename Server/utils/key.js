@@ -1,5 +1,5 @@
 // validate keys with env vars
-function validateApiKeys(req, res, next) {
+export function validateApiKeys(req, res, next) {
   if (process.env.NODE_ENV === "development") {
     next();
     return 0;
@@ -23,4 +23,4 @@ function validateApiKeys(req, res, next) {
   }
 }
 
-module.exports = { validateApiKeys };
+export default { validateApiKeys };

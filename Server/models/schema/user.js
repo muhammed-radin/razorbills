@@ -1,8 +1,7 @@
-const { Schema } = require("mongoose");
-const { Product } = require("../product");
-const mongoose = require("mongoose");
+import mongoose, { Schema } from "mongoose";
+import { Product } from "../product.js";
 
-const UserSchema = new Schema({
+export const UserSchema = new Schema({
   id: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
@@ -30,6 +29,6 @@ const UserSchema = new Schema({
   AOV: { type: Number, default: 0 }, // Average Order Value
 });
 
-const UserModel = mongoose.model("User", UserSchema, "users");
+export const UserModel = mongoose.model("User", UserSchema, "users");
 
-module.exports = { UserSchema, UserModel };
+export default { UserSchema, UserModel };

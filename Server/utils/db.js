@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const max_tries = 5;
 let tries = 0;
 
-function connectToDatabase() {
+export function connectToDatabase() {
   return new Promise((resolve, reject) => {
     mongoose
       .connect(process.env.MONGODB_URI)
@@ -29,4 +29,5 @@ function connectToDatabase() {
 }
 
 // export db
-module.exports = { db: mongoose.connection, connectToDatabase };
+export const db = mongoose.connection;
+export default { db, connectToDatabase };

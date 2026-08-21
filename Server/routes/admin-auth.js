@@ -1,8 +1,10 @@
-var express = require("express");
-var router = express.Router();
-const CryptoJS = require("crypto-js");
-const { decryptStrict } = require("../utils/crypt");
-const { useMemory, getMemory } = require("../utils/memory");
+import express from "express";
+import CryptoJS from "crypto-js";
+import { v4 as uuid } from "uuid";
+import { decryptStrict } from "../utils/crypt.js";
+import { useMemory, getMemory } from "../utils/memory.js";
+
+const router = express.Router();
 
 router.post("/", async function (req, res, next) {
   try {
@@ -19,7 +21,6 @@ router.post("/", async function (req, res, next) {
       decryptStrict(username) === process.env.ADMIN_USERNAME &&
       decryptStrict(password) === process.env.ADMIN_PASSWORD
     ) {
-      let { v4: uuid } = await import("uuid");
       const token = uuid();
 
       // Set the admin token in a cookie
@@ -65,4 +66,4 @@ router.post("/validate", async function (req, res, next) {
   }
 });
 
-module.exports = router;
+export default router;

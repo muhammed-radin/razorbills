@@ -1,8 +1,7 @@
-const { Schema } = require("mongoose");
-const { Product } = require("../product");
-const mongoose = require("mongoose");
+import mongoose, { Schema } from "mongoose";
+import { Product } from "../product.js";
 
-const WishlistSchema = new Schema({
+export const WishlistSchema = new Schema({
   id: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   products: {
@@ -26,5 +25,5 @@ const WishlistSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-const WishlistModel = mongoose.model("Wishlist", WishlistSchema, "wishlists");
-module.exports = { WishlistSchema, WishlistModel };
+export const WishlistModel = mongoose.model("Wishlist", WishlistSchema, "wishlists");
+export default { WishlistSchema, WishlistModel };

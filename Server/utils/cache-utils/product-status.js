@@ -1,7 +1,7 @@
-const { useMemory } = require("../memory");
+import { useMemory } from "../memory.js";
+import { db } from "../db.js";
 
-const { db } = require("../db");
-const productStatusCache = useMemory(null);
+export const productStatusCache = useMemory(null);
 
 productStatusCache.toUpdate(async (memory, lowThresholdString) => {
   const lowThreshold = parseInt(lowThresholdString, 10) || 5;
@@ -64,4 +64,4 @@ productStatusCache.toUpdate(async (memory, lowThresholdString) => {
   });
 });
 
-module.exports = { productStatusCache };
+export default { productStatusCache };

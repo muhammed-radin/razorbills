@@ -1,11 +1,8 @@
-const { Schema } = require("mongoose");
-const { Product } = require("../product");
-const mongoose = require("mongoose");
-const {
-  productStatusCache,
-} = require("../../utils/cache-utils/product-status");
+import mongoose, { Schema } from "mongoose";
+import { Product } from "../product.js";
+import { productStatusCache } from "../../utils/cache-utils/product-status.js";
 
-const ProductSchema = new Schema({
+export const ProductSchema = new Schema({
   id: { type: String, required: true, unique: true },
   title: { type: String, required: true },
   price: { type: Number, required: true },
@@ -65,7 +62,7 @@ ProductSchema.pre("save", function (next) {
   }
 });
 
-class MinimalProduct {
+export class MinimalProduct {
   constructor({
     id,
     title,
@@ -155,6 +152,6 @@ ProductSchema.methods.toMinimal = function () {
   });
 };
 
-const ProductModel = mongoose.model("Product", ProductSchema, "products");
+export const ProductModel = mongoose.model("Product", ProductSchema, "products");
 
-module.exports = { ProductSchema, ProductModel, MinimalProduct };
+export default { ProductSchema, ProductModel, MinimalProduct };

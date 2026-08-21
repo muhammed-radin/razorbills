@@ -1,8 +1,9 @@
-var express = require("express");
-var router = express.Router();
-const CryptoJS = require("crypto-js");
-const { UserModel } = require("../models/schema/user");
-const { decrypt } = require("../utils/crypt");
+import express from "express";
+import CryptoJS from "crypto-js";
+import { UserModel } from "../models/schema/user.js";
+import { decrypt } from "../utils/crypt.js";
+
+const router = express.Router();
 
 router.post("/signup", async function (req, res, next) {
   try {
@@ -91,4 +92,4 @@ router.post("/logout", async function (req, res, next) {
   }
 });
 
-module.exports = router;
+export default router;

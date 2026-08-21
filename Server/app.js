@@ -1,19 +1,18 @@
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
-require("dotenv").config();
+import express from "express";
+import path from "path";
+import cookieParser from "cookie-parser";
+import logger from "morgan";
+import "dotenv/config";
+import cors from "cors";
+import { toNodeHandler } from "better-auth/node";
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
-var cors = require("cors");
+import indexRouter from "./routes/index.js";
+import usersRouter from "./routes/users.js";
+import { db, connectToDatabase } from "./utils/db.js";
+import { validateApiKeys } from "./utils/key.js";
+import { auth } from "./utils/auth.js";
 
-const { db, connectToDatabase } = require("./utils/db");
-const { validateApiKeys } = require("./utils/key");
-
-const { auth } = require("./utils/auth");
-
-var app = express();
+const app = express();
 
 app.use(
   cors({
@@ -21,7 +20,7 @@ app.use(
     credentials: true,
   }),
 );
-app.all("/api/*", toNodeHandler(auth));
+app.all("/api/auth/*", toNodeHandler(auth));
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -43,7 +42,10 @@ function checkDatabaseConnection(req, res, next) {
 // start api after db connection is established
 app.use("/api", validateApiKeys, checkDatabaseConnection, indexRouter);
 
-app.listen(3000, () => {
-  console.log("Server is running on http://localhost:3000");
-});
-module.exports = app;
+if (process.argv[1] && (process.argv[1].endsWith("/app.js") || process.argv[1].endsWith("\\app.js"))) {
+  app.listen(3000, () => {
+    console.log("Server is running on http://localhost:3000");
+  });
+}
+
+export default app;

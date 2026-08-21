@@ -1,12 +1,12 @@
-var express = require("express");
-var router = express.Router();
-const { db } = require("../utils/db");
-const { productStatusCache } = require("../utils/cache-utils/product-status");
-const { FeedMold } = require("../models/feed");
-const { MinimalProduct } = require("../models/schema/product");
-const { productFeedCache } = require("../utils/cache-utils/product-feed");
-const { productMemoryCache } = require("../utils/cache-utils/product-data");
-const ProductModel = require("../models/schema/product").ProductModel;
+import express from "express";
+import { db } from "../utils/db.js";
+import { productStatusCache } from "../utils/cache-utils/product-status.js";
+import { FeedMold } from "../models/feed.js";
+import { ProductModel, MinimalProduct } from "../models/schema/product.js";
+import { productFeedCache } from "../utils/cache-utils/product-feed.js";
+import { productMemoryCache } from "../utils/cache-utils/product-data.js";
+
+const router = express.Router();
 
 /* GET */
 router.get("/", async function (req, res, next) {
@@ -210,4 +210,4 @@ router.delete("/:productid", async function (req, res) {
   res.json(deleted);
 });
 
-module.exports = router;
+export default router;
