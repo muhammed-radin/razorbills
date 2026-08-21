@@ -27,7 +27,16 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 connectToDatabase().then(() => {
-  console.log("Database connection established. Starting API...");
+  console.log("Database connection established. Starting Server...");
+  if (
+    process.argv[1] &&
+    (process.argv[1].endsWith("/app.js") ||
+      process.argv[1].endsWith("\\app.js"))
+  ) {
+    app.listen(process.env.PORT, () => {
+      console.log("Server is running on http://localhost:" + process.env.PORT);
+    });
+  }
 });
 
 function checkDatabaseConnection(req, res, next) {
@@ -41,11 +50,5 @@ function checkDatabaseConnection(req, res, next) {
 
 // start api after db connection is established
 app.use("/api", validateApiKeys, checkDatabaseConnection, indexRouter);
-
-if (process.argv[1] && (process.argv[1].endsWith("/app.js") || process.argv[1].endsWith("\\app.js"))) {
-  app.listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
-  });
-}
 
 export default app;
