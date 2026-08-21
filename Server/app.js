@@ -5,12 +5,33 @@ import logger from "morgan";
 import "dotenv/config";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
+import rateLimit from "express-rate-limit";
 
 import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
 import { db, connectToDatabase } from "./utils/db.js";
 import { validateApiKeys } from "./utils/key.js";
 import { auth } from "./utils/auth.js";
+
+// 1. Define global relaxed limiter for standard data routes
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    error: "Too many requests from this IP, please try again after 15 minutes.",
+  },
+});
+
+// 2. Define strict limiter for authentication routes
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Strict limit: max 20 auth attempts per IP per 15 mins
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many login/signup attempts. Please try again later." },
+});
 
 const app = express();
 
@@ -20,7 +41,11 @@ app.use(
     credentials: true,
   }),
 );
+app.use("/api/auth/*", authLimiter);
 app.all("/api/auth/*", toNodeHandler(auth));
+
+app.use(globalApiLimiter);
+
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

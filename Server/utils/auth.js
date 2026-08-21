@@ -8,41 +8,45 @@ import { generateBetterAuthFields } from "./schemaMapper.js";
 export const auth = betterAuth({
   database: mongodbAdapter(
     // Extract the raw MongoClient from your Mongoose connection pool
-    mongoose.connection.getClient(),
+    mongoose.connection.getClient().db(),
   ),
   emailAndPassword: {
     enabled: true,
   },
-  plugins: [admin()],
+  plugins: [
+    admin({
+      adminRoles: ["admin", "owner"],
+      defaultRole: "user",
+    }),
+  ],
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       mapProfileToUser: (profile, context) => {
-        console.log("Google profile:");
-        console.log(profile);
-        console.log("Google context:");
-        console.log(context);
-
         return {
-          // Email and Name remain unencrypted for authentication lookups
           email: profile.email,
           name: profile.name,
+          image: profile.picture, // Using Better Auth's standard native "image" property
+          role: "user",
 
-          // Pull the custom encrypted strings sent from your Vite frontend form
-          ...context?.data,
-          ...profile,
+          // Pull raw payload string variables sent during the registration step
+          address: context?.data?.address || "",
+          phoneNumber: context?.data?.phoneNumber || "",
         };
       },
     },
   },
-  user: generateBetterAuthFields(),
+  user: {
+    fields: {
+      image: "profilePicture", // Map Better Auth's "image" field to your Mongoose schema's "profilePicture" field
+    },
+    additionalFields: generateBetterAuthFields(),
+    modelName: "users", // Ensure this matches your Mongoose model name
+  },
 
   advanced: {
     database: {
-      // ⚠️ CRITICAL: Disable Better Auth's internal text string ID generation.
-      // This forces Better Auth to let MongoDB handle native ObjectIds,
-      // ensuring seamless compatibility if your own Mongoose schemas reference users.
       generateId: false,
     },
   },

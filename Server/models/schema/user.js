@@ -3,7 +3,11 @@ import { Product } from "../product.js";
 
 export const UserSchema = new Schema(
   {
-    id: { type: String, required: true, unique: true },
+    _id: {
+      type: mongoose.Schema.Types.ObjectId,
+      auto: true,
+    },
+
     email: { type: String, required: true, unique: true },
     emailVerified: { type: Boolean, default: false },
     password: { type: String, required: true },
@@ -11,8 +15,7 @@ export const UserSchema = new Schema(
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
     isActive: { type: Boolean, default: true },
-    role: { type: String, default: "user" },
-    profilePicture: { type: String, default: null },
+
     currentlyLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date, default: null },
     addressBook: { type: [String], default: [] },
@@ -20,13 +23,10 @@ export const UserSchema = new Schema(
     phoneNumber: { type: String, default: "" },
     preferences: { type: Schema.Types.Mixed, default: {} },
     provider: { type: String, default: "local" },
-    adminPermissions: {
-      read: { type: Boolean, default: true },
-      write: { type: Boolean, default: false },
-      delete: { type: Boolean, default: false },
-      create: { type: Boolean, default: false },
-      update: { type: Boolean, default: false },
-    },
+
+    adminPermissions: { type: [String], default: [] },
+    role: { type: String, default: "user", enum: ["user", "admin", "owner"] },
+    profilePicture: { type: String, default: null },
 
     // orderInfo { orders: 100, lastOrderDate: Date, lastOrderId: String }
     orderInfo: {
