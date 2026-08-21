@@ -13,22 +13,22 @@ import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { set, z } from "zod";
+import { z } from "zod";
 import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
-import axios from "axios";
 import { api } from "@/utils/api";
-
 import { toast } from "sonner";
 import { useEffect } from "react";
-
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
-});
+import { useTranslation } from "react-i18next";
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const formSchema = z.object({
+    email: z.string().email(t("auth.invalidEmail")),
+    password: z.string().min(8, t("auth.passwordMinLength")),
+  });
 
   const form = useForm({
     defaultValues: {
@@ -59,10 +59,9 @@ const LoginPage = () => {
                 rejectui(response.data);
                 return;
               }
-              console.log("user data from", response.data);
-              resolveui("Login Successful");
+              resolveui(t("auth.loginSuccess"));
 
-              // // Store token in indexedDB
+              // Store token in localStorage
               localStorage.setItem("auth_token", encrypt(response.data.token));
               localStorage.setItem(
                 "user_data",
@@ -81,10 +80,10 @@ const LoginPage = () => {
             });
         }),
       {
-        loading: "Logging in...",
+        loading: t("auth.loggingIn"),
         success: (msg) => `${msg}`,
         error: (err) =>
-          `Login failed: ${(err.response && err.response.data.message) || err.message || "Unknown error"}`,
+          `${t("auth.loginFailed")}: ${(err.response && err.response.data.message) || err.message || "Unknown error"}`,
       },
     );
   };
@@ -108,18 +107,16 @@ const LoginPage = () => {
 
   const onUserGoogleSignIn = () => {
     clickToGProvider()
-      .then(({ user, token }) => {
-        // extract uid, displayName, photoURL, email,  from user
+      .then(({ user }) => {
         const { uid, displayName, photoURL, email } = user;
         let password = uid;
-        // You can now use the user info and token as needed
         let encryptedData = {
           id: encrypt(uid),
           name: encrypt(displayName),
           avatar: encrypt(photoURL),
           email: email,
           provider: "google",
-          password: encryptStrict(password), // Using uid as password for Google signups
+          password: encryptStrict(password),
         };
 
         SumbitForm(encryptedData);
@@ -137,17 +134,17 @@ const LoginPage = () => {
       <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />
         <p className="mt-4 text-xl font-semibold tracking-tight">
-          Log in to RazorBills
+          {t("auth.loginTitle")}
         </p>
 
         <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignIn}>
           <GoogleLogo />
-          Continue with Google
+          {t("auth.continueWithGoogle")}
         </Button>
 
         <div className="my-7 w-full flex items-center justify-center overflow-hidden">
           <Separator />
-          <span className="text-sm px-2">OR</span>
+          <span className="text-sm px-2">{t("auth.or")}</span>
           <Separator />
         </div>
 
@@ -161,11 +158,11 @@ const LoginPage = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("auth.email")}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="Email"
+                      placeholder={t("auth.emailPlaceholder")}
                       className="w-full"
                       {...field}
                     />
@@ -179,11 +176,11 @@ const LoginPage = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t("auth.password")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Password"
+                      placeholder={t("auth.passwordPlaceholder")}
                       className="w-full"
                       {...field}
                     />
@@ -193,7 +190,7 @@ const LoginPage = () => {
               )}
             />
             <Button type="submit" className="mt-4 w-full">
-              Continue with Email
+              {t("auth.continueWithEmail")}
             </Button>
           </form>
         </Form>
@@ -203,12 +200,12 @@ const LoginPage = () => {
             to="#"
             className="text-sm block underline text-muted-foreground text-center"
           >
-            Forgot your password?
+            {t("auth.forgotPassword")}
           </Link>
           <p className="text-sm text-center">
-            Don&apos;t have an account?
+            {t("auth.dontHaveAccount")}
             <Link to="/signup" className="ml-1 underline text-muted-foreground">
-              Create account
+              {t("auth.createAccount")}
             </Link>
           </p>
         </div>

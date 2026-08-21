@@ -18,6 +18,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Helmet } from "react-helmet-async";
 
 export default function ContactUs() {
+  const { t } = useTranslation();
+
   const contactMethods = [
     {
       icon: Mail,

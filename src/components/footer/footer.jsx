@@ -1,69 +1,73 @@
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "../logo";
 import { Link } from "react-router-dom";
-const footerSections = [
-  {
-    title: "Quick Links",
-    links: [
-      {
-        title: "Home",
-        href: "#",
-      },
+import { useTranslation } from "react-i18next";
 
-      {
-        title: "Wishlist",
-        href: "#",
-      },
-      {
-        title: "Cart",
-        href: "#",
-      },
-      {
-        title: "Profile",
-        href: "#",
-      },
-    ],
-  },
-  {
-    title: "Customer Support",
-    links: [
-      {
-        title: "Order Tracking",
-        href: "#",
-      },
-      {
-        title: "Return & Refunds",
-        href: "/return",
-      },
-      {
-        title: "Shipping Info",
-        href: "/shipping",
-      },
-      {
-        title: "Contact Us",
-        href: "/contact",
-      },
-    ],
-  },
-  {
-    title: "Company Info",
-    links: [
-      {
-        title: "About Us",
-        href: "/about",
-      },
-      {
-        title: "Privacy Policy",
-        href: "/privacy",
-      },
-      {
-        title: "Terms & Conditions",
-        href: "/terms",
-      },
-    ],
-  },
-];
 export const Footer = () => {
+  const { t } = useTranslation();
+
+  const footerSections = [
+    {
+      title: t("footer.quickLinks"),
+      links: [
+        {
+          title: t("footer.home"),
+          href: "/",
+        },
+        {
+          title: t("footer.wishlist"),
+          href: "/wishlist",
+        },
+        {
+          title: t("footer.cart"),
+          href: "/cart",
+        },
+        {
+          title: t("footer.profile"),
+          href: "/settings",
+        },
+      ],
+    },
+    {
+      title: t("footer.customerSupport"),
+      links: [
+        {
+          title: t("footer.orderTracking"),
+          href: "/order",
+        },
+        {
+          title: t("footer.returnRefunds"),
+          href: "/return",
+        },
+        {
+          title: t("footer.shippingInfo"),
+          href: "/shipping",
+        },
+        {
+          title: t("footer.contactUs"),
+          href: "/contact",
+        },
+      ],
+    },
+    {
+      title: t("footer.companyInfo"),
+      links: [
+        {
+          title: t("footer.aboutUs"),
+          href: "/about",
+        },
+        {
+          title: t("footer.privacyPolicy"),
+          href: "/privacy",
+        },
+        {
+          title: t("footer.termsConditions"),
+          href: "/terms",
+        },
+      ],
+    },
+  ];
+
   return (
     <footer className="border-t">
       <div className="max-w-(--breakpoint-xl) mx-auto">
@@ -72,20 +76,20 @@ export const Footer = () => {
             {/* Logo */}
             <Logo />
             <p className="mt-4 text-muted-foreground">
-              Your one-stop shop for the latest and greatest electronics.
+              {t("footer.tagline")}
             </p>
           </div>
           {footerSections.map(({ title, links }) => (
             <div key={title}>
               <h6 className="font-medium">{title}</h6>
               <ul className="mt-6 space-y-4">
-                {links.map(({ title, href }) => (
-                  <li key={title}>
+                {links.map(({ title: linkTitle, href }) => (
+                  <li key={linkTitle}>
                     <Link
                       to={href}
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      {title}
+                      {linkTitle}
                     </Link>
                   </li>
                 ))}
@@ -97,7 +101,7 @@ export const Footer = () => {
         <div className="py-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-x-2 gap-y-5 px-6 xl:px-0">
           {/* Copyright */}
           <span className="text-muted-foreground">
-            &copy; {new Date().getFullYear()} RazorBills. All rights reserved.
+            &copy; {new Date().getFullYear()} RazorBills. {t("footer.allRightsReserved")}
           </span>
         </div>
       </div>

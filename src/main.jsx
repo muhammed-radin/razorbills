@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
+import "./i18n";
 import { HashRouter as BrowserRouter } from "react-router-dom";
 import Router from "./router/Router.jsx";
 import { ThemeProvider } from "./utils/theme-provider.jsx";

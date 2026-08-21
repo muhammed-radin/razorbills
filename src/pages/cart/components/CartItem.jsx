@@ -6,6 +6,7 @@ import { Minus, Plus, Trash2, Heart } from "lucide-react";
 import { currency } from "@/utils/currency";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const CartItem = ({
   cartItem,
@@ -13,6 +14,7 @@ const CartItem = ({
   onRemove,
   className
 }) => {
+  const { t } = useTranslation();
   const { product, quantity } = cartItem;
 
   const handleQuantityChange = (change) => {
@@ -82,6 +84,7 @@ const CartItem = ({
               size="sm"
               className="text-muted-foreground hover:text-destructive"
               onClick={handleRemove}
+              aria-label={t("common.delete")}
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -89,6 +92,7 @@ const CartItem = ({
               variant="ghost"
               size="sm"
               className="text-muted-foreground hover:text-pink-600"
+              aria-label={t("product.addToFavorites")}
             >
               <Heart className="w-4 h-4" />
             </Button>
@@ -110,17 +114,17 @@ const CartItem = ({
                     {currency(product.originalPrice)}
                   </span>
                   <Badge variant="destructive" className="text-xs">
-                    {discount}% OFF
+                    {discount}% {t("common.off")}
                   </Badge>
                 </>
               )}
             </div>
             <div className="text-sm text-muted-foreground">
-              Subtotal: <span className="font-semibold">{currency(cartItem.getTotalPrice())}</span>
+              {t("cart.subtotal")}: <span className="font-semibold">{currency(cartItem.getTotalPrice())}</span>
             </div>
             {cartItem.getSavings() > 0 && (
               <div className="text-sm text-green-600 dark:text-green-400">
-                You save: {currency(cartItem.getSavings())}
+                {t("common.saveAmount", { amount: currency(cartItem.getSavings()) })}
               </div>
             )}
           </div>
@@ -128,7 +132,7 @@ const CartItem = ({
           {/* Quantity Controls */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">Qty:</span>
+              <span className="text-sm font-medium text-foreground">{t("orders.qty")}</span>
               <div className="flex items-center border rounded-md">
                 <Button
                   variant="ghost"
@@ -159,17 +163,17 @@ const CartItem = ({
         {/* Stock Status */}
         {isOutOfStock && (
           <Badge variant="destructive" className="w-fit">
-            Out of Stock
+            {t("product.outOfStock")}
           </Badge>
         )}
         {isLowStock && !isOutOfStock && (
           <Badge variant="outline" className="w-fit text-orange-600 border-orange-600 dark:text-orange-400 dark:border-orange-400">
-            Only {product.stock} left in stock
+            {t("common.lowStock")} ({product.stock})
           </Badge>
         )}
         {!isOutOfStock && !isLowStock && (
           <div className="text-xs text-green-600 dark:text-green-400">
-            In Stock
+            {t("common.inStock")}
           </div>
         )}
       </div>

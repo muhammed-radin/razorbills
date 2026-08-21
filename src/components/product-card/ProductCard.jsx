@@ -3,28 +3,28 @@ import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Preloader } from "../LoaderScreen";
-import { ImageIcon, ImageOff, Heart, Eye, ShoppingCart } from "lucide-react";
+import { ImageOff, Heart, Eye, ShoppingCart } from "lucide-react";
 import { currency } from "@/utils/currency";
+import { useTranslation } from "react-i18next";
 
 const ProductCard = ({ product, index }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [imageLoaded, setLoadedState] = useState(false);
   const [imageErr, setImageErr] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  console.log("Rendering ProductCard for product:", product);
 
   // Staggered animation on mount
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
-    }, index * 100);
+    }, (index || 0) * 100);
     return () => clearTimeout(timer);
   }, [index]);
 
   const handleProductClick = useCallback(() => {
-    console.log("Product clicked:", product);
     const productId = product.id;
     navigate(`/product/${productId}`);
   }, [navigate, product]);
@@ -42,19 +42,9 @@ const ProductCard = ({ product, index }) => {
     setIsFavorite((prev) => !prev);
   }, []);
 
-  const handleQuickView = useCallback(
-    (e) => {
-      e.stopPropagation();
-      // Quick view functionality can be implemented here
-      console.log("Quick view:", product.id);
-    },
-    [product.id],
-  );
-
   const handleAddToCart = useCallback(
     (e) => {
       e.stopPropagation();
-      // Add to cart functionality can be implemented here
       console.log("Add to cart:", product.id);
     },
     [product.id],
@@ -69,12 +59,6 @@ const ProductCard = ({ product, index }) => {
         )
       : 0;
 
-  // Calculate savings amount
-  const savingsAmount =
-    product.originalPrice && product.originalPrice !== product.price
-      ? (product.originalPrice - product.price).toFixed(2)
-      : 0;
-
   return (
     <Card
       className={cn(
@@ -87,8 +71,8 @@ const ProductCard = ({ product, index }) => {
       onTouchStart={() => {
         setIsHovered(true);
         setTimeout(() => setIsHovered(false), 3000);
-      }} // Hide after 3 seconds on touch devices
-      onDoubleClick={() => handleProductClick()}
+      }}
+      onClick={handleProductClick}
     >
       <CardHeader className="h-40 border-1 max-sm:border-2 rounded-2xl p-0 m-0 overflow-hidden bg-center relative">
         {/* Image */}
@@ -96,7 +80,7 @@ const ProductCard = ({ product, index }) => {
           src={product.image || product.thumbnail}
           alt={product.title}
           className={cn(
-            "w-full h-40 object-cover object-center  bg-background transition-all duration-500 ease-out",
+            "w-full h-40 object-cover object-center bg-background transition-all duration-500 ease-out",
             "group-hover:scale-110 group-hover:rotate-1",
             { hidden: !imageLoaded || imageErr },
           )}
@@ -108,7 +92,7 @@ const ProductCard = ({ product, index }) => {
         {product.stock === 0 && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
             <span className="text-white text-sm font-semibold">
-              Out of Stock
+              {t("product.outOfStock")}
             </span>
           </div>
         )}
@@ -154,7 +138,7 @@ const ProductCard = ({ product, index }) => {
         {/* Favorite Button */}
         <button
           onClick={handleFavoriteClick}
-          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          aria-label={isFavorite ? t("product.removeFromFavorites") : t("product.addToFavorites")}
           className={cn(
             "absolute top-2 right-2 z-10 p-2 rounded-full",
             "backdrop-blur-md bg-white/30 dark:bg-black/30",
@@ -182,14 +166,14 @@ const ProductCard = ({ product, index }) => {
         >
           <button
             onClick={handleProductClick}
-            aria-label="Quick view"
+            aria-label={t("product.productDetails")}
             className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:scale-110 transition-transform duration-200"
           >
             <Eye className="w-4 h-4 text-gray-700 dark:text-gray-200" />
           </button>
           <button
             onClick={handleAddToCart}
-            aria-label="Add to cart"
+            aria-label={t("product.addToCart")}
             className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:scale-110 transition-transform duration-200"
           >
             <ShoppingCart className="w-4 h-4 text-gray-700 dark:text-gray-200" />
@@ -214,7 +198,7 @@ const ProductCard = ({ product, index }) => {
           <Link to={`/product/${product.id}`}>{product.title}</Link>
         </h2>
 
-        {/* Enhanced Price Section */}
+        {/* Price Section */}
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Current Price */}
@@ -226,7 +210,7 @@ const ProductCard = ({ product, index }) => {
                 product.stock === 0 && "text-red-600 dark:text-red-400",
               )}
             >
-              {product.stock === 0 ? "Out of Stock" : currency(product.price)}
+              {product.stock === 0 ? t("product.outOfStock") : currency(product.price)}
             </span>
 
             {/* Original Price */}
@@ -237,15 +221,6 @@ const ProductCard = ({ product, index }) => {
                 </span>
               )}
           </div>
-
-          {/* Savings Badge
-          {savingsAmount > 0 && (
-            <div className="inline-flex w-fit">
-              <span className="text-xs font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
-                Save {currency(savingsAmount)}
-              </span>
-            </div>
-          )} */}
         </div>
       </CardContent>
     </Card>

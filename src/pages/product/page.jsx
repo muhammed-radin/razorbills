@@ -13,7 +13,6 @@ import {
 import {
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
@@ -26,10 +25,9 @@ import {
   Share2,
   Minus,
   Plus,
-  LoaderPinwheel,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Product } from "@/models/product";
 import { currency } from "@/utils/currency";
 import StyledMd from "@/components/styled-md";
 
@@ -48,15 +46,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import ReviewCard from "@/components/review-card";
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
-import axios from "axios";
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
-import { MessageSquare } from "lucide-react";
-
+import { useTranslation } from "react-i18next";
 
 const reviews = [];
 
 const ProductDetailsPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -106,8 +103,6 @@ const ProductDetailsPage = () => {
     return null;
   }
 
-
-
   return (
     <div className="min-h-screen max-w-7xl flex flex-col p-4 lg:p-8 mx-auto">
       <Helmet>
@@ -115,15 +110,15 @@ const ProductDetailsPage = () => {
         <meta name="description" content={product.description} />
         <meta
           name="keywords"
-          content={`${product.title}, ${product.category}, ${product.brand}, ${product.tags.join(", ")}`}
+          content={`${product.title}, ${product.category}, ${product.brand}, ${(product.tags || []).join(", ")}`}
         />
       </Helmet>
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm text-muted-foreground max-w-7xl  justify-start   ">
+      <nav className="mb-6 text-sm text-muted-foreground max-w-7xl justify-start">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
-              <Link to="/">Home</Link>
+              <Link to="/">{t("product.home")}</Link>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
@@ -139,27 +134,27 @@ const ProductDetailsPage = () => {
         </Breadcrumb>
       </nav>
 
-      <div className="max-w-7xl justify-items-center lg:justify-items-normal  grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full">
+      <div className="max-w-7xl justify-items-center lg:justify-items-normal grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full">
         {/* Product Images */}
         <div className="space-y-4 w-full max-w-lg">
           {/* Main Image */}
-          <div className=" aspect-square rounded-xl overflow-hidden bg-gray-50 border ">
+          <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
             <img
-              src={product.images[selectedImage]}
+              src={(product.images && product.images[selectedImage]) || product.thumbnail}
               alt={product.title}
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
 
           {/* Thumbnail Images */}
-          {product.images.length >= 1 && (
-            <div className="flex space-x-3">
+          {product.images && product.images.length > 1 && (
+            <div className="flex space-x-3 overflow-x-auto pb-2">
               {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={cn(
-                    "w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors",
+                    "w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0",
                     selectedImage === index
                       ? "border-primary"
                       : "border-gray-200",
@@ -195,7 +190,7 @@ const ProductDetailsPage = () => {
                     key={star}
                     className={cn(
                       "h-4 w-4",
-                      star <= Math.round(product.rating)
+                      star <= Math.round(product.rating || 5)
                         ? "fill-yellow-400 text-yellow-400"
                         : "text-gray-300",
                     )}
@@ -203,7 +198,7 @@ const ProductDetailsPage = () => {
                 ))}
               </div>
               <span className="text-sm text-muted-foreground">
-                ({product.rating}) • {product.reviewCount} reviews
+                ({product.rating}) • {product.reviewCount || 0} reviews
               </span>
             </div>
           </div>
@@ -220,13 +215,13 @@ const ProductDetailsPage = () => {
                     {currency(product.originalPrice)}
                   </span>
                   <Badge variant="destructive" className="text-xs">
-                    {discount}% OFF
+                    {discount}% {t("common.off")}
                   </Badge>
                 </>
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              Free shipping on orders over {currency(300)}
+              {t("product.freeShippingThreshold", { amount: currency(500) })}
             </p>
           </div>
 
@@ -247,15 +242,15 @@ const ProductDetailsPage = () => {
             ></div>
             <span className="text-sm">
               {product.stock > 0
-                ? `${product.stock} items in stock`
-                : "Out of stock"}
+                ? t("product.stockCount", { count: product.stock })
+                : t("product.outOfStock")}
             </span>
           </div>
 
           {/* Quantity and Add to Cart */}
           <div className="space-y-4">
             <div className="flex items-center space-x-4">
-              <label className="text-sm font-medium">Quantity:</label>
+              <label className="text-sm font-medium">{t("product.quantity")}</label>
               <div className="flex items-center border rounded-md">
                 <Button
                   variant="ghost"
@@ -288,13 +283,13 @@ const ProductDetailsPage = () => {
                 disabled={product.stock === 0}
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
-                Add to Cart
+                {t("product.addToCart")}
               </Button>
               <div className="flex space-x-2 flex-row max-sm:justify-center sm:w-49">
-                <Button variant="outline" size="lg" className="w-[49%]">
+                <Button variant="outline" size="lg" className="w-[49%]" aria-label={t("product.addToFavorites")}>
                   <Heart className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="lg" className="w-[49%]">
+                <Button variant="outline" size="lg" className="w-[49%]" aria-label="Share">
                   <Share2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -302,26 +297,27 @@ const ProductDetailsPage = () => {
           </div>
 
           {/* Tags */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Tags:</h3>
-            <div className="flex flex-wrap gap-2">
-              {product.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
+          {product.tags && product.tags.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">{t("product.tags")}</h3>
+              <div className="flex flex-wrap gap-2">
+                {product.tags.map((tag) => (
+                  <Badge key={tag} variant="outline" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Product Details Tabs */}
-      <div className="max-w-7xl mt-12 space-y-8 ">
+      <div className="max-w-7xl mt-12 space-y-8">
         <Separator />
         {/* Detailed Description */}
         <div className="sm:max-w-3xl max-sm:max-w-full">
-          <h2 className="text-2xl font-bold mb-4">Product Details</h2>
-          {/* Using StyledMd component to render markdown */}
+          <h2 className="text-2xl font-bold mb-4">{t("product.productDetails")}</h2>
           <StyledMd>
             {product.detailedDescription || product.description}
           </StyledMd>
@@ -331,13 +327,13 @@ const ProductDetailsPage = () => {
           {/* Specifications */}
           <Card className="w-full xl:w-1/2">
             <CardHeader>
-              <CardTitle>Specifications</CardTitle>
+              <CardTitle>{t("product.specifications")}</CardTitle>
               <CardDescription>
-                Technical specifications and details
+                {t("product.techSpecs")}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1  xl:grid-cols-1 gap-x-6 gap-y-1">
+              <div className="grid grid-cols-1 xl:grid-cols-1 gap-x-6 gap-y-1">
                 {product.specifications &&
                   product.specifications.map((spec, index) => (
                     <div
@@ -359,8 +355,8 @@ const ProductDetailsPage = () => {
           {/* Features */}
           <Card className="w-full xl:w-1/2">
             <CardHeader>
-              <CardTitle>Features</CardTitle>
-              <CardDescription>Key features and benefits</CardDescription>
+              <CardTitle>{t("product.features")}</CardTitle>
+              <CardDescription>{t("product.keyFeatures")}</CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="grid grid-cols-1 gap-3">
@@ -376,44 +372,44 @@ const ProductDetailsPage = () => {
           </Card>
         </section>
 
-
-        {/* Review */}
         {/* Reviews Section */}
-        <div className="max-w-7xl  mt-12 space-y-8">
+        <div className="max-w-7xl mt-12 space-y-8">
           <Tabs defaultValue="review">
             <TabsList>
-              <TabsTrigger value="review">Reviews</TabsTrigger>
+              <TabsTrigger value="review">{t("product.reviewsTab")}</TabsTrigger>
               <TabsTrigger value="similar">
-                Products From {product.brand}
+                {t("product.brandProductsTab", { brand: product.brand || "" })}
               </TabsTrigger>
             </TabsList>
             <TabsContent value="review" className="w-full">
               <Card className="bg-background">
                 <CardHeader>
-                  <CardTitle>Customer Reviews</CardTitle>
+                  <CardTitle>{t("product.customerReviews")}</CardTitle>
                   <CardDescription>
-                    See what our customers are saying
+                    {t("product.reviewsSubtitle")}
                   </CardDescription>
                   <Drawer>
-                    <DrawerTrigger
-                      variant="outline"
-                      size="sm"
-                      className="ml-auto my-1"
-                    >
-                      <span variant="outline" size="sm" className="ml-auto my-1">
-                        Write a Review
-                      </span>
+                    <DrawerTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="ml-auto my-1"
+                      >
+                        {t("product.writeReview")}
+                      </Button>
                     </DrawerTrigger>
                     <DrawerContent>
                       <DrawerHeader>
-                        <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+                        <DrawerTitle>{t("product.reviewDrawerTitle")}</DrawerTitle>
                         <DrawerDescription>
-                          This action cannot be undone.
+                          {t("product.reviewDrawerDesc")}
                         </DrawerDescription>
                       </DrawerHeader>
                       <DrawerFooter className="space-x-2 flex flex-row items-center justify-center">
-                        <Button>Submit</Button>
-                        <DrawerClose>Cancel</DrawerClose>
+                        <Button>{t("product.submitReview")}</Button>
+                        <DrawerClose asChild>
+                          <Button variant="outline">{t("common.cancel")}</Button>
+                        </DrawerClose>
                       </DrawerFooter>
                     </DrawerContent>
                   </Drawer>
@@ -422,35 +418,28 @@ const ProductDetailsPage = () => {
                 <CardContent className="w-full">
                   {reviews && reviews.length > 0 ? (
                     <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
-                      {reviews.map(
-                        (it, index) => {
-                          return (
-                            <ReviewCard
-                              review={{
-                                date: new Date(),
-                                author: "John Doe",
-                                comment:
-                                  "Great product! Highly recommend it.".repeat(
-                                    index,
-                                  ),
-                                title: "Excellent Quality",
-                                rating: Math.floor(Math.random() * 5),
-                              }}
-                              className="w-[350px]"
-                              key={index}
-                            />
-                          );
-                        },
-                      )}
+                      {reviews.map((it, index) => (
+                        <ReviewCard
+                          review={{
+                            date: new Date(),
+                            author: "Customer",
+                            comment: "Great product!",
+                            title: "Excellent Quality",
+                            rating: 5,
+                          }}
+                          className="w-[350px]"
+                          key={index}
+                        />
+                      ))}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                       <MessageSquare className="h-10 w-10 text-muted-foreground mb-3" />
                       <p className="text-sm font-medium text-muted-foreground">
-                        No Comments Yet
+                        {t("product.noCommentsTitle")}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Be the first to share your thoughts on this product.
+                        {t("product.noCommentsDesc")}
                       </p>
                     </div>
                   )}
@@ -460,23 +449,14 @@ const ProductDetailsPage = () => {
             <TabsContent value="similar">
               <Card className="bg-background">
                 <CardHeader>
-                  <CardTitle>Products From {product.brand}</CardTitle>
-                  <CardDescription>
-                    Explore more products from this brand
-                  </CardDescription>
+                  <CardTitle>{t("product.brandProductsTab", { brand: product.brand || "" })}</CardTitle>
                 </CardHeader>
                 <CardContent className="w-full">
                   <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9].map(
-                      (it, index) => {
-                        return (
-                          <HorizontalProductCard
-                            product={[product]}
-                            className="w-[350px]"
-                          />
-                        );
-                      },
-                    )}
+                    <HorizontalProductCard
+                      product={product}
+                      className="w-[350px]"
+                    />
                   </div>
                 </CardContent>
               </Card>

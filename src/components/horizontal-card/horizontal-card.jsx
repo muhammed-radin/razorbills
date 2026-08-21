@@ -12,6 +12,7 @@ import { Heart, ShoppingCart, Eye, Star, ImageOff } from "lucide-react";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { currency } from "@/utils/currency";
+import { useTranslation } from "react-i18next";
 
 const HorizontalProductCardComponent = ({
   variant,
@@ -21,12 +22,13 @@ const HorizontalProductCardComponent = ({
     description: "This is a sample product description.",
     price: 49.99,
     originalPrice: 59.99,
-    image:null,
+    image: null,
     thumbnail: null,
     id: 134,
   },
   index = 0,
 }) => {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -37,7 +39,7 @@ const HorizontalProductCardComponent = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
-    }, index * 80);
+    }, (index || 0) * 80);
     return () => clearTimeout(timer);
   }, [index]);
 
@@ -49,20 +51,17 @@ const HorizontalProductCardComponent = ({
   }, [productData?.stock]);
 
   const discountPercentage = useMemo(
-    () => 
-       productData.originalPrice &&
-        productData.originalPrice !== productData.price
+    () =>
+      productData.originalPrice &&
+      productData.originalPrice !== productData.price
         ? Math.round(
-          ((productData.originalPrice - productData.price) /
-            productData.originalPrice) *
-          100,
-        )
+            ((productData.originalPrice - productData.price) /
+              productData.originalPrice) *
+              100,
+          )
         : 0,
-
-    
     [productData.originalPrice, productData.price],
   );
-
 
   let variantStyle = "";
   if (variant === "borderless") {
@@ -82,12 +81,9 @@ const HorizontalProductCardComponent = ({
     [productData.title],
   );
 
-  const handleQuickView = useCallback(
-    (e) => {
-      navigate(`/product/${productData.id}`);
-    },
-    [productData.id],
-  );
+  const handleQuickView = useCallback(() => {
+    navigate(`/product/${productData.id}`);
+  }, [navigate, productData.id]);
 
   const handleMouseEnter = useCallback(() => setIsHovered(true), []);
   const handleMouseLeave = useCallback(() => setIsHovered(false), []);
@@ -100,25 +96,17 @@ const HorizontalProductCardComponent = ({
   return (
     <Card
       className={cn(
-        // Base styles
         "relative flex flex-row items-stretch overflow-hidden cursor-pointer group",
-        // Sizing - responsive
         "w-full sm:w-[380px] md:w-[420px] lg:w-[450px]",
         "min-w-[280px] max-w-full",
         "h-auto min-h-[140px]",
-        // Spacing
         "p-0 gap-0",
-        // Border & shadow
         "rounded-xl border border-border/50",
         "shadow-sm hover:shadow-xl",
-        // Background
         "bg-card/80 backdrop-blur-sm",
-        // Transitions
         "transition-all duration-500 ease-out",
-        // Hover effects
         "hover:border-primary/30",
         "hover:-translate-y-1",
-        // Animation
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
         variantStyle,
         className,
@@ -185,7 +173,7 @@ const HorizontalProductCardComponent = ({
         >
           <button
             onClick={handleQuickView}
-            aria-label="Quick view"
+            aria-label={t("product.productDetails")}
             className={cn(
               "p-2.5 rounded-full",
               "bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm",
@@ -257,7 +245,7 @@ const HorizontalProductCardComponent = ({
           <button
             onClick={handleFavoriteClick}
             aria-label={
-              isFavorite ? "Remove from favorites" : "Add to favorites"
+              isFavorite ? t("product.removeFromFavorites") : t("product.addToFavorites")
             }
             className={cn(
               "p-1.5 sm:p-2 rounded-full flex-shrink-0",
@@ -286,12 +274,11 @@ const HorizontalProductCardComponent = ({
           )}
         >
           <Link to={`/product/${productData.id}`}>
-            {" "}
             {limitWords(
               productData.description ||
               "Premium quality product with exceptional features.",
               12,
-            )}{" "}
+            )}
           </Link>
         </CardDescription>
 
@@ -309,7 +296,7 @@ const HorizontalProductCardComponent = ({
                   isStockOut && "text-red-600 dark:text-red-400",
                 )}
               >
-                {isStockOut ? "Out of Stock" : currency(productData.price)}
+                {isStockOut ? t("product.outOfStock") : currency(productData.price)}
               </span>
               {productData.originalPrice &&
                 productData.originalPrice !== productData.price && (
@@ -320,7 +307,7 @@ const HorizontalProductCardComponent = ({
             </div>
             {discountPercentage > 0 && isStockOut === false && (
               <span className="text-[10px] font-medium text-green-600 dark:text-green-400">
-                Save {currency(productData.originalPrice - productData.price)}
+                {t("common.saveAmount", { amount: currency(productData.originalPrice - productData.price) })}
               </span>
             )}
           </div>
@@ -340,7 +327,7 @@ const HorizontalProductCardComponent = ({
               )}
             >
               <ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline text-xs font-medium">Add</span>
+              <span className="hidden sm:inline text-xs font-medium">{t("product.addToCart")}</span>
             </Button>
           )}
         </div>
