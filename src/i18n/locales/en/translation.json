@@ -246,8 +246,8 @@
     "selectLanguage": "Select language",
     "addressBook": "Address Book",
     "manageAddresses": "Manage your delivery addresses",
-    "savePreferences": "Save Preferences",
-    "saveSettings": "Save Settings",
+    "saving": "Saving...",
+    "saveChange": "Save Changes",
     "notificationPreferences": "Notification Preferences",
     "notificationPreferencesDesc": "Choose how you want to be notified",
     "emailNotifications": "Email Notifications",
@@ -281,7 +281,8 @@
     "signOutAllDesc": "This will sign you out from all active sessions",
     "signOutAllButton": "Sign Out All",
     "deleteAccount": "Delete Account",
-    "deleteAccountDesc": "Permanently delete your account and all data"
+    "deleteAccountDesc": "Permanently delete your account and all data",
+    "deleteAccountButton": "Delete Account"
   },
   "address": {
     "title": "Address Book",
