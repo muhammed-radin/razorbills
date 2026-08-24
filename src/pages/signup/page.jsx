@@ -200,7 +200,7 @@ const SignUpPage = () => {
         <p className="mt-5 text-sm text-center">
           {t("auth.alreadyHaveAccount")}
           <Link to="/login" className="ml-1 underline text-muted-foreground">
-            {t("auth.login")}
+            {t("auth.logIn")}
           </Link>
         </p>
       </div>
