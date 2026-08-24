@@ -177,6 +177,7 @@
   "auth": {
     "loginTitle": "Log in to RazorBills",
     "signupTitle": "Sign up for RazorBills",
+    "or": "OR",
     "continueWithGoogle": "Continue with Google",
     "fullName": "Full Name",
     "fullNamePlaceholder": "Your Full Name",

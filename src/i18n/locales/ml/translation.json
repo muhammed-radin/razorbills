@@ -177,6 +177,7 @@
   "auth": {
     "loginTitle": "റൈസർബിൽസിലേക്ക് ലോഗിൻ ചെയ്യുക",
     "signupTitle": "റൈസർബിൽസിൽ അക്കൗണ്ട് തുടങ്ങുക",
+    "or": "അല്ലെങ്കിൽ",
     "continueWithGoogle": "ഗൂഗിൾ വഴി തുടരുക",
     "fullName": "പൂർണ്ണമായ പേര്",
     "fullNamePlaceholder": "നിങ്ങളുടെ പേര്",
