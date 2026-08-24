@@ -481,17 +481,63 @@
     "needHelp": "Need Help?",
     "needHelpDesc": "For questions related to returns or refunds, contact:"
   },
-  "terms": {
-    "title": "Terms and Conditions",
-    "lastUpdated": "Last updated: {{date}}",
+"terms": {
+      "title": "Terms & Conditions",
+          "lastUpdated": "Last updated",
     "welcome": "Welcome to RazorBills. By accessing or using our website, you agree to be bound by these Terms and Conditions.",
-    "acceptance": "Acceptance of Terms",
-    "acceptanceDesc": "By creating an account, placing an order, or using this platform, you agree to comply with and be bound by these terms.",
-    "productsAndPricing": "Products & Pricing",
-    "productsAndPricingDesc": "All product prices and availability are subject to change without notice. We make every effort to display accurate specifications and images.",
-    "ordersAndPayment": "Orders & Payment",
-    "ordersAndPaymentDesc": "Orders are subject to acceptance and availability. Payments are processed securely via approved payment gateways."
-  },
+
+      "sections": {
+        "useOfWebsite": {
+          "title": "Use of Website",
+          "content": "By using this website, you confirm that you are legally capable of entering into a binding agreement. You agree to use the website only for lawful purposes."
+        },
+        "productsAndInformation": {
+          "title": " Products & Information",
+          "content": "We make every effort to ensure that product descriptions, pricing, and availability are accurate. However, errors may occur. Razorbills reserves the right to correct any errors or update information without prior notice."
+        },
+        "ordersAndPayments": {
+          "title": " Orders & Payments",
+          "content": "All orders are subject to acceptance and availability. Currently, we accept payments through UPI. Cash on Delivery (COD) will be introduced soon. Orders will be processed only after successful payment confirmation."
+        },
+        "pricing": {
+          "title": " Pricing",
+          "content": "Prices listed on the website are subject to change without prior notice. Any applicable taxes will be included as per Indian regulations."
+        },
+        "shippingAndDelivery": {
+          "title": " Shipping & Delivery",
+          "content": "Delivery timelines may vary depending on location and product availability. Razorbills is not responsible for delays caused by logistics partners or unforeseen circumstances."
+        },
+        "returnsAndRefunds": {
+          "title": " Returns & Refunds",
+          "content": "Returns and refunds are governed by our Return & Refund Policy. Please review that page for detailed information."
+        },
+        "intellectualProperty": {
+          "title": " Intellectual Property",
+          "content": "All content on this website, including text, logos, images, and design, is the property of Razorbills and may not be copied or used without permission."
+        },
+        "limitationOfLiability": {
+          "title": " Limitation of Liability",
+          "content": "Razorbills shall not be liable for any indirect, incidental, or consequential damages arising from the use of our website or products."
+        },
+        "changesToTerms": {
+          "title": " Changes to Terms",
+          "content": "We reserve the right to modify these Terms & Conditions at any time. Continued use of the website means you accept the updated terms."
+        },
+        "contactInformation": {
+          "title": "Contact Information",
+          "content": "If you have any questions regarding these Terms & Conditions, please contact us through the details provided on our Contact Us page."
+        }
+      },
+      "importantNotice": {
+        "title": "Important Notice",
+        "content": "By continuing to use Razorbills, you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions. If you do not agree with any part of these terms, please discontinue use of our website immediately."
+      },
+      "questions": {
+        "title": "Questions About Our Terms?",
+        "content": "Our team is here to help clarify any concerns you may have.",
+      "contactUs": "Contact Us"
+      }
+    },
   "notfound": {
     "title": "404",
     "message": "Oops! The page you are looking for does not exist.",

@@ -1,67 +1,70 @@
 import { FileText, CheckCircle, Shield, Package, CreditCard, Truck, RefreshCcw, Copyright, AlertCircle, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
+
 
 export default function TermsAndConditions() {
+  const { t } = useTranslation();
   const sections = [
     {
       id: 1,
       icon: FileText,
-      title: 'Use of Website',
-      content: 'By using this website, you confirm that you are legally capable of entering into a binding agreement. You agree to use the website only for lawful purposes.'
+      title: t("terms.sections.useOfWebsite.title"),
+      content: t("terms.sections.useOfWebsite.content")
     },
     {
       id: 2,
       icon: Package,
-      title: 'Products & Information',
-      content: 'We make every effort to ensure that product descriptions, pricing, and availability are accurate. However, errors may occur. Razorbills reserves the right to correct any errors or update information without prior notice.'
+      title: t("terms.sections.productsAndInformation.title"),
+      content: t("terms.sections.productsAndInformation.content")
     },
     {
       id: 3,
       icon: CreditCard,
-      title: 'Orders & Payments',
-      content: 'All orders are subject to acceptance and availability. Currently, we accept payments through UPI. Cash on Delivery (COD) will be introduced soon. Orders will be processed only after successful payment confirmation.'
+      title: t("terms.sections.ordersAndPayments.title"),
+      content: t("terms.sections.ordersAndPayments.content")
     },
     {
       id: 4,
       icon: CheckCircle,
-      title: 'Pricing',
-      content: 'Prices listed on the website are subject to change without prior notice. Any applicable taxes will be included as per Indian regulations.'
+      title: t("terms.sections.pricing.title"),
+      content: t("terms.sections.pricing.content")
     },
     {
       id: 5,
       icon: Truck,
-      title: 'Shipping & Delivery',
-      content: 'Delivery timelines may vary depending on location and product availability. Razorbills is not responsible for delays caused by logistics partners or unforeseen circumstances.'
+      title: t("terms.sections.shippingAndDelivery.title"),
+      content: t("terms.sections.shippingAndDelivery.content")
     },
     {
       id: 6,
       icon: RefreshCcw,
-      title: 'Returns & Refunds',
-      content: 'Returns and refunds are governed by our Return & Refund Policy. Please review that page for detailed information.'
+      title: t("terms.sections.returnsAndRefunds.title"),
+      content: t("terms.sections.returnsAndRefunds.content")
     },
     {
       id: 7,
       icon: Copyright,
-      title: 'Intellectual Property',
-      content: 'All content on this website, including text, logos, images, and design, is the property of Razorbills and may not be copied or used without permission.'
+      title: t("terms.sections.intellectualProperty.title"),
+      content: t("terms.sections.intellectualProperty.content")
     },
     {
       id: 8,
       icon: Shield,
-      title: 'Limitation of Liability',
-      content: 'Razorbills shall not be liable for any indirect, incidental, or consequential damages arising from the use of our website or products.'
+      title: t("terms.sections.limitationOfLiability.title"),
+      content: t("terms.sections.limitationOfLiability.content")
     },
     {
       id: 9,
       icon: AlertCircle,
-      title: 'Changes to Terms',
-      content: 'We reserve the right to modify these Terms & Conditions at any time. Continued use of the website means you accept the updated terms.'
+      title: t("terms.sections.changesToTerms.title"),
+      content: t("terms.sections.changesToTerms.content")
     },
     {
       id: 10,
       icon: Mail,
-      title: 'Contact Information',
-      content: 'If you have any questions regarding these Terms & Conditions, please contact us through the details provided on our Contact Us page.'
+      title: t("terms.sections.contactInformation.title"),
+      content: t("terms.sections.contactInformation.content")
     }
   ];
 
@@ -73,10 +76,10 @@ export default function TermsAndConditions() {
         
         <div className="relative max-w-4xl mx-auto px-6 py-20 text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 dark:text-white">
-            Terms & Conditions
+            {t("terms.title")}
           </h1>
           <p className="text-lg dark:text-gray-300">
-            Last updated: 2/14/2026
+            {t("terms.lastUpdated")}: 2/14/2026
           </p>
         </div>
       </div>
@@ -85,7 +88,7 @@ export default function TermsAndConditions() {
       <div className="max-w-4xl mx-auto px-6 py-12">
         <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-8 mb-12 dark:bg-black/10 dark:border-neutral-700">
           <p className="text-lg leading-relaxed dark:text-gray-300">
-            Welcome to Razorbills. By accessing or using our website, you agree to the following terms and conditions. Please read them carefully.
+            {t("terms.welcome")}
           </p>
         </div>
 
@@ -122,10 +125,10 @@ export default function TermsAndConditions() {
             <AlertCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
             <div>
               <h3 className="text-lg font-bold mb-2 text-black dark:text-white">
-                Important Notice
+                {t("terms.importantNotice.title")}
               </h3>
               <p className="leading-relaxed text-neutral-700 dark:text-gray-300">
-                By continuing to use Razorbills, you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions. If you do not agree with any part of these terms, please discontinue use of our website immediately.
+                {t("terms.importantNotice.content")}
               </p>
             </div>
           </div>
@@ -134,14 +137,14 @@ export default function TermsAndConditions() {
         {/* Footer CTA */}
         <div className="mt-12 text-center border-neutral-200 border-t pt-12 dark:border-neutral-700">
           <h3 className="text-2xl font-bold mb-4 text-black dark:text-white">
-            Questions About Our Terms?
+            {t("terms.questions.title")}
           </h3>
           <p className="mb-6 text-neutral-600 dark:text-gray-300">
-            Our team is here to help clarify any concerns you may have.
+            {t("terms.questions.content")}
           </p>
           <Button className="inline-flex items-center gap-2">
             <Mail className="w-5 h-5" />
-            Contact Us
+             {t("terms.questions.contactUs")}
           </Button>
         </div>
       </div>
