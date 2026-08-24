@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -87,6 +88,7 @@ const sampleAddresses = [
 ];
 
 const AddressBookPage = () => {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [addresses, setAddresses] = useState(sampleAddresses);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -196,11 +198,11 @@ const AddressBookPage = () => {
   const getTypeLabel = (type) => {
     switch (type) {
       case "home":
-        return "Home";
+        return t("address.typeHome");
       case "work":
-        return "Work";
+        return t("address.typeWork");
       default:
-        return "Other";
+        return t("address.typeOther");
     }
   };
 
@@ -212,18 +214,18 @@ const AddressBookPage = () => {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
+                <Link to="/">{t("footer.home")}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/settings">Settings</Link>
+                <Link to="/settings">{t("settings.title")}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Address Book</BreadcrumbPage>
+              <BreadcrumbPage>{t("address.title")}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -245,10 +247,10 @@ const AddressBookPage = () => {
               <MapPin className="w-8 h-8 text-primary" />
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  Address Book
+                  {t("address.title")}
                 </h1>
                 <p className="text-muted-foreground">
-                  Manage your delivery addresses
+                  {t("address.subtitle")}
                 </p>
               </div>
             </div>
@@ -258,24 +260,24 @@ const AddressBookPage = () => {
             <DialogTrigger asChild>
               <Button className="transition-all duration-300 hover:shadow-lg group">
                 <Plus className="w-4 h-4 mr-2 transition-transform duration-300 group-hover:rotate-90" />
-                Add New Address
+                {t("address.addNew")}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <MapPinned className="w-5 h-5 text-primary" />
-                  Add New Address
+                  {t("address.addNew")}
                 </DialogTitle>
                 <DialogDescription>
-                  Add a new delivery address to your account
+                  {t("address.addNewDesc")}
                 </DialogDescription>
               </DialogHeader>
               <AddressForm
                 address={newAddress}
                 setAddress={setNewAddress}
                 onSubmit={handleAddAddress}
-                submitLabel="Add Address"
+                submitLabel={t("address.submitAdd")}
               />
             </DialogContent>
           </Dialog>
@@ -295,11 +297,10 @@ const AddressBookPage = () => {
                 <MapPin className="absolute inset-0 m-auto w-12 h-12 text-primary" />
               </div>
               <h2 className="text-2xl font-semibold text-foreground mb-4">
-                No Addresses Yet
+                {t("address.noAddresses")}
               </h2>
               <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                You haven't added any delivery addresses yet. Add your first
-                address to make checkout faster!
+                {t("address.noAddressesDesc")}
               </p>
               <Button
                 onClick={() => setIsAddDialogOpen(true)}
@@ -307,7 +308,7 @@ const AddressBookPage = () => {
                 className="transition-all duration-300 hover:shadow-lg"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Add Your First Address
+                {t("address.addFirstAddress")}
               </Button>
             </CardContent>
           </Card>
@@ -330,7 +331,7 @@ const AddressBookPage = () => {
                   <div className="absolute top-0 right-0">
                     <div className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-bl-lg flex items-center gap-1">
                       <Star className="w-3 h-3 fill-current" />
-                      Default
+                      {t("common.default")}
                     </div>
                   </div>
                 )}
@@ -390,7 +391,7 @@ const AddressBookPage = () => {
                         }}
                       >
                         <Edit2 className="w-3 h-3 mr-1" />
-                        Edit
+                        {t("common.edit")}
                       </Button>
                       <Button
                         variant="outline"
@@ -402,7 +403,7 @@ const AddressBookPage = () => {
                         }}
                       >
                         <Trash2 className="w-3 h-3 mr-1" />
-                        Delete
+                        {t("common.delete")}
                       </Button>
                     </div>
                     {!address.isDefault && (
@@ -413,7 +414,7 @@ const AddressBookPage = () => {
                         onClick={() => handleSetDefault(address.id)}
                       >
                         <Star className="w-3 h-3 mr-1" />
-                        Set as Default
+                        {t("address.setDefault")}
                       </Button>
                     )}
                   </div>
@@ -439,8 +440,8 @@ const AddressBookPage = () => {
                 <div className="p-4 rounded-full bg-muted group-hover:bg-primary/10 transition-all duration-300 mb-4">
                   <Plus className="w-8 h-8 transition-transform duration-300 group-hover:rotate-90" />
                 </div>
-                <p className="font-medium">Add New Address</p>
-                <p className="text-sm">Click to add a new delivery address</p>
+                <p className="font-medium">{t("address.addNew")}</p>
+                <p className="text-sm">{t("address.addNewDesc")}</p>
               </CardContent>
             </Card>
           </div>
@@ -452,10 +453,10 @@ const AddressBookPage = () => {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Edit2 className="w-5 h-5 text-primary" />
-                Edit Address
+                {t("address.editAddress")}
               </DialogTitle>
               <DialogDescription>
-                Update your delivery address details
+                {t("address.editAddressDesc")}
               </DialogDescription>
             </DialogHeader>
             {selectedAddress && (
@@ -463,7 +464,7 @@ const AddressBookPage = () => {
                 address={selectedAddress}
                 setAddress={setSelectedAddress}
                 onSubmit={handleEditAddress}
-                submitLabel="Save Changes"
+                submitLabel={t("address.submitEdit")}
               />
             )}
           </DialogContent>
@@ -475,11 +476,10 @@ const AddressBookPage = () => {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-destructive">
                 <Trash2 className="w-5 h-5" />
-                Delete Address
+                {t("address.deleteAddress")}
               </DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this address? This action cannot
-                be undone.
+                {t("address.deleteConfirm")}
               </DialogDescription>
             </DialogHeader>
             {selectedAddress && (
@@ -491,7 +491,7 @@ const AddressBookPage = () => {
                   </span>
                   {selectedAddress.isDefault && (
                     <Badge variant="secondary" className="text-xs">
-                      Default
+                      {t("common.default")}
                     </Badge>
                   )}
                 </div>
@@ -505,11 +505,11 @@ const AddressBookPage = () => {
                 variant="outline"
                 onClick={() => setIsDeleteDialogOpen(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button variant="destructive" onClick={handleDeleteAddress}>
                 <Trash2 className="w-4 h-4 mr-2" />
-                Delete Address
+                {t("address.deleteAddress")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -521,16 +521,18 @@ const AddressBookPage = () => {
 
 // Address Form Component
 const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-4 py-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
+          <Label htmlFor="name">{t("address.fullName")}</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="name"
-              placeholder="Enter full name"
+              placeholder={t("address.fullNamePlaceholder")}
               value={address.name}
               onChange={(e) => setAddress({ ...address, name: e.target.value })}
               className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -538,13 +540,13 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone Number</Label>
+          <Label htmlFor="phone">{t("address.phone")}</Label>
           <div className="relative">
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               id="phone"
               type="tel"
-              placeholder="Enter phone number"
+              placeholder={t("address.phonePlaceholder")}
               value={address.phone}
               onChange={(e) => setAddress({ ...address, phone: e.target.value })}
               className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
@@ -554,31 +556,31 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="type">Address Type</Label>
+        <Label htmlFor="type">{t("address.addressType")}</Label>
         <Select
           value={address.type}
           onValueChange={(value) => setAddress({ ...address, type: value })}
         >
           <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
-            <SelectValue placeholder="Select address type" />
+            <SelectValue placeholder={t("address.selectType")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="home">
               <div className="flex items-center gap-2">
                 <Home className="w-4 h-4" />
-                Home
+                {t("address.typeHome")}
               </div>
             </SelectItem>
             <SelectItem value="work">
               <div className="flex items-center gap-2">
                 <Briefcase className="w-4 h-4" />
-                Work
+                {t("address.typeWork")}
               </div>
             </SelectItem>
             <SelectItem value="other">
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
-                Other
+                {t("address.typeOther")}
               </div>
             </SelectItem>
           </SelectContent>
@@ -586,10 +588,10 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="address">Street Address</Label>
+        <Label htmlFor="address">{t("address.streetAddress")}</Label>
         <Textarea
           id="address"
-          placeholder="Enter street address, apartment, building, etc."
+          placeholder={t("address.streetAddressPlaceholder")}
           value={address.address}
           onChange={(e) => setAddress({ ...address, address: e.target.value })}
           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20 min-h-[80px]"
@@ -598,30 +600,30 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="city">City</Label>
+          <Label htmlFor="city">{t("address.city")}</Label>
           <Input
             id="city"
-            placeholder="Enter city"
+            placeholder={t("address.cityPlaceholder")}
             value={address.city}
             onChange={(e) => setAddress({ ...address, city: e.target.value })}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="state">State</Label>
+          <Label htmlFor="state">{t("address.state")}</Label>
           <Input
             id="state"
-            placeholder="Enter state"
+            placeholder={t("address.statePlaceholder")}
             value={address.state}
             onChange={(e) => setAddress({ ...address, state: e.target.value })}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="pincode">PIN Code</Label>
+          <Label htmlFor="pincode">{t("address.pinCode")}</Label>
           <Input
             id="pincode"
-            placeholder="Enter PIN code"
+            placeholder={t("address.pinCodePlaceholder")}
             value={address.pincode}
             onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"

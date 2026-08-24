@@ -10,6 +10,7 @@ import {
   Truck,
   RefreshCcw,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,20 +24,20 @@ export default function ContactUs() {
   const contactMethods = [
     {
       icon: Mail,
-      title: "Email Support",
+      title: t("contact.emailSupport"),
       detail: "support@razorbills.com",
-      description: "For product inquiries, order issues, and general questions",
+      description: t("contact.emailSupportDesc"),
     },
     {
       icon: Phone,
-      title: "Phone / WhatsApp Support",
+      title: t("contact.phoneSupport"),
       detail: "+91 XXXXXXXXXX",
-      description: "Monday to Saturday",
-      time: "10:00 AM – 6:00 PM (IST)",
+      description: t("contact.phoneSupportDesc"),
+      time: t("contact.phoneSupportHours"),
     },
     {
       icon: MapPin,
-      title: "Office Address",
+      title: t("contact.officeAddress"),
       detail: "Razorbills",
       description: "[Your Office Address]",
       address: "[City, State, PIN Code]",
@@ -45,16 +46,16 @@ export default function ContactUs() {
   ];
 
   const faqTopics = [
-    { icon: Package, label: "Order status" },
-    { icon: CreditCard, label: "Payments & refunds" },
-    { icon: Truck, label: "Shipping & delivery" },
-    { icon: RefreshCcw, label: "Returns & replacements" },
+    { icon: Package, label: t("contact.faqOrderStatus") },
+    { icon: CreditCard, label: t("contact.faqPayments") },
+    { icon: Truck, label: t("contact.faqShipping") },
+    { icon: RefreshCcw, label: t("contact.faqReturns") },
   ];
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-black/10 dark:text-gray-100">
       <Helmet>
-        <title>Contact Us - RazorBills</title>
+        <title>{t("contact.helmetTitle")}</title>
         <meta name="description" content="Get in touch with RazorBills for support, inquiries, and feedback. We're here to help with product questions, orders, and general inquiries." />
         <meta name="keywords" content="contact us, razorbills, support, email, phone, address, contact form" />
       </Helmet>
@@ -65,14 +66,13 @@ export default function ContactUs() {
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 dark:text-white">
-              Contact Us
+              {t("contact.title")}
             </h1>
             <p className="text-xl max-w-3xl mx-auto leading-relaxed dark:text-gray-300">
-              We're here to help with product questions, orders, and general
-              inquiries.
+              {t("contact.subtitle")}
             </p>
             <p className="text-lg mt-4 dark:text-gray-300">
-              Our support team will respond as soon as possible.
+              {t("contact.responseNote")}
             </p>
           </div>
         </div>
@@ -132,13 +132,13 @@ export default function ContactUs() {
               </div>
               <div>
                 <h3 className="text-xl font-bold mb-1 text-black dark:text-white">
-                  Service Area
+                  {t("contact.serviceArea")}
                 </h3>
                 <p className="text-lg font-semibold text-amber-600">
-                  India - Nationwide Delivery
+                  {t("contact.serviceAreaTitle")}
                 </p>
                 <p className="text-sm text-neutral-700 dark:text-gray-300 mt-1">
-                  We deliver electronic components across all states in India
+                  {t("contact.serviceAreaDesc")}
                 </p>
               </div>
             </div>
@@ -153,16 +153,14 @@ export default function ContactUs() {
                 <MessageSquare className="w-6 h-6 text-amber-600" />
               </div>
               <h2 className="text-3xl font-bold text-black dark:text-white">
-                Contact Form
+                {t("contact.formTitle")}
               </h2>
             </div>
             <p className="text-lg leading-relaxed mb-4 dark:text-gray-300">
-              You can also contact us using the form. For faster support, please
-              include your order ID (if applicable) and a brief description of
-              your issue.
+              {t("contact.formDesc")}
             </p>
             <p className="text-sm text-neutral-600 dark:text-gray-300">
-              We typically respond within 24 business hours.
+              {t("contact.formResponseTime")}
             </p>
 
             {/* Need Help Faster Section */}
@@ -172,11 +170,10 @@ export default function ContactUs() {
                   <HelpCircle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-1" />
                   <div>
                     <h3 className="text-lg font-bold mb-2 text-black dark:text-white">
-                      Need Help Faster?
+                      {t("contact.helpFaster")}
                     </h3>
                     <p className="text-sm text-neutral-700 dark:text-gray-300 mb-4">
-                      Before contacting us, you may find quick answers in our
-                      FAQ section regarding:
+                      {t("contact.helpFasterDesc")}
                     </p>
                   </div>
                 </div>
@@ -202,7 +199,7 @@ export default function ContactUs() {
             <CardContent className="p-8">
               <form className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name *</Label>
+                  <Label htmlFor="name">{t("contact.nameLabel")}</Label>
                   <Input
                     id="name"
                     type="text"
@@ -212,7 +209,7 @@ export default function ContactUs() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">{t("contact.emailLabel")}</Label>
                   <Input
                     id="email"
                     type="email"
@@ -222,12 +219,12 @@ export default function ContactUs() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">{t("contact.phoneLabel")}</Label>
                   <Input id="phone" type="tel" placeholder="+91 XXXXXXXXXX" />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="orderId">Order ID (if applicable)</Label>
+                  <Label htmlFor="orderId">{t("contact.orderIdLabel")}</Label>
                   <Input
                     id="orderId"
                     type="text"
@@ -236,7 +233,7 @@ export default function ContactUs() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="subject">Subject *</Label>
+                  <Label htmlFor="subject">{t("contact.subjectLabel")}</Label>
                   <Input
                     id="subject"
                     type="text"
@@ -246,17 +243,17 @@ export default function ContactUs() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="message">Message *</Label>
+                  <Label htmlFor="message">{t("contact.messageLabel")}</Label>
                   <Textarea
                     id="message"
-                    placeholder="Please describe your question or issue in detail..."
+                    placeholder={t("contact.messagePlaceholder")}
                     className="min-h-[150px]"
                     required
                   />
                 </div>
 
                 <Button type="submit" className="w-full">
-                  Send Message
+                  {t("contact.sendMessage")}
                 </Button>
               </form>
             </CardContent>
@@ -268,11 +265,10 @@ export default function ContactUs() {
       <div className="relative overflow-hidden bg-neutral-100 dark:bg-black/10 border-t dark:border-neutral-700">
         <div className="relative max-w-7xl mx-auto px-6 py-12 text-center">
           <h2 className="text-2xl md:text-3xl font-bold mb-4 text-black dark:text-white">
-            Thank You for Reaching Out
+            {t("contact.thankYou")}
           </h2>
           <p className="text-lg text-neutral-700 dark:text-gray-300 max-w-2xl mx-auto">
-            We value clear communication and are committed to providing reliable
-            support.
+            {t("contact.thankYouDesc")}
           </p>
         </div>
       </div>

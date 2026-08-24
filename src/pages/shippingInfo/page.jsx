@@ -1,32 +1,27 @@
 import { Package, Clock, Truck, MapPin, IndianRupee, Search, Shield, AlertCircle, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 export default function RazorbillsShipping() {
-  const deliveryTimes = [
-    {
-      title: 'Standard Delivery Time',
-      duration: '3–7 working days',
-      description: 'For most locations across India'
-    }
-  ];
+  const { t } = useTranslation();
 
   const processingSteps = [
-    'We process and ship most orders within 24 working hours of order confirmation',
-    'Orders placed on public holidays are processed on the next working day',
-    'Dispatch timelines may vary for high-volume, bulk, or made-to-order items',
-    'Order status and tracking details are shared via email once the order is shipped'
+    t('shipping.step1'),
+    t('shipping.step2'),
+    t('shipping.step3'),
+    t('shipping.step4')
   ];
 
   const deliveryFactors = [
-    'Customer location',
-    'Courier partner serviceability',
-    'Local delivery conditions'
+    t('shipping.factor1'),
+    t('shipping.factor2'),
+    t('shipping.factor3')
   ];
 
   const trackingFeatures = [
-    'A tracking number shared via email/SMS',
-    'Updates from the courier partner until delivery'
+    t('shipping.trackingPoint1'),
+    t('shipping.trackingPoint2')
   ];
 
   return (
@@ -38,10 +33,10 @@ export default function RazorbillsShipping() {
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 dark:text-white">
-              Shipping Information
+              {t('shipping.title')}
             </h1>
             <p className="text-xl max-w-3xl mx-auto leading-relaxed dark:text-gray-300">
-              We ship electronic components across India with reliable logistics partners to ensure safe and timely delivery.
+              {t('shipping.subtitle')}
             </p>
           </div>
         </div>
@@ -57,10 +52,10 @@ export default function RazorbillsShipping() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold mb-1 text-black dark:text-white">
-                  Shipping Coverage
+                  {t('shipping.coverageTitle')}
                 </h2>
                 <p className="text-lg text-amber-600 font-semibold">
-                  We currently deliver nationwide across India
+                  {t('shipping.coverageDesc')}
                 </p>
               </div>
             </div>
@@ -76,7 +71,7 @@ export default function RazorbillsShipping() {
                   <Clock className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Order Processing & Dispatch
+                  {t('shipping.dispatchTitle')}
                 </h2>
               </div>
               <ul className="space-y-3">
@@ -100,47 +95,47 @@ export default function RazorbillsShipping() {
                   <IndianRupee className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Shipping Charges
+                  {t('shipping.chargesTitle')}
                 </h2>
               </div>
               <h3 className="font-semibold text-lg mb-4 text-black dark:text-white">
-                Shipping Fee Structure
+                {t('shipping.feeStructure')}
               </h3>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b-2 border-neutral-300 dark:border-neutral-600">
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-black dark:text-white">Payment Type</th>
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-black dark:text-white">Order Value</th>
-                      <th className="text-left py-3 px-2 text-sm font-semibold text-black dark:text-white">Shipping Fee</th>
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-black dark:text-white">{t('shipping.thPaymentType')}</th>
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-black dark:text-white">{t('shipping.thOrderValue')}</th>
+                      <th className="text-left py-3 px-2 text-sm font-semibold text-black dark:text-white">{t('shipping.thShippingFee')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">Prepaid (UPI / Card)</td>
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">More than ₹500</td>
-                      <td className="py-3 px-2 text-sm font-semibold text-green-600">FREE</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.prepaid')}</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.above500')}</td>
+                      <td className="py-3 px-2 text-sm font-semibold text-green-600">{t('shipping.free')}</td>
                     </tr>
                     <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">Prepaid (UPI / Card)</td>
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">Less than ₹500</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.prepaid')}</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.below500')}</td>
                       <td className="py-3 px-2 text-sm font-semibold text-amber-600">₹50</td>
                     </tr>
                     <tr className="border-b border-neutral-200 dark:border-neutral-700">
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">Cash on Delivery (COD)</td>
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">More than ₹500</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.cod')}</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.above500')}</td>
                       <td className="py-3 px-2 text-sm font-semibold text-amber-600">₹30</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">Cash on Delivery (COD)</td>
-                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">Less than ₹500</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.cod')}</td>
+                      <td className="py-3 px-2 text-sm text-neutral-700 dark:text-gray-300">{t('shipping.below500')}</td>
                       <td className="py-3 px-2 text-sm font-semibold text-amber-600">₹80</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <p className="text-sm text-neutral-600 dark:text-gray-400 mt-4">
-                Shipping charges (if applicable) are displayed clearly at checkout.
+                {t('shipping.delayNotice')}
               </p>
             </CardContent>
           </Card>
@@ -153,7 +148,7 @@ export default function RazorbillsShipping() {
               <Truck className="w-6 h-6 text-amber-600" />
             </div>
             <h2 className="text-3xl font-bold text-black dark:text-white">
-              Estimated Delivery Time
+              {t('shipping.estimatedTitle')}
             </h2>
           </div>
           
@@ -161,13 +156,13 @@ export default function RazorbillsShipping() {
             <CardContent className="p-6">
               <div className="text-center">
                 <h3 className="font-bold text-2xl mb-2 text-black dark:text-white">
-                  Standard Delivery Time
+                  {t('shipping.standardDelivery')}
                 </h3>
                 <p className="text-3xl text-amber-600 font-bold mb-4">
-                  3–7 working days
+                  {t('shipping.deliveryDays')}
                 </p>
                 <p className="text-neutral-600 dark:text-gray-400">
-                  For most locations across India
+                  {t('shipping.deliveryLocations')}
                 </p>
               </div>
             </CardContent>
@@ -176,7 +171,7 @@ export default function RazorbillsShipping() {
           <Card className="mb-6">
             <CardContent className="p-6">
               <h3 className="font-semibold text-lg mb-4 text-black dark:text-white">
-                Delivery time depends on:
+                {t('shipping.factorsTitle')}
               </h3>
               <ul className="space-y-3">
                 {deliveryFactors.map((factor, idx) => (
@@ -196,7 +191,7 @@ export default function RazorbillsShipping() {
               <p className="text-sm text-neutral-600 dark:text-gray-400 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 <span>
-                  Delivery timelines are estimated and may be affected by factors beyond our control such as weather, strikes, natural calamities, or courier delays.
+                  {t('shipping.delayNotice')}
                 </span>
               </p>
             </CardContent>
@@ -212,7 +207,7 @@ export default function RazorbillsShipping() {
                   <MapPin className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Address & Delivery Responsibility
+                  {t('shipping.addressRespTitle')}
                 </h2>
               </div>
               <ul className="space-y-3">
@@ -221,30 +216,30 @@ export default function RazorbillsShipping() {
                     <span className="text-amber-600 text-xs font-bold">✓</span>
                   </div>
                   <span className="text-neutral-700 dark:text-gray-300">
-                    Customers must ensure that the shipping address, PIN code, and contact number are accurate
+                    {t('shipping.addressPoint1')}
                   </span>
                 </li>
               </ul>
               <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg dark:bg-orange-900/10 dark:border-orange-500/30">
                 <p className="text-sm font-semibold text-neutral-800 dark:text-gray-200 mb-2">
-                  We are not responsible for delays or non-delivery due to:
+                  {t('shipping.notRespTitle')}
                 </p>
                 <ul className="space-y-2 text-sm text-neutral-700 dark:text-gray-300">
                   <li className="flex items-center gap-2">
                     <span className="text-orange-600">•</span>
-                    Incorrect or incomplete address
+                    {t('shipping.notResp1')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-orange-600">•</span>
-                    Unreachable customer
+                    {t('shipping.notResp2')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-orange-600">•</span>
-                    Repeated delivery attempt failures
+                    {t('shipping.notResp3')}
                   </li>
                 </ul>
                 <p className="text-sm font-semibold text-orange-700 dark:text-orange-400 mt-3">
-                  Any re-shipping due to address issues will be chargeable.
+                  {t('shipping.reshippingFee')}
                 </p>
               </div>
             </CardContent>
@@ -258,7 +253,7 @@ export default function RazorbillsShipping() {
                   <Package className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Partial / Split Shipments
+                  {t('shipping.splitShipTitle')}
                 </h2>
               </div>
               <ul className="space-y-3">
@@ -267,7 +262,7 @@ export default function RazorbillsShipping() {
                     <span className="text-amber-600 text-xs font-bold">✓</span>
                   </div>
                   <span className="text-neutral-700 dark:text-gray-300">
-                    In some cases, orders containing multiple items may be shipped in multiple packages
+                    {t('shipping.splitPoint1')}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -275,7 +270,7 @@ export default function RazorbillsShipping() {
                     <span className="text-amber-600 text-xs font-bold">✓</span>
                   </div>
                   <span className="text-neutral-700 dark:text-gray-300">
-                    Customers will receive tracking details for each shipment separately
+                    {t('shipping.splitPoint2')}
                   </span>
                 </li>
               </ul>
@@ -292,11 +287,11 @@ export default function RazorbillsShipping() {
                   <Search className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Shipment Tracking
+                  {t('shipping.trackingTitle')}
                 </h2>
               </div>
               <p className="text-neutral-700 dark:text-gray-300 mb-4">
-                Once dispatched, you will receive:
+                {t('shipping.trackingDesc')}
               </p>
               <ul className="space-y-3">
                 {trackingFeatures.map((feature, idx) => (
@@ -309,7 +304,7 @@ export default function RazorbillsShipping() {
                 ))}
               </ul>
               <p className="text-sm text-neutral-600 dark:text-gray-400 mt-4">
-                Customers are requested to track their shipment regularly and coordinate with the courier if required.
+                {t('shipping.trackingAdvice')}
               </p>
             </CardContent>
           </Card>
@@ -322,11 +317,11 @@ export default function RazorbillsShipping() {
                   <Shield className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Packaging & Safety
+                  {t('shipping.safetyTitle')}
                 </h2>
               </div>
               <p className="text-neutral-700 dark:text-gray-300">
-                All components are packed securely to prevent damage during transit. Sensitive electronic parts are handled with appropriate protective packaging.
+                {t('shipping.safetyDesc')}
               </p>
             </CardContent>
           </Card>
@@ -339,19 +334,19 @@ export default function RazorbillsShipping() {
               <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-1" />
               <div>
                 <h3 className="text-xl font-bold mb-3 text-black dark:text-white">
-                  Undelivered / RTO Shipments
+                  {t('shipping.rtoTitle')}
                 </h3>
                 <p className="text-neutral-700 dark:text-gray-300 mb-3">
-                  If a shipment is returned to us (RTO – Return to Origin) due to:
+                  {t('shipping.rtoDesc')}
                 </p>
                 <ul className="space-y-2 mb-4 text-neutral-700 dark:text-gray-300">
                   <li className="flex items-center gap-2">
                     <span className="text-orange-600">•</span>
-                    Customer unavailability
+                    {t('shipping.notResp2')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-orange-600">•</span>
-                    Incorrect address
+                    {t('shipping.notResp1')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-orange-600">•</span>
@@ -363,11 +358,11 @@ export default function RazorbillsShipping() {
                   <ul className="space-y-2 text-neutral-700 dark:text-gray-300">
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">→</span>
-                      Re-shipping will be done only after additional shipping charges are paid
+                      {t('shipping.rtoThen1')}
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">→</span>
-                      Refunds (if applicable) will be processed after deducting actual shipping and handling costs
+                      {t('shipping.rtoThen2')}
                     </li>
                   </ul>
                 </div>
@@ -380,10 +375,10 @@ export default function RazorbillsShipping() {
         <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-500/30">
           <CardContent className="p-8 text-center">
             <h3 className="text-2xl font-bold mb-4 text-black dark:text-white">
-              Questions About Shipping?
+              {t('shipping.questionsTitle')}
             </h3>
             <p className="text-neutral-700 dark:text-gray-300 mb-6">
-              For shipping-related questions, please contact us at:
+              {t('shipping.questionsDesc')}
             </p>
             <div className="flex items-center justify-center gap-2 mb-6">
               <Mail className="w-5 h-5 text-amber-600" />
@@ -392,7 +387,7 @@ export default function RazorbillsShipping() {
               </a>
             </div>
             <p className="text-neutral-700 dark:text-gray-300">
-              We're happy to assist.
+              {t('shipping.happyToAssist')}
             </p>
           </CardContent>
         </Card>

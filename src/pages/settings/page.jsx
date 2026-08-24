@@ -657,6 +657,8 @@ const SettingsPage = () => {
 
 // Notification Item Component
 const NotificationItem = ({ id, checked, onChange, title, description }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-start justify-between p-3 rounded-lg border border-transparent hover:border-border hover:bg-muted/30 transition-all duration-300">
       <div className="space-y-0.5">
@@ -679,6 +681,7 @@ const NotificationItem = ({ id, checked, onChange, title, description }) => {
 
 // Theme Card Component
 const ThemeCard = ({ value, currentTheme, icon, label, onClick }) => {
+  const { t } = useTranslation();
   const isSelected = currentTheme === value;
 
   return (

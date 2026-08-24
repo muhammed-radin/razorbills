@@ -9,43 +9,46 @@ import {
   Mail,
   CheckCircle2,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Returns() {
+  const { t } = useTranslation();
+
   const returnEligibility = [
-    "The product received is damaged, defective, or incorrect",
-    "The issue is reported within 48 hours of delivery",
-    "The product is unused, unsoldered, and in original condition",
-    "Original packaging, labels, and accessories are intact",
+    t("return.eligibility1"),
+    t("return.eligibility2"),
+    t("return.eligibility3"),
+    t("return.eligibility4"),
   ];
 
   const nonReturnableItems = [
-    "Used or soldered electronic components",
-    "Items damaged due to improper handling or installation",
-    "Clearance or discounted products (if mentioned at purchase)",
-    "Products returned without prior approval",
+    t("return.nonReturnable1"),
+    t("return.nonReturnable2"),
+    t("return.nonReturnable3"),
+    t("return.nonReturnable4"),
   ];
 
   const returnSteps = [
     {
       number: "1",
-      text: "Contact us at support@razorbills.com",
+      text: t("return.step1"),
     },
     {
       number: "2",
-      text: "Share your order ID, product details, and clear images or videos of the issue",
+      text: t("return.step2"),
     },
     {
       number: "3",
-      text: "Our team will review the request and respond within 2 business days",
+      text: t("return.step3"),
     },
   ];
 
   const importantNotes = [
-    "Do not send products back without confirmation",
-    "We reserve the right to reject returns that do not meet the eligibility criteria",
-    "Refund timelines may vary based on banks or payment providers",
+    t("return.importantNote1"),
+    t("return.importantNote2"),
+    t("return.importantNote3"),
   ];
 
   return (
@@ -57,12 +60,10 @@ export default function Returns() {
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 dark:text-white">
-              Returns & Refund Policy
+              {t("return.title")}
             </h1>
             <p className="text-xl max-w-3xl mx-auto leading-relaxed dark:text-gray-300">
-              We aim to provide high-quality electronic components and a
-              transparent buying experience. Please read the return and refund
-              policy carefully before placing an order.
+              {t("return.subtitle")}
             </p>
           </div>
         </div>
@@ -77,11 +78,11 @@ export default function Returns() {
                 <CheckCircle2 className="w-6 h-6 text-amber-600" />
               </div>
               <h2 className="text-3xl font-bold text-black dark:text-white">
-                Return Eligibility
+                {t("return.eligibilityTitle")}
               </h2>
             </div>
             <p className="text-neutral-700 dark:text-gray-300 mb-4">
-              Returns are accepted only under the following conditions:
+              {t("return.eligibilityDesc")}
             </p>
             <ul className="space-y-3">
               {returnEligibility.map((item, idx) => (
@@ -101,9 +102,7 @@ export default function Returns() {
                   <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
                   <p className="text-sm text-neutral-700 dark:text-gray-300">
                     <strong>
-                      Products that have been used, installed, soldered,
-                      altered, or physically damaged after delivery are not
-                      eligible for return.
+                      {t("return.eligibilityWarning")}
                     </strong>
                   </p>
                 </div>
@@ -120,11 +119,11 @@ export default function Returns() {
                 <X className="w-6 h-6 text-red-600" />
               </div>
               <h2 className="text-3xl font-bold text-black dark:text-white">
-                Non-Returnable Items
+                {t("return.nonReturnableTitle")}
               </h2>
             </div>
             <p className="text-neutral-700 dark:text-gray-300 mb-4">
-              The following items are not eligible for return or refund:
+              {t("return.nonReturnableDesc")}
             </p>
             <ul className="space-y-3">
               {nonReturnableItems.map((item, idx) => (
@@ -147,7 +146,7 @@ export default function Returns() {
                 <FileText className="w-6 h-6 text-amber-600" />
               </div>
               <h2 className="text-3xl font-bold text-black dark:text-white">
-                How to Request a Return
+                {t("return.howToRequest")}
               </h2>
             </div>
             <p className="text-neutral-700 dark:text-gray-300 mb-6">
@@ -168,7 +167,7 @@ export default function Returns() {
             <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-500/30">
               <CardContent className="p-4">
                 <p className="text-sm font-semibold text-neutral-800 dark:text-gray-200">
-                  Returns must be approved before shipping the product back.
+                  {t("return.approvalNote")}
                 </p>
               </CardContent>
             </Card>
@@ -184,7 +183,7 @@ export default function Returns() {
                   <DollarSign className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Refunds
+                  {t("return.refundsTitle")}
                 </h2>
               </div>
               <ul className="space-y-3 mb-4">
@@ -193,8 +192,7 @@ export default function Returns() {
                     <span className="text-amber-600 text-xs font-bold">✓</span>
                   </div>
                   <span className="text-neutral-700 dark:text-gray-300">
-                    Once the returned product is received and inspected, we will
-                    notify you of the approval or rejection
+                    {t("return.refundPoint1")}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -202,8 +200,7 @@ export default function Returns() {
                     <span className="text-amber-600 text-xs font-bold">✓</span>
                   </div>
                   <span className="text-neutral-700 dark:text-gray-300">
-                    If approved, refunds will be processed within 5–7 business
-                    days
+                    {t("return.refundPoint2")}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -211,13 +208,12 @@ export default function Returns() {
                     <span className="text-amber-600 text-xs font-bold">✓</span>
                   </div>
                   <span className="text-neutral-700 dark:text-gray-300">
-                    Refunds will be credited to the original payment method
+                    {t("return.refundPoint3")}
                   </span>
                 </li>
               </ul>
               <p className="text-sm text-neutral-600 dark:text-gray-400 italic">
-                Shipping charges (if any) are non-refundable, unless the return
-                is due to our error.
+                {t("return.refundShippingNote")}
               </p>
             </CardContent>
           </Card>
@@ -230,13 +226,11 @@ export default function Returns() {
                   <Package className="w-6 h-6 text-amber-600" />
                 </div>
                 <h2 className="text-2xl font-bold text-black dark:text-white">
-                  Replacement Option
+                  {t("return.replacementTitle")}
                 </h2>
               </div>
               <p className="text-neutral-700 dark:text-gray-300">
-                In cases of damaged or defective products, we may offer a
-                replacement instead of a refund, based on availability and
-                customer preference.
+                {t("return.replacementDesc")}
               </p>
             </CardContent>
           </Card>
@@ -250,7 +244,7 @@ export default function Returns() {
                 <Truck className="w-6 h-6 text-amber-600" />
               </div>
               <h2 className="text-2xl font-bold text-black dark:text-white">
-                Return Shipping
+                {t("return.returnShippingTitle")}
               </h2>
             </div>
             <ul className="space-y-3">
@@ -259,8 +253,7 @@ export default function Returns() {
                   <span className="text-amber-600 text-xs font-bold">✓</span>
                 </div>
                 <span className="text-neutral-700 dark:text-gray-300">
-                  If the return is due to a wrong or defective product, return
-                  shipping will be arranged or reimbursed by us
+                  {t("return.returnShippingPoint1")}
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -268,8 +261,7 @@ export default function Returns() {
                   <span className="text-amber-600 text-xs font-bold">✓</span>
                 </div>
                 <span className="text-neutral-700 dark:text-gray-300">
-                  For other approved returns, the customer may be responsible
-                  for return shipping costs
+                  {t("return.returnShippingPoint2")}
                 </span>
               </li>
             </ul>
@@ -283,7 +275,7 @@ export default function Returns() {
               <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
               <div>
                 <h3 className="text-xl font-bold mb-4 text-black dark:text-white">
-                  Important Notes
+                  {t("return.importantNotesTitle")}
                 </h3>
                 <ul className="space-y-3">
                   {importantNotes.map((note, idx) => (
@@ -304,10 +296,10 @@ export default function Returns() {
         <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-500/30">
           <CardContent className="p-8 text-center">
             <h3 className="text-2xl font-bold mb-4 text-black dark:text-white">
-              Need Help?
+              {t("return.needHelp")}
             </h3>
             <p className="text-neutral-700 dark:text-gray-300 mb-6">
-              For questions related to returns or refunds, contact:
+              {t("return.needHelpDesc")}
             </p>
             <div className="flex items-center justify-center gap-2 mb-6">
               <Mail className="w-5 h-5 text-amber-600" />
@@ -319,7 +311,7 @@ export default function Returns() {
               </a>
             </div>
             <p className="text-neutral-700 dark:text-gray-300">
-              We're here to help.
+              {t("shipping.happyToAssist")}
             </p>
           </CardContent>
         </Card>

@@ -94,7 +94,7 @@ export default function TermsAndConditions() {
 
         {/* Terms Sections */}
         <div className="space-y-8">
-          {sections.map((section, index) => {
+          {sections.map((section) => {
             const Icon = section.icon;
             return (
               <div 
