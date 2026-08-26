@@ -3,6 +3,16 @@ import { decrypt } from "@/utils/crypt";
 import React, { useMemo } from "react";
 
 const AvatarIcon = ({ name, decrypted = true, img, size = 40 }) => {
+  console.log(
+    "AvatarIcon Rendered with name:",
+    name,
+    "decrypted:",
+    decrypted,
+    "img:",
+    img,
+    "size:",
+    size,
+  );
   const decryptedName = useMemo(() => {
     if (!decrypted) return name;
     try {
@@ -16,7 +26,7 @@ const AvatarIcon = ({ name, decrypted = true, img, size = 40 }) => {
   const initials = useMemo(() => {
     return decryptedName
       .split(" ")
-      .map((part) => part[0].toUpperCase())
+      .map((part) => part[0]?.toUpperCase())
       .join("")
       .slice(0, 2);
   }, [decryptedName]);

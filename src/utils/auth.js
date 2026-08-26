@@ -82,6 +82,7 @@ function clickToGProvider() {
         // This gives you a Google Access Token. You can use it to access the Google API.
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const token = credential.accessToken;
+
         // The signed-in user info.
         const user = result.user;
         // IdP data available using getAdditionalUserInfo(result)
@@ -89,7 +90,7 @@ function clickToGProvider() {
         if (user) {
           if (user.emailVerified) {
             // User is verified, resolve the promise with user and token
-            resolve({ user, token });
+            resolve({ user, credential });
           } else {
             // 1. Alert the user they must verify their email
             alert("Please verify your email address before logging in.");

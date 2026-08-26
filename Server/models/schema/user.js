@@ -1,16 +1,14 @@
 import mongoose, { Schema } from "mongoose";
 import { Product } from "../product.js";
 
+const generateId = () =>
+  CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+
 export const UserSchema = new Schema(
   {
-    _id: {
-      type: mongoose.Schema.Types.ObjectId,
-      auto: true,
-    },
-
+    id: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     emailVerified: { type: Boolean, default: false },
-    password: { type: String, required: true },
     name: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
@@ -26,9 +24,11 @@ export const UserSchema = new Schema(
 
     adminPermissions: { type: [String], default: [] },
     role: { type: String, default: "user", enum: ["user", "admin", "owner"] },
-    profilePicture: { type: String, default: null },
+    image: { type: String, default: null },
+    banned: { type: Boolean, default: false },
+    banExpires: { type: Date, default: null },
+    banReason: { type: String, default: null },
 
-    // orderInfo { orders: 100, lastOrderDate: Date, lastOrderId: String }
     orderInfo: {
       orders: { type: Number, default: 0 },
       lastOrderDate: { type: Date, default: null },
@@ -41,6 +41,7 @@ export const UserSchema = new Schema(
     timestamps: true,
     strict: true, // Allow additional fields not defined in the schema
     collection: "users", // Specify the collection name
+    id: true, // Add a virtual 'id' getter that returns the string representation of '_id'
   },
 );
 

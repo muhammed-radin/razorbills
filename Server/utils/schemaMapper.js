@@ -1,62 +1,116 @@
 // server/utils/schemaMapper.js
 import { UserSchema } from "../models/schema/user.js";
 
-export function generateBetterAuthFields() {
+const NATIVE_FIELDS = new Set([
+  "_id",
+  "id",
+  "__v",
+  "name",
+  "email",
+  "emailVerified",
+  "image",
+  "profilePicture",
+  "role",
+  "createdAt",
+  "updatedAt",
+  "banned",
+  "banExpires",
+  "banReason",
+]);
+
+const SECRET_FIELDS = new Set([
+  "password",
+  "resetToken",
+  "verifyToken",
+  "providerId",
+]);
+
+const SERVER_OWNED_FIELDS = new Set([
+  "isActive",
+  "adminPermissions",
+  "totalSpent",
+  "AOV",
+]);
+
+function mapMongooseType(schemaType) {
+  if (!schemaType) return null;
+
+  if (schemaType.instance === "Array") {
+    const caster = schemaType.caster?.instance;
+    if (caster === "String") return "string[]";
+    if (caster === "Number") return "number[]";
+    if (caster === "Boolean") return "boolean[]";
+    if (caster === "Date") return "date[]";
+    if (caster === "ObjectId") return "string[]";
+    return "json";
+  }
+
+  if (schemaType.instance === "String") return "string";
+  if (schemaType.instance === "Number") return "number";
+  if (schemaType.instance === "Boolean") return "boolean";
+  if (schemaType.instance === "Date") return "date";
+  if (schemaType.instance === "ObjectId") return "string";
+  if (schemaType.instance === "Decimal128") return "number";
+  if (schemaType.instance === "Mixed") return "json";
+
+  if (schemaType.schema) return "json";
+
+  return null;
+}
+
+function readLiteralDefault(schemaType) {
+  const defaultValue = schemaType?.defaultValue || schemaType?.default;
+
+  if (defaultValue === undefined) return undefined;
+  if (typeof defaultValue === "function") return undefined;
+
+  return defaultValue;
+}
+
+function setDeep(target, path, value) {
+  const parts = path.split(".");
+  let cursor = target;
+
+  for (let index = 0; index < parts.length - 1; index += 1) {
+    const part = parts[index];
+    cursor[part] ??= {};
+    cursor = cursor[part];
+  }
+
+  cursor[parts[parts.length - 1]] = value;
+}
+
+export function generateBetterAuthFields(schema = UserSchema) {
   const additionalFields = {};
 
-  // Core identity keys completely managed by Better Auth's internal router
-  const nativeFields = [
-    "_id",
-    "id",
-    "name",
-    "email",
-    "emailVerified",
-    "image",
-    "profilePicture",
-    "role",
-    "createdAt",
-    "updatedAt",
-    "__v",
-  ];
+  schema.eachPath((path, schemaType) => {
+    if (NATIVE_FIELDS.has(path)) return;
+    if (SECRET_FIELDS.has(path)) return;
+    if (path.startsWith("_")) return;
 
-  // Fields that standard users must NEVER overwrite via client payloads
-  const serverOwnedFields = [
-    "isActive",
-    "adminPermissions",
-    "totalSpent",
-    "AOV",
-  ];
+    const type = mapMongooseType(schemaType);
+    if (!type) return;
 
-  Object.keys(UserSchema.paths).forEach((fieldName) => {
-    // Skip native framework fields
-    if (nativeFields.includes(fieldName)) return;
-
-    const mongooseField = UserSchema.paths[fieldName];
-    let fieldType = null;
-
-    // 🎯 1. Map String Arrays natively supported by Better Auth
-    if (
-      mongooseField.instance === "Array" &&
-      mongooseField.caster?.instance === "String"
-    ) {
-      fieldType = "string[]";
-    }
-    // 🎯 2. Map standard primitive types
-    else if (mongooseField.instance === "String") fieldType = "string";
-    else if (mongooseField.instance === "Number") fieldType = "number";
-    else if (mongooseField.instance === "Boolean") fieldType = "boolean";
-    else if (mongooseField.instance === "Date") fieldType = "date";
-
-    // 🛡️ 3. SAFE SKIP RULE: If it's a nested object (SingleNested/Mixed), skip it!
-    // Better Auth won't track it, and Mongoose handles it purely via custom routes.
-    if (!fieldType) return;
-
-    // 🔒 4. Build configuration block dynamically
-    additionalFields[fieldName] = {
-      type: fieldType,
-      returned: true, // Passes field state down to useSession() on React client
-      input: !serverOwnedFields.includes(fieldName), // 👈 Automatically enforces security boundaries
+    const fieldConfig = {
+      type,
+      returned: true,
+      input: !SERVER_OWNED_FIELDS.has(path),
     };
+
+    const defaultValue = readLiteralDefault(schemaType);
+    if (defaultValue !== undefined) {
+      fieldConfig.defaultValue = defaultValue;
+    }
+
+    if (schemaType.options?.required === true) {
+      fieldConfig.required = true;
+    }
+
+    if (schemaType.options?.enum) {
+      fieldConfig.enum = [...schemaType.options.enum];
+    }
+
+    setDeep(additionalFields, path, fieldConfig);
   });
 
   return additionalFields;

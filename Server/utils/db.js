@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 const max_tries = 5;
 let tries = 0;
 
-export function connectToDatabase() {
+function connectToDatabase() {
   return new Promise((resolve, reject) => {
     mongoose
       .connect(process.env.MONGODB_URI)
@@ -28,6 +28,25 @@ export function connectToDatabase() {
   });
 }
 
+async function dropDatabase() {
+  try {
+    // Accesses the underlying MongoDB driver directly
+    await mongoose.connection.db.dropDatabase();
+    console.log("Database entirely deleted.");
+  } catch (error) {
+    console.error("Failed to drop database:", error);
+  }
+}
+
+async function dropCollectionByName(name) {
+  try {
+    await mongoose.connection.db.dropCollection(name);
+    console.log(`Collection "${name}" dropped.`);
+  } catch (error) {
+    console.error(`Failed to drop collection:`, error);
+  }
+}
+
 // export db
-export const db = mongoose.connection;
-export default { db, connectToDatabase };
+const db = mongoose.connection;
+export { db, connectToDatabase, dropDatabase, dropCollectionByName };

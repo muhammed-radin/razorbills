@@ -11,7 +11,6 @@ import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
 import { db, connectToDatabase } from "./utils/db.js";
 import { validateApiKeys } from "./utils/key.js";
-import { auth } from "./utils/auth.js";
 
 // 1. Define global relaxed limiter for standard data routes
 const globalApiLimiter = rateLimit({
@@ -41,17 +40,20 @@ app.use(
     credentials: true,
   }),
 );
-app.use("/api/auth/*", authLimiter);
-app.all("/api/auth/*", toNodeHandler(auth));
 
-app.use(globalApiLimiter);
+connectToDatabase().then(async () => {
+  const { auth } = await import("./utils/auth.js");
 
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+  app.use("/api/auth/*", authLimiter);
+  app.all("/api/auth/*", toNodeHandler(auth));
 
-connectToDatabase().then(() => {
+  app.use(globalApiLimiter);
+
+  app.use(logger("dev"));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: false }));
+  app.use(cookieParser());
+
   console.log("Database connection established. Starting Server...");
   if (
     process.argv[1] &&

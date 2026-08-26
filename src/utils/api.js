@@ -1,5 +1,6 @@
 import axios from "axios";
-import { decrypt, decryptStrict } from "./crypt";
+import { decrypt, decryptObj, decryptStrict } from "./crypt";
+import { authClient, useSession } from "@/lib/auth-client";
 
 const apiBase = import.meta.env.VITE_API_ENDPOINT;
 const ACTION_HEADER = {
@@ -46,14 +47,17 @@ const api = {
   auth() {
     return api.base("/api/auth");
   },
-  getUser() {
-    let userData = localStorage.getItem("user_data");
-
-    if (userData) {
-      let data = JSON.parse(decrypt(userData));
-      return data;
+  async getUser(decryptData = true) {
+    const { data: session } = await authClient.getSession();
+    if (!session || !session.user) {
+      return null;
     }
-    return null;
+    const userData = session.user;
+    if (decryptData) {
+      userData = decryptObj(userData, false, ["emailVerified"]);
+    }
+    userData.session = session;
+    return userData;
   },
   actions: {
     logOut() {

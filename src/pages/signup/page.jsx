@@ -19,6 +19,8 @@ import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { authClient, signUp } from "@/lib/auth-client";
+import { generateHashLink } from "@/utils/route-util";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -59,41 +61,94 @@ const SignUpPage = () => {
   };
 
   const SumbitForm = (data) => {
-    toast.promise(
-      () =>
-        new Promise((resolveui, rejectui) => {
-          api.client
-            .post("/api/auth/signup", data)
-            .then((response) => {
-              resolveui("Sign-up Successful");
-              navigate(
-                "/login?email=" +
-                  encodeURIComponent(data.email) +
-                  "&pw=" +
-                  encodeURIComponent(data.password) +
-                  "&signup=true",
-              );
-            })
-            .catch((error) => {
-              rejectui(error);
-              console.error("There was an error!", error);
-            });
-        }),
-      {
-        loading: "Signing up...",
-        success: (msg) => `${msg}`,
-        error: (err) =>
-          `Sign-up failed: ${err.response.data.message || err.message || "Unknown error"}`,
-      },
-    );
+    // toast.promise(
+    //   () =>
+    //     new Promise((resolveui, rejectui) => {
+    //       api.client
+    //         .post("/api/auth/signup", data)
+    //         .then((response) => {
+    //           resolveui("Sign-up Successful");
+    //           navigate(
+    //             "/login?email=" +
+    //               encodeURIComponent(data.email) +
+    //               "&pw=" +
+    //               encodeURIComponent(data.password) +
+    //               "&signup=true",
+    //           );
+    //         })
+    //         .catch((error) => {
+    //           rejectui(error);
+    //           console.error("There was an error!", error);
+    //         });
+    //     }),
+    //   {
+    //     loading: "Signing up...",
+    //     success: (msg) => `${msg}`,
+    //     error: (err) =>
+    //       `Sign-up failed: ${err.response.data.message || err.message || "Unknown error"}`,
+    //   },
+    // );
+
+    authClient.signUp
+      .email(
+        {
+          email: data.email,
+          password: data.password,
+          name: data.name,
+          provider: "local",
+        },
+        {
+          onSuccess: (response) => {
+            console.log(response);
+            toast.success("Sign-up Successful");
+            // navigate(
+            //   "/login?email=" +
+            //     encodeURIComponent(data.email) +
+            //     "&pw=" +
+            //     encodeURIComponent(data.password) +
+            //     "&signup=true",
+            // );
+          },
+          onError: (error) => {
+            console.error("There was an error!", error);
+            toast.error(
+              `Sign-up failed: ${error.response.data.message || error.message || "Unknown error"}`,
+            );
+          },
+        },
+      )
+      .then((response) => {
+        console.log(response);
+        toast.success("Sign-up Successful");
+        // navigate(
+        //   "/login?email=" +
+        //     encodeURIComponent(data.email) +
+        //     "&pw=" +
+        //     encodeURIComponent(data.password) +
+        //     "&signup=true",
+        // );
+      })
+      .catch((error) => {
+        console.error("There was an error!", error);
+        toast.error(
+          `Sign-up failed: ${error.response.data.message || error.message || "Unknown error"}`,
+        );
+      });
   };
 
   const onUserGoogleSignUp = () => {
     clickToGProvider()
-      .then(({ user, token }) => {
+      .then(({ user, credential }) => {
         // extract uid, displayName, photoURL, email,  from user
-        const { uid, displayName, photoURL, email } = user;
-        let password = uid;
+        const {
+          uid,
+          displayName,
+          photoURL,
+          email,
+          accessToken,
+          emailVerified,
+          idToken,
+        } = user;
         // You can now use the user info and token as needed
         // uid encrypted for getting uniqe user id
         let encryptedData = {
@@ -102,10 +157,21 @@ const SignUpPage = () => {
           avatar: encrypt(photoURL),
           email: email,
           provider: "google",
-          password: encryptStrict(password), // Using uid as password for Google signups
+          emailVerified,
         };
 
-        SumbitForm(encryptedData);
+        authClient.signIn.social({
+          provider: "google",
+          idToken: {
+            token: credential.idToken,
+            accessToken: credential.accessToken,
+          },
+          callbackURL: generateHashLink("/"),
+          disableRedirect: false,
+          additionalData: encryptedData,
+        });
+
+        // SumbitForm(encryptedData);
       })
       .catch(({ errorCode, errorMessage, email, credential }) => {
         console.error(errorCode, errorMessage, email, credential);
@@ -116,10 +182,12 @@ const SignUpPage = () => {
   };
 
   useEffect(() => {
-    if (api.getUser()) {
-      navigate("/");
-      return;
-    }
+    (async function () {
+      if (await api.getUser()) {
+        navigate("/home");
+        return;
+      }
+    });
   }, []);
 
   return (
