@@ -33,6 +33,13 @@ const ContactUs = lazy(() => import("@/pages/contactus/page"));
 const ShippingInfo = lazy(() => import("@/pages/shippingInfo/page"));
 const Return = lazy(() => import("@/pages/return/page"));
 const CategoriesPage = lazy(() => import("@/pages/categories/categories.page"));
+const ForgotPasswordPage = lazy(
+  () => import("@/pages/forgot-password/page"),
+);
+const PaymentSuccessPage = lazy(
+  () => import("@/pages/payment-success/page"),
+);
+const OrderStatusPage = lazy(() => import("@/pages/order-status/page"));
 
 // Admin Pages
 const AdminDashboardPage = lazy(() => import("@/pages/Admin/dashboard/page"));
@@ -45,6 +52,7 @@ const EditProductPage = lazy(
 );
 const OrdersPage = lazy(() => import("@/pages/Admin/orders"));
 const CustomersPage = lazy(() => import("@/pages/Admin/customers"));
+const AdminSettingsPage = lazy(() => import("@/pages/Admin/settings/page"));
 
 // --- ROUTE CONFIGURATION MAPS ---
 
@@ -55,6 +63,11 @@ const clientRoutes = [
   { path: "cart", element: <CartPage /> },
   { path: "login", element: <LoginPage /> },
   { path: "signup", element: <SignUpPage /> },
+  { path: "forgot-password", element: <ForgotPasswordPage /> },
+  { path: "payment-success", element: <PaymentSuccessPage /> },
+  { path: "payment/success", element: <PaymentSuccessPage /> },
+  { path: "order-status", element: <OrderStatusPage /> },
+  { path: "order/status", element: <OrderStatusPage /> },
   { path: "privacy", element: <PrivacyPolicyPage /> },
   { path: "404", element: <NotFoundPage /> },
   { path: "*", element: <NotFoundPage /> },
@@ -79,6 +92,7 @@ const adminSubRoutes = [
   { path: "products/:id/edit", element: <EditProductPage /> },
   { path: "orders", element: <OrdersPage /> },
   { path: "customers", element: <CustomersPage /> },
+  { path: "settings", element: <AdminSettingsPage /> },
 ];
 
 // --- MAIN ROUTER COMPONENT ---

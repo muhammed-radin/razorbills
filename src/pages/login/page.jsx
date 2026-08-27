@@ -197,7 +197,7 @@ const LoginPage = () => {
 
         <div className="mt-5 space-y-5">
           <Link
-            to="#"
+            to="/forgot-password"
             className="text-sm block underline text-muted-foreground text-center"
           >
             {t("auth.forgotPassword")}

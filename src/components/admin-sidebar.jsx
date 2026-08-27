@@ -67,6 +67,11 @@ const navItems = {
 
 const navItemsArray = [
   ...Object.values(navItems).flatMap((group) => group.items),
+  {
+    title: "Settings",
+    url: "/auth/admin/settings",
+    icon: Settings,
+  },
 ];
 
 export function AdminSidebar({
@@ -151,7 +156,7 @@ export function AdminSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <Link to="/admin/settings">
+              <Link to="/auth/admin/settings">
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
               </Link>
