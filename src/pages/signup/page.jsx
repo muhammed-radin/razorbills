@@ -15,12 +15,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { api } from "@/utils/api";
-import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import { toast } from "sonner";
 import { useEffect } from "react";
-import { authClient, signUp } from "@/lib/auth-client";
-import { generateHashLink } from "@/utils/route-util";
+import { authClient } from "@/lib/auth-client";
+import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -57,137 +56,64 @@ const SignUpPage = () => {
       name: encrypt(name),
     };
 
-    SumbitForm(encryptedData);
+    sumbitForm(encryptedData);
   };
 
-  const SumbitForm = (data) => {
-    // toast.promise(
-    //   () =>
-    //     new Promise((resolveui, rejectui) => {
-    //       api.client
-    //         .post("/api/auth/signup", data)
-    //         .then((response) => {
-    //           resolveui("Sign-up Successful");
-    //           navigate(
-    //             "/login?email=" +
-    //               encodeURIComponent(data.email) +
-    //               "&pw=" +
-    //               encodeURIComponent(data.password) +
-    //               "&signup=true",
-    //           );
-    //         })
-    //         .catch((error) => {
-    //           rejectui(error);
-    //           console.error("There was an error!", error);
-    //         });
-    //     }),
-    //   {
-    //     loading: "Signing up...",
-    //     success: (msg) => `${msg}`,
-    //     error: (err) =>
-    //       `Sign-up failed: ${err.response.data.message || err.message || "Unknown error"}`,
-    //   },
-    // );
-
-    authClient.signUp
-      .email(
-        {
-          email: data.email,
-          password: data.password,
-          name: data.name,
-          provider: "local",
-        },
-        {
-          onSuccess: (response) => {
-            console.log(response);
-            toast.success("Sign-up Successful");
-            // navigate(
-            //   "/login?email=" +
-            //     encodeURIComponent(data.email) +
-            //     "&pw=" +
-            //     encodeURIComponent(data.password) +
-            //     "&signup=true",
-            // );
-          },
-          onError: (error) => {
-            console.error("There was an error!", error);
-            toast.error(
-              `Sign-up failed: ${error.response.data.message || error.message || "Unknown error"}`,
-            );
-          },
-        },
-      )
-      .then((response) => {
-        console.log(response);
-        toast.success("Sign-up Successful");
-        // navigate(
-        //   "/login?email=" +
-        //     encodeURIComponent(data.email) +
-        //     "&pw=" +
-        //     encodeURIComponent(data.password) +
-        //     "&signup=true",
-        // );
-      })
-      .catch((error) => {
-        console.error("There was an error!", error);
-        toast.error(
-          `Sign-up failed: ${error.response.data.message || error.message || "Unknown error"}`,
-        );
-      });
-  };
-
-  const onUserGoogleSignUp = () => {
-    clickToGProvider()
-      .then(({ user, credential }) => {
-        // extract uid, displayName, photoURL, email,  from user
-        const {
-          uid,
-          displayName,
-          photoURL,
-          email,
-          accessToken,
-          emailVerified,
-          idToken,
-        } = user;
-        // You can now use the user info and token as needed
-        // uid encrypted for getting uniqe user id
-        let encryptedData = {
-          id: encrypt(uid),
-          name: encrypt(displayName),
-          avatar: encrypt(photoURL),
-          email: email,
-          provider: "google",
-          emailVerified,
-        };
-
-        authClient.signIn.social({
-          provider: "google",
-          idToken: {
-            token: credential.idToken,
-            accessToken: credential.accessToken,
-          },
-          callbackURL: generateHashLink("/"),
-          disableRedirect: false,
-          additionalData: encryptedData,
-        });
-
-        // SumbitForm(encryptedData);
-      })
-      .catch(({ errorCode, errorMessage, email, credential }) => {
-        console.error(errorCode, errorMessage, email, credential);
-        toast.error(
-          `Google Sign-Up failed: ${errorMessage || "Unknown error"}`,
-        );
-      });
+  const sumbitForm = (data) => {
+    toast.promise(
+      () =>
+        new Promise((resolveui, rejectui) => {
+          authClient.signUp.email(
+            {
+              email: data.email,
+              password: data.password,
+              name: data.name,
+              provider: "local",
+              image:
+                "https://api.dicebear.com/10.x/planets/svg?borderRadius=50&tags=animation&seed=" +
+                encodeURIComponent(data.name),
+            },
+            {
+              onSuccess: (payload) => {
+                const { response, data: response_data, user } = payload;
+                if (response.status == 200) {
+                  resolveui("Sign-up Successful");
+                  navigate(
+                    "/login?email=" +
+                      encodeURIComponent(data.email) +
+                      "&pw=" +
+                      encodeURIComponent(data.password) +
+                      "&signup=true",
+                  );
+                } else {
+                  rejectui("Sign-up Failed");
+                }
+              },
+              onError: (error) => {
+                rejectui(error);
+                toast.error(
+                  `Sign-up failed: ${error?.response?.data?.message || error?.message || "Unknown error"}`,
+                );
+              },
+            },
+          );
+        }),
+      {
+        loading: "Signing up...",
+        success: (msg) => `${msg}`,
+        error: (err) =>
+          `Sign-up failed: ${err?.response?.data?.message || err?.message || "Unknown error"}`,
+      },
+    );
   };
 
   useEffect(() => {
     (async function () {
       if (await api.getUser()) {
-        navigate("/home");
+        navigate("/");
         return;
       }
-    });
+    })();
   }, []);
 
   return (
@@ -198,7 +124,7 @@ const SignUpPage = () => {
           Sign up for RazorBills
         </p>
 
-        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignUp}>
+        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignIn}>
           <GoogleLogo />
           Continue with Google
         </Button>

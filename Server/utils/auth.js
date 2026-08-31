@@ -5,6 +5,9 @@ import mongoose from "mongoose";
 import { admin } from "better-auth/plugins";
 import { db } from "./db.js";
 import { UserModel } from "../models/schema/user.js";
+import axios from "axios";
+import { createAuthMiddleware } from "better-auth/api";
+import { decryptStrict } from "./crypt.js";
 
 export const auth = betterAuth({
   database: mongodbAdapter(
@@ -34,9 +37,29 @@ export const auth = betterAuth({
       },
     },
   },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      // 1. Target email sign-in and sign-up endpoints
+      if (ctx.path === "/sign-in/email" || ctx.path === "/sign-up/email") {
+        if (ctx.body && typeof ctx.body.password === "string") {
+          try {
+            console.log("password", ctx.body.password);
+            // 2. Decrypt client-encrypted password back to plain text
+            const plainPassword = decryptStrict(ctx.body.password);
+
+            // 3. Mutate request body before Better Auth validates or hashes
+            ctx.body.password = plainPassword;
+            console.log("Decrypted password for auth:", plainPassword);
+          } catch (error) {
+            throw new Error("Password decryption failed");
+          }
+        }
+      }
+    }),
+  },
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
+    requireEmailVerification: false,
     onExistingUserSignUp: async ({ user }, req) => {
       // Custom logic for handling existing users during sign-up
       console.log("Existing user attempted to sign up.");
@@ -57,17 +80,36 @@ export const auth = betterAuth({
       defaultRole: "user",
     }),
   ],
+  account: {
+    accountLinking: {
+      updateUserInfoOnLink: true, // Update user info when linking accounts
+    },
+  },
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      mapProfileToUser: (profile, context) => {
+      scope: ["openid", "email", "profile"],
+      prompt: "select_account consent",
+
+      mapProfileToUser: async (profile) => {
+        console.log("Google profile:", profile);
+        // Guarantee a non-empty name string to satisfy DB validation
+        const nameFallback =
+          profile.name ||
+          `${profile.given_name || ""} ${profile.family_name || ""}`.trim() ||
+          profile.email.split("@")[0];
+
+        const profilePicture =
+          profile.picture ||
+          "https://api.dicebear.com/10.x/planets/svg?borderRadius=50&tags=animation&seed=" +
+            encodeURIComponent(nameFallback);
+
         return {
-          ...profile,
           email: profile.email,
-          emailVerified: profile.emailVerified,
-          name: profile.name,
-          image: profile.picture, // Using Better Auth's standard native "image" property
+          emailVerified: profile.email_verified,
+          name: nameFallback,
+          image: profilePicture,
           role: "user",
         };
       },
@@ -75,6 +117,18 @@ export const auth = betterAuth({
   },
   user: {
     modelName: "users_validation", // Ensure this matches your Mongoose model name
+    additionalFields: {
+      profilePicture: {
+        type: String,
+        default: "",
+        required: false,
+        input: true,
+        returned: true,
+      },
+    },
+    fields: {
+      image: "profilePicture", // Map the "image" field to "profilePicture" in your Mongoose model
+    },
   },
 
   advanced: {

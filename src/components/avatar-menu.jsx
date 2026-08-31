@@ -27,10 +27,11 @@ import AvatarIcon from "./avatar-icon";
 import { decrypt } from "@/utils/crypt";
 import React, { useMemo, useCallback } from "react";
 
-const AvatarMenu = ({ name, img, user }) => {
+const AvatarMenu = ({ name, img, user, decrypted }) => {
   const decryptedUserName = useMemo(() => {
+    if (decrypted == false) return user.name;
     try {
-      return decrypt(user.name);
+      return decrypt(user.name) ? decrypt(user.name) : user.name; // fallback to original name if decryption fails
     } catch (e) {
       console.error("Failed to decrypt user name:", e);
       return user.name;
@@ -65,11 +66,11 @@ const AvatarMenu = ({ name, img, user }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-3">
-        <AvatarIcon name={name} img={img} />
+        <AvatarIcon name={name} img={img} decrypted={decrypted} />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="mt-2 w-72">
         <DropdownMenuItem className="py-3">
-          <AvatarIcon name={name} img={img} />
+          <AvatarIcon name={name} img={img} decrypted={decrypted} />
           <div className="ml-1 flex flex-col">
             <p className="text-sm font-medium">{decryptedUserName}</p>
             <p className="text-xs text-muted-foreground">{user.email}</p>

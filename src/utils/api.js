@@ -24,6 +24,8 @@ const api = {
     baseURL: apiBase,
     headers: ACTION_HEADER,
   }),
+  enableDecryption: true,
+  enableEncryption: true,
   base(path = "") {
     // THIS FUNCTION USED FOR RECOVER OLD VERSIONS OF API CALLS, NEW ONES SHOULD USE api.client DIRECTLY
     // TO Prevent any issues with the base URL, we can ensure it always ends with a slash
@@ -52,7 +54,7 @@ const api = {
     if (!session || !session.user) {
       return null;
     }
-    const userData = session.user;
+    let userData = session.user;
     if (decryptData) {
       userData = decryptObj(userData, false, ["emailVerified"]);
     }
@@ -61,21 +63,7 @@ const api = {
   },
   actions: {
     logOut() {
-      let user = api.getUser();
-      return new Promise((resolve, reject) => {
-        api.client
-          .post("/api/auth/logout", {
-            email: user ? user.email : null,
-          })
-          .then((response) => {
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("user_data");
-            resolve(response);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      });
+      return authClient.signOut();
     },
   },
 };
