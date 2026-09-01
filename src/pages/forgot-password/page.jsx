@@ -15,39 +15,51 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CheckCircle2, ArrowLeft, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
 const ForgotPasswordPage = () => {
   const { t } = useTranslation();
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submittedEmail, setSubmittedEmail] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const formSchema = z.object({
-    email: z.string().email(t("auth.validationEmail")),
-  });
+  const passwordSchema = z
+    .object({
+      newPassword: z
+        .string()
+        .min(1, t("auth.passwordRequired"))
+        .min(8, t("auth.validationPassword"))
+        .regex(/[A-Z]/, t("auth.validationPasswordUppercase"))
+        .regex(/[a-z]/, t("auth.validationPasswordLowercase"))
+        .regex(/[0-9]/, t("auth.validationPasswordNumber"))
+        .regex(/[@$!%*?&#]/, t("auth.validationPasswordSpecial")),
+      confirmPassword: z
+        .string()
+        .min(1, t("auth.confirmPasswordRequired")),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t("auth.passwordsDoNotMatch"),
+      path: ["confirmPassword"],
+    });
 
   const form = useForm({
     defaultValues: {
-      email: "",
+      newPassword: "",
+      confirmPassword: "",
     },
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(passwordSchema),
   });
 
-  const onSubmit = (data) => {
+  const onSubmit = () => {
     setIsLoading(true);
-    // Simulate frontend password reset flow
+    // Simulate frontend password reset
     setTimeout(() => {
       setIsLoading(false);
-      setSubmittedEmail(data.email);
-      setIsSubmitted(true);
-    }, 1000);
-  };
-
-  const handleReset = () => {
-    setIsSubmitted(false);
-    form.reset({ email: submittedEmail });
+      form.reset({ newPassword: "", confirmPassword: "" });
+      setIsSuccess(true);
+    }, 800);
   };
 
   return (
@@ -58,13 +70,15 @@ const ForgotPasswordPage = () => {
       <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />
         <h1 className="mt-4 text-xl font-semibold tracking-tight text-center">
-          {t("auth.forgotPasswordTitle")}
+          {isSuccess
+            ? t("auth.passwordResetSuccess")
+            : t("auth.resetPassword")}
         </h1>
 
-        {!isSubmitted ? (
+        {!isSuccess ? (
           <>
             <p className="mt-2 text-sm text-muted-foreground text-center">
-              {t("auth.forgotPasswordDesc")}
+              {t("auth.setNewPasswordDesc")}
             </p>
 
             <Form {...form}>
@@ -74,18 +88,76 @@ const ForgotPasswordPage = () => {
               >
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="newPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("auth.email")}</FormLabel>
+                      <FormLabel>{t("auth.newPassword")}</FormLabel>
                       <FormControl>
-                        <Input
-                          type="email"
-                          placeholder={t("auth.emailPlaceholder")}
-                          className="w-full"
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showNewPassword ? "text" : "password"}
+                            placeholder={t("auth.newPasswordPlaceholder")}
+                            className="w-full pr-10"
+                            disabled={isLoading}
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={
+                              showNewPassword
+                                ? t("auth.hidePassword")
+                                : t("auth.showPassword")
+                            }
+                          >
+                            {showNewPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t("auth.confirmPassword")}</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder={t("auth.confirmPasswordPlaceholder")}
+                            className="w-full pr-10"
+                            disabled={isLoading}
+                            {...field}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            aria-label={
+                              showConfirmPassword
+                                ? t("auth.hidePassword")
+                                : t("auth.showPassword")
+                            }
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -96,10 +168,10 @@ const ForgotPasswordPage = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t("auth.sendingResetLink")}
+                      {t("auth.resettingPassword")}
                     </>
                   ) : (
-                    t("auth.sendResetLink")
+                    t("auth.resetPassword")
                   )}
                 </Button>
               </form>
@@ -110,23 +182,12 @@ const ForgotPasswordPage = () => {
             <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
               <CheckCircle2 className="w-6 h-6" />
             </div>
-            <div className="space-y-1">
-              <h2 className="font-semibold text-lg">{t("auth.resetLinkSent")}</h2>
-              <p className="text-xs font-mono text-muted-foreground bg-muted p-1.5 rounded break-all flex items-center justify-center gap-1.5">
-                <Mail className="w-3.5 h-3.5" />
-                {submittedEmail}
-              </p>
-            </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {t("auth.resetLinkSentDesc")}
+              {t("auth.passwordResetSuccessDesc")}
             </p>
-            <Button
-              variant="outline"
-              onClick={handleReset}
-              className="w-full text-xs"
-            >
-              {t("auth.tryDifferentEmail")}
-            </Button>
+            <Link to="/login" className="w-full">
+              <Button className="w-full">{t("auth.backToLogin")}</Button>
+            </Link>
           </div>
         )}
 
