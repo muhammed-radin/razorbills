@@ -1,4 +1,3 @@
-import React from "react";
 import {
   CheckCircle,
   CreditCard,
@@ -80,12 +79,7 @@ const DEFAULT_ORDER = {
 
 const OrderSummary1 = ({
   order = DEFAULT_ORDER,
-  className,
-  onTrackOrder,
-  onDownloadReceipt,
-  onPrintOrder,
-  onContactSupport,
-  onContinueShopping,
+  className
 }) => {
   const formatPrice = (price) => {
     return new Intl.NumberFormat("en-US", {
@@ -113,20 +107,20 @@ const OrderSummary1 = ({
         className: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10",
       },
     };
-    return variants[status] || variants.confirmed;
+    return variants[status];
   };
 
   const statusBadge = getStatusBadge(order.status);
 
   return (
-    <section className={cn("py-12 md:py-16", className)}>
-      <div className="container max-w-4xl mx-auto px-4">
+    <section className={cn("py-16 md:py-24", className)}>
+      <div className="container max-w-4xl">
         {/* Success Header */}
         <div className="mb-10 text-center">
           <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-emerald-500/10">
             <CheckCircle className="size-8 text-emerald-600" />
           </div>
-          <h1 className="mb-2 text-2xl font-bold tracking-tight md:text-3xl text-foreground">
+          <h1 className="mb-2 text-2xl font-bold tracking-tight md:text-3xl">
             Thank you for your order!
           </h1>
           <p className="text-muted-foreground">
@@ -136,12 +130,12 @@ const OrderSummary1 = ({
         </div>
 
         {/* Order Info Bar */}
-        <Card className="mb-6 shadow-none border">
+        <Card className="mb-6 shadow-none">
           <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4 md:p-6">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <div>
                 <p className="text-sm text-muted-foreground">Order Number</p>
-                <p className="font-semibold text-foreground font-mono">{order.orderNumber}</p>
+                <p className="font-semibold">{order.orderNumber}</p>
               </div>
               <Separator
                 orientation="vertical"
@@ -149,7 +143,7 @@ const OrderSummary1 = ({
               />
               <div>
                 <p className="text-sm text-muted-foreground">Order Date</p>
-                <p className="font-medium text-foreground">{order.orderDate}</p>
+                <p className="font-medium">{order.orderDate}</p>
               </div>
             </div>
             <Badge className={statusBadge.className}>{statusBadge.label}</Badge>
@@ -160,10 +154,10 @@ const OrderSummary1 = ({
           {/* Left Column - Items & Totals */}
           <div className="space-y-6 lg:col-span-2">
             {/* Order Items */}
-            <Card className="shadow-none border">
+            <Card className="shadow-none">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <Package className="size-5 text-primary" />
+                  <Package className="size-5" />
                   Items Ordered
                 </CardTitle>
               </CardHeader>
@@ -174,7 +168,7 @@ const OrderSummary1 = ({
                       <div className="w-20 shrink-0">
                         <AspectRatio
                           ratio={1}
-                          className="overflow-hidden rounded-lg bg-muted border"
+                          className="overflow-hidden rounded-lg bg-muted"
                         >
                           <img
                             src={item.image}
@@ -184,12 +178,12 @@ const OrderSummary1 = ({
                         </AspectRatio>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-medium text-foreground">{item.name}</h3>
+                        <h3 className="font-medium">{item.name}</h3>
                         {item.details && (
                           <p className="mt-0.5 text-sm text-muted-foreground">
                             {item.details.map((d, i) => (
                               <span key={d.label}>
-                                {d.label}: {d.value}
+                                {d.value}
                                 {i < item.details.length - 1 && " · "}
                               </span>
                             ))}
@@ -200,7 +194,7 @@ const OrderSummary1 = ({
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-foreground">
+                        <p className="font-semibold">
                           {formatPrice(item.price * item.quantity)}
                         </p>
                         {item.quantity > 1 && (
@@ -219,16 +213,16 @@ const OrderSummary1 = ({
             </Card>
 
             {/* Order Totals */}
-            <Card className="shadow-none border">
+            <Card className="shadow-none">
               <CardContent className="p-6">
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground font-medium">{formatPrice(order.subtotal)}</span>
+                    <span>{formatPrice(order.subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span className="text-foreground font-medium">
+                    <span>
                       {order.shipping === 0
                         ? "Free"
                         : formatPrice(order.shipping)}
@@ -236,7 +230,7 @@ const OrderSummary1 = ({
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Tax</span>
-                    <span className="text-foreground font-medium">{formatPrice(order.tax)}</span>
+                    <span>{formatPrice(order.tax)}</span>
                   </div>
                   {order.discount && order.discount > 0 && (
                     <div className="flex justify-between text-sm text-emerald-600">
@@ -246,8 +240,8 @@ const OrderSummary1 = ({
                   )}
                   <Separator />
                   <div className="flex justify-between text-lg font-semibold">
-                    <span className="text-foreground">Total Paid</span>
-                    <span className="text-primary">{formatPrice(order.total)}</span>
+                    <span>Total Paid</span>
+                    <span>{formatPrice(order.total)}</span>
                   </div>
                 </div>
               </CardContent>
@@ -257,16 +251,16 @@ const OrderSummary1 = ({
           {/* Right Column - Shipping & Payment */}
           <div className="space-y-6">
             {/* Shipping Information */}
-            <Card className="shadow-none border">
+            <Card className="shadow-none">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <MapPin className="size-5 text-primary" />
+                  <MapPin className="size-5" />
                   Shipping Address
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="font-medium text-foreground">{order.shippingAddress.name}</p>
+                  <p className="font-medium">{order.shippingAddress.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {order.shippingAddress.street}
                   </p>
@@ -282,7 +276,7 @@ const OrderSummary1 = ({
                 <div className="flex items-start gap-3">
                   <Truck className="mt-0.5 size-4 text-muted-foreground" />
                   <div>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="text-sm font-medium">
                       {order.shippingMethod}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -294,21 +288,23 @@ const OrderSummary1 = ({
             </Card>
 
             {/* Payment Information */}
-            <Card className="shadow-none border">
+            <Card className="shadow-none">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                  <CreditCard className="size-5 text-primary" />
+                  <CreditCard className="size-5" />
                   Payment Method
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {order.paymentMethod.type === "card" && (
                   <div className="flex items-center gap-3">
-                    <div className="flex size-8 items-center justify-center rounded bg-primary/10 text-primary font-bold text-xs">
-                      {order.paymentMethod.cardBrand || "Card"}
-                    </div>
+                    <img
+                      src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/visa-icon.svg"
+                      alt="Visa"
+                      className="size-8"
+                    />
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-sm font-medium">
                         {order.paymentMethod.cardBrand} ending in{" "}
                         {order.paymentMethod.lastFour}
                       </p>
@@ -321,10 +317,14 @@ const OrderSummary1 = ({
                 {order.paymentMethod.type === "paypal" && (
                   <div className="flex items-center gap-3">
                     <div className="flex size-10 items-center justify-center rounded-md bg-muted">
-                      <CreditCard className="size-5" />
+                      <img
+                        src="https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/paypal-icon.svg"
+                        alt="PayPal"
+                        className="size-5"
+                      />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-foreground">PayPal</p>
+                      <p className="text-sm font-medium">PayPal</p>
                       <p className="text-sm text-muted-foreground">
                         {order.paymentMethod.email}
                       </p>
@@ -335,29 +335,17 @@ const OrderSummary1 = ({
             </Card>
 
             {/* Actions */}
-            <Card className="shadow-none border">
+            <Card className="shadow-none">
               <CardContent className="space-y-3 p-4">
-                <Button
-                  className="w-full"
-                  variant="default"
-                  onClick={onTrackOrder}
-                >
+                <Button className="w-full" variant="default">
                   <Package className="mr-2 size-4" />
                   Track Order
                 </Button>
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  onClick={onDownloadReceipt}
-                >
+                <Button className="w-full" variant="outline">
                   <Download className="mr-2 size-4" />
                   Download Receipt
                 </Button>
-                <Button
-                  className="w-full"
-                  variant="ghost"
-                  onClick={onPrintOrder}
-                >
+                <Button className="w-full" variant="ghost">
                   <Printer className="mr-2 size-4" />
                   Print Order
                 </Button>
@@ -372,16 +360,11 @@ const OrderSummary1 = ({
             Have a question about your order?
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Button
-              variant="outline"
-              onClick={onContactSupport}
-            >
-              Contact Support
+            <Button variant="outline" asChild>
+              <a href="#">Contact Support</a>
             </Button>
-            <Button
-              onClick={onContinueShopping}
-            >
-              Continue Shopping
+            <Button asChild>
+              <a href="#">Continue Shopping</a>
             </Button>
           </div>
         </div>
