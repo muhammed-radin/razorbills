@@ -36,7 +36,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   }),
 );
@@ -44,10 +44,10 @@ app.use(
 connectToDatabase().then(async () => {
   const { auth } = await import("./utils/auth.js");
 
-  // app.use("/api/auth/*", authLimiter);
+  app.use("/api/auth/*", authLimiter);
   app.all("/api/auth/*", toNodeHandler(auth));
 
-  // app.use(globalApiLimiter);
+  app.use(globalApiLimiter);
 
   app.use(logger("dev"));
   app.use(express.json());

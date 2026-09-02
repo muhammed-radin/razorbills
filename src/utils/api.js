@@ -2,7 +2,7 @@ import axios from "axios";
 import { decryptObj } from "./crypt";
 import { authClient } from "@/lib/auth-client";
 
-const apiBase = import.meta.env.VITE_API_ENDPOINT;
+const apiBase = "/";
 const ACTION_HEADER = {
   "server-api-key": import.meta.env.VITE_SERVER_API_KEY,
   "actions-api-key": import.meta.env.VITE_ACTION_ACESS_TOKEN,

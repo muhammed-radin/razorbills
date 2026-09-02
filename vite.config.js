@@ -11,18 +11,19 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  /* server: {
+  server: {
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
     },
     proxy: {
       // Shorthand for your API endpoints
       "/api": {
-        target: "http://localhost:3000",
+        target: import.meta.env.VITE_API_ENDPOINT,
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
-  }, */
+  },
   base: "./",
 });
