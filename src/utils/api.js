@@ -1,5 +1,6 @@
 import axios from "axios";
-import { decrypt, decryptStrict } from "./crypt";
+import { decryptObj } from "./crypt";
+import { authClient } from "@/lib/auth-client";
 
 const apiBase = import.meta.env.VITE_API_ENDPOINT;
 const ACTION_HEADER = {
@@ -23,6 +24,8 @@ const api = {
     baseURL: apiBase,
     headers: ACTION_HEADER,
   }),
+  enableDecryption: true,
+  enableEncryption: true,
   base(path = "") {
     // THIS FUNCTION USED FOR RECOVER OLD VERSIONS OF API CALLS, NEW ONES SHOULD USE api.client DIRECTLY
     // TO Prevent any issues with the base URL, we can ensure it always ends with a slash
@@ -46,32 +49,21 @@ const api = {
   auth() {
     return api.base("/api/auth");
   },
-  getUser() {
-    let userData = localStorage.getItem("user_data");
-
-    if (userData) {
-      let data = JSON.parse(decrypt(userData));
-      return data;
+  async getUser(decryptData = true) {
+    const { data: session } = await authClient.getSession();
+    if (!session || !session.user) {
+      return null;
     }
-    return null;
+    let userData = session.user;
+    if (decryptData) {
+      userData = decryptObj(userData, false, ["emailVerified"]);
+    }
+    userData.session = session;
+    return userData;
   },
   actions: {
     logOut() {
-      let user = api.getUser();
-      return new Promise((resolve, reject) => {
-        api.client
-          .post("/api/auth/logout", {
-            email: user ? user.email : null,
-          })
-          .then((response) => {
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("user_data");
-            resolve(response);
-          })
-          .catch((error) => {
-            reject(error);
-          });
-      });
+      return authClient.signOut();
     },
   },
 };

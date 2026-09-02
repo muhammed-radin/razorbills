@@ -1,4 +1,4 @@
-class FeedMold {
+export class FeedMold {
   constructor() {}
 
   featured = []; // ProductSchema minimal here
@@ -25,7 +25,7 @@ class FeedMold {
   grid_categories = [{}];
 }
 
-class ShowCaseTab {
+export class ShowCaseTab {
   constructor(
     tag = "",
     title = "",
@@ -43,4 +43,4 @@ class ShowCaseTab {
   }
 }
 
-module.exports = { FeedMold, ShowCaseTab };
+export default { FeedMold, ShowCaseTab };

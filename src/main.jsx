@@ -7,14 +7,17 @@ import Router from "./router/Router.jsx";
 import { ThemeProvider } from "./utils/theme-provider.jsx";
 import { Toaster } from "sonner";
 import { HelmetProvider } from "react-helmet-async";
+import { DialogAlertProvider } from "./components/dialog-alert-provider";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <HelmetProvider>
       <BrowserRouter>
         <ThemeProvider>
-          <Toaster richColors position="top-right" theme="dark" />
-          <Router />
+          <DialogAlertProvider>
+            <Toaster richColors position="top-right" theme="dark" />
+            <Router />
+          </DialogAlertProvider>
         </ThemeProvider>
       </BrowserRouter>
     </HelmetProvider>

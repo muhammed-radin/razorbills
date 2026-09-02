@@ -5,15 +5,18 @@ import { NavigationSheet } from "./navigation-sheet";
 import { SunIcon, MoonIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/utils/theme-provider";
-import { api } from "@/utils/api";
 import AvatarMenu from "../avatar-menu";
 import LanguageSwitcher from "../language-switcher";
 import { useTranslation } from "react-i18next";
+import { useSession } from "@/lib/auth-client";
+import { Skeleton } from "../ui/skeleton";
 
 const NavbarBlock = () => {
   const { setTheme, theme } = useTheme();
   const { t } = useTranslation();
-  const user = api.getUser();
+  
+  const { data, isPending, error } = useSession();
+  const user = data?.user;
 
   return (
     <nav className="h-16 bg-background border-b sticky top-0 z-50 w-full">
@@ -40,8 +43,16 @@ const NavbarBlock = () => {
           </Button>
 
           {/* avatar or auth buttons */}
-          {user ? (
-            <AvatarMenu name={user.name} img={user.profilePicture} user={user} size={40} />
+          {isPending ? (
+            <Skeleton className="h-10 w-10 rounded-full" />
+          ) : user ? (
+            <AvatarMenu
+              name={user.name}
+              img={user.profilePicture}
+              user={user}
+              size={40}
+              decrypted={true}
+            />
           ) : (
             <>
               <Link to="/login" className="cursor-pointer">

@@ -256,6 +256,7 @@ const GridCard = ({ item, index, ...params }) => {
               isLarge ? "text-2xl sm:text-3xl text-white" : "",
               isMedium ? "text-xl text-white" : "",
               isSmall ? "text-base" : "",
+              "max-md:text-sm",
             )}
           >
             {item.title}
@@ -266,6 +267,7 @@ const GridCard = ({ item, index, ...params }) => {
               isLarge ? "text-lg text-gray-200" : "",
               isMedium ? "text-sm text-gray-300" : "",
               isSmall ? "text-sm text-muted-foreground" : "",
+              "max-md:text-xs",
             )}
           >
             {item.subtitle}

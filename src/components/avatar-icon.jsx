@@ -2,11 +2,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { decrypt } from "@/utils/crypt";
 import React, { useMemo } from "react";
 
-const AvatarIcon = ({ name, decrypted = true, img, size = 40 }) => {
+const AvatarIcon = ({ name, decrypted, img, size = 40 }) => {
   const decryptedName = useMemo(() => {
     if (!decrypted) return name;
     try {
-      return decrypt(name);
+      return decrypt(name) ? decrypt(name) : name; // fallback to original name if decryption fails
     } catch (e) {
       console.error("Failed to decrypt name:", e);
       return name; // fallback to original name on decrypt error
@@ -16,13 +16,16 @@ const AvatarIcon = ({ name, decrypted = true, img, size = 40 }) => {
   const initials = useMemo(() => {
     return decryptedName
       .split(" ")
-      .map((part) => part[0].toUpperCase())
+      .map((part) => part[0]?.toUpperCase())
       .join("")
       .slice(0, 2);
   }, [decryptedName]);
 
   const decryptedImg = useMemo(() => {
-    if (!decrypted || img === null) return img;
+    if (!decrypted || img === null || typeof img !== "string") return img;
+    if (img.startsWith("http://") || img.startsWith("https://")) {
+      return img; // Already a URL, no need to decrypt
+    }
     try {
       return decrypt(img);
     } catch (e) {

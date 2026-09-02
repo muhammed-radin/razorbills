@@ -15,10 +15,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { api } from "@/utils/api";
-import { clickToGProvider } from "@/utils/auth";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
+import { authClient } from "@/lib/auth-client";
+import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
+
 
 const SignUpPage = () => {
   const { t } = useTranslation();
@@ -56,62 +59,59 @@ const SignUpPage = () => {
       name: encrypt(name),
     };
 
-    SumbitForm(encryptedData);
+    sumbitForm(encryptedData);
   };
 
-  const SumbitForm = (data) => {
+  const sumbitForm = (data) => {
     toast.promise(
       () =>
         new Promise((resolveui, rejectui) => {
-          api.client
-            .post("/api/auth/signup", data)
-            .then(() => {
-              resolveui(t("auth.signupSuccess"));
-              navigate(
-                "/login?email=" +
-                  encodeURIComponent(data.email) +
-                  "&pw=" +
-                  encodeURIComponent(data.password) +
-                  "&signup=true",
-              );
-            })
-            .catch((error) => {
-              rejectui(error);
-              console.error("There was an error!", error);
-            });
+          authClient.signUp.email(
+            {
+              email: data.email,
+              password: data.password,
+              name: data.name,
+              provider: "local",
+              image:
+                "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
+                encodeURIComponent(data.name),
+            },
+            {
+              onSuccess: (payload) => {
+                const { response, data: response_data, user } = payload;
+                if (response.status == 200) {
+                  resolveui(t("auth.signupSuccess"));
+                  navigate("/login");
+                } else {
+                  rejectui("Sign-up Failed");
+                }
+              },
+              onError: (error) => {
+                rejectui(error);
+                toast.error(
+                  `Sign-up failed: ${error?.response?.data?.message || error?.message || "Unknown error"}`,
+                );
+              },
+            },
+          );
         }),
       {
         loading: t("auth.signingUp"),
         success: (msg) => `${msg}`,
         error: (err) =>
-          `${t("auth.signupFailed")}: ${(err.response && err.response.data && err.response.data.message) || err.message || "Unknown error"}`,
+          `${t("auth.signupFailed")}: ${err?.response?.data?.message || err?.message || "Unknown error"}`,
       },
     );
   };
 
-  const onUserGoogleSignUp = () => {
-    clickToGProvider()
-      .then(({ user }) => {
-        const { uid, displayName, photoURL, email } = user;
-        let password = uid;
-        let encryptedData = {
-          id: encrypt(uid),
-          name: encrypt(displayName),
-          avatar: encrypt(photoURL),
-          email: email,
-          provider: "google",
-          password: encryptStrict(password),
-        };
-
-        SumbitForm(encryptedData);
-      })
-      .catch(({ errorCode, errorMessage, email, credential }) => {
-        console.error("Error Code:", errorCode);
-        console.error("Error Message:", errorMessage);
-        console.error("Email:", email);
-        console.error("Credential:", credential);
-      });
-  };
+  useEffect(() => {
+    (async function () {
+      if (await api.getUser()) {
+        navigate("/");
+        return;
+      }
+    })();
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">
@@ -121,7 +121,7 @@ const SignUpPage = () => {
           {t("auth.signupTitle")}
         </p>
 
-        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignUp}>
+        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignIn}>
           <GoogleLogo />
           {t("auth.continueWithGoogle")}
         </Button>

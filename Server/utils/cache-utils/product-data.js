@@ -1,7 +1,7 @@
-const { useMemory } = require("../memory");
+import { useMemory } from "../memory.js";
 
-let productMemoryCache = useMemory(null, "productMemoryCache", 60).toUpdate(
+export let productMemoryCache = useMemory(null, "productMemoryCache", 60).toUpdate(
   async (memory) => {},
 );
 
-module.exports = { productMemoryCache };
+export default { productMemoryCache };

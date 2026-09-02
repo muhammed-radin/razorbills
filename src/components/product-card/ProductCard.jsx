@@ -42,9 +42,18 @@ const ProductCard = ({ product, index }) => {
     setIsFavorite((prev) => !prev);
   }, []);
 
+  const handleQuickView = useCallback(
+    (e) => {
+      e?.stopPropagation();
+      // Quick view functionality can be implemented here
+    },
+    [product.id],
+  );
+
   const handleAddToCart = useCallback(
     (e) => {
-      e.stopPropagation();
+      e?.stopPropagation();
+      // Add to cart functionality can be implemented here
       console.log("Add to cart:", product.id);
     },
     [product.id],

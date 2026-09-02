@@ -3,7 +3,6 @@ import NavbarBlock from "@/components/navbar/navbar";
 import { Footer } from "./components/footer/footer";
 import { ThemeProvider } from "./utils/theme-provider";
 import ScrollToTop from "./utils/ScrollToTop"; // Import the ScrollToTop component
-import { Toaster } from "sonner";
 
 function App() {
   const location = useLocation();

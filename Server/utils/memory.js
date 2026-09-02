@@ -1,6 +1,6 @@
-const { db } = require("./db");
+import { db } from "./db.js";
 
-class Memory {
+export class Memory {
   constructor(data) {
     this._memory = data;
     this.isExpired = false;
@@ -78,7 +78,7 @@ class Memory {
 
 // backward-compatible factory
 
-const CacheTable = {};
+export const CacheTable = {};
 
 /**
  * @param {object} data
@@ -87,7 +87,7 @@ const CacheTable = {};
  * @param {function} updateFn
  * @returns {Memory}
  */
-function useMemory(data, id, timeout, updateFn) {
+export function useMemory(data, id, timeout, updateFn) {
   if (id) {
     CacheTable[id] = new Memory(data);
     if (timeout) {
@@ -101,23 +101,23 @@ function useMemory(data, id, timeout, updateFn) {
   return new Memory(data);
 }
 
-function getMemory(id) {
+export function getMemory(id) {
   return CacheTable[id] || null;
 }
 
-function clearMemory(id) {
+export function clearMemory(id) {
   if (CacheTable[id]) {
     delete CacheTable[id];
   }
 }
 
-function clearAllMemory() {
+export function clearAllMemory() {
   for (const id in CacheTable) {
     delete CacheTable[id];
   }
 }
 
-function setMemory(id, data) {
+export function setMemory(id, data) {
   if (CacheTable[id]) {
     CacheTable[id].set(data);
   } else {
@@ -125,7 +125,7 @@ function setMemory(id, data) {
   }
 }
 
-module.exports = {
+export default {
   Memory,
   useMemory,
   getMemory,

@@ -1,4 +1,4 @@
-const { Product } = require("./models/product");
+import { Product } from "./models/product.js";
 
 let products = [
   new Product(
@@ -239,4 +239,5 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse tristique v
   // More products can be added here
 ];
 
-module.exports = products;
+export { products };
+export default products;

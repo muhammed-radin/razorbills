@@ -1,24 +1,24 @@
-const CryptoJS = require("crypto-js");
+import CryptoJS from "crypto-js";
 
-function decryptStrict(ciphertext) {
+export function decryptStrict(ciphertext) {
   const bytes = CryptoJS.AES.decrypt(ciphertext, process.env.CRYPTED_STRICT);
   return bytes.toString(CryptoJS.enc.Utf8);
 }
 
-function decrypt(ciphertext) {
+export function decrypt(ciphertext) {
   const bytes = CryptoJS.AES.decrypt(ciphertext, process.env.CRYPTED);
   return bytes.toString(CryptoJS.enc.Utf8);
 }
 
-function encryptStrict(plaintext) {
+export function encryptStrict(plaintext) {
   return CryptoJS.AES.encrypt(plaintext, process.env.CRYPTED_STRICT).toString();
 }
 
-function encrypt(plaintext) {
+export function encrypt(plaintext) {
   return CryptoJS.AES.encrypt(plaintext, process.env.CRYPTED).toString();
 }
 
-module.exports = {
+export default {
   decryptStrict,
   decrypt,
   encryptStrict,

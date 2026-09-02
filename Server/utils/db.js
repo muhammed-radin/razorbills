@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 const max_tries = 5;
 let tries = 0;
 
@@ -28,5 +28,25 @@ function connectToDatabase() {
   });
 }
 
+async function dropDatabase() {
+  try {
+    // Accesses the underlying MongoDB driver directly
+    await mongoose.connection.db.dropDatabase();
+    console.log("Database entirely deleted.");
+  } catch (error) {
+    console.error("Failed to drop database:", error);
+  }
+}
+
+async function dropCollectionByName(name) {
+  try {
+    await mongoose.connection.db.dropCollection(name);
+    console.log(`Collection "${name}" dropped.`);
+  } catch (error) {
+    console.error(`Failed to drop collection:`, error);
+  }
+}
+
 // export db
-module.exports = { db: mongoose.connection, connectToDatabase };
+const db = mongoose.connection;
+export { db, connectToDatabase, dropDatabase, dropCollectionByName };

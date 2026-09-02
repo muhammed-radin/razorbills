@@ -1,8 +1,7 @@
-const { Schema } = require("mongoose");
-const { Product } = require("../product");
-const mongoose = require("mongoose");
+import mongoose, { Schema } from "mongoose";
+import { Product } from "../product.js";
 
-const CartSchema = new Schema({
+export const CartSchema = new Schema({
   id: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   products: {
@@ -28,5 +27,5 @@ const CartSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-const CartModel = mongoose.model("Cart", CartSchema, "carts");
-module.exports = { CartSchema, CartModel };
+export const CartModel = mongoose.model("Cart", CartSchema, "carts");
+export default { CartSchema, CartModel };

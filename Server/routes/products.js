@@ -1,12 +1,12 @@
-var express = require("express");
-var router = express.Router();
-const { db } = require("../utils/db");
-const { productStatusCache } = require("../utils/cache-utils/product-status");
-const { FeedMold } = require("../models/feed");
-const { MinimalProduct } = require("../models/schema/product");
-const { productFeedCache } = require("../utils/cache-utils/product-feed");
-const { productMemoryCache } = require("../utils/cache-utils/product-data");
-const ProductModel = require("../models/schema/product").ProductModel;
+import express from "express";
+import { db } from "../utils/db.js";
+import { productStatusCache } from "../utils/cache-utils/product-status.js";
+import { FeedMold } from "../models/feed.js";
+import { ProductModel, MinimalProduct } from "../models/schema/product.js";
+import { productFeedCache } from "../utils/cache-utils/product-feed.js";
+import { productMemoryCache } from "../utils/cache-utils/product-data.js";
+
+const router = express.Router();
 
 /* GET */
 router.get("/", async function (req, res, next) {
@@ -14,33 +14,33 @@ router.get("/", async function (req, res, next) {
     return res.json(productMemoryCache.getLocalMemory(req.url));
   }
 
-  let limit = parseInt(req.query.limit) || parseInt(req.body.limit) || 40;
-  let search = req.query.search || req.body.search || "";
-  let category = req.query.category || req.body.category || "";
+  let limit = parseInt(req.query?.limit) || parseInt(req.body?.limit) || 40;
+  let search = req.query?.search || req.body?.search || "";
+  let category = req.query?.category || req.body?.category || "";
   let priceMin =
-    parseFloat(req.query.priceMin) || parseFloat(req.body.priceMin) || 0;
+    parseFloat(req.query?.priceMin) || parseFloat(req.body?.priceMin) || 0;
   let priceMax =
-    parseFloat(req.query.priceMax) ||
-    parseFloat(req.body.priceMax) ||
+    parseFloat(req.query?.priceMax) ||
+    parseFloat(req.body?.priceMax) ||
     Number.MAX_VALUE;
-  let keywords = req.query.keywords || req.body.keywords || "";
-  let tags = req.query.tags || req.body.tags || "";
-  let sortBy = req.query.sortBy || req.body.sortBy || "createdAt";
-  let sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+  let keywords = req.query?.keywords || req.body?.keywords || "";
+  let tags = req.query?.tags || req.body?.tags || "";
+  let sortBy = req.query?.sortBy || req.body?.sortBy || "createdAt";
+  let sortOrder = req.query?.sortOrder === "asc" ? 1 : -1;
   let ratingMin =
-    parseFloat(req.query.ratingMin) || parseFloat(req.body.ratingMin) || 0;
+    parseFloat(req.query?.ratingMin) || parseFloat(req.body?.ratingMin) || 0;
   let ratingMax =
-    parseFloat(req.query.ratingMax) || parseFloat(req.body.ratingMax) || 5;
+    parseFloat(req.query?.ratingMax) || parseFloat(req.body?.ratingMax) || 5;
   let inStock =
-    req.query.inStock == "true" || req.body.inStock == "true" || false;
+    req.query?.inStock == "true" || req.body?.inStock == "true" || false;
 
   let productStartIndex =
-    parseInt(req.query.startIndex) || parseInt(req.body.startIndex) || 0;
+    parseInt(req.query?.startIndex) || parseInt(req.body?.startIndex) || 0;
 
-  let page = parseInt(req.query.page) || parseInt(req.body.page) || 1;
+  let page = parseInt(req.query?.page) || parseInt(req.body?.page) || 1;
 
   let minimize =
-    req.query.minimize === "true" || req.body.minimize === "true" || false;
+    req.query?.minimize === "true" || req.body?.minimize === "true" || false;
 
   if (page > 1) {
     productStartIndex = (page - 1) * limit;
@@ -210,4 +210,4 @@ router.delete("/:productid", async function (req, res) {
   res.json(deleted);
 });
 
-module.exports = router;
+export default router;
