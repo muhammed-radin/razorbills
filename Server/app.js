@@ -47,7 +47,7 @@ connectToDatabase().then(async () => {
   const { auth } = await import("./utils/auth.js");
 
   app.use("/api/auth/*", authLimiter);
-  app.all("/api/auth/*splat", toNodeHandler(auth));
+  app.all("/api/auth/*", toNodeHandler(auth));
 
   app.use(globalApiLimiter);
   app.use(logger("dev"));
