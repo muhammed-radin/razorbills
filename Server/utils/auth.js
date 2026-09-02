@@ -102,7 +102,7 @@ export const auth = betterAuth({
 
         const profilePicture =
           profile.picture ||
-          "https://api.dicebear.com/10.x/planets/svg?borderRadius=50&tags=animation&seed=" +
+          "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
             encodeURIComponent(nameFallback);
 
         return {
@@ -123,6 +123,13 @@ export const auth = betterAuth({
         default: "",
         required: false,
         input: true,
+        returned: true,
+      },
+      adminPermissions: {
+        type: [String],
+        default: [],
+        required: false,
+        input: false,
         returned: true,
       },
     },

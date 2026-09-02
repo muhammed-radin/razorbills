@@ -14,33 +14,33 @@ router.get("/", async function (req, res, next) {
     return res.json(productMemoryCache.getLocalMemory(req.url));
   }
 
-  let limit = parseInt(req.query.limit) || parseInt(req.body.limit) || 40;
-  let search = req.query.search || req.body.search || "";
-  let category = req.query.category || req.body.category || "";
+  let limit = parseInt(req.query?.limit) || parseInt(req.body?.limit) || 40;
+  let search = req.query?.search || req.body?.search || "";
+  let category = req.query?.category || req.body?.category || "";
   let priceMin =
-    parseFloat(req.query.priceMin) || parseFloat(req.body.priceMin) || 0;
+    parseFloat(req.query?.priceMin) || parseFloat(req.body?.priceMin) || 0;
   let priceMax =
-    parseFloat(req.query.priceMax) ||
-    parseFloat(req.body.priceMax) ||
+    parseFloat(req.query?.priceMax) ||
+    parseFloat(req.body?.priceMax) ||
     Number.MAX_VALUE;
-  let keywords = req.query.keywords || req.body.keywords || "";
-  let tags = req.query.tags || req.body.tags || "";
-  let sortBy = req.query.sortBy || req.body.sortBy || "createdAt";
-  let sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
+  let keywords = req.query?.keywords || req.body?.keywords || "";
+  let tags = req.query?.tags || req.body?.tags || "";
+  let sortBy = req.query?.sortBy || req.body?.sortBy || "createdAt";
+  let sortOrder = req.query?.sortOrder === "asc" ? 1 : -1;
   let ratingMin =
-    parseFloat(req.query.ratingMin) || parseFloat(req.body.ratingMin) || 0;
+    parseFloat(req.query?.ratingMin) || parseFloat(req.body?.ratingMin) || 0;
   let ratingMax =
-    parseFloat(req.query.ratingMax) || parseFloat(req.body.ratingMax) || 5;
+    parseFloat(req.query?.ratingMax) || parseFloat(req.body?.ratingMax) || 5;
   let inStock =
-    req.query.inStock == "true" || req.body.inStock == "true" || false;
+    req.query?.inStock == "true" || req.body?.inStock == "true" || false;
 
   let productStartIndex =
-    parseInt(req.query.startIndex) || parseInt(req.body.startIndex) || 0;
+    parseInt(req.query?.startIndex) || parseInt(req.body?.startIndex) || 0;
 
-  let page = parseInt(req.query.page) || parseInt(req.body.page) || 1;
+  let page = parseInt(req.query?.page) || parseInt(req.body?.page) || 1;
 
   let minimize =
-    req.query.minimize === "true" || req.body.minimize === "true" || false;
+    req.query?.minimize === "true" || req.body?.minimize === "true" || false;
 
   if (page > 1) {
     productStartIndex = (page - 1) * limit;

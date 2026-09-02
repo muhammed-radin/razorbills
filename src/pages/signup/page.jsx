@@ -70,7 +70,7 @@ const SignUpPage = () => {
               name: data.name,
               provider: "local",
               image:
-                "https://api.dicebear.com/10.x/planets/svg?borderRadius=50&tags=animation&seed=" +
+                "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
                 encodeURIComponent(data.name),
             },
             {

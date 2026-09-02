@@ -5,8 +5,6 @@ import { NavigationSheet } from "./navigation-sheet";
 import { SunIcon, MoonIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/utils/theme-provider";
-import { api } from "@/utils/api";
-import AvatarIcon from "@/components/avatar-icon";
 import AvatarMenu from "../avatar-menu";
 import { useSession } from "@/lib/auth-client";
 import { Skeleton } from "../ui/skeleton";
