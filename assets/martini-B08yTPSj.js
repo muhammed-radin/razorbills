@@ -1,1 +1,0 @@
-import{b7 as a}from"./index-Brctxg9j.js";const e=[["path",{d:"M12 12 4.207 4.207A.707.707 0 0 1 4.707 3h14.586a.707.707 0 0 1 .5 1.207z",key:"vxdekd"}],["path",{d:"M12 12v10",key:"1nesaz"}],["path",{d:"M7 22h10",key:"10w4w3"}]],d=a("martini",e);export{e as __iconNode,d as default};
