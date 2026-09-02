@@ -11,7 +11,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
+  /* server: {
     headers: {
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
     },
@@ -23,6 +23,6 @@ export default defineConfig({
         secure: false,
       },
     },
-  },
+  }, */
   base: "./",
 });
