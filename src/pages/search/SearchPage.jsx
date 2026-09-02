@@ -202,7 +202,15 @@ export default function SearchPage() {
     setPriceRange(fixedPriceRange);
     setMinRating(0);
     setShowOnlyInStock(false);
-  }, [fixedPriceRange, setMinRating, setPriceRange, setSearchQuery, setSelectedCategory, setShowOnlyInStock, setSortBy]);
+  }, [
+    fixedPriceRange,
+    setMinRating,
+    setPriceRange,
+    setSearchQuery,
+    setSelectedCategory,
+    setShowOnlyInStock,
+    setSortBy,
+  ]);
 
   const activeFiltersCount = [
     selectedCategory !== "all",
@@ -219,9 +227,7 @@ export default function SearchPage() {
         {/* Header */}
         <header className="mb-6">
           <h1 className="text-3xl font-bold mb-2">{t("search.pageTitle")}</h1>
-          <p className="text-gray-600">
-            {t("search.pageSubtitle")}
-          </p>
+          <p className="text-gray-600">{t("search.pageSubtitle")}</p>
         </header>
 
         {/* Search Bar */}
@@ -311,7 +317,11 @@ export default function SearchPage() {
             ) : filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
                 {filteredAndSortedProducts.map((product, idx) => (
-                  <ProductCard key={product.id || idx} product={product} index={idx} />
+                  <ProductCard
+                    key={product.id || idx}
+                    product={product}
+                    index={idx}
+                  />
                 ))}
               </div>
             ) : (
@@ -344,7 +354,7 @@ export default function SearchPage() {
         <div className="mt-6 sm:p-1">
           <PaginationWithPrimaryButton
             className="w-full"
-            currentPage={currentActivePage}
+            currentPage={searchParams}
             totalPages={totalPages}
             onPageChange={(pageNum) => handlePageChange(pageNum)}
           />
