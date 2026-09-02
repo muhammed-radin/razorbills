@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
 import {
   Package,
   Shield,
@@ -13,11 +14,12 @@ import { Button } from "@/components/ui/button";
 
 export default function RazorbillsAbout() {
   const [hoveredCard, setHoveredCard] = useState(null);
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-black/10 dark:text-gray-100">
       <Helmet>
-        <title>About Us - RazorBills</title>
+        <title>{t("about.helmetTitle")}</title>
         <meta name="description" content="Learn about RazorBills, our mission to provide industrial-grade electronic components for engineers, makers, startups, and institutions with a focus on accessibility and affordability." />
         <meta name="keywords" content="about us, razorbills, electronics, components, mission, vision, industrial-grade" />
       </Helmet>
@@ -28,18 +30,17 @@ export default function RazorbillsAbout() {
         <div className="relative max-w-7xl  mx-auto px-6 py-20">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 dark:text-white">
-              About Us
+              {t("about.title")}
             </h1>
 
             <div className="max-w-3xl mx-auto space-y-4">
               <p className="text-xl leading-relaxed dark:text-gray-300">
-                Industrial-grade electronic components for engineers, makers,
-                startups, and institutions.
+                {t("about.subtitle")}
               </p>
               <div className="flex items-center justify-center gap-3 text-amber-600">
                 <MapPin className="w-5 h-5" />
                 <span className=" font-medium">
-                  India · Nationwide Delivery
+                  {t("about.nationwide")}
                 </span>
               </div>
             </div>
@@ -53,20 +54,17 @@ export default function RazorbillsAbout() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl font-bold mb-6 dark:text-white">
-                Built on a Simple Idea
+                {t("about.ideaTitle")}
               </h2>
               <p className="text-xl leading-relaxed mb-4 dark:text-gray-300">
-                Make high-quality electronics components more{" "}
+                {t("about.ideaSubtitle")}{" "}
                 <span className="text-amber-600 font-semibold">
-                  accessible and affordable
+                  {t("about.accessibleAffordable")}
                 </span>
                 .
               </p>
               <p className="leading-relaxed dark:text-gray-300">
-                We noticed that many buyers faced high prices, unnecessary
-                complexity, and unreliable sourcing when purchasing electronic
-                parts. Our goal is to change that by offering a straightforward
-                and transparent shopping experience.
+                {t("about.ideaDesc")}
               </p>
             </div>
 
@@ -79,11 +77,10 @@ export default function RazorbillsAbout() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1 dark:text-white">
-                        Industrial-Grade Quality
+                        {t("about.qualityTitle")}
                       </h3>
                       <p className="text-sm dark:text-gray-300">
-                        Sourced from reliable manufacturers and trusted supply
-                        partners
+                        {t("about.qualityDesc")}
                       </p>
                     </div>
                   </div>
@@ -94,10 +91,10 @@ export default function RazorbillsAbout() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1 dark:text-white">
-                        Quality Selection
+                        {t("about.selectionTitle")}
                       </h3>
                       <p className="text-sm dark:text-gray-300">
-                        Every product selected with performance in mind
+                        {t("about.selectionDesc")}
                       </p>
                     </div>
                   </div>
@@ -108,10 +105,10 @@ export default function RazorbillsAbout() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1  dark:text-white">
-                        Competitive Pricing
+                        {t("about.pricingTitle")}
                       </h3>
                       <p className="text-sm  dark:text-gray-300">
-                        Honest pricing with no hidden complications
+                        {t("about.pricingDesc")}
                       </p>
                     </div>
                   </div>
@@ -127,27 +124,25 @@ export default function RazorbillsAbout() {
         <div className="relative max-w-7xl mx-auto px-6 py-16">
           <div className="text-center mb-12 ">
             <h2 className="text-4xl font-bold  text-black dark:text-white">
-              What Sets Us Apart
+              {t("about.setsApart")}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 ">
             {[
               {
-                title: "Simple Store Experience",
-                description:
-                  "Clear product information without unnecessary complications",
+                title: t("about.feature1Title"),
+                description: t("about.feature1Desc"),
                 icon: Package,
               },
               {
-                title: "Competitive Pricing",
-                description: "Honest pricing with transparency at every step",
+                title: t("about.feature2Title"),
+                description: t("about.feature2Desc"),
                 icon: TrendingUp,
               },
               {
-                title: "Clarity First",
-                description:
-                  "No unnecessary complications, just straight answers",
+                title: t("about.feature3Title"),
+                description: t("about.feature3Desc"),
                 icon: Zap,
               },
             ].map((feature, idx) => {
@@ -193,10 +188,10 @@ export default function RazorbillsAbout() {
                     <CheckCircle2 className="w-6 h-6 text-amber-600 flex-shrink-0" />
                     <div>
                       <div className="font-semibold  text-black dark:text-white">
-                        Return Options
+                        {t("about.trustPoint1")}
                       </div>
                       <div className="text-sm  text-neutral-600 dark:text-gray-300">
-                        Quality assurance guaranteed
+                        {t("about.trustPoint1Sub")}
                       </div>
                     </div>
                   </div>
@@ -205,10 +200,10 @@ export default function RazorbillsAbout() {
                     <CheckCircle2 className="w-6 h-6 text-amber-600 flex-shrink-0" />
                     <div>
                       <div className="font-semibold  text-black dark:text-white">
-                        Secure UPI Payments
+                        {t("about.trustPoint2")}
                       </div>
                       <div className="text-sm  text-neutral-600 dark:text-gray-300">
-                        Safe & encrypted transactions
+                        {t("about.trustPoint2Sub")}
                       </div>
                     </div>
                   </div>
@@ -217,10 +212,10 @@ export default function RazorbillsAbout() {
                     <CheckCircle2 className="w-6 h-6 text-amber-600 flex-shrink-0" />
                     <div>
                       <div className="font-semibold  text-black dark:text-white">
-                        COD Coming Soon
+                        {t("about.trustPoint3")}
                       </div>
                       <div className="text-sm  text-neutral-600 dark:text-gray-300">
-                        Cash on Delivery option launching
+                        {t("about.trustPoint3Sub")}
                       </div>
                     </div>
                   </div>
@@ -229,10 +224,10 @@ export default function RazorbillsAbout() {
                     <CheckCircle2 className="w-6 h-6 text-amber-600 flex-shrink-0" />
                     <div>
                       <div className="font-semibold  text-black dark:text-white">
-                        Dedicated Support
+                        {t("about.trustPoint4")}
                       </div>
                       <div className="text-sm  text-neutral-600 dark:text-gray-300">
-                        Always available to assist
+                        {t("about.trustPoint4Sub")}
                       </div>
                     </div>
                   </div>
@@ -242,16 +237,13 @@ export default function RazorbillsAbout() {
 
             <div className="order-1 md:order-2">
               <h2 className="text-2xl md:text-4xl font-bold mb-6  text-black dark:text-white">
-                Customer Trust Matters
+                {t("about.trustTitle")}
               </h2>
               <p className="text-lg md:text-xl leading-relaxed mb-6  text-neutral-700 dark:text-gray-300">
-                We build relationships through reliability, transparency, and
-                responsive support.
+                {t("about.trustSubtitle")}
               </p>
               <p className="leading-relaxed  text-neutral-600 dark:text-gray-300">
-                Our support team is always available to assist you with your
-                orders and questions. We're here to ensure your experience with
-                Razorbills is smooth from start to finish.
+                {t("about.trustDesc")}
               </p>
             </div>
           </div>
@@ -262,11 +254,10 @@ export default function RazorbillsAbout() {
       <div className="relative overflow-hidden bg-neutral-100 dark:bg-black/10">
         <div className="relative max-w-7xl mx-auto px-6 py-16 text-center">
           <h2 className="text-xl md:text-4xl font-bold mb-6 max-w-4xl mx-auto leading-tight  text-black dark:text-white">
-            Supporting Innovation by Making Electronics Components Easier to
-            Find, Easier to Buy, and Easier to Trust
+            {t("about.bannerTitle")}
           </h2>
           <div className="flex items-center justify-center gap-3 text-amber-600  font-medium">
-            <span>BUILD WITH CONFIDENCE</span>
+            <span>{t("about.bannerBadge")}</span>
           </div>
         </div>
       </div>
@@ -277,14 +268,14 @@ export default function RazorbillsAbout() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
               <div className="text-xl font-bold mb-2  text-black dark:text-white">
-                Ready to Build Your Next Project?
+                {t("about.ctaTitle")}
               </div>
               <p className=" text-neutral-600 dark:text-gray-300">
-                Thank you for choosing Razorbills.
+                {t("about.ctaDesc")}
               </p>
             </div>
             <Button className="transition-all duration-300  semibold">
-              Explore Components
+              {t("about.ctaButton")}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>

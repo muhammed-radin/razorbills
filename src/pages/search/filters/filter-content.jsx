@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SelectLabel } from "@radix-ui/react-select";
 import { currency } from "@/utils/currency";
 import { useStore } from "../SearchPage";
+import { useTranslation } from "react-i18next";
 
 function FilterContent({
   showFilters,
@@ -30,6 +31,7 @@ function FilterContent({
   setShowOnlyInStock,
   className,
 }) {
+  const { t } = useTranslation();
   const { fixedPriceRange } = useStore();
 
   return (
@@ -42,24 +44,24 @@ function FilterContent({
       >
         {/* Category Filter */}
         <div>
-          <Label className="text-sm font-medium mb-3 block">Category</Label>
+          <Label className="text-sm font-medium mb-3 block">{t("search.categories")}</Label>
           <Select
             defaultValue="all"
             value={selectedCategory}
             onValueChange={setSelectedCategory}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder={t("search.allCategories")} />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectLabel className="text-muted-foreground p-1">
-                  Categories
+                  {t("search.categories")}
                 </SelectLabel>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{t("search.allCategories")}</SelectItem>
                 {categories.length === 0 ? (
                   <SelectLabel className="text-muted-foreground p-1">
-                    No Categories Found
+                    {t("categories.noCategories")}
                   </SelectLabel>
                 ) : (
                   categories.map((category) => (
@@ -76,7 +78,7 @@ function FilterContent({
         {/* Price Range Filter */}
         <div>
           <Label className="text-sm font-medium mb-3 block">
-            Price Range: {currency(priceRange[0])} - {currency(priceRange[1])}
+            {t("search.priceRange")}: {currency(priceRange[0])} - {currency(priceRange[1])}
           </Label>
           <Slider
             value={priceRange}
@@ -96,7 +98,7 @@ function FilterContent({
         {/* Rating Filter */}
         <div>
           <Label className="text-sm font-medium mb-3 block">
-            Minimum Rating
+            {t("search.minRating")}
           </Label>
           <RadioGroup
             value={minRating}
@@ -124,7 +126,7 @@ function FilterContent({
                     ))}
                   </div>
                   <span className="text-sm">
-                    {rating === 0 ? "All Ratings" : `${rating}+ Stars`}
+                    {rating === 0 ? t("search.allRatings") : `${rating} ${t("search.andAbove")}`}
                   </span>
                 </Label>
               </div>
@@ -140,7 +142,7 @@ function FilterContent({
             onCheckedChange={setShowOnlyInStock}
           />
           <Label htmlFor="in-stock" className="text-sm cursor-pointer">
-            In Stock Only
+            {t("search.inStockOnly")}
           </Label>
         </div>
       </div>

@@ -8,21 +8,12 @@ import {
   DrawerTitle,
   DrawerFooter,
   DrawerClose,
-  DrawerDescription,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { Filter, SlidersHorizontal, X, Star } from "lucide-react";
+import { Filter, SlidersHorizontal, X } from "lucide-react";
 import FilterContent from "./filter-content";
+import { useTranslation } from "react-i18next";
 
 function FilterSidebar({
   activeFiltersCount,
@@ -39,6 +30,8 @@ function FilterSidebar({
   showFilters,
   setShowFilters,
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="w-full lg:w-80">
       <Card className="py-3 border-1 border-border max-lg:border-none shadow-none max-lg:bg-transparent">
@@ -46,7 +39,7 @@ function FilterSidebar({
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <SlidersHorizontal size={20} />
-              Filters
+              {t("search.filters")}
               {activeFiltersCount > 0 && (
                 <Badge variant="secondary" className="ml-2">
                   {activeFiltersCount}
@@ -68,7 +61,7 @@ function FilterSidebar({
                   <div className="flex items-center justify-between">
                     <DrawerTitle className="text-lg flex items-center gap-2">
                       <SlidersHorizontal size={20} />
-                      Filters
+                      {t("search.filters")}
                       {activeFiltersCount > 0 && (
                         <Badge variant="secondary" className="ml-2">
                           {activeFiltersCount}
@@ -92,11 +85,10 @@ function FilterSidebar({
                       className="mt-2 w-full"
                     >
                       <X size={16} className="mr-1" />
-                      Clear All Filters
+                      {t("search.clearAllFilters")}
                     </Button>
                   )}
                 </DrawerHeader>
-                {/* <DrawerDescription > */}
                 <FilterContent
                   categories={categories}
                   selectedCategory={selectedCategory}
@@ -108,10 +100,9 @@ function FilterSidebar({
                   showOnlyInStock={showOnlyInStock}
                   setShowOnlyInStock={setShowOnlyInStock}
                 />
-                {/* </DrawerDescription> */}
                 <DrawerFooter>
                   <DrawerClose>
-                    <Button variant="outline">Close</Button>
+                    <Button variant="outline">{t("common.close")}</Button>
                   </DrawerClose>
                 </DrawerFooter>
               </DrawerContent>
@@ -125,7 +116,7 @@ function FilterSidebar({
               className="mt-2 w-full"
             >
               <X size={16} className="mr-1" />
-              Clear All Filters
+              {t("search.clearAllFilters")}
             </Button>
           )}
         </CardHeader>

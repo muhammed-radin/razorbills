@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, CreditCard, Truck, Shield, Tag } from "lucide-react";
 import { currency } from "@/utils/currency";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const CartSummary = ({ 
   cart, 
@@ -14,6 +15,8 @@ const CartSummary = ({
   taxRate = 0.18,
   freeShippingThreshold = 500
 }) => {
+  const { t } = useTranslation();
+
   if (!cart || cart.isEmpty()) {
     return null;
   }
@@ -34,14 +37,14 @@ const CartSummary = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <ShoppingCart className="w-5 h-5" />
-          Order Summary
+          {t("cart.orderSummary")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Items Count */}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
-            Items ({itemsCount} {itemsCount === 1 ? 'item' : 'items'})
+            {t("cart.subtotal")} ({itemsCount} {itemsCount === 1 ? t("common.item") : t("common.items")})
           </span>
           <span className="font-medium">{currency(subtotal)}</span>
         </div>
@@ -56,7 +59,7 @@ const CartSummary = ({
             <div className="flex justify-between text-sm">
               <span className="text-green-600 dark:text-green-400 flex items-center gap-1">
                 <Tag className="w-3 h-3" />
-                Total Savings
+                {t("cart.totalSavings", { amount: "" }).replace(":", "")}
               </span>
               <span className="text-green-600 dark:text-green-400 font-medium">-{currency(totalSavings)}</span>
             </div>
@@ -68,12 +71,12 @@ const CartSummary = ({
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground flex items-center gap-1">
             <Truck className="w-3 h-3" />
-            Shipping
+            {t("cart.shipping")}
           </span>
           <div className="text-right">
             {shipping === 0 ? (
               <div className="flex items-center gap-1">
-                <span className="text-green-600 dark:text-green-400 font-medium">FREE</span>
+                <span className="text-green-600 dark:text-green-400 font-medium">{t("cart.freeShipping")}</span>
                 <Badge variant="secondary" className="text-xs">
                   ₹{freeShippingThreshold}+
                 </Badge>
@@ -101,7 +104,7 @@ const CartSummary = ({
 
         {/* Tax */}
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Tax (GST {Math.round(taxRate * 100)}%)</span>
+          <span className="text-muted-foreground">{t("cart.estimatedTax")}</span>
           <span className="font-medium">{currency(tax)}</span>
         </div>
 
@@ -109,7 +112,7 @@ const CartSummary = ({
 
         {/* Total */}
         <div className="flex justify-between text-lg font-bold">
-          <span>Total</span>
+          <span>{t("cart.total", "Total")}</span>
           <span>{currency(total)}</span>
         </div>
 
@@ -120,26 +123,13 @@ const CartSummary = ({
           onClick={onCheckout}
         >
           <CreditCard className="w-4 h-4 mr-2" />
-          Proceed to Checkout
+          {t("cart.proceedToCheckout")}
         </Button>
 
         {/* Security Badge */}
         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <Shield className="w-4 h-4" />
           <span>Secure Checkout</span>
-        </div>
-
-        {/* Benefits */}
-        <div className="space-y-2 pt-2">
-          <div className="text-sm text-muted-foreground">
-            ✓ Free returns within 30 days
-          </div>
-          <div className="text-sm text-muted-foreground">
-            ✓ 1-year manufacturer warranty
-          </div>
-          <div className="text-sm text-muted-foreground">
-            ✓ Customer support 24/7
-          </div>
         </div>
       </CardContent>
     </Card>

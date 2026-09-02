@@ -17,27 +17,30 @@ import { z } from "zod";
 import { api } from "@/utils/api";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
 
-const formSchema = z.object({
-  email: z.string().email(),
-  name: z.string().min(2, "Name must be at least 2 characters long"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters long")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-    .regex(
-      /[@$!%*?&#]/,
-      "Password must contain at least one special character",
-    ),
-});
 
 const SignUpPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const formSchema = z.object({
+    email: z.string().email(t("auth.invalidEmail")),
+    name: z.string().min(2, t("auth.nameMinLength")),
+    password: z
+      .string()
+      .min(8, t("auth.passwordMinLength"))
+      .regex(/[A-Z]/, t("auth.passwordUppercase"))
+      .regex(/[a-z]/, t("auth.passwordLowercase"))
+      .regex(/[0-9]/, t("auth.passwordNumber"))
+      .regex(
+        /[@$!%*?&#]/,
+        t("auth.passwordSpecial"),
+      ),
+  });
 
   const form = useForm({
     defaultValues: {
@@ -77,7 +80,7 @@ const SignUpPage = () => {
               onSuccess: (payload) => {
                 const { response, data: response_data, user } = payload;
                 if (response.status == 200) {
-                  resolveui("Sign-up Successful");
+                  resolveui(t("auth.signupSuccess"));
                   navigate("/login");
                 } else {
                   rejectui("Sign-up Failed");
@@ -93,10 +96,10 @@ const SignUpPage = () => {
           );
         }),
       {
-        loading: "Signing up...",
+        loading: t("auth.signingUp"),
         success: (msg) => `${msg}`,
         error: (err) =>
-          `Sign-up failed: ${err?.response?.data?.message || err?.message || "Unknown error"}`,
+          `${t("auth.signupFailed")}: ${err?.response?.data?.message || err?.message || "Unknown error"}`,
       },
     );
   };
@@ -115,17 +118,17 @@ const SignUpPage = () => {
       <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />
         <p className="mt-4 text-xl font-semibold tracking-tight">
-          Sign up for RazorBills
+          {t("auth.signupTitle")}
         </p>
 
         <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignIn}>
           <GoogleLogo />
-          Continue with Google
+          {t("auth.continueWithGoogle")}
         </Button>
 
         <div className="my-7 w-full flex items-center justify-center overflow-hidden">
           <Separator />
-          <span className="text-sm px-2">OR</span>
+          <span className="text-sm px-2">{t("auth.or")}</span>
           <Separator />
         </div>
 
@@ -139,11 +142,11 @@ const SignUpPage = () => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>{t("auth.fullName")}</FormLabel>
                   <FormControl>
                     <Input
-                      type="name"
-                      placeholder="Your Full Name"
+                      type="text"
+                      placeholder={t("auth.fullNamePlaceholder")}
                       className="w-full"
                       {...field}
                     />
@@ -157,11 +160,11 @@ const SignUpPage = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t("auth.email")}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="Email"
+                      placeholder={t("auth.emailPlaceholder")}
                       className="w-full"
                       {...field}
                     />
@@ -175,11 +178,11 @@ const SignUpPage = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t("auth.password")}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="Password"
+                      placeholder={t("auth.passwordPlaceholder")}
                       className="w-full"
                       {...field}
                     />
@@ -189,15 +192,15 @@ const SignUpPage = () => {
               )}
             />
             <Button type="submit" className="mt-4 w-full">
-              Continue with Email
+              {t("auth.continueWithEmail")}
             </Button>
           </form>
         </Form>
 
         <p className="mt-5 text-sm text-center">
-          Already have an account?
+          {t("auth.alreadyHaveAccount")}
           <Link to="/login" className="ml-1 underline text-muted-foreground">
-            Log in
+            {t("auth.logIn")}
           </Link>
         </p>
       </div>

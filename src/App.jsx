@@ -6,7 +6,7 @@ import ScrollToTop from "./utils/ScrollToTop"; // Import the ScrollToTop compone
 
 function App() {
   const location = useLocation();
-  const hideNavbar = ["/login", "/signup"].includes(location.pathname);
+  const hideNavbar = ["/login", "/signup","forgot-password"].includes(location.pathname);
 
   return (
     <>

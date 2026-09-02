@@ -47,8 +47,10 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const SettingsPage = () => {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
@@ -117,9 +119,9 @@ const SettingsPage = () => {
         >
           <Settings className="w-8 h-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+            <h1 className="text-3xl font-bold text-foreground">{t("settings.title")}</h1>
             <p className="text-muted-foreground">
-              Manage your account preferences
+              {t("settings.subtitle")}
             </p>
           </div>
         </div>
@@ -141,28 +143,28 @@ const SettingsPage = () => {
               className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
             >
               <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Profile</span>
+              <span className="hidden sm:inline">{t("settings.profile")}</span>
             </TabsTrigger>
             <TabsTrigger
               value="notifications"
               className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
             >
               <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">Notifications</span>
+              <span className="hidden sm:inline">{t("settings.notifications")}</span>
             </TabsTrigger>
             <TabsTrigger
               value="appearance"
               className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
             >
               <Palette className="w-4 h-4" />
-              <span className="hidden sm:inline">Appearance</span>
+              <span className="hidden sm:inline">{t("settings.appearance")}</span>
             </TabsTrigger>
             <TabsTrigger
               value="security"
               className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
             >
               <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">Security</span>
+              <span className="hidden sm:inline">{t("settings.security")}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -180,10 +182,10 @@ const SettingsPage = () => {
                 <CardHeader className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
                   <CardTitle className="flex items-center gap-2">
                     <Camera className="w-5 h-5" />
-                    Profile Picture
+                    {t("settings.profilePicture")}
                   </CardTitle>
                   <CardDescription>
-                    Upload your profile picture
+                    {t("settings.uploadProfilePicture")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -211,7 +213,7 @@ const SettingsPage = () => {
                         size="sm"
                         className="transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
                       >
-                        Change Photo
+                        {t("settings.changePhoto")}
                       </Button>
                     </div>
                   </div>
@@ -223,16 +225,16 @@ const SettingsPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="w-5 h-5" />
-                    Personal Information
+                    {t("settings.personalInfo")}
                   </CardTitle>
                   <CardDescription>
-                    Update your personal details
+                    {t("settings.personalInfoDesc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label htmlFor="name">{t("settings.fullName")}</Label>
                       <Input
                         id="name"
                         value={userData.name}
@@ -243,7 +245,7 @@ const SettingsPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
+                      <Label htmlFor="email">{t("settings.emailAddress")}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -258,7 +260,7 @@ const SettingsPage = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">{t("settings.phoneNumber")}</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -273,7 +275,7 @@ const SettingsPage = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="language">Language</Label>
+                      <Label htmlFor="language">{t("settings.language")}</Label>
                       <Select
                         value={userData.language}
                         onValueChange={(value) =>
@@ -282,7 +284,7 @@ const SettingsPage = () => {
                       >
                         <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
                           <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
-                          <SelectValue placeholder="Select language" />
+                          <SelectValue placeholder={t("settings.selectLanguage")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="en">English</SelectItem>
@@ -306,12 +308,12 @@ const SettingsPage = () => {
                       {isLoading ? (
                         <span className="flex items-center gap-2">
                           <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                          Saving...
+                            Saving...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
                           <Save className="w-4 h-4" />
-                          Save Changes
+                          {t("settings.saveSettings")}
                         </span>
                       )}
                     </Button>
@@ -328,9 +330,9 @@ const SettingsPage = () => {
                         <MapPin className="w-6 h-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">Address Book</h3>
+                        <h3 className="font-semibold">{t("settings.addressBook")}</h3>
                         <p className="text-sm text-muted-foreground">
-                          Manage your delivery addresses
+                          {t("settings.manageAddresses")}
                         </p>
                       </div>
                     </div>
@@ -353,10 +355,10 @@ const SettingsPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="w-5 h-5" />
-                  Notification Preferences
+                  {t("settings.notificationPreferences")}
                 </CardTitle>
                 <CardDescription>
-                  Choose how you want to be notified
+                  {t("settings.chooseNotificationMethod")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -364,7 +366,7 @@ const SettingsPage = () => {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    Email Notifications
+                    {t("settings.emailNotifications")}
                   </h4>
                   <div className="space-y-4 pl-6">
                     <NotificationItem
@@ -373,8 +375,8 @@ const SettingsPage = () => {
                       onChange={(checked) =>
                         setUserData({ ...userData, emailNotifications: checked })
                       }
-                      title="Email Notifications"
-                      description="Receive notifications via email"
+                      title={t("settings.emailNotifications")}
+                      description={t("settings.receiveNotificationsViaEmail")}
                     />
                     <NotificationItem
                       id="newsletter"
@@ -382,8 +384,8 @@ const SettingsPage = () => {
                       onChange={(checked) =>
                         setUserData({ ...userData, newsletter: checked })
                       }
-                      title="Newsletter"
-                      description="Receive our weekly newsletter"
+                      title={t("settings.newsletter")}
+                      description={t("settings.receiveWeeklyNewsletter")}
                     />
                     <NotificationItem
                       id="promotions"
@@ -391,8 +393,8 @@ const SettingsPage = () => {
                       onChange={(checked) =>
                         setUserData({ ...userData, promotions: checked })
                       }
-                      title="Promotional Emails"
-                      description="Receive promotional offers and deals"
+                      title={t("settings.promotionalEmails")}
+                      description={t("settings.receivePromotionalOffers")}
                     />
                   </div>
                 </div>
@@ -403,7 +405,7 @@ const SettingsPage = () => {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="w-4 h-4" />
-                    Push Notifications
+                    {t("settings.pushNotifications")}
                   </h4>
                   <div className="space-y-4 pl-6">
                     <NotificationItem
@@ -412,8 +414,8 @@ const SettingsPage = () => {
                       onChange={(checked) =>
                         setUserData({ ...userData, pushNotifications: checked })
                       }
-                      title="Push Notifications"
-                      description="Receive push notifications on your device"
+                      title={t("settings.pushNotifications")}
+                      description={t("settings.receivePushNotifications")}
                     />
                     <NotificationItem
                       id="orderUpdates"
@@ -421,8 +423,8 @@ const SettingsPage = () => {
                       onChange={(checked) =>
                         setUserData({ ...userData, orderUpdates: checked })
                       }
-                      title="Order Updates"
-                      description="Get notified about your order status"
+                      title={t("settings.orderUpdates")}
+                      description={t("settings.getNotifiedAboutOrderStatus")}
                     />
                   </div>
                 </div>
@@ -464,21 +466,21 @@ const SettingsPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="w-5 h-5" />
-                  Appearance Settings
+                  {t("settings.appearanceSettings")}
                 </CardTitle>
                 <CardDescription>
-                  Customize how the app looks
+                  {t("settings.customizeAppAppearance")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
-                  <Label>Theme</Label>
+                  <Label>{t("settings.theme")}</Label>
                   <div className="grid grid-cols-3 gap-4">
                     <ThemeCard
                       value="light"
                       currentTheme={userData.theme}
                       icon={<Sun className="w-6 h-6" />}
-                      label="Light"
+                      label={t("settings.light")}
                       onClick={() =>
                         setUserData({ ...userData, theme: "light" })
                       }
@@ -487,7 +489,7 @@ const SettingsPage = () => {
                       value="dark"
                       currentTheme={userData.theme}
                       icon={<Moon className="w-6 h-6" />}
-                      label="Dark"
+                      label={t("settings.dark")}
                       onClick={() =>
                         setUserData({ ...userData, theme: "dark" })
                       }
@@ -496,7 +498,7 @@ const SettingsPage = () => {
                       value="system"
                       currentTheme={userData.theme}
                       icon={<Smartphone className="w-6 h-6" />}
-                      label="System"
+                      label={t("settings.system")}
                       onClick={() =>
                         setUserData({ ...userData, theme: "system" })
                       }
@@ -515,12 +517,12 @@ const SettingsPage = () => {
                     {isLoading ? (
                       <span className="flex items-center gap-2">
                         <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        Saving...
+                        {t("settings.saving")}
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
                         <Save className="w-4 h-4" />
-                        Save Settings
+                        {t("settings.saveChange")}
                       </span>
                     )}
                   </Button>
@@ -543,21 +545,21 @@ const SettingsPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Key className="w-5 h-5" />
-                    Change Password
+                    {t("settings.changePassword")}
                   </CardTitle>
                   <CardDescription>
-                    Update your account password
+                    {t("settings.changePasswordDesc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <Label htmlFor="currentPassword">{t("settings.currentPassword")}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         id="currentPassword"
                         type={showPassword ? "text" : "password"}
-                        placeholder="Enter current password"
+                        placeholder={t("settings.currentPasswordPlaceholder")}
                         className="pl-10 pr-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                       />
                       <button
@@ -575,27 +577,27 @@ const SettingsPage = () => {
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="newPassword">New Password</Label>
+                      <Label htmlFor="newPassword">{t("settings.newPassword")}</Label>
                       <Input
                         id="newPassword"
                         type="password"
-                        placeholder="Enter new password"
+                        placeholder={t("settings.newPasswordPlaceholder")}
                         className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <Label htmlFor="confirmPassword">{t("settings.confirmPassword")}</Label>
                       <Input
                         id="confirmPassword"
                         type="password"
-                        placeholder="Confirm new password"
+                        placeholder={t("settings.confirmPasswordPlaceholder")}
                         className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
                   </div>
                   <Button className="transition-all duration-300 hover:shadow-lg">
                     <Key className="w-4 h-4 mr-2" />
-                    Update Password
+                    {t("settings.updatePassword")}
                   </Button>
                 </CardContent>
               </Card>
@@ -605,10 +607,10 @@ const SettingsPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-destructive">
                     <Shield className="w-5 h-5" />
-                    Account Actions
+                    {t("settings.accountActions")}
                   </CardTitle>
                   <CardDescription>
-                    Manage your account security
+                    {t("settings.accountActionsDesc")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -616,14 +618,14 @@ const SettingsPage = () => {
                     <div className="flex items-center gap-4">
                       <LogOut className="w-5 h-5 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">Sign out of all devices</p>
+                        <p className="font-medium">{t("settings.signOutAll")}</p>
                         <p className="text-sm text-muted-foreground">
-                          This will sign you out from all active sessions
+                          {t("settings.signOutAllDesc")}
                         </p>
                       </div>
                     </div>
                     <Button variant="outline" size="sm">
-                      Sign Out All
+                      {t("settings.signOutAll")}
                     </Button>
                   </div>
 
@@ -632,15 +634,15 @@ const SettingsPage = () => {
                       <Trash2 className="w-5 h-5 text-destructive" />
                       <div>
                         <p className="font-medium text-destructive">
-                          Delete Account
+                          {t("settings.deleteAccount")}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Permanently delete your account and all data
+                          {t("settings.deleteAccountDesc")}
                         </p>
                       </div>
                     </div>
                     <Button variant="destructive" size="sm">
-                      Delete
+                      {t("settings.deleteAccountButton")}
                     </Button>
                   </div>
                 </CardContent>
@@ -655,13 +657,17 @@ const SettingsPage = () => {
 
 // Notification Item Component
 const NotificationItem = ({ id, checked, onChange, title, description }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-start justify-between p-3 rounded-lg border border-transparent hover:border-border hover:bg-muted/30 transition-all duration-300">
       <div className="space-y-0.5">
         <Label htmlFor={id} className="cursor-pointer">
-          {title}
+          {t(title)}
         </Label>
-        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-sm text-muted-foreground">
+          {t(description)}
+        </p>
       </div>
       <Checkbox
         id={id}
@@ -675,6 +681,7 @@ const NotificationItem = ({ id, checked, onChange, title, description }) => {
 
 // Theme Card Component
 const ThemeCard = ({ value, currentTheme, icon, label, onClick }) => {
+  const { t } = useTranslation();
   const isSelected = currentTheme === value;
 
   return (
@@ -698,7 +705,7 @@ const ThemeCard = ({ value, currentTheme, icon, label, onClick }) => {
         {icon}
       </div>
       <span className={cn("font-medium", isSelected && "text-primary")}>
-        {label}
+        {t(label)}
       </span>
     </button>
   );

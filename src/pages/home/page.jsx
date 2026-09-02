@@ -1,9 +1,9 @@
 import React, { memo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 import CategoryList from "@/components/category-tag/CategoryList";
-import ProductCard from "@/components/product-card/ProductCard";
 import SearchBar from "@/components/searchBar/SearchBar";
 import CarouselSlide from "@/components/carousel";
 import ListHorizontalProductCards from "@/components/horizontal-card/list-horizontal-product-cards";
@@ -27,6 +27,7 @@ import { FolderCode } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const EmptyProductsSection = memo(function EmptyProductsRender() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   return (
@@ -35,16 +36,15 @@ const EmptyProductsSection = memo(function EmptyProductsRender() {
         <EmptyMedia variant="icon">
           <FolderCode />
         </EmptyMedia>
-        <EmptyTitle>No Products Yet</EmptyTitle>
+        <EmptyTitle>{t("home.noProductsTitle")}</EmptyTitle>
         <EmptyDescription>
-          There are no products available at the moment. Please check back later
-          or contact our support team.
+          {t("home.noProductsDesc")}
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        <Button onClick={() => navigate("/contact")}>Contact Admin</Button>
+        <Button onClick={() => navigate("/contact")}>{t("home.contactAdmin")}</Button>
         <Button variant="outline" onClick={() => navigate("/contact")}>
-          Request Product
+          {t("home.requestProduct")}
         </Button>
       </EmptyContent>
     </Empty>
@@ -52,6 +52,7 @@ const EmptyProductsSection = memo(function EmptyProductsRender() {
 });
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [latestProducts, setlatestProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +63,8 @@ export default function HomePage() {
     api.client
       .get("/api/products/feed")
       .then((response) => {
-        setlatestProducts(response.data.latest);
-        setFeaturedProducts(response.data.featured);
+        setlatestProducts(response.data.latest || []);
+        setFeaturedProducts(response.data.featured || []);
         setLoading(false);
       })
       .catch((error) => {
@@ -75,18 +76,16 @@ export default function HomePage() {
   return (
     <div className="min-h-screen w-full">
       <Helmet>
-        <title>RazorBills - High-Quality Electronic Components</title>
+        <title>{t("home.helmetTitle")}</title>
         <meta
           name="description"
-          content="Your one-stop shop for the latest and greatest electronics. Industrial-grade electronic components for engineers, makers, startups, and institutions."
+          content={t("home.helmetDescription")}
         />
         <meta
           name="keywords"
           content="electronics, components, resistor, diode, led, transistor, battery, fuse, potentiometer, speaker, microphone, microcontroller"
         />
       </Helmet>
-      {/* Hero Section */}
-      {/* <Hero /> */}
       {/* Highlighted Image Slider - Full Width Hero Style */}
       <HighlightedSlider className="" />
 
@@ -108,13 +107,13 @@ export default function HomePage() {
             {/* Featured Products Carousel - Premium Cards */}
             {featuredProducts.length > 0 && (
               <FeaturedCarousel
-                title="Featured Collection"
+                title={t("home.featuredCollection")}
                 products={featuredProducts}
               />
             )}
 
             {/* Content Grid - Categories & Offers */}
-            <ContentGrid title="Explore Categories" />
+            <ContentGrid title={t("home.exploreCategories")} />
 
             {/* Blank Section */}
             {isEmpty && <EmptyProductsSection />}
@@ -122,7 +121,7 @@ export default function HomePage() {
             {/* New Arrivals - Regular Carousel Design */}
             {latestProducts.length > 0 && (
               <CarouselSlide
-                title="New Arrivals"
+                title={t("home.newArrivals")}
                 variant="new-arrivals"
                 products={latestProducts}
               />
@@ -131,8 +130,8 @@ export default function HomePage() {
             {/* Product Grid */}
             {latestProducts.length > 0 && (
               <ClassicProcuctsSlider
-                title="All Products"
-                products={latestProducts.slice(0, 10)} // Show first 10 products as recommended
+                title={t("home.allProducts")}
+                products={latestProducts.slice(0, 10)}
               />
             )}
 
@@ -144,7 +143,7 @@ export default function HomePage() {
             {/* Top Rated - Modern Carousel Design */}
             {latestProducts.length > 0 && (
               <ModernCarousel
-                title="Top Rated"
+                title={t("home.topRated")}
                 variant="top-rated"
                 products={latestProducts}
               />

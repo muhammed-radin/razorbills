@@ -4,14 +4,15 @@ import { api } from "@/utils/api";
 import { Heart, icons } from "lucide-react";
 import { memo, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { DynamicIcon } from "lucide-react/dynamic";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 function CategoriesPage() {
+  const { t } = useTranslation();
   const [displayItems, setDisplayItems] = useState([
     {
       id: 1,
-      title: "Whishlists",
+      title: "Wishlist",
       subtitle: "Save your favorites",
       image: null,
       icon: Heart,
@@ -35,15 +36,17 @@ function CategoriesPage() {
       .then((response) => {
         const parsedData = response.data.map((item) => {
           const pascalCaseName = item.icon
-            .split("-")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join("");
+            ? item.icon
+                .split("-")
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join("")
+            : "Folder";
           const IconComponent = icons[pascalCaseName];
 
           return {
             id: item.id,
             title: item.name,
-            subtitle: item.description || "No description available",
+            subtitle: item.description || t("categories.noDescription", "No description available"),
             image: item.image || null,
             icon: IconComponent ? <IconComponent /> : null,
             theme: "amber",
@@ -58,15 +61,15 @@ function CategoriesPage() {
         setIsLoading(false);
         setDisplayItems([]);
       });
-  }, []);
+  }, [t]);
 
   return (
     <div className="min-h-screen p-3 sm:p-7 max-sm:p-4 max-sm:mt-3">
       <Helmet>
-        <title>Categories - RazorBills</title>
+        <title>{t("categories.title")} - RazorBills</title>
         <meta
           name="description"
-          content="Browse our wide range of categories and find the perfect products for your needs."
+          content={t("categories.subtitle")}
         />
         <meta
           name="keywords"
@@ -77,12 +80,11 @@ function CategoriesPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="mb-6">
-          <h1 className="text-3xl font-bold mb-2" onClick={handleCardClick}>
-            Categories
+          <h1 className="text-3xl font-bold mb-2">
+            {t("categories.title")}
           </h1>
           <p className="text-gray-600">
-            Browse our wide range of categories and find the perfect products
-            for your needs.
+            {t("categories.subtitle")}
           </p>
         </header>
 
@@ -101,7 +103,7 @@ function CategoriesPage() {
             </>
           ) : displayItems.length === 0 ? (
             <p className="text-gray-500 col-span-full text-center">
-              No categories available.
+              {t("categories.noCategories")}
             </p>
           ) : (
             displayItems.map((item, index) => (

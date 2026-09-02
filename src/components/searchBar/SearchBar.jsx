@@ -1,8 +1,10 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { LucideSearch } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function SearchBar() {
+    const { t } = useTranslation();
     const [searchTerm, setSearchTerm] = useState("");
     const navigate = useNavigate();
 
@@ -26,7 +28,7 @@ export default function SearchBar() {
             <form onSubmit={handleSearch} className="relative sm:w-1/2 max-sm:w-[90%] mx-auto">
                 <input
                     type="text"
-                    placeholder="Search..."
+                    placeholder={t("home.searchPlaceholder")}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyPress={handleKeyPress}
@@ -34,7 +36,7 @@ export default function SearchBar() {
                 />
                 <button
                     type="submit"
-                    aria-label="Search"
+                    aria-label={t("common.search")}
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                     <LucideSearch size={20} />

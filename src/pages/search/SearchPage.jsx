@@ -22,15 +22,8 @@ import PaginationWithPrimaryButton from "@/components/customized/pagination/pagi
 import { api } from "@/utils/api";
 import { create } from "zustand";
 import { Preloader } from "@/components/LoaderScreen";
-
-const sortOptions = [
-  { value: "relevance", label: "Best Match" },
-  { value: "price-low", label: "Price: Low to High" },
-  { value: "price-high", label: "Price: High to Low" },
-  { value: "rating", label: "Customer Rating" },
-  { value: "name", label: "Name A-Z" },
-  { value: "newest", label: "Newest First" },
-];
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 // migrating to zustand for state management
 const useStore = create((set) => ({
@@ -55,10 +48,20 @@ const useStore = create((set) => ({
 export { useStore };
 
 export default function SearchPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+
+  const sortOptions = [
+    { value: "relevance", label: t("search.sortBestMatch") },
+    { value: "price-low", label: t("search.sortPriceLow") },
+    { value: "price-high", label: t("search.sortPriceHigh") },
+    { value: "rating", label: t("search.sortRating") },
+    { value: "name", label: t("search.sortName") },
+    { value: "newest", label: t("search.sortNewest") },
+  ];
 
   const {
     searchQuery,
@@ -76,7 +79,6 @@ export default function SearchPage() {
     setPriceRange,
     setMinRating,
     setShowOnlyInStock,
-    setFixedPriceRange,
   } = useStore();
 
   const deferedSearchQuery = useDeferredValue(searchQuery);
@@ -137,15 +139,14 @@ export default function SearchPage() {
         .then((response) => {
           const fetched = response.data;
           setPreloader(false);
-          setTotalPages(fetched.totalPages);
-          setTotalProducts(fetched.count);
-          // Update the products state with the fetched data
-          setFilteredAndSortedProducts(fetched.products);
+          setTotalPages(fetched.totalPages || 1);
+          setTotalProducts(fetched.count || 0);
+          setFilteredAndSortedProducts(fetched.products || []);
         })
         .catch((error) => {
           console.error("Error fetching products:", error);
           setPreloader(false);
-          toast.error("Failed to load products");
+          toast.error(t("search.failedToLoad"));
           setTotalPages(1);
           setTotalProducts(0);
           setFilteredAndSortedProducts([]);
@@ -190,7 +191,7 @@ export default function SearchPage() {
     // load categories from API
     api.client.get("/api/categories?limit=100").then((response) => {
       const fetchedCategories = response.data;
-      setCategories(fetchedCategories);
+      setCategories(fetchedCategories || []);
     });
   }, []);
 
@@ -201,7 +202,7 @@ export default function SearchPage() {
     setPriceRange(fixedPriceRange);
     setMinRating(0);
     setShowOnlyInStock(false);
-  }, []);
+  }, [fixedPriceRange, setMinRating, setPriceRange, setSearchQuery, setSelectedCategory, setShowOnlyInStock, setSortBy]);
 
   const activeFiltersCount = [
     selectedCategory !== "all",
@@ -210,14 +211,16 @@ export default function SearchPage() {
     showOnlyInStock,
   ].filter(Boolean).length;
 
+  const currentActivePage = parseInt(searchParams.get("page") || "1", 10);
+
   return (
     <div className="min-h-screen p-3 sm:p-7 max-sm:p-4 max-sm:mt-3">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Search Products</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("search.pageTitle")}</h1>
           <p className="text-gray-600">
-            Find the perfect electronic components and gadgets
+            {t("search.pageSubtitle")}
           </p>
         </header>
 
@@ -230,7 +233,7 @@ export default function SearchPage() {
             />
             <Input
               type="text"
-              placeholder="Search products, categories, or keywords..."
+              placeholder={t("search.inputPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => {
@@ -270,18 +273,20 @@ export default function SearchPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
               <div>
                 <h2 className="text-xl font-semibold">
-                  {totalProducts} Products Found
+                  {totalProducts === 1
+                    ? t("search.productsFound_one", { count: totalProducts })
+                    : t("search.productsFound_other", { count: totalProducts })}
                 </h2>
                 {searchParams.get("q") && (
                   <p className="text-gray-600">
-                    Results for "{searchParams.get("q")}"
+                    {t("search.resultsFor", { query: searchParams.get("q") })}
                   </p>
                 )}
               </div>
 
               <div className="flex items-center space-x-2">
                 <Label htmlFor="sort" className="text-sm whitespace-nowrap">
-                  Sort by:
+                  {t("search.sortBy")}
                 </Label>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-48">
@@ -305,8 +310,8 @@ export default function SearchPage() {
               </div>
             ) : filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 justify-items-center">
-                {filteredAndSortedProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                {filteredAndSortedProducts.map((product, idx) => (
+                  <ProductCard key={product.id || idx} product={product} index={idx} />
                 ))}
               </div>
             ) : (
@@ -316,21 +321,20 @@ export default function SearchPage() {
                   <Search size={64} className="mx-auto text-gray-300" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">
-                  No products found
+                  {t("search.noProductsFound")}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Try adjusting your search criteria or filters, Check your
-                  internet connection.
+                  {t("search.noProductsFoundDesc")}
                 </p>
                 <Button onClick={clearFilters} variant="default">
-                  Clear All Filters
+                  {t("search.clearAllFilters")}
                 </Button>
                 <Button
                   onClick={searchProducts}
                   variant="outline"
                   className="ml-2"
                 >
-                  Try Again
+                  {t("common.tryAgain")}
                 </Button>
               </div>
             )}
@@ -340,7 +344,7 @@ export default function SearchPage() {
         <div className="mt-6 sm:p-1">
           <PaginationWithPrimaryButton
             className="w-full"
-            currentPage={searchParams}
+            currentPage={currentActivePage}
             totalPages={totalPages}
             onPageChange={(pageNum) => handlePageChange(pageNum)}
           />

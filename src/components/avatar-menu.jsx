@@ -1,16 +1,9 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -26,8 +19,11 @@ import { toast } from "sonner";
 import AvatarIcon from "./avatar-icon";
 import { decrypt } from "@/utils/crypt";
 import React, { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
-const AvatarMenu = ({ name, img, user, decrypted }) => {
+const AvatarMenu = ({ name, img, user }) => {
+  const { t } = useTranslation();
+
   const decryptedUserName = useMemo(() => {
     if (decrypted == false) return user.name;
     try {
@@ -45,7 +41,7 @@ const AvatarMenu = ({ name, img, user, decrypted }) => {
           api.actions
             .logOut()
             .then(() => {
-              resolve("Signed Out Successfully");
+              resolve(t("avatarMenu.signedOutSuccess"));
               setTimeout(() => {
                 window.location.reload();
               }, 1000);
@@ -55,13 +51,15 @@ const AvatarMenu = ({ name, img, user, decrypted }) => {
             });
         }),
       {
-        loading: "Signing Out...",
+        loading: t("avatarMenu.signingOut"),
         success: (msg) => `${msg}`,
         error: (err) =>
-          `Log-out failed: ${err.response?.data?.message || err.message || "Unknown error"}`,
+          t("avatarMenu.logOutFailed", {
+            error: err.response?.data?.message || err.message || "Unknown error",
+          }),
       },
     );
-  }, []);
+  }, [t]);
 
   return (
     <DropdownMenu>
@@ -78,31 +76,31 @@ const AvatarMenu = ({ name, img, user, decrypted }) => {
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem>
-          <User className="mr-1" /> My Profile
+          <User className="mr-1" /> {t("avatarMenu.myProfile")}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/cart">
-            <ShoppingCart className="mr-1" /> Cart
+            <ShoppingCart className="mr-1" /> {t("avatarMenu.cart")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/order">
-            <ShoppingBag className="mr-1" /> Orders
+            <ShoppingBag className="mr-1" /> {t("avatarMenu.orders")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/settings">
-            <Settings2 className="mr-1" /> Preferences
+            <Settings2 className="mr-1" /> {t("avatarMenu.preferences")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/addressbook">
-            <MapPin className="mr-1" /> Addresses
+            <MapPin className="mr-1" /> {t("avatarMenu.addresses")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-1" /> Sign out
+          <LogOut className="mr-1" /> {t("avatarMenu.signOut")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
