@@ -1,1 +1,0 @@
-import{b7 as a}from"./index-CvGio14B.js";const e=[["path",{d:"M16 2v3",key:"otl347"}],["path",{d:"M21 15V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h10v-5a1 1 0 011-1za2.4 2.4 0 01-.706 1.706l-3.588 3.588A2.4 2.4 0 0115 21",key:"4uit17"}],["path",{d:"M3 9h18",key:"1pudct"}],["path",{d:"M8 2v3",key:"1ioesn"}]],d=a("calendar-fold",e);export{e as __iconNode,d as default};

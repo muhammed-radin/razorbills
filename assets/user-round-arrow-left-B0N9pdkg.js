@@ -1,1 +1,0 @@
-import{b7 as e}from"./index-CvGio14B.js";const o=[["path",{d:"m19 16-3 3",key:"lp3y45"}],["path",{d:"M2 21a8 8 0 0 1 12.664-6.5",key:"1ap0vn"}],["path",{d:"M22 19h-6l3 3",key:"13fjle"}],["circle",{cx:"10",cy:"8",r:"5",key:"o932ke"}]],t=e("user-round-arrow-left",o);export{o as __iconNode,t as default};
