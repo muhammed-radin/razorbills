@@ -1,8 +1,8 @@
-const { FeedMold, ShowCaseTab } = require("../../models/feed");
-const { ProductModel, MinimalProduct } = require("../../models/schema/product");
-const { useMemory } = require("../memory");
+import { FeedMold, ShowCaseTab } from "../../models/feed.js";
+import { ProductModel, MinimalProduct } from "../../models/schema/product.js";
+import { useMemory } from "../memory.js";
 
-const productFeedCache = useMemory(null, "productFeedCache", 60);
+export const productFeedCache = useMemory(null, "productFeedCache", 60);
 
 productFeedCache.toUpdate(async function populateFeed(memory) {
   const Feed = new FeedMold();
@@ -133,4 +133,4 @@ productFeedCache.toUpdate(async function populateFeed(memory) {
   memory.expireTimeout(1000 * 60 * 60); // expire in 1 hour
 });
 
-module.exports = { productFeedCache };
+export default { productFeedCache };

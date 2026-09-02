@@ -1,7 +1,8 @@
-var express = require("express");
-const { Category } = require("../models/schema/categories");
-const { globalMemory } = require("../utils/cache-utils/global-cache");
-var router = express.Router();
+import express from "express";
+import { Category } from "../models/schema/categories.js";
+import { globalMemory } from "../utils/cache-utils/global-cache.js";
+
+const router = express.Router();
 
 /* GET users listing. */
 router.get("/", function (req, res) {
@@ -99,4 +100,4 @@ router.delete("/:id", function (req, res) {
     });
 });
 
-module.exports = router;
+export default router;

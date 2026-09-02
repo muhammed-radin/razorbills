@@ -11,15 +11,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { clickToGProvider } from "@/utils/auth";
-import { encrypt, encryptStrict } from "@/utils/crypt";
+import { encryptStrict } from "@/utils/crypt";
 import { api } from "@/utils/api";
 
 import { toast } from "sonner";
 import { useEffect } from "react";
+import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
+import { authClient } from "@/lib/auth-client";
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -44,96 +45,68 @@ const LoginPage = () => {
       password: encryptStrict(password),
     };
 
-    SumbitForm(encryptedData);
+    sumbitForm(encryptedData);
   };
 
-  const SumbitForm = (data) => {
+  const sumbitForm = (data) => {
     toast.promise(
       () =>
         new Promise((resolveui, rejectui) => {
-          api.client
-            .post("/api/auth/login", data)
-            .then((response) => {
-              if (response.status !== 200) {
-                rejectui(response.data);
-                return;
+          authClient.signIn.email(data, {
+            onSuccess: (payload) => {
+              const { response, data, user } = payload;
+              if (response.status == 200) {
+                resolveui("Login Successful");
+                navigate("/");
+              } else {
+                rejectui(response.statusText || "Login failed");
               }
-              resolveui("Login Successful");
-
-              // // Store token in indexedDB
-              localStorage.setItem("auth_token", encrypt(response.data.token));
-              localStorage.setItem(
-                "user_data",
-                encrypt(JSON.stringify(response.data.user)),
-              );
-
-              navigate("/");
-            })
-            .catch((error) => {
+            },
+            onError: (error) => {
               rejectui(error);
               console.error("There was an error!", error);
 
               setTimeout(() => {
                 form.setValue("password", "");
               }, 1000);
-            });
+            },
+          });
         }),
       {
         loading: "Logging in...",
         success: (msg) => `${msg}`,
         error: (err) =>
-          `Login failed: ${(err.response && err.response.data.message) || err.message || "Unknown error"}`,
+          `Login failed: ${err?.error?.message || err?.response?.data?.message || err?.message || err?.error?.statusText || err || "Unknown error"}`,
       },
     );
   };
 
-  useEffect(() => {
-    if (api.getUser()) {
-      navigate("/");
-      return;
-    }
+  const [urlParams, setUrlParams] = useSearchParams();
 
-    const urlParams = new URLSearchParams(window.location.search);
+  useEffect(() => {
+    (async function () {
+      if (await api.getUser()) {
+        navigate("/");
+        return;
+      }
+    })();
+
     const email = urlParams.get("email");
     const pw = urlParams.get("pw");
     const signup = urlParams.get("signup");
+
+    console.log("URL Params:", { email, pw, signup });
 
     if (email && pw && signup) {
       form.setValue("email", decodeURIComponent(email));
       form.setValue("password", decodeURIComponent(pw));
 
-      SumbitForm({
+      sumbitForm({
         email: decodeURIComponent(email),
         password: decodeURIComponent(pw),
       });
     }
   }, []);
-
-  const onUserGoogleSignIn = () => {
-    clickToGProvider()
-      .then(({ user, token }) => {
-        // extract uid, displayName, photoURL, email,  from user
-        const { uid, displayName, photoURL, email } = user;
-        let password = uid;
-        // You can now use the user info and token as needed
-        let encryptedData = {
-          id: encrypt(uid),
-          name: encrypt(displayName),
-          avatar: encrypt(photoURL),
-          email: email,
-          provider: "google",
-          password: encryptStrict(password), // Using uid as password for Google signups
-        };
-
-        SumbitForm(encryptedData);
-      })
-      .catch(({ errorCode, errorMessage, email, credential }) => {
-        console.error(errorCode, errorMessage, email, credential);
-        toast.error(
-          `Google Sign-In failed: ${errorMessage || "Unknown error"}`,
-        );
-      });
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">

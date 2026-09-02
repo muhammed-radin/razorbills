@@ -41,11 +41,11 @@ function FilterSidebar({
 }) {
   return (
     <div className="w-full lg:w-80">
-      <Card className="py-3 border-none shadow-none max-lg:bg-transparent">
+      <Card className="py-3 border-1 border-border max-lg:border-none shadow-none max-lg:bg-transparent">
         <CardHeader className="max-lg:px-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Filter size={20} />
+              <SlidersHorizontal size={20} />
               Filters
               {activeFiltersCount > 0 && (
                 <Badge variant="secondary" className="ml-2">
@@ -54,9 +54,14 @@ function FilterSidebar({
               )}
             </CardTitle>
 
-            <Drawer>
-              <DrawerTrigger className="lg:hidden">
-                <SlidersHorizontal size={16} />
+            <Drawer
+              open={showFilters}
+              onOpenChange={setShowFilters}
+              swipeDirection={"left"}
+              showSwipeHandle={false}
+            >
+              <DrawerTrigger className="lg:hidden bg-background hover:bg-background/90 border border-border rounded-md px-2 py-1 flex flex-row justify-between items-center gap-3 text-sm">
+                Show Filters <SlidersHorizontal size={16} />
               </DrawerTrigger>
               <DrawerContent>
                 <DrawerHeader>
@@ -126,7 +131,7 @@ function FilterSidebar({
         </CardHeader>
 
         <CardContent
-          className={`space-y-6 ${showFilters ? "hidden" : "hidden lg:block"}`}
+          className={`space-y-6 ${showFilters ? "hidden" : "hidden lg:block"} px-5 py-1`}
         >
           <FilterContent
             categories={categories}

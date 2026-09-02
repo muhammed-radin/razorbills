@@ -1,4 +1,4 @@
-class Product {
+export class Product {
   constructor(
     id,
     title,
@@ -58,14 +58,14 @@ class Product {
   }
 }
 
-class ProductSpecification {
+export class ProductSpecification {
   constructor(label, value) {
     this.label = label;
     this.value = value;
   }
 }
 
-class Price {
+export class Price {
   constructor(amount, date, currency = "INR", discount = 0) {
     this.amount = amount;
     this.date = date;
@@ -74,4 +74,4 @@ class Price {
   }
 }
 
-module.exports = { Product, ProductSpecification, Price };
+export default { Product, ProductSpecification, Price };

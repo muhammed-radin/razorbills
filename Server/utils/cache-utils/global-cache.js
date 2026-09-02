@@ -1,7 +1,7 @@
-const { useMemory } = require("../memory");
+import { useMemory } from "../memory.js";
 
-let globalMemory = useMemory(null, "globalMemory").toUpdate(
+export let globalMemory = useMemory(null, "globalMemory").toUpdate(
   async (memory) => {},
 );
 
-module.exports = { globalMemory };
+export default { globalMemory };

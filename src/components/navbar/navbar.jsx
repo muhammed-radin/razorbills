@@ -5,13 +5,14 @@ import { NavigationSheet } from "./navigation-sheet";
 import { SunIcon, MoonIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/utils/theme-provider";
-import { api } from "@/utils/api";
-import AvatarIcon from "@/components/avatar-icon";
 import AvatarMenu from "../avatar-menu";
+import { useSession } from "@/lib/auth-client";
+import { Skeleton } from "../ui/skeleton";
 
 const NavbarBlock = () => {
   const { setTheme, theme } = useTheme();
-  const user = api.getUser();
+  const { data, isPending, error } = useSession();
+  const user = data?.user;
 
   return (
     <nav className="h-16 bg-background border-b sticky top-0 z-50 w-full">
@@ -25,20 +26,42 @@ const NavbarBlock = () => {
 
         <div className="flex items-center gap-3">
           {/* theme button */}
-          <Button size="icon" variant="outline" aria-label="Toggle theme" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-            {theme === "light" ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
+          <Button
+            size="icon"
+            variant="outline"
+            aria-label="Toggle theme"
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          >
+            {theme === "light" ? (
+              <MoonIcon className="h-4 w-4" />
+            ) : (
+              <SunIcon className="h-4 w-4" />
+            )}
           </Button>
 
           {/* avatar or auth buttons */}
-          {user ? (<AvatarMenu name={user.name} img={user.profilePicture} user={user} size={40} />) : (<><Link to="./login" className="cursor-pointer">
-            <Button variant="outline" className="hidden sm:inline-flex">
-              Sign In
-            </Button>
-          </Link>
-            <Link to="./signup" className="cursor-pointer">
-              <Button>Sign Up</Button>
-            </Link></>)}
-
+          {isPending ? (
+            <Skeleton className="h-10 w-10 rounded-full" />
+          ) : user ? (
+            <AvatarMenu
+              name={user.name}
+              img={user.profilePicture}
+              user={user}
+              size={40}
+              decrypted={true}
+            />
+          ) : (
+            <>
+              <Link to="./login" className="cursor-pointer">
+                <Button variant="outline" className="hidden sm:inline-flex">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="./signup" className="cursor-pointer">
+                <Button>Sign Up</Button>
+              </Link>
+            </>
+          )}
 
           {/* Mobile Menu */}
           <div className="md:hidden">

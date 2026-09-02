@@ -1,8 +1,7 @@
-const { Schema } = require("mongoose");
-const { Product } = require("../product");
-const mongoose = require("mongoose");
+import mongoose, { Schema } from "mongoose";
+import { Product } from "../product.js";
 
-const ReviewCommentSchema = new Schema({
+export const ReviewCommentSchema = new Schema({
   id: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   productId: { type: String, required: true },
@@ -14,6 +13,6 @@ const ReviewCommentSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-const ReviewModel = mongoose.model("Review", ReviewCommentSchema, "reviews");
+export const ReviewModel = mongoose.model("Review", ReviewCommentSchema, "reviews");
 
-module.exports = { ReviewCommentSchema, ReviewModel };
+export default { ReviewCommentSchema, ReviewModel };

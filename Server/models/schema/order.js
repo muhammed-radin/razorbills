@@ -1,8 +1,7 @@
-const { Schema } = require("mongoose");
-const { Product } = require("../product");
-const mongoose = require("mongoose");
+import mongoose, { Schema } from "mongoose";
+import { Product } from "../product.js";
 
-const OrderSchema = new Schema({
+export const OrderSchema = new Schema({
   id: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   products: {
@@ -152,6 +151,6 @@ OrderSchema.statics.updateEstimatedDelivery = function (orderId, estimatedDate) 
 };
 
 
-const OrderModel = mongoose.model("Order", OrderSchema, "orders");
+export const OrderModel = mongoose.model("Order", OrderSchema, "orders");
 
-module.exports = { OrderSchema, OrderModel };
+export default { OrderSchema, OrderModel };

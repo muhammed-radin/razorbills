@@ -1,4 +1,4 @@
-class CartItem {
+export class CartItem {
   constructor(productId, product, quantity = 1) {
     this.id = `cart-${Date.now()}-${Math.random()}`;
     this.productId = productId;
@@ -34,7 +34,7 @@ class CartItem {
   }
 }
 
-class Cart {
+export class Cart {
   constructor() {
     this.items = [];
     this.createdAt = new Date();
@@ -131,4 +131,4 @@ class Cart {
   }
 }
 
-module.exports = { Cart, CartItem };
+export default { Cart, CartItem };
