@@ -1,1 +1,0 @@
-import{aM as a}from"./index-J7LC7ugf.js";const e=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M9 17V7h4a3 3 0 0 1 0 6H9",key:"1dfk2c"}]],r=a("square-parking",e);export{e as __iconNode,r as default};

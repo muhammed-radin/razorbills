@@ -1,0 +1,1 @@
+import{aN as e}from"./index-MA1nCtBe.js";const t=[["rect",{x:"11",y:"14",width:"10",height:"7",rx:"2",key:"nfm8rk"}],["rect",{x:"3",y:"3",width:"10",height:"7",rx:"2",key:"1ljebb"}]],o=e("ungroup",t);export{t as __iconNode,o as default};

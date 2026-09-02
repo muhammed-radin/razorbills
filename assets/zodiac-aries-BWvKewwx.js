@@ -1,0 +1,1 @@
+import{aN as a}from"./index-MA1nCtBe.js";const e=[["path",{d:"M12 7.5a4.5 4.5 0 1 1 5 4.5",key:"k987hv"}],["path",{d:"M7 12a4.5 4.5 0 1 1 5-4.5V21",key:"mjup0w"}]],c=a("zodiac-aries",e);export{e as __iconNode,c as default};

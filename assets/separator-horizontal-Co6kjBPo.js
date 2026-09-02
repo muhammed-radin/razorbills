@@ -1,0 +1,1 @@
+import{aN as a}from"./index-MA1nCtBe.js";const o=[["path",{d:"m16 16-4 4-4-4",key:"3dv8je"}],["path",{d:"M3 12h18",key:"1i2n21"}],["path",{d:"m8 8 4-4 4 4",key:"2bscm2"}]],e=a("separator-horizontal",o);export{o as __iconNode,e as default};

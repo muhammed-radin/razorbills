@@ -1,1 +1,0 @@
-import{aM as e}from"./index-J7LC7ugf.js";const t=[["path",{d:"M21 5H3",key:"1fi0y6"}],["path",{d:"M17 12H7",key:"16if0g"}],["path",{d:"M19 19H5",key:"vjpgq2"}]],n=e("text-align-center",t);export{t as __iconNode,n as default};

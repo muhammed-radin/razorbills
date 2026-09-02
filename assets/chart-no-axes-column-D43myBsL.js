@@ -1,1 +1,0 @@
-import{aM as o}from"./index-J7LC7ugf.js";const a=[["path",{d:"M5 21v-6",key:"1hz6c0"}],["path",{d:"M12 21V3",key:"1lcnhd"}],["path",{d:"M19 21V9",key:"unv183"}]],t=o("chart-no-axes-column",a);export{a as __iconNode,t as default};

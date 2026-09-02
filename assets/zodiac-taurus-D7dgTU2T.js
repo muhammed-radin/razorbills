@@ -1,1 +1,0 @@
-import{aM as c}from"./index-J7LC7ugf.js";const a=[["circle",{cx:"12",cy:"15",r:"6",key:"lhqcmb"}],["path",{d:"M18 3A6 6 0 0 1 6 3",key:"1p399e"}]],o=c("zodiac-taurus",a);export{a as __iconNode,o as default};

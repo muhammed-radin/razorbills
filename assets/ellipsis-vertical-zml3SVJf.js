@@ -1,1 +1,0 @@
-import{aM as c}from"./index-J7LC7ugf.js";const e=[["circle",{cx:"12",cy:"12",r:"1",key:"41hilf"}],["circle",{cx:"12",cy:"5",r:"1",key:"gxeob9"}],["circle",{cx:"12",cy:"19",r:"1",key:"lyex9k"}]],l=c("ellipsis-vertical",e);export{e as __iconNode,l as default};

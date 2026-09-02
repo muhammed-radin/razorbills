@@ -1,1 +1,0 @@
-import{aM as a}from"./index-J7LC7ugf.js";const t=[["path",{d:"m14 11 4-4 4 4",key:"1pu57t"}],["path",{d:"M18 16V7",key:"ty0viw"}],["path",{d:"m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16",key:"d5nyq2"}],["path",{d:"M3.304 13h6.392",key:"1q3zxz"}]],o=a("a-arrow-up",t);export{t as __iconNode,o as default};

@@ -1,1 +1,0 @@
-import{aM as e}from"./index-J7LC7ugf.js";const a=[["path",{d:"M6 12h12",key:"8npq4p"}],["path",{d:"M6 20V4",key:"1w1bmo"}],["path",{d:"M18 20V4",key:"o2hl4u"}]],t=e("heading",a);export{a as __iconNode,t as default};
