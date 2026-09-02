@@ -41,14 +41,13 @@ app.use(
   }),
 );
 
-app.use(globalApiLimiter);
-
 connectToDatabase().then(async () => {
   const { auth } = await import("./utils/auth.js");
 
   app.use("/api/auth/*", authLimiter);
   app.all("/api/auth/*", toNodeHandler(auth));
 
+  app.use(globalApiLimiter);
   app.use(logger("dev"));
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
