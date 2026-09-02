@@ -18,7 +18,7 @@ export default defineConfig({
     proxy: {
       // Shorthand for your API endpoints
       "/api": {
-        target: import.meta.env.VITE_API_ENDPOINT,
+        target: "https://razorbills-server.vercel.app",
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ""),
