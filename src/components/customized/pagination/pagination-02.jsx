@@ -21,7 +21,7 @@ export default memo(function PaginationWithPrimaryButton({
   const navigate = useNavigate();
 
   const currentPageNumber = Math.min(
-    Math.max(parseInt(currentPage.get("page")) || 1, 1),
+    Math.max(parseInt(currentPage?.get("page")) || 1, 1),
     totalPages,
   );
   const previousPage = Math.max(currentPageNumber - 1, 1);
