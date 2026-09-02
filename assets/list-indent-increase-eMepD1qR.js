@@ -1,1 +1,0 @@
-import{aN as e}from"./index-MA1nCtBe.js";const a=[["path",{d:"M21 5H11",key:"us1j55"}],["path",{d:"M21 12H11",key:"wd7e0v"}],["path",{d:"M21 19H11",key:"saa85w"}],["path",{d:"m3 8 4 4-4 4",key:"1a3j6y"}]],d=e("list-indent-increase",a);export{a as __iconNode,d as default};

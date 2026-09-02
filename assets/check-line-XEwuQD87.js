@@ -1,1 +1,0 @@
-import{aN as e}from"./index-MA1nCtBe.js";const a=[["path",{d:"M20 4L9 15",key:"1qkx8z"}],["path",{d:"M21 19L3 19",key:"100sma"}],["path",{d:"M9 15L4 10",key:"9zxff7"}]],t=e("check-line",a);export{a as __iconNode,t as default};

@@ -1,1 +1,0 @@
-import{aN as t}from"./index-MA1nCtBe.js";const e=[["path",{d:"M2 3v18",key:"pzttux"}],["rect",{width:"12",height:"18",x:"6",y:"3",rx:"2",key:"btr8bg"}],["path",{d:"M22 3v18",key:"6jf3v"}]],a=t("gallery-horizontal",e);export{e as __iconNode,a as default};

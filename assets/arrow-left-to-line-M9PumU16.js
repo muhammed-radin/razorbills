@@ -1,1 +1,0 @@
-import{aN as e}from"./index-MA1nCtBe.js";const o=[["path",{d:"M3 19V5",key:"rwsyhb"}],["path",{d:"m13 6-6 6 6 6",key:"1yhaz7"}],["path",{d:"M7 12h14",key:"uoisry"}]],a=e("arrow-left-to-line",o);export{o as __iconNode,a as default};

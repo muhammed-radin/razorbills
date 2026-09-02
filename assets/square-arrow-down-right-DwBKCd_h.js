@@ -1,0 +1,1 @@
+import{b7 as e}from"./index-Brctxg9j.js";const o=[["path",{d:"M15 15 9 9",key:"qb9ybb"}],["path",{d:"M9 15h6V9",key:"1wezwn"}],["rect",{x:"3",y:"3",width:"18",height:"18",rx:"2",key:"h1oib"}]],t=e("square-arrow-down-right",o);export{o as __iconNode,t as default};

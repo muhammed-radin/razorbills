@@ -1,0 +1,1 @@
+import{b7 as e}from"./index-Brctxg9j.js";const t=[["path",{d:"M8 2v3",key:"1ioesn"}],["path",{d:"M16 2v3",key:"otl347"}],["rect",{x:"3",y:"3",width:"18",height:"18",rx:"2",key:"h1oib"}],["path",{d:"M3 9h18",key:"1pudct"}]],o=e("calendar",t);export{t as __iconNode,o as default};

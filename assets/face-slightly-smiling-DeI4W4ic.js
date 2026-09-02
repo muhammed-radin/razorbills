@@ -1,1 +1,0 @@
-import{aN as a}from"./index-MA1nCtBe.js";const e=[["path",{d:"M15 10V9",key:"4dkmfx"}],["path",{d:"M16.472 15a6 6 0 01-8.943 0",key:"7qomzy"}],["path",{d:"M9 10V9",key:"1lazqi"}],["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}]],i=a("face-slightly-smiling",e);export{e as __iconNode,i as default};
