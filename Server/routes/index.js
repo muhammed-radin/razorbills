@@ -11,7 +11,6 @@ router.use("/products", productsRouter);
 
 /* User routes */
 router.use("/users", requireAuth, usersRouter);
-router.use("/usersdev", usersRouter);
 
 /* Category routes */
 router.use("/categories", categoriesRouter);

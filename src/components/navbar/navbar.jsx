@@ -14,8 +14,6 @@ const NavbarBlock = () => {
   const { data, isPending, error } = useSession();
   const user = data?.user;
 
-  console.log("NavbarBlock user:", data);
-
   return (
     <nav className="h-16 bg-background border-b sticky top-0 z-50 w-full">
       <div className="h-full flex items-center justify-between max-w-(--breakpoint-xl) mx-auto px-4 sm:px-6 lg:px-8">

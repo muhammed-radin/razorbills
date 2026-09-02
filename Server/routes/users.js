@@ -8,8 +8,8 @@ const router = express.Router();
 /* GET users listing. */
 router.get(
   "/",
-  // requirePermission("read"),
-  // requireAdmin,
+  requirePermission("read"),
+  requireAdmin,
   function (req, res, next) {
     db.collection("users")
       .find({})

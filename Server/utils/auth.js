@@ -1,11 +1,9 @@
 // server/auth.js
 import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import mongoose from "mongoose";
 import { admin } from "better-auth/plugins";
 import { db } from "./db.js";
 import { UserModel } from "../models/schema/user.js";
-import axios from "axios";
 import { createAuthMiddleware } from "better-auth/api";
 import { decryptStrict } from "./crypt.js";
 
@@ -20,19 +18,16 @@ export const auth = betterAuth({
         after: async (userData, context) => {
           userData._id = userData.id; // Ensure _id is set to the same value as id
           const user = await UserModel.create(userData);
-          console.log("New user created:", user);
         },
       },
       delete: {
         after: async (userData, context) => {
           await UserModel.deleteOne({ id: userData.id });
-          console.log("User deleted:", userData.id);
         },
       },
       update: {
         after: async (userData, context) => {
           await UserModel.updateOne({ id: userData.id }, userData);
-          console.log("User updated:", userData.id);
         },
       },
     },
@@ -43,13 +38,11 @@ export const auth = betterAuth({
       if (ctx.path === "/sign-in/email" || ctx.path === "/sign-up/email") {
         if (ctx.body && typeof ctx.body.password === "string") {
           try {
-            console.log("password", ctx.body.password);
             // 2. Decrypt client-encrypted password back to plain text
             const plainPassword = decryptStrict(ctx.body.password);
 
             // 3. Mutate request body before Better Auth validates or hashes
             ctx.body.password = plainPassword;
-            console.log("Decrypted password for auth:", plainPassword);
           } catch (error) {
             throw new Error("Password decryption failed");
           }
@@ -62,7 +55,6 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     onExistingUserSignUp: async ({ user }, req) => {
       // Custom logic for handling existing users during sign-up
-      console.log("Existing user attempted to sign up.");
       throw new APIError(
         "BAD_REQUEST",
         "User already exists. Please log in instead.",
@@ -93,7 +85,6 @@ export const auth = betterAuth({
       prompt: "select_account consent",
 
       mapProfileToUser: async (profile) => {
-        console.log("Google profile:", profile);
         // Guarantee a non-empty name string to satisfy DB validation
         const nameFallback =
           profile.name ||

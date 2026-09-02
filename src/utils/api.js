@@ -1,6 +1,6 @@
 import axios from "axios";
-import { decrypt, decryptObj, decryptStrict } from "./crypt";
-import { authClient, useSession } from "@/lib/auth-client";
+import { decryptObj } from "./crypt";
+import { authClient } from "@/lib/auth-client";
 
 const apiBase = import.meta.env.VITE_API_ENDPOINT;
 const ACTION_HEADER = {

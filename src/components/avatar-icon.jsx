@@ -3,16 +3,6 @@ import { decrypt } from "@/utils/crypt";
 import React, { useMemo } from "react";
 
 const AvatarIcon = ({ name, decrypted, img, size = 40 }) => {
-  console.log(
-    "AvatarIcon Rendered with name:",
-    name,
-    "decrypted:",
-    decrypted,
-    "img:",
-    img,
-    "size:",
-    size,
-  );
   const decryptedName = useMemo(() => {
     if (!decrypted) return name;
     try {
@@ -23,8 +13,6 @@ const AvatarIcon = ({ name, decrypted, img, size = 40 }) => {
     }
   }, [name, decrypted]);
 
-  console.log("decryptedName:", decryptedName);
-
   const initials = useMemo(() => {
     return decryptedName
       .split(" ")
@@ -34,7 +22,7 @@ const AvatarIcon = ({ name, decrypted, img, size = 40 }) => {
   }, [decryptedName]);
 
   const decryptedImg = useMemo(() => {
-    if (!decrypted || img === null) return img;
+    if (!decrypted || img === null || typeof img !== "string") return img;
     if (img.startsWith("http://") || img.startsWith("https://")) {
       return img; // Already a URL, no need to decrypt
     }

@@ -23,7 +23,6 @@ const AdminAuth = () => {
   useEffect(() => {
     authClient.getSession().then((session) => {
       if (session && session.user) {
-        console.log("Session:", session);
         if (session.user.role !== "admin") {
           navigate("/");
           return;

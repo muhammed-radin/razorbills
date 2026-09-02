@@ -43,7 +43,7 @@ export const requirePermission = (requiredCapability) => {
 
     if (!permissions.includes(requiredCapability)) {
       return res.status(403).json({
-        error: `Forbidden: Missing layout capability: ${requiredCapability}`,
+        error: `Forbidden: Missing required permission: ${requiredCapability}`,
       });
     }
 

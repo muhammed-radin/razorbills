@@ -55,7 +55,6 @@ const LoginPage = () => {
           authClient.signIn.email(data, {
             onSuccess: (payload) => {
               const { response, data, user } = payload;
-              console.log(response);
               if (response.status == 200) {
                 resolveui("Login Successful");
                 navigate("/");

@@ -78,13 +78,7 @@ const SignUpPage = () => {
                 const { response, data: response_data, user } = payload;
                 if (response.status == 200) {
                   resolveui("Sign-up Successful");
-                  navigate(
-                    "/login?email=" +
-                      encodeURIComponent(data.email) +
-                      "&pw=" +
-                      encodeURIComponent(data.password) +
-                      "&signup=true",
-                  );
+                  navigate("/login");
                 } else {
                   rejectui("Sign-up Failed");
                 }
