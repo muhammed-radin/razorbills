@@ -5,6 +5,12 @@ export function validateApiKeys(req, res, next) {
     return 0;
   }
 
+  // Skip for better auth endpoints
+  if (req.path.startsWith("/api/auth")) {
+    next();
+    return 0;
+  }
+
   if (req.headers["server-api-key"] === process.env.SERVER_API_KEY) {
     if (req.headers["actions-api-key"] === process.env.ACTION_ACCESS_TOKEN) {
       next();

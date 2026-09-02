@@ -36,18 +36,18 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   }),
 );
+
+app.use(globalApiLimiter);
 
 connectToDatabase().then(async () => {
   const { auth } = await import("./utils/auth.js");
 
   app.use("/api/auth/*", authLimiter);
   app.all("/api/auth/*", toNodeHandler(auth));
-
-  app.use(globalApiLimiter);
 
   app.use(logger("dev"));
   app.use(express.json());
@@ -76,6 +76,6 @@ function checkDatabaseConnection(req, res, next) {
 }
 
 // start api after db connection is established
-app.use("/api", validateApiKeys, checkDatabaseConnection, indexRouter);
+app.use("/api", checkDatabaseConnection, indexRouter);
 
 export default app;
