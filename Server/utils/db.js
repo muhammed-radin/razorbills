@@ -47,6 +47,15 @@ async function dropCollectionByName(name) {
   }
 }
 
+async function startDB(req, res, next) {
+  if (mongoose.connection.readyState == 1) {
+    next();
+  } else if (mongoose.connection.readyState == 0) {
+    await connectToDatabase();
+    next();
+  }
+}
+
 function checkDatabaseConnection(req, res, next) {
   if (mongoose.connection.readyState == 1) {
     next();
@@ -67,8 +76,6 @@ function checkDatabaseConnection(req, res, next) {
   }
 }
 
-connectToDatabase();
-
 // export db
 const db = mongoose.connection;
 export {
@@ -77,4 +84,5 @@ export {
   dropDatabase,
   dropCollectionByName,
   checkDatabaseConnection,
+  startDB,
 };

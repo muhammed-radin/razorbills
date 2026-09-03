@@ -9,7 +9,12 @@ import rateLimit from "express-rate-limit";
 
 import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
-import { db, connectToDatabase, checkDatabaseConnection } from "./utils/db.js";
+import {
+  db,
+  connectToDatabase,
+  checkDatabaseConnection,
+  startDB,
+} from "./utils/db.js";
 import { validateApiKeys } from "./utils/key.js";
 import createAuth from "./utils/auth.js";
 
@@ -37,7 +42,6 @@ async function initAuth(req, res, next) {
   if (!db) {
     await connectToDatabase();
   }
-
   return toNodeHandler(createAuth(db))(req, res, next);
 }
 
@@ -52,6 +56,7 @@ app.use(
   }),
 );
 
+app.use(startDB);
 app.use("/api/auth/*", authLimiter);
 app.all("/api/auth/*", checkDatabaseConnection, initAuth);
 
