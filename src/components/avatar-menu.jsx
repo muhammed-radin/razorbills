@@ -21,7 +21,7 @@ import { decrypt } from "@/utils/crypt";
 import React, { useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
-const AvatarMenu = ({ name, img, user }) => {
+const AvatarMenu = ({ name, img, user, decrypted }) => {
   const { t } = useTranslation();
 
   const decryptedUserName = useMemo(() => {
@@ -55,7 +55,8 @@ const AvatarMenu = ({ name, img, user }) => {
         success: (msg) => `${msg}`,
         error: (err) =>
           t("avatarMenu.logOutFailed", {
-            error: err.response?.data?.message || err.message || "Unknown error",
+            error:
+              err.response?.data?.message || err.message || "Unknown error",
           }),
       },
     );
