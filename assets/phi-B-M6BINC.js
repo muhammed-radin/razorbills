@@ -1,0 +1,1 @@
+import{ba as c}from"./index-Dd7BjW4q.js";const e=[["path",{d:"M12 2v20",key:"t6zp3m"}],["circle",{cx:"12",cy:"12",r:"7",key:"fim9np"}]],t=c("phi",e);export{e as __iconNode,t as default};
