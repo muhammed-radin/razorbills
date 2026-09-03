@@ -9,8 +9,9 @@ import rateLimit from "express-rate-limit";
 
 import indexRouter from "./routes/index.js";
 import usersRouter from "./routes/users.js";
-import { db, connectToDatabase } from "./utils/db.js";
+import { db, connectToDatabase, checkDatabaseConnection } from "./utils/db.js";
 import { validateApiKeys } from "./utils/key.js";
+import createAuth from "./utils/auth.js";
 
 // 1. Define global relaxed limiter for standard data routes
 const globalApiLimiter = rateLimit({
@@ -32,6 +33,14 @@ const authLimiter = rateLimit({
   message: { error: "Too many login/signup attempts. Please try again later." },
 });
 
+async function initAuth(req, res, next) {
+  if (!db) {
+    await connectToDatabase();
+  }
+
+  return toNodeHandler(createAuth(db))(req, res, next);
+}
+
 const app = express();
 
 app.set("trust proxy", 1);
@@ -43,37 +52,22 @@ app.use(
   }),
 );
 
-connectToDatabase().then(async () => {
-  const { auth } = await import("./utils/auth.js");
+app.use("/api/auth/*", authLimiter);
+app.all("/api/auth/*", checkDatabaseConnection, initAuth);
 
-  app.use("/api/auth/*", authLimiter);
-  app.all("/api/auth/*", toNodeHandler(auth));
+app.use(globalApiLimiter);
+app.use(logger("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
-  app.use(globalApiLimiter);
-  app.use(logger("dev"));
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: false }));
-  app.use(cookieParser());
-
-  console.log("Database connection established. Starting Server...");
-  if (
-    process.argv[1] &&
-    (process.argv[1].endsWith("/app.js") ||
-      process.argv[1].endsWith("\\app.js"))
-  ) {
-    app.listen(process.env.PORT, () => {
-      console.log("Server is running on http://localhost:" + process.env.PORT);
-    });
-  }
-});
-
-function checkDatabaseConnection(req, res, next) {
-  if (!db) {
-    return res
-      .status(503)
-      .json({ message: "Database connection not established" });
-  }
-  next();
+if (
+  process.argv[1] &&
+  (process.argv[1].endsWith("/app.js") || process.argv[1].endsWith("\\app.js"))
+) {
+  app.listen(process.env.PORT, () => {
+    console.log("Server is running on http://localhost:" + process.env.PORT);
+  });
 }
 
 // start api after db connection is established

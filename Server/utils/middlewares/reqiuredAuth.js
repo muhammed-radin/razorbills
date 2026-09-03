@@ -1,10 +1,10 @@
 // server/middleware/authMiddleware.js
-import { auth } from "../auth.js";
+import createAuth from "../auth.js";
 
 export const requireAuth = async (req, res, next) => {
   try {
     // Better Auth reads the session directly from incoming Express cookies/headers
-    const session = await auth.api.getSession({
+    const session = await createAuth().api.getSession({
       headers: req.headers,
     });
 

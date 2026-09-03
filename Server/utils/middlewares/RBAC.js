@@ -1,9 +1,9 @@
 // server/middleware/rbacMiddleware.js
-import { auth } from "../auth.js";
+import createAuth from "../auth.js";
 
 // Middleware A: Protect Custom User Data Routes (Users access ONLY their own data)
 export const requireAdmin = async (req, res, next) => {
-  const session = await auth.api.getSession({ headers: req.headers });
+  const session = await createAuth().api.getSession({ headers: req.headers });
   if (!session) return res.status(401).json({ error: "Unauthorized" });
 
   const isStaff =
@@ -23,7 +23,7 @@ export const requireAdmin = async (req, res, next) => {
 // Middleware B: Protect Admin Actions with specific granular capability flags
 export const requirePermission = (requiredCapability) => {
   return async (req, res, next) => {
-    const session = await auth.api.getSession({ headers: req.headers });
+    const session = await createAuth().api.getSession({ headers: req.headers });
     if (!session) return res.status(401).json({ error: "Unauthorized" });
 
     if (session.user.role === "owner") {

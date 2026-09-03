@@ -47,6 +47,34 @@ async function dropCollectionByName(name) {
   }
 }
 
+function checkDatabaseConnection(req, res, next) {
+  if (mongoose.connection.readyState == 1) {
+    next();
+  } else if (mongoose.connection.readyState == 0) {
+    return res
+      .status(503)
+      .json({ message: "Database connection not established" });
+  } else if (mongoose.connection.readyState == 2) {
+    return res
+      .status(503)
+      .json({ message: "Database connection is currently connecting" });
+  } else if (mongoose.connection.readyState == 3) {
+    return res
+      .status(503)
+      .json({ message: "Database connection is currently disconnecting" });
+  } else if (mongoose.connection.readyState == 99) {
+    return res.status(503).json({ message: "Database connection is closed" });
+  }
+}
+
+connectToDatabase();
+
 // export db
 const db = mongoose.connection;
-export { db, connectToDatabase, dropDatabase, dropCollectionByName };
+export {
+  db,
+  connectToDatabase,
+  dropDatabase,
+  dropCollectionByName,
+  checkDatabaseConnection,
+};
