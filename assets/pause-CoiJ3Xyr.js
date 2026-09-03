@@ -1,0 +1,1 @@
+import{b7 as e}from"./index-zNe9KWZH.js";const t=[["rect",{x:"14",y:"3",width:"5",height:"18",rx:"1",key:"kaeet6"}],["rect",{x:"5",y:"3",width:"5",height:"18",rx:"1",key:"1wsw3u"}]],o=e("pause",t);export{t as __iconNode,o as default};
