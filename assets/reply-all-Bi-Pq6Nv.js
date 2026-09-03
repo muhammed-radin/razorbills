@@ -1,0 +1,1 @@
+import{b7 as e}from"./index-jQOn6wO3.js";const a=[["path",{d:"m12 17-5-5 5-5",key:"1s3y5u"}],["path",{d:"M22 18v-2a4 4 0 0 0-4-4H7",key:"1fcyog"}],["path",{d:"m7 17-5-5 5-5",key:"1ed8i2"}]],t=e("reply-all",a);export{a as __iconNode,t as default};

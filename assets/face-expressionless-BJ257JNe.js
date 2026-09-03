@@ -1,0 +1,1 @@
+import{b7 as e}from"./index-jQOn6wO3.js";const s=[["path",{d:"M14 10h2",key:"1lstlu"}],["path",{d:"M8 10h2",key:"66od0"}],["path",{d:"M8 16h8",key:"10ke2u"}],["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}]],o=e("face-expressionless",s);export{s as __iconNode,o as default};
