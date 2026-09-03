@@ -46,7 +46,9 @@ function CategoriesPage() {
           return {
             id: item.id,
             title: item.name,
-            subtitle: item.description || t("categories.noDescription", "No description available"),
+            subtitle:
+              item.description ||
+              t("categories.noDescription", "No description available"),
             image: item.image || null,
             icon: IconComponent ? <IconComponent /> : null,
             theme: "amber",
@@ -67,10 +69,7 @@ function CategoriesPage() {
     <div className="min-h-screen p-3 sm:p-7 max-sm:p-4 max-sm:mt-3">
       <Helmet>
         <title>{t("categories.title")} - RazorBills</title>
-        <meta
-          name="description"
-          content={t("categories.subtitle")}
-        />
+        <meta name="description" content={t("categories.subtitle")} />
         <meta
           name="keywords"
           content="categories, razorbills, products, shopping, electronics, home, fashion"
@@ -80,12 +79,8 @@ function CategoriesPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">
-            {t("categories.title")}
-          </h1>
-          <p className="text-gray-600">
-            {t("categories.subtitle")}
-          </p>
+          <h1 className="text-3xl font-bold mb-2">{t("categories.title")}</h1>
+          <p className="text-gray-600">{t("categories.subtitle")}</p>
         </header>
 
         {/* Category List */}

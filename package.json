@@ -11,6 +11,7 @@
     "final": "vite build && vite preview"
   },
   "dependencies": {
+    "@base-ui/react": "^1.7.0",
     "@hookform/resolvers": "^5.2.1",
     "@mdxeditor/editor": "^4.1.0",
     "@radix-ui/react-accordion": "^1.2.17",
