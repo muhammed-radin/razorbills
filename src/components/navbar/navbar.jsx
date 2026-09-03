@@ -25,7 +25,7 @@ const NavbarBlock = () => {
           <Logo />
 
           {/* Desktop Menu */}
-          <NavMenu className="hidden md:block" />
+          <NavMenu className="hidden lg:block" />
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -69,7 +69,7 @@ const NavbarBlock = () => {
           )}
 
           {/* Mobile Menu */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <NavigationSheet />
           </div>
         </div>
