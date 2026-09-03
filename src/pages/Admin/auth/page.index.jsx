@@ -1,45 +1,55 @@
 import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Outlet, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/utils/theme-provider";
 
 import { StrictMode, useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { LoaderScreen } from "@/components/LoaderScreen";
 
 const AdminAuth = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  // useEffect(() => {
+  //   authClient.getSession().then((session) => {
+  //     if (session && session.data.user) {
+  //       if (session.data.user.role !== "admin") {
+  //         console.log("User is not an admin. Redirecting to home page.");
+  //         navigate("/");
+  //         return;
+  //       } else {
+  //         setIsAuthenticated(true);
+  //       }
+  //     } else {
+  //       console.log("No session found. Redirecting to home page.");
+  //       console.log("Session:", session);
+  //       setIsAuthenticated(false);
+  //       navigate("/");
+  //     }
+  //   });
+  // }, []);
+
+  const { data, isPending, error } = authClient.useSession();
+
   useEffect(() => {
-    authClient.getSession().then((session) => {
-      if (session && session.user) {
-        if (session.user.role !== "admin") {
-          navigate("/");
-          return;
-        } else {
-          setIsAuthenticated(true);
-        }
-      } else {
-        setIsAuthenticated(false);
-        navigate("/");
-      }
-    });
-  }, []);
+    if (isPending) {
+      return;
+    }
+    if (error) {
+      navigate("/404");
+      return;
+    }
+    if (!data || !data.user || data.user.role !== "admin") {
+      navigate("/404");
+    }
+  }, [data]);
 
   return (
     <StrictMode>
       <ThemeProvider>
-        {isAuthenticated ? (
+        {isPending ? (
+          <LoaderScreen />
+        ) : data && data.user && data.user?.role === "admin" ? (
           <Outlet />
         ) : (
           <div className="flex min-h-screen flex-col items-center justify-center bg-background">

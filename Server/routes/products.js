@@ -10,7 +10,10 @@ const router = express.Router();
 
 /* GET */
 router.get("/", async function (req, res, next) {
-  if (productMemoryCache.getLocalMemory(req.url)) {
+  if (
+    productMemoryCache.getLocalMemory(req.url) &&
+    req.query.realtime !== "true"
+  ) {
     return res.json(productMemoryCache.getLocalMemory(req.url));
   }
 
