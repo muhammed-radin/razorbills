@@ -14,7 +14,7 @@ import { Skeleton } from "../ui/skeleton";
 const NavbarBlock = () => {
   const { setTheme, theme } = useTheme();
   const { t } = useTranslation();
-  
+
   const { data, isPending, error } = useSession();
   const user = data?.user;
 
@@ -29,17 +29,19 @@ const NavbarBlock = () => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-
           {/* theme button */}
           <Button
             size="icon"
             variant="outline"
             aria-label={t("nav.toggleTheme")}
             onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            className="max-[330px]:hidden"
           >
-            {theme === "light" ? <MoonIcon className="h-4 w-4" /> : <SunIcon className="h-4 w-4" />}
+            {theme === "light" ? (
+              <MoonIcon className="h-4 w-4" />
+            ) : (
+              <SunIcon className="h-4 w-4" />
+            )}
           </Button>
 
           {/* avatar or auth buttons */}
@@ -56,7 +58,7 @@ const NavbarBlock = () => {
           ) : (
             <>
               <Link to="/login" className="cursor-pointer">
-                <Button variant="outline" className="hidden sm:inline-flex">
+                <Button variant="outline" className="hidden lg:inline-flex">
                   {t("nav.signIn")}
                 </Button>
               </Link>
