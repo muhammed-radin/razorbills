@@ -1,0 +1,1 @@
+import{ba as e}from"./index-C8LgfNFp.js";const a=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M7 10h10",key:"1101jm"}],["path",{d:"M7 14h10",key:"1mhdw3"}]],h=e("square-equal",a);export{a as __iconNode,h as default};

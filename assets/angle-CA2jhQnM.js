@@ -1,1 +1,0 @@
-import{ba as a}from"./index-Dd7BjW4q.js";const e=[["path",{d:"M3 3v16a2 2 0 0 0 2 2h16",key:"c24i48"}],["path",{d:"M3 11a10 10 0 0 1 10 10",key:"jhvw44"}]],t=a("angle",e);export{e as __iconNode,t as default};

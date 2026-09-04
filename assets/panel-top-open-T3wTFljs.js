@@ -1,1 +1,0 @@
-import{ba as e}from"./index-Dd7BjW4q.js";const t=[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M3 9h18",key:"1pudct"}],["path",{d:"m15 14-3 3-3-3",key:"g215vf"}]],a=e("panel-top-open",t);export{t as __iconNode,a as default};

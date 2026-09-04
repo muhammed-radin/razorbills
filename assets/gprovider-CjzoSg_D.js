@@ -1,1 +1,0 @@
-import{j as e,b as s}from"./index-Dd7BjW4q.js";function i(){return e.jsxs("div",{className:"flex min-h-screen flex-col items-center justify-center w-full",children:[e.jsx(s,{className:"h-12 w-12"}),e.jsx("p",{className:"mt-4 text-lg font-medium",children:"Redirecting to Google..."})]})}export{i as default};

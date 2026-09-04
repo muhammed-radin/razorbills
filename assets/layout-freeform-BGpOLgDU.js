@@ -1,1 +1,0 @@
-import{ba as e}from"./index-Dd7BjW4q.js";const t=[["rect",{width:"7",height:"7",x:"3",y:"3",rx:"1",key:"1g98yp"}],["rect",{width:"7",height:"7",x:"14",y:"4",rx:"1",key:"n7b4zl"}],["rect",{width:"7",height:"7",x:"4",y:"14",rx:"1",key:"1ngf42"}]],o=e("layout-freeform",t);export{t as __iconNode,o as default};
