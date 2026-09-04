@@ -80,7 +80,7 @@ export default function CategoryList(params) {
     if (category === "All") {
       navigate("/search");
     } else {
-      navigate(`/search?category=${encodeURIComponent(category)}`);
+      navigate(`/search?transform=${encodeURIComponent(category)}`);
     }
   };
 
@@ -105,9 +105,9 @@ export default function CategoryList(params) {
                 key={category.id}
                 label={
                   category.name === "All" ? (
-                    <Link to={`/search?categories=all`}>All</Link>
+                    <Link to={`/search`}>All</Link>
                   ) : (
-                    <Link to={`/search?category=${category.name}`}>
+                    <Link to={`/search?transform=${category.id}`}>
                       {category.name}
                     </Link>
                   )

@@ -26,7 +26,7 @@ function CategoriesPage() {
 
   const handleCardClick = (id) => {
     if (id) {
-      navigate(`/search?category=${id}`);
+      navigate(`/search?transform=${id}`);
     }
   };
 
