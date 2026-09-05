@@ -1,13 +1,20 @@
 // server/auth.js
 import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { admin } from "better-auth/plugins";
+import { admin, anonymous } from "better-auth/plugins";
 import { UserModel } from "../models/schema/user.js";
 import { createAuthMiddleware } from "better-auth/api";
 import { decryptStrict } from "./crypt.js";
+import mongoose from "mongoose";
+
+let authInstance = null;
 
 export default function createAuth(db) {
-  return betterAuth({
+  if (authInstance) {
+    return authInstance;
+  }
+
+  authInstance = betterAuth({
     database: mongodbAdapter(
       // Extract the raw MongoClient from your Mongoose connection pool
       db,
@@ -67,6 +74,10 @@ export default function createAuth(db) {
       minPasswordLength: 8,
     },
     plugins: [
+      anonymous({
+        emailDomainName: "guest.razorbills.app",
+        generateName: (user) => `Guest-${user.id.slice(0, 8)}`,
+      }),
       admin({
         adminRoles: ["admin"],
         defaultRole: "user",
@@ -142,4 +153,10 @@ export default function createAuth(db) {
     baseURL: process.env.BETTER_AUTH_URL,
     secret: process.env.BETTER_AUTH_SECRET,
   });
+
+  return authInstance;
+}
+
+export function getAuthInstance() {
+  return createAuth(mongoose.connection);
 }

@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import { Product } from "../product.js";
 
 const generateId = () =>
   CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);

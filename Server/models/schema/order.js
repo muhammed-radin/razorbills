@@ -1,5 +1,22 @@
 import mongoose, { Schema } from "mongoose";
-import { Product } from "../product.js";
+
+export const orderStatusEnum = {
+  QUEUED: "queued", // order is created waiting for admin approval or payment confirmation
+  ORDER_CONFIRMED: "order_confirmed", // order is confirmed by admin or payment is confirmed
+  PENDING: "pending",
+  PROCESSING: "processing",
+  PAID: "paid",
+  SHIPPED: "shipped",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+  RETURNED: "returned",
+  REFUNDED: "refunded",
+  FAILED: "failed",
+  ON_HOLD: "on_hold",
+  REFUND_REQUESTED: "refund_requested",
+  REFUND_APPROVED: "refund_approved",
+  REFUND_DECLINED: "refund_declined",
+};
 
 export const OrderSchema = new Schema({
   id: { type: String, required: true, unique: true },
@@ -9,20 +26,24 @@ export const OrderSchema = new Schema({
       {
         productId: { type: String, required: true },
         title: { type: String, required: true },
-        Thumbnail: { type: String, required: true },
+        thumbnail: { type: String, required: true },
         originalPrice: { type: Number, required: true },
         sku: { type: String, required: true },
         category: { type: String, required: true },
         brand: { type: String, required: true },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
+        specialInfo: { type: Schema.Types.Mixed, default: {} },
       },
     ],
     required: true,
   },
   totalAmount: { type: Number, required: true },
   currency: { type: String, default: "INR" },
-  discount: { type: Number, default: 0 },
+  discount: {
+    codes: { type: [String], default: [] },
+    amount: { type: Number, default: 0 },
+  },
   tax: { type: Number, default: 0 },
 
   isPaid: { type: Boolean, default: false },
@@ -34,7 +55,16 @@ export const OrderSchema = new Schema({
   isActive: { type: Boolean, default: true },
 
   orderDate: { type: Date, default: Date.now },
-  status: { type: String, default: "Processing" },
+  status: {
+    type: String,
+    default: orderStatusEnum.QUEUED,
+    enum: Object.values(orderStatusEnum),
+  },
+  orderHistoryStates: {
+    type: [String],
+    default: [orderStatusEnum.QUEUED],
+    enum: Object.values(orderStatusEnum),
+  },
   shippingAddress: { type: String, required: true },
   billingAddress: { type: String, required: true },
   paymentMethod: { type: String, required: true },
@@ -66,13 +96,13 @@ OrderSchema.pre("save", function (next) {
 
 OrderSchema.methods.markAsPaid = function () {
   this.isPaid = true;
-  this.status = "Paid";
+  this.status = orderStatusEnum.PAID;
   return this.save();
 };
 
 OrderSchema.methods.markAsShipped = function (trackingNumber) {
   this.isShipped = true;
-  this.status = "Shipped";
+  this.status = orderStatusEnum.SHIPPED;
   this.trackingNumber = trackingNumber;
   this.shippedAt = new Date();
   return this.save();
@@ -80,28 +110,28 @@ OrderSchema.methods.markAsShipped = function (trackingNumber) {
 
 OrderSchema.methods.markAsDelivered = function () {
   this.completed = true;
-  this.status = "Delivered";
+  this.status = orderStatusEnum.COMPLETED;
   this.deliveredAt = new Date();
   return this.save();
 };
 
 OrderSchema.methods.cancelOrder = function () {
   this.isCancelled = true;
-  this.status = "Cancelled";
+  this.status = orderStatusEnum.CANCELLED;
   this.cancelledAt = new Date();
   return this.save();
 };
 
 OrderSchema.methods.returnOrder = function () {
   this.isReturned = true;
-  this.status = "Returned";
+  this.status = orderStatusEnum.RETURNED;
   this.returnedAt = new Date();
   return this.save();
 };
 
 OrderSchema.methods.refundOrder = function () {
   this.isRefunded = true;
-  this.status = "Refunded";
+  this.status = orderStatusEnum.REFUNDED;
   this.refundedAt = new Date();
   return this.save();
 };
@@ -122,34 +152,52 @@ OrderSchema.statics.getOrdersByUserId = function (userId) {
 
 // Updtate order status
 OrderSchema.statics.updateOrderStatus = function (orderId, status) {
-  return this.findOneAndUpdate({ id: orderId }, { status: status }, { new: true });
+  return this.findOneAndUpdate(
+    { id: orderId },
+    { status: status },
+    { new: true },
+  );
 };
 
 // Delete order
 OrderSchema.statics.deleteOrder = function (orderId) {
   return this.findOneAndDelete({ id: orderId });
-}
+};
 
 // cancel order
 OrderSchema.statics.cancelOrderById = function (orderId) {
-  return this.findOneAndUpdate({ id: orderId }, { isCancelled: true, status: "Cancelled", cancelledAt: new Date() }, { new: true });
+  return this.findOneAndUpdate(
+    { id: orderId },
+    { isCancelled: true, status: "Cancelled", cancelledAt: new Date() },
+    { new: true },
+  );
 };
 
 // shipment info update
 OrderSchema.statics.updateShipmentInfo = function (orderId, shipmentInfo) {
-  return this.findOneAndUpdate({ id: orderId }, { deliveryServiceInfo: shipmentInfo }, { new: true });
+  return this.findOneAndUpdate(
+    { id: orderId },
+    { deliveryServiceInfo: shipmentInfo },
+    { new: true },
+  );
 };
 
 // events of order
 OrderSchema.statics.getOrdersByStatus = function (status) {
-  return this.find({ status: status }); 
-}
-
-// update estimated delivery date
-OrderSchema.statics.updateEstimatedDelivery = function (orderId, estimatedDate) {
-  return this.findOneAndUpdate({ id: orderId }, { estimatedDelivery: estimatedDate, updatedAt: new Date() }, { new: true });
+  return this.find({ status: status });
 };
 
+// update estimated delivery date
+OrderSchema.statics.updateEstimatedDelivery = function (
+  orderId,
+  estimatedDate,
+) {
+  return this.findOneAndUpdate(
+    { id: orderId },
+    { estimatedDelivery: estimatedDate, updatedAt: new Date() },
+    { new: true },
+  );
+};
 
 export const OrderModel = mongoose.model("Order", OrderSchema, "orders");
 

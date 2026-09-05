@@ -83,7 +83,7 @@ export const CacheTable = {};
 /**
  * @param {object} data
  * @param {string} id
- * @param {number} timeout
+ * @param {number} timeout in milliseconds
  * @param {function} updateFn
  * @returns {Memory}
  */

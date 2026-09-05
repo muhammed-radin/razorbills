@@ -53,10 +53,10 @@ export default function onUserGoogleSignIn() {
                     response.data.user &&
                     response.data.token
                   ) {
-                    resolveui("Google Sign-Up successful");
+                    resolveui("Google Sign-In successful");
                     navigate("/");
                   } else {
-                    rejectui("Google Sign-Up failed");
+                    rejectui("Google Sign-In failed");
                   }
                 })
                 .catch((error) => {
@@ -67,24 +67,24 @@ export default function onUserGoogleSignIn() {
                 });
             })
             .catch((err) => {
-              console.warn("Google Sign-Up error:", err);
+              console.warn("Google Sign-In error:", err);
               rejectui(
                 `${err.errorMessage || err.message || err.response?.data?.message || "Unknown error"}`,
               );
             });
         } catch (error) {
-          console.error("Google Sign-Up error:", error);
+          console.error("Google Sign-In error:", error);
           rejectui(
             `${error.errorMessage || error.message || error.response?.data?.message || "Unknown error"}`,
           );
         }
       }),
     {
-      loading: "Signing up...",
+      loading: "Signing in...",
       success: (msg) => `${msg}`,
       error: (err) => {
         console.log(err);
-        return `Sign-up failed: ${err || err.errorMessage || err.message || err.response?.data?.message || "Unknown error"}`;
+        return `Sign-in failed: ${err || err.errorMessage || err.message || err.response?.data?.message || "Unknown error"}`;
       },
     },
   );
