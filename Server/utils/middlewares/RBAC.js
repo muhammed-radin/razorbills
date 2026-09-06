@@ -8,6 +8,16 @@ export const requireAdmin = async (req, res, next) => {
   });
   if (!session) return res.status(401).json({ error: "Unauthorized" });
 
+  if (!session.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (session.user.isAnonymous === true) {
+    return res.status(403).json({
+      error: "Forbidden: Anonymous users cannot access this resource.",
+    });
+  }
+
   const isStaff =
     session.user.role === "admin" || session.user.role === "owner";
   const isOwnerOfData = session.user.id === req.params.userId;
@@ -29,6 +39,15 @@ export const requirePermission = (requiredCapability) => {
       headers: req.headers,
     });
     if (!session) return res.status(401).json({ error: "Unauthorized" });
+    if (!session.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (session.user.isAnonymous === true) {
+      return res.status(403).json({
+        error: "Forbidden: Anonymous users cannot access this resource.",
+      });
+    }
 
     if (session.user.role === "owner") {
       req.user = session.user;

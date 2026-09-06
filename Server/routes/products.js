@@ -5,11 +5,16 @@ import { FeedMold } from "../models/feed.js";
 import { ProductModel, MinimalProduct } from "../models/schema/product.js";
 import { productFeedCache } from "../utils/cache-utils/product-feed.js";
 import { productMemoryCache } from "../utils/cache-utils/product-data.js";
+import {
+  passUserAuth,
+  requireSession,
+} from "../utils/middlewares/reqiuredAuth.js";
+import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 
 const router = express.Router();
 
 /* GET */
-router.get("/", async function (req, res, next) {
+router.get("/", requireSession, async function (req, res, next) {
   if (
     productMemoryCache.getLocalMemory(req.url) &&
     req.query.realtime !== "true"
@@ -134,7 +139,7 @@ router.get("/status", async function (req, res) {
   res.json(productStatusCache.get());
 });
 
-router.get("/feed", async function (req, res) {
+router.get("/feed", requireSession, async function (req, res) {
   if (productFeedCache.get() !== null && req.query.realtime !== "true") {
     return res.json(productFeedCache.get());
   }
@@ -143,7 +148,7 @@ router.get("/feed", async function (req, res) {
   res.json(productFeedCache.get());
 });
 
-router.get("/:productid", async function (req, res) {
+router.get("/:productid", requireSession, async function (req, res) {
   const productid = req.params.productid;
   const { title, price, tags, keywords, originalPrice, minimize } = req.query;
   if (!productid) {
@@ -184,33 +189,56 @@ router.get("/:productid", async function (req, res) {
   res.json(await product);
 });
 
-router.post("/new/:productId", async function (req, res) {
-  const productId = req.params.productId;
+router.post(
+  "/new/:productId",
+  requireAdmin,
+  requirePermission("create"),
+  passUserAuth,
+  async function (req, res) {
+    const productId = req.params.productId;
+    if (!req.user || !productId) {
+      return res.status(400).json({ error: "User or Product ID is required" });
+    }
 
-  const product = await db.collection("products").findOne({ id: productId });
-  if (product) {
-    return res
-      .status(403)
-      .json({ error: "Product aleready found in ID: " + productId });
-  }
+    const { id: adminId, name: adminName } = req.user;
 
-  const newProduct = req.body;
+    const product = await db.collection("products").findOne({ id: productId });
+    if (product) {
+      return res
+        .status(403)
+        .json({ error: "Product aleready found in ID: " + productId });
+    }
 
-  const created = await ProductModel.create(newProduct);
-  res.json(created);
-});
+    const newProduct = req.body;
+    newProduct.owner.id = adminId;
+    newProduct.owner.name = adminName;
 
-router.put("/:productid", async function (req, res) {
-  const productid = req.params.productid;
-  const product = req.body;
-  const updated = await ProductModel.updateOne({ id: productid }, product);
-  res.json(updated);
-});
+    const created = await ProductModel.create(newProduct);
+    res.json(created);
+  },
+);
 
-router.delete("/:productid", async function (req, res) {
-  const productid = req.params.productid;
-  const deleted = await ProductModel.deleteOne({ id: productid });
-  res.json(deleted);
-});
+router.put(
+  "/:productid",
+  requireAdmin,
+  requirePermission("update"),
+  async function (req, res) {
+    const productid = req.params.productid;
+    const product = req.body;
+    const updated = await ProductModel.updateOne({ id: productid }, product);
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/:productid",
+  requireAdmin,
+  requirePermission("delete"),
+  async function (req, res) {
+    const productid = req.params.productid;
+    const deleted = await ProductModel.deleteOne({ id: productid });
+    res.json(deleted);
+  },
+);
 
 export default router;

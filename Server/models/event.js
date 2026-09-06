@@ -63,4 +63,12 @@ class EventEmitter {
   }
 }
 
+class ClassicEvent {
+  constructor(type) {
+    this.type = type;
+    this.timestamp = Date.now();
+  }
+}
+
+export { ClassicEvent };
 export default EventEmitter;

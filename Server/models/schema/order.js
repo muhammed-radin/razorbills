@@ -78,6 +78,10 @@ export const OrderSchema = new Schema({
   returnedAt: { type: Date, default: null },
   refundedAt: { type: Date, default: null },
 
+  reasonForCancellation: { type: String, default: null },
+  reasonForReturn: { type: String, default: null },
+  reasonForRefund: { type: String, default: null },
+
   deliveryServiceInfo: {
     serviceName: { type: String, default: null },
     contactNumber: { type: String, default: null },
@@ -115,24 +119,28 @@ OrderSchema.methods.markAsDelivered = function () {
   return this.save();
 };
 
-OrderSchema.methods.cancelOrder = function () {
+OrderSchema.methods.cancelOrder = function (reason) {
   this.isCancelled = true;
+  this.isActive = false;
   this.status = orderStatusEnum.CANCELLED;
   this.cancelledAt = new Date();
+  this.reasonForCancellation = reason;
   return this.save();
 };
 
-OrderSchema.methods.returnOrder = function () {
+OrderSchema.methods.returnOrder = function (reason) {
   this.isReturned = true;
   this.status = orderStatusEnum.RETURNED;
   this.returnedAt = new Date();
+  this.reasonForReturn = reason;
   return this.save();
 };
 
-OrderSchema.methods.refundOrder = function () {
+OrderSchema.methods.refundOrder = function (reason) {
   this.isRefunded = true;
   this.status = orderStatusEnum.REFUNDED;
   this.refundedAt = new Date();
+  this.reasonForRefund = reason;
   return this.save();
 };
 
@@ -165,10 +173,17 @@ OrderSchema.statics.deleteOrder = function (orderId) {
 };
 
 // cancel order
-OrderSchema.statics.cancelOrderById = function (orderId) {
+OrderSchema.statics.cancelOrderById = function (orderId, reason) {
   return this.findOneAndUpdate(
     { id: orderId },
-    { isCancelled: true, status: "Cancelled", cancelledAt: new Date() },
+    {
+      isCancelled: true,
+      status: "Cancelled",
+      cancelledAt: new Date(),
+      reasonForCancellation: reason,
+      isActive: false,
+      status: orderStatusEnum.CANCELLED,
+    },
     { new: true },
   );
 };

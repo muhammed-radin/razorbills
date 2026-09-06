@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 export const AddressSchema = new Schema({
+  // currently unusable, instead use AddressMold to create new address objects and then save on user profile property addressBook array.
   id: { type: String, required: true, unique: true },
   userId: { type: String, required: true },
   name: { type: String, required: true },
@@ -17,10 +18,42 @@ export const AddressSchema = new Schema({
   isActive: { type: Boolean, default: true },
 });
 
+class AddressMold {
+  constructor({
+    id,
+    userId,
+    name,
+    street,
+    city,
+    state,
+    postalCode,
+    country,
+    phoneNumber,
+    email,
+    isDefault = false,
+  }) {
+    this.id = id;
+    this.userId = userId;
+    this.name = name;
+    this.street = street;
+    this.city = city;
+    this.state = state;
+    this.postalCode = postalCode;
+    this.country = country;
+    this.phoneNumber = phoneNumber;
+    this.email = email;
+    this.isDefault = isDefault;
+    this.createdAt = new Date();
+    this.updatedAt = new Date();
+    this.isActive = true;
+  }
+}
+
 export const AddressBook = mongoose.model(
+  // currently unusable, instead use AddressMold to create new address objects and then save on user profile property addressBook array.
   "AddressBook",
   AddressSchema,
   "addressbooks",
 );
 
-export default { AddressSchema, AddressBook };
+export { AddressMold };

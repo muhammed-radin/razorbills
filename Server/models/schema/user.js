@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { AddressSchema } from "./address";
 
 const generateId = () =>
   CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
@@ -15,8 +16,8 @@ export const UserSchema = new Schema(
 
     currentlyLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date, default: null },
-    addressBook: { type: [String], default: [] },
-    address: { type: String, default: "" },
+    addressBook: { type: [AddressSchema], default: [] },
+    address: { type: AddressSchema, default: null },
     phoneNumber: { type: String, default: "" },
     preferences: { type: Schema.Types.Mixed, default: {} },
     provider: { type: String, default: "local" },
@@ -28,6 +29,7 @@ export const UserSchema = new Schema(
     banExpires: { type: Date, default: null },
     banReason: { type: String, default: null },
 
+    // TODO: what about orderInfo?
     orderInfo: {
       orders: { type: Number, default: 0 },
       lastOrderDate: { type: Date, default: null },

@@ -49,7 +49,7 @@ async function flushInteractionViews(interactionBuffer) {
         return filter;
       },
     );
-    await db.collection("products").bulkWrite(bulkOps);
+    db.collection("products").bulkWrite(bulkOps);
     // Clear the buffer
     for (const productId in interactionBuffer) {
       delete interactionBuffer[productId];
@@ -299,5 +299,139 @@ router.post("product/rate", requireAuth, passUserAuth, (req, res) => {
 
   res.status(200).json({ message: "Rating recorded successfully" });
 });
+
+////////////////////////////////////
+///////////// Wishlist /////////////
+////////////////////////////////////
+
+// Wishlist count as Liked Products
+
+const wishlistBuffer = {}; // { productId: rawIncrementCount }
+
+evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
+  if (!wishlist || !wishlist.products || !Array.isArray(wishlist.products)) {
+    return;
+  }
+
+  function productWishlisted(
+    productId,
+    userId,
+    userEmail,
+    userName,
+    userAvatar,
+    isGuest,
+    folder,
+  ) {
+    if (!productId || !userId || !userEmail || !userName || !isGuest) {
+      console.error("Missing required fields for wishlist event");
+      return;
+    }
+
+    wishlistBuffer[productId] = (wishlistBuffer[productId] || 0) + 1;
+
+    productInteractionBuffer.push({
+      updateOne: {
+        filter: { productId, userId },
+        update: {
+          $setOnInsert: {
+            id: `${productId}_${userId}`,
+            productId,
+            userId,
+            userName,
+            userAvatar: userAvatar ? userAvatar : "",
+            userEmail,
+            isGuest: isGuest,
+            createdAt: new Date(),
+            folder: folder || "/",
+            hasWishlisted: true,
+          },
+          $set: {
+            updatedAt: new Date(),
+            isGuest: isGuest,
+            hasWishlisted: true,
+            userName,
+            userAvatar: userAvatar ? userAvatar : "",
+            folder: folder || "/",
+          },
+        },
+        upsert: true,
+      },
+    });
+  }
+
+  wishlist.products.forEach((product) => {
+    productWishlisted(
+      product.productId,
+      wishlist.userId,
+      wishlist.userEmail,
+      wishlist.userName,
+      wishlist.userAvatar,
+      wishlist.isGuest,
+      wishlist.folder,
+    );
+  });
+});
+
+function flushWishlists() {
+  if (Object.keys(wishlistBuffer).length === 0) {
+    return;
+  } else if (Object.keys(wishlistBuffer).length > 0) {
+    const bulkOps = Object.entries(wishlistBuffer).map(([productId, count]) => {
+      const filter = {
+        updateOne: {
+          filter: { productId },
+          update: { $inc: { "metrics.wishlistCount": count } },
+          upsert: true,
+        },
+      };
+      return filter;
+    });
+    db.collection("products").bulkWrite(bulkOps);
+    // Clear the buffer after flushing
+    for (const productId in wishlistBuffer) {
+      delete wishlistBuffer[productId];
+    }
+  }
+}
+
+const wishlistIntervalId = setInterval(flushWishlists, FLUSH_INTERVAL);
+
+////////////////////////////////////
+//////////// CART //////////////////
+////////////////////////////////////
+
+const cartBuffer = {}; // { productId: rawIncrementCount }
+
+evt.on(Evts.CART_ITEM_ADDED, async ({ cart, productId, quantity }) => {
+  if (!cart || !productId || !quantity || quantity <= 0) {
+    return;
+  }
+
+  cartBuffer[productId] = (cartBuffer[productId] || 0) + quantity;
+});
+
+function flushCarts() {
+  if (Object.keys(cartBuffer).length === 0) {
+    return;
+  } else if (Object.keys(cartBuffer).length > 0) {
+    const bulkOps = Object.entries(cartBuffer).map(([productId, count]) => {
+      const filter = {
+        updateOne: {
+          filter: { productId },
+          update: { $inc: { "metrics.cartCount": count } },
+          upsert: true,
+        },
+      };
+      return filter;
+    });
+    db.collection("products").bulkWrite(bulkOps);
+    // Clear the buffer after flushing
+    for (const productId in cartBuffer) {
+      delete cartBuffer[productId];
+    }
+  }
+}
+
+const cartIntervalId = setInterval(flushCarts, FLUSH_INTERVAL);
 
 export default router;

@@ -201,4 +201,73 @@ router.post("/", requireAuth, passUserAuth, function (req, res) {
     });
 });
 
+// Actions of order: cancel, getStatus, updateStatus.
+
+router.post("/:id/cancel", requireAuth, passUserAuth, function (req, res) {
+  const orderId = req.params.id;
+
+  OrderModel.findOne({ id: orderId })
+    .then((order) => {
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      if (order.isCancelled) {
+        return res.status(400).json({ error: "Order is already cancelled" });
+      }
+      order
+        .cancelOrder(req.body?.reason)
+        .then((updatedOrder) => {
+          res.json(updatedOrder);
+        })
+        .catch((err) => {
+          console.error("Error canceling order:", err);
+          res.status(500).json({ error: "Failed to cancel order" });
+        });
+    })
+    .catch((err) => {
+      console.error("Error fetching order:", err);
+      res.status(500).json({ error: "Failed to fetch order" });
+    });
+});
+
+router.get("/:id/status", requireAuth, passUserAuth, function (req, res) {
+  const orderId = req.params.id;
+
+  OrderModel.findOne({ id: orderId })
+    .then((order) => {
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      res.json(order);
+    })
+    .catch((err) => {
+      console.error("Error fetching order:", err);
+      res.status(500).json({ error: "Failed to fetch order" });
+    });
+});
+
+router.post(
+  "/:id/updateStatus",
+  requireAuth,
+  requireAdmin,
+  requirePermission("update"),
+  function (req, res) {
+    const orderId = req.params.id;
+
+    OrderModel.findOne({ id: orderId })
+      .then((order) => {
+        if (!order) {
+          return res.status(404).json({ error: "Order not found" });
+        }
+
+        // TODO: update order status;
+      })
+      .catch((err) => {
+        console.error("Error fetching order:", err);
+        res.status(500).json({ error: "Failed to fetch order" });
+      });
+  },
+);
+
 export default router;

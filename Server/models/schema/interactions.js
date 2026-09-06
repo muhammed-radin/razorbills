@@ -20,6 +20,7 @@ export const InteractionSchema = new Schema(
     isGuest: { type: Boolean, default: true },
     hasViewed: { type: Boolean, default: false },
     hasShared: { type: Boolean, default: false },
+    hasWishlisted: { type: Boolean, default: false },
 
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },

@@ -5,6 +5,7 @@ import {
   requireAuth,
 } from "../utils/middlewares/reqiuredAuth.js";
 import { WishlistModel } from "../models/schema/whishlist.js";
+import { evt, Evts } from "../utils/events.manage.js";
 
 const router = express.Router();
 
@@ -97,15 +98,34 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
         error: "Invalid wishlist data. 'name' and 'products' are required.",
       });
     }
+
+    let filteredProducts = products;
+
+    // get existing wishlist
+    const existingWishlist = await WishlistModel.findOne({ userId, folder });
+
+    // validate products: duplicate products
+    if (existingWishlist) {
+      const duplicateProducts = existingWishlist.products.map((product) => {
+        if (products.some((p) => p.productId === product.productId)) {
+          filteredProducts = products.filter(
+            (p) => p.productId !== product.productId,
+          );
+          return product;
+        }
+        return null;
+      });
+    }
+
     const newWishList = await WishlistModel.findOneAndUpdate(
       { userId, folder },
       {
-        $addToSet: { products },
+        $addToSet: { products: filteredProducts },
         $set: { updatedAt: new Date() },
         $setOnInsert: {
           folder: folder || "/",
           userId: userId,
-          products: products,
+          products: filteredProducts,
           updatedAt: new Date(),
           createdAt: new Date(),
         },
@@ -113,8 +133,14 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
       { upsert: true, new: true },
     );
 
+    evt.fire(Evts.WISHLIST_ADDED, newWishList);
+    filteredProducts.forEach((p) => {
+      evt.fire(Evts.PRODUCT_WISHLISTED, { product: p, userId, folder });
+    });
+
     res.json(newWishList);
   } catch (error) {
+    evt.fire(Evts.WISHLIST_ERROR, { error });
     console.error("Error creating wishlist:", error);
     res.status(500).json({ error: "Failed to create wishlist" });
   }

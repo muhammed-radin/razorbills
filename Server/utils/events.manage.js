@@ -1,4 +1,4 @@
-import EventEmitter from "../models/event.js";
+import EventEmitter, { ClassicEvent } from "../models/event.js";
 
 const globalEvents = new EventEmitter();
 const dbEvents = new EventEmitter();
@@ -10,6 +10,32 @@ class DatabaseDocumentEvent {
     this.document = document;
     this.data = eventData;
     this.timestamp = new Date();
+  }
+}
+
+class ProductEvent extends ClassicEvent {
+  constructor({ type, product }) {
+    super(type);
+    this.gloabl = true;
+    this.product = product;
+  }
+}
+
+class CommentEvent extends ClassicEvent {
+  constructor({ type, comment }) {
+    super(type);
+    this.gloabl = true;
+    this.comment = comment;
+  }
+}
+
+class ErrorEvent extends ClassicEvent {
+  constructor({ type, error, errorCode = null, data = null }) {
+    super(type);
+    this.gloabl = true;
+    this.error = error;
+    this.errorCode = errorCode;
+    this.data = data;
   }
 }
 
@@ -43,6 +69,9 @@ const GlobalEventNames = {
   PRODUCT_WISHLISTED: "product_wishlisted",
   PRODUCT_CARTED: "product_carted",
   PRODUCT_COMMENTED: "product_commented",
+  PRODUCT_COMMENT_UPDATED: "product_comment_updated",
+  PRODUCT_COMMENT_DELETED: "product_comment_deleted",
+  PRODUCT_COMMENT_ERROR: "product_comment_error",
 
   // User events
   USER_REGISTERED: "user_registered",
@@ -51,6 +80,20 @@ const GlobalEventNames = {
   USER_PROFILE_UPDATED: "user_profile_updated",
   USER_PASSWORD_CHANGED: "user_password_changed",
   USER_DELETED: "user_deleted",
+
+  // Wihlist events
+  WISHLIST_REMOVED: "wishlist_removed",
+  WISHLIST_ADDED: "wishlist_added",
+  WISHLIST_UPDATED: "wishlist_updated",
+  WISHLIST_ERROR: "wishlist_error",
+
+  // Cart events
+  CART_UPDATED: "cart_updated",
+  CART_CLEARED: "cart_cleared",
+  CART_ERROR: "cart_error",
+  CART_ITEM_ADDED: "cart_item_added",
+  CART_ITEM_REMOVED: "cart_item_removed",
+  CART_ITEM_UPDATED: "cart_item_updated",
 
   // Order events
   ORDER_PLACED: "order_placed",
@@ -68,4 +111,9 @@ export {
   dbEvents,
   DatabaseDocumentEvent,
   GlobalEventNames as Evts,
+
+  // Event classes
+  ProductEvent,
+  ErrorEvent,
+  CommentEvent,
 };
