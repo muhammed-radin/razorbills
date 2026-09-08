@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -21,7 +20,7 @@ import {
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
-import EmptyCart from "./components/empty-cart";
+import EmptyCart from "./components/Empty-cart.jsx";
 import ShoppingCart1 from "@/components/shopping-cart-1.jsx";
 import { cartData } from "@/pages/cart/data/shopping-cart-1-data.js";
 
