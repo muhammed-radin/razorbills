@@ -34,8 +34,8 @@ function FilterSidebar({
 
   return (
     <div className="w-full lg:w-80">
-      <Card className="py-3 border-1 border-border max-lg:border-none shadow-none max-lg:bg-transparent">
-        <CardHeader className="max-lg:px-2">
+      <Card className="py-3 max-lg:py-1 border-1 border-border max-lg:border-none shadow-none max-lg:bg-transparent">
+        <CardHeader className="max-lg:px-2 py-0 lg:py-2.5">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <SlidersHorizontal size={20} />

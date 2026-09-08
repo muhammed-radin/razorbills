@@ -6,16 +6,18 @@ import {
 } from "firebase/auth";
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
+import { alert } from "@/components/dialog-alert-provider";
+import { useContext } from "react";
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDcpDFsKkpD68g1gC5k8o00cudzq_gV2zk",
-  authDomain: "razorbills-server.firebaseapp.com",
-  projectId: "razorbills-server",
-  storageBucket: "razorbills-server.firebasestorage.app",
-  messagingSenderId: "405184941818",
-  appId: "1:405184941818:web:cc8b1748e54a609eac8343",
-  measurementId: "G-0F0QLNGZSS",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
@@ -52,22 +54,25 @@ const sendVerificationToUnverifiedUser = async () => {
 
     await verifyBeforeUpdateEmail(user, hiddenEmail);
 
-    alert(
-      `A verification link has been sent to ${hiddenEmail}. Please check your inbox to complete your account setup.`,
-    );
-    alert(
-      "Also, please check your spam/junk folder if you don't see it in your inbox.",
-    );
+    alert.info({
+      title: "Verification Email Sent",
+      description: `A verification link has been sent to ${hiddenEmail}. Please check your inbox to complete your account setup. \n\n If you don't see it, please check your spam/junk folder.`,
+    });
     return true;
   } catch (error) {
     console.error("Error setting up verification:", error);
 
     if (error.code === "auth/requires-recent-login") {
-      alert(
-        "For security reasons, please log out, sign back in, and try clicking verify immediately.",
-      );
+      alert.error({
+        title: "Security Alert",
+        description:
+          "For security reasons, please log out, sign back in, and try clicking verify immediately.",
+      });
     } else {
-      alert(`Failed: ${error.message}`);
+      alert.error({
+        title: "Error",
+        description: `Failed: ${error.message}`,
+      });
     }
 
     return false;
@@ -93,24 +98,43 @@ function clickToGProvider() {
             resolve({ user, credential });
           } else {
             // 1. Alert the user they must verify their email
-            alert("Please verify your email address before logging in.");
+            alert.info({
+              title: "Email not verified",
+              description:
+                "Please verify your email address before logging in.",
+              buttonText: "Continue",
+              onClose: () => {
+                reject({
+                  errorCode: "email-not-verified",
+                  errorMessage:
+                    "User email not verified. Please verify your email address before logging in.",
+                });
 
-            const confirmed = window.confirm(
-              "Would you like us to send a verification email to your inbox?",
-            );
-            // 2. Trigger a Firebase verification email to their inbox
-            if (confirmed) {
-              sendVerificationToUnverifiedUser(user)
-                .then(() => console.log("Verification email sent!"))
-                .catch((err) =>
-                  console.error("Error sending verification:", err),
-                );
-            } else {
-              reject({
-                errorCode: "email-not-verified",
-                errorMessage: "User email not verified.",
-              });
-            }
+                alert
+                  .confirm({
+                    title: "Send verification email?",
+                    description:
+                      "Would you like us to send a verification email to your inbox?",
+                    buttonText: "Send Email",
+                    secondaryButtonText: "Cancel",
+                  })
+                  .then((confirmed) => {
+                    // 2. Trigger a Firebase verification email to their inbox
+                    if (confirmed) {
+                      sendVerificationToUnverifiedUser(user)
+                        .then(() => {})
+                        .catch((err) =>
+                          console.error("Error sending verification:", err),
+                        );
+                    } else {
+                      reject({
+                        errorCode: "email-not-verified",
+                        errorMessage: "User email not verified.",
+                      });
+                    }
+                  });
+              },
+            });
           }
         }
       })

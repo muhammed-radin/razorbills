@@ -316,6 +316,7 @@ export default memo(function FeaturedCard({
                 "transition-all duration-300",
                 "hover:scale-105 hover:shadow-xl",
                 "bg-rose-500 hover:bg-rose-600 text-white",
+                "max-lg:hidden",
               )}
             >
               <PackageX className="size-4" />

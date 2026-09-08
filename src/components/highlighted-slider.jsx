@@ -214,6 +214,13 @@ export default function HighlightedSlider({
       text: "text-rose-400",
       badge: "from-rose-500 to-pink-500",
     },
+    // shadcn theme black and white
+    default: {
+      accent: "from-gray-600 to-gray-600",
+      glow: "bg-gray-500/30",
+      text: "text-gray-400",
+      badge: "from-gray-500 to-gray-500",
+    },
   };
 
   const theme = themeColors[current.theme] || themeColors.violet;

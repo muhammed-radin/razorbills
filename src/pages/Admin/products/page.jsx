@@ -66,10 +66,14 @@ export default function AdminProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await api.client.get(api.products());
+      const response = await api.client.get(api.products(), {
+        page: currentPage.get("page"),
+        realtime: "true",
+      });
 
-      setProducts(response.data || []);
-      setFilteredProducts(response.data || []);
+      setProducts(response.data.products || []);
+      setFilteredProducts(response.data.products || []);
+      setTotalPages(response.data.totalPages || 1);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {

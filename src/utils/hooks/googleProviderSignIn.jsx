@@ -62,20 +62,20 @@ export default function onUserGoogleSignIn() {
                 .catch((error) => {
                   console.error("Google Sign-In error:", error);
                   rejectui(
-                    `Google Sign-Up failed: ${error.message || error.response?.data?.message || "Unknown error"}`,
+                    `${error.errorMessage || error.message || error.response?.data?.message || "Unknown error"}`,
                   );
                 });
             })
             .catch((err) => {
               console.warn("Google Sign-Up error:", err);
               rejectui(
-                `Google Sign-Up failed: ${err.message || err.response?.data?.message || "Unknown error"}`,
+                `${err.errorMessage || err.message || err.response?.data?.message || "Unknown error"}`,
               );
             });
         } catch (error) {
           console.error("Google Sign-Up error:", error);
           rejectui(
-            `Google Sign-Up failed: ${error.message || error.response?.data?.message || "Unknown error"}`,
+            `${error.errorMessage || error.message || error.response?.data?.message || "Unknown error"}`,
           );
         }
       }),
@@ -84,7 +84,7 @@ export default function onUserGoogleSignIn() {
       success: (msg) => `${msg}`,
       error: (err) => {
         console.log(err);
-        return `Sign-up failed: ${err.message || err.response?.data?.message || "Unknown error"}`;
+        return `Sign-up failed: ${err || err.errorMessage || err.message || err.response?.data?.message || "Unknown error"}`;
       },
     },
   );

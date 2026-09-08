@@ -1,16 +1,12 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import CategoryTag from "./CategoryTag";
 import React from "react";
 import { cn } from "@/lib/utils";
-import axios from "axios";
 import { api } from "@/utils/api";
 import { Skeleton } from "../ui/skeleton";
-import { Grid2X2, Grid2X2Check } from "lucide-react";
 
 export default function CategoryList(params) {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const AllCategory = {
     id: "all",
     name: "All",
@@ -18,12 +14,52 @@ export default function CategoryList(params) {
     description: "All Categories",
   };
 
+  const defaultCategories = [
+    AllCategory,
+    {
+      id: "electronics",
+      name: "Electronics",
+      icon: "tv",
+      description: "Electronic Devices",
+    },
+    {
+      id: "smartphones",
+      name: "Smartphones",
+      icon: "smartphone",
+      description: "Smartphones and Accessories",
+    },
+    {
+      id: "laptops",
+      name: "Laptops",
+      icon: "laptop",
+      description: "Laptops and Accessories",
+    },
+    {
+      id: "cameras",
+      name: "Cameras",
+      icon: "camera",
+      description: "Cameras and Photography Equipment",
+    },
+    {
+      id: "headphones",
+      name: "Headphones",
+      icon: "headphones",
+      description: "Headphones and Audio Equipment",
+    },
+  ];
+  const [categories, setCategories] = useState(defaultCategories);
+  const [loading, setLoading] = useState(true);
+
   const fetchCategories = async () => {
     if (loading == false) setLoading(true);
     try {
       const response = await api.client.get("/api/categories?limit=13");
       const fetchedCategories = response.data;
-      setCategories([AllCategory, ...fetchedCategories]);
+      if (!fetchedCategories || fetchedCategories.length === 0) {
+        setCategories(defaultCategories);
+      } else {
+        setCategories([AllCategory, ...fetchedCategories]);
+      }
       setLoading(false);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -44,7 +80,7 @@ export default function CategoryList(params) {
     if (category === "All") {
       navigate("/search");
     } else {
-      navigate(`/search?category=${encodeURIComponent(category)}`);
+      navigate(`/search?transform=${encodeURIComponent(category)}`);
     }
   };
 
@@ -69,9 +105,9 @@ export default function CategoryList(params) {
                 key={category.id}
                 label={
                   category.name === "All" ? (
-                    <Link to={`/search?categories=all`}>All</Link>
+                    <Link to={`/search`}>All</Link>
                   ) : (
-                    <Link to={`/search?category=${category.name}`}>
+                    <Link to={`/search?transform=${category.id}`}>
                       {category.name}
                     </Link>
                   )

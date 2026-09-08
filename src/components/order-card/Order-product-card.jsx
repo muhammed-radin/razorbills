@@ -1,10 +1,7 @@
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -22,7 +19,7 @@ const OrderProductCardComponent = ({ variant, className }) => {
       className={cn(
         " w-full  relative flex flex-row items-start justify-start p-4 pl-0 gap-3 mb-5",
         varientStyle,
-        className
+        className,
       )}
     >
       <div className="mx-2">
@@ -37,7 +34,7 @@ const OrderProductCardComponent = ({ variant, className }) => {
         <CardDescription>
           {limitWords(
             "Product description goes here. It provides a brief overview of the product features.",
-            10
+            10,
           )}
         </CardDescription>
       </CardContent>
@@ -45,7 +42,7 @@ const OrderProductCardComponent = ({ variant, className }) => {
   );
 };
 
-OrderProductCardComponent.displayName = 'OrderProductCard';
+OrderProductCardComponent.displayName = "OrderProductCard";
 
 export const OrderProductCard = React.memo(OrderProductCardComponent);
 
