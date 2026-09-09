@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { dbEventNames, dbEvents } from "./events.manage.js";
+import { initAgenda } from "./agenda.js";
 const max_tries = 5;
 let tries = 0;
 
@@ -11,9 +12,28 @@ function connectToDatabase() {
       .then(async () => {
         dbEvents.fire(dbEventNames.CONNECTED);
         console.log("Connected!");
-        resolve();
         // Get the database instance
         const db = mongoose.connection.db;
+        // Get the Agenda instance
+        let agenda = initAgenda();
+        const isStarted = !!agenda._processInterval;
+        if (isStarted === false) {
+          agenda
+            .start()
+            .then(() => {
+              console.log("Agenda started successfully.");
+              resolve(db, mongoose.connection, agenda);
+            })
+            .catch((err) => {
+              dbEvents.fire(dbEventNames.ERROR, err);
+              console.log("Error starting Agenda");
+              console.error("Agenda start error:", err);
+              reject(err);
+            });
+        } else {
+          console.log("Agenda already started.");
+          resolve(db, mongoose.connection, agenda);
+        }
       })
       .catch((err) => {
         dbEvents.fire(dbEventNames.ERROR, err);

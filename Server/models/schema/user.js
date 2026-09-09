@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { AddressSchema } from "./address";
+import { AddressSchema } from "./address.js";
 
 const generateId = () =>
   CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);

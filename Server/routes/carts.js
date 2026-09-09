@@ -141,8 +141,7 @@ router.delete("/clear", requireAuth, passUserAuth, async function (req, res) {
 
   const cart = await CartModel.findOne({ userId });
   if (!cart) {
-    evt.fire(Evts.CART_ERROR, { error: "Cart not found", errorCode: 404 });
-    return res.status(404).json({ error: "Cart not found" });
+    cart = await CartModel.create({ userId, products: [] });
   }
 
   cart.products = [];

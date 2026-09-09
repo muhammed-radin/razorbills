@@ -103,6 +103,12 @@ const GlobalEventNames = {
 
   // Analytics events
   ANALYTICS_UPDATED: "analytics_updated",
+  ANALYTICS_FLUSHED: "analytics_flushed",
+
+  // Flush events
+  FLUSH_REQUESTED: "flush_requested",
+
+  INTERACTION_RECORDED: "interaction_recorded",
 };
 
 export {

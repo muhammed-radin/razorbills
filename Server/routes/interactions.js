@@ -26,6 +26,7 @@ const userInteractionViewBuffer = {}; // example: { productId: { userId1: 1, use
 const guestInteractionViewBuffer = {}; // example: { productId: { userId1: 1, userId2: 1 } }
 
 const FLUSH_INTERVAL = 1000 * 60; // 1 minute
+const FLUSH_BUFFER_SIZE = 30; // Flush when buffer reaches this size
 
 const productInteractionBuffer = [];
 
@@ -158,11 +159,22 @@ router.post(
       },
     });
 
+    evt.fire(Evts.INTERACTION_RECORDED, {
+      productId,
+      userId,
+      userName,
+      userAvatar: userAvatar ? userAvatar : "",
+      userEmail,
+      isGuest: !isAuthenticated,
+      interactionType: "view",
+      property: "hasViewed",
+      timestamp: new Date(),
+    });
     res.status(200).json({ message: "View recorded successfully" });
   },
 );
 
-const flushIntervalId = setInterval(flushViews, FLUSH_INTERVAL);
+const flushVisitIntervalId = setInterval(flushViews, FLUSH_INTERVAL);
 
 /////////// SHARES ////////////
 
@@ -213,6 +225,18 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
     },
   });
 
+  evt.fire(Evts.INTERACTION_RECORDED, {
+    productId,
+    userId,
+    userName,
+    userAvatar: userAvatar ? userAvatar : "",
+    userEmail,
+    isGuest: !isAuthenticated,
+    interactionType: "share",
+    property: "hasShared",
+    timestamp: new Date(),
+  });
+
   res.status(200).json({ message: "Share recorded successfully" });
 });
 
@@ -243,7 +267,9 @@ const shareIntervalId = setInterval(flushShares, FLUSH_INTERVAL);
 ///////////// RATES ////////////
 // Rating data stored into db directly, no buffer needed since it's a single value per user per product
 
-router.post("product/rate", requireAuth, passUserAuth, (req, res) => {
+const rateBuffer = {}; // { productId: rawIncrementCount }
+
+router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
   const { productId, rating } = req.body; // rating: 1-5
   const {
     id: userId,
@@ -270,7 +296,7 @@ router.post("product/rate", requireAuth, passUserAuth, (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  db.collection("interactions").bulkWrite({
+  productInteractionBuffer.push({
     updateOne: {
       filter: { productId, userId },
       update: {
@@ -297,8 +323,80 @@ router.post("product/rate", requireAuth, passUserAuth, (req, res) => {
     },
   });
 
+  rateBuffer[productId] = (rateBuffer[productId] || 0) + 1;
+
+  evt.fire(Evts.INTERACTION_RECORDED, {
+    productId,
+    userId,
+    userName,
+    userAvatar: userAvatar ? userAvatar : "",
+    userEmail,
+    isGuest: !isAuthenticated,
+    interactionType: "rate",
+    property: "rating",
+    timestamp: new Date(),
+  });
+
   res.status(200).json({ message: "Rating recorded successfully" });
 });
+
+const flushRates = () => {
+  if (Object.keys(rateBuffer).length === 0) {
+    return;
+  } else if (Object.keys(rateBuffer).length > 0) {
+    const bulkOps = Object.entries(rateBuffer).map(([productId, count]) => {
+      const filter = {
+        updateOne: {
+          filter: { productId },
+          update: { $inc: { "metrics.reviewCount": count } },
+          upsert: true,
+        },
+      };
+      return filter;
+    });
+    db.collection("products").bulkWrite(bulkOps);
+    // Clear the buffer after flushing
+    for (const productId in rateBuffer) {
+      delete rateBuffer[productId];
+    }
+  }
+};
+
+const rateIntervalId = setInterval(flushRates, FLUSH_INTERVAL);
+
+// get product interaction (views, shares, rates) for a specific product
+router.get(
+  "interactions/:productId",
+  requireAuth,
+  passUserAuth,
+  async (req, res) => {
+    const user = req.user;
+    const { productId } = req.params;
+
+    evt.fire(Evts.FLUSH_REQUESTED, true); // Try to Flush all buffers before fetching interactions
+
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+    if (!user) {
+      return res.status(400).json({ error: "User is required" });
+    }
+
+    try {
+      const interaction = await InteractionModel.findOne({
+        productId,
+        userId: user.id,
+      });
+      if (!interaction) {
+        return res.status(404).json({ error: "Interaction not found" });
+      }
+      res.status(200).json({ interaction });
+    } catch (error) {
+      console.error("Error fetching interactions:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  },
+);
 
 ////////////////////////////////////
 ///////////// Wishlist /////////////
@@ -370,6 +468,18 @@ evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
       wishlist.folder,
     );
   });
+
+  evt.fire(Evts.INTERACTION_RECORDED, {
+    productId: wishlist.products.map((p) => p.productId),
+    userId: wishlist.userId,
+    userName: wishlist.userName,
+    userAvatar: wishlist.userAvatar ? wishlist.userAvatar : "",
+    userEmail: wishlist.userEmail,
+    isGuest: wishlist.isGuest,
+    interactionType: "wishlist",
+    property: "metrics.wishlistCount",
+    timestamp: new Date(),
+  });
 });
 
 function flushWishlists() {
@@ -408,6 +518,18 @@ evt.on(Evts.CART_ITEM_ADDED, async ({ cart, productId, quantity }) => {
   }
 
   cartBuffer[productId] = (cartBuffer[productId] || 0) + quantity;
+
+  evt.fire(Evts.INTERACTION_RECORDED, {
+    productId,
+    userId: cart.userId,
+    userName: cart.userName,
+    userAvatar: cart.userAvatar ? cart.userAvatar : "",
+    userEmail: cart.userEmail,
+    isGuest: cart.isGuest,
+    interactionType: "cart",
+    property: "metrics.cartCount",
+    timestamp: new Date(),
+  });
 });
 
 function flushCarts() {
@@ -433,5 +555,34 @@ function flushCarts() {
 }
 
 const cartIntervalId = setInterval(flushCarts, FLUSH_INTERVAL);
+
+evt.on(Evts.FLUSH_REQUESTED, () => {
+  flushViews();
+  flushShares();
+  flushWishlists();
+  flushRates();
+  flushCarts();
+});
+
+evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
+  // flush if buffer size exceeds threshold
+  if (productInteractionBuffer.length >= FLUSH_BUFFER_SIZE) {
+    flushViews();
+    flushShares();
+    flushRates();
+    flushWishlists();
+    flushCarts();
+  }
+
+  if (
+    interaction &&
+    (interaction.type === "wishlist" || interaction.type === "cart") &&
+    (wishlistBuffer.length >= FLUSH_BUFFER_SIZE ||
+      cartBuffer.length >= FLUSH_BUFFER_SIZE)
+  ) {
+    flushWishlists();
+    flushCarts();
+  }
+});
 
 export default router;

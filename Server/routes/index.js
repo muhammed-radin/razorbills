@@ -9,6 +9,10 @@ import cartRouter from "./carts.js";
 import AddressRouter from "./address.js";
 import OrderRouter from "./orders.js";
 import commentsRouter from "./comments.js";
+import { getAgenda } from "../utils/agenda.js";
+import { createExpressMiddleware } from "agendash";
+import { checkDatabaseConnection } from "../utils/db.js";
+import { requireAdmin } from "../utils/middlewares/RBAC.js";
 
 const router = express.Router();
 
@@ -38,5 +42,12 @@ router.use("/orders", requireAuth, OrderRouter);
 
 /* Comment routes */
 router.use("/comments", requireAuth, commentsRouter);
+
+/* Agenda Dashboard */
+router.use("/tasks/dashboard", checkDatabaseConnection, (req, res, next) => {
+  const agenda = getAgenda();
+  const controller = createExpressMiddleware(agenda);
+  controller(req, res, next);
+});
 
 export default router;

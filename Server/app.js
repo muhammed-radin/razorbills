@@ -59,8 +59,8 @@ app.use(
 );
 
 app.use(startDB);
-app.use("/api/auth/*", authLimiter);
-app.all("/api/auth/*", checkDatabaseConnection, initAuth);
+app.use("/api/auth/*splat", authLimiter);
+app.all("/api/auth/*splat", checkDatabaseConnection, initAuth);
 
 app.use(globalApiLimiter);
 app.use(logger("dev"));
