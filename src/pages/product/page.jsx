@@ -44,13 +44,16 @@ import {
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import ReviewCard from "@/components/review-card";
+
 import HorizontalProductCard from "@/components/horizontal-card/horizontal-card";
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
 import { useTranslation } from "react-i18next";
+import { R } from "../../../dist/assets/index-B5fNWglU";
 
-const reviews = [];
+import { ReviewRating1 } from "@/components/review/review-rating-1"
+import { reviews, storeData } from "./review-rating-1-data";
+
 
 const ProductDetailsPage = () => {
   const { t } = useTranslation();
@@ -373,96 +376,11 @@ const ProductDetailsPage = () => {
         </section>
 
         {/* Reviews Section */}
-        <div className="max-w-7xl mt-12 space-y-8">
-          <Tabs defaultValue="review">
-            <TabsList>
-              <TabsTrigger value="review">{t("product.reviewsTab")}</TabsTrigger>
-              <TabsTrigger value="similar">
-                {t("product.brandProductsTab", { brand: product.brand || "" })}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="review" className="w-full">
-              <Card className="bg-background">
-                <CardHeader>
-                  <CardTitle>{t("product.customerReviews")}</CardTitle>
-                  <CardDescription>
-                    {t("product.reviewsSubtitle")}
-                  </CardDescription>
-                  <Drawer>
-                    <DrawerTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="ml-auto my-1"
-                      >
-                        {t("product.writeReview")}
-                      </Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                      <DrawerHeader>
-                        <DrawerTitle>{t("product.reviewDrawerTitle")}</DrawerTitle>
-                        <DrawerDescription>
-                          {t("product.reviewDrawerDesc")}
-                        </DrawerDescription>
-                      </DrawerHeader>
-                      <DrawerFooter className="space-x-2 flex flex-row items-center justify-center">
-                        <Button>{t("product.submitReview")}</Button>
-                        <DrawerClose asChild>
-                          <Button variant="outline">{t("common.cancel")}</Button>
-                        </DrawerClose>
-                      </DrawerFooter>
-                    </DrawerContent>
-                  </Drawer>
-                  <Separator className="my-2" />
-                </CardHeader>
-                <CardContent className="w-full">
-                  {reviews && reviews.length > 0 ? (
-                    <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
-                      {reviews.map((it, index) => (
-                        <ReviewCard
-                          review={{
-                            date: new Date(),
-                            author: "Customer",
-                            comment: "Great product!",
-                            title: "Excellent Quality",
-                            rating: 5,
-                          }}
-                          className="w-[350px]"
-                          key={index}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <MessageSquare className="h-10 w-10 text-muted-foreground mb-3" />
-                      <p className="text-sm font-medium text-muted-foreground">
-                        {t("product.noCommentsTitle")}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {t("product.noCommentsDesc")}
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="similar">
-              <Card className="bg-background">
-                <CardHeader>
-                  <CardTitle>{t("product.brandProductsTab", { brand: product.brand || "" })}</CardTitle>
-                </CardHeader>
-                <CardContent className="w-full">
-                  <div className="flex flex-wrap gap-4 flex-row items-stretch justify-center">
-                    <HorizontalProductCard
-                      product={product}
-                      className="w-[350px]"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+       <div className="flex min-h-svh w-full items-center justify-center">
+      <div className="w-full">
+        <ReviewRating1 Review={reviews} />
+      </div>
+    </div>
       </div>
     </div>
   );
