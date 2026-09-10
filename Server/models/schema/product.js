@@ -53,6 +53,13 @@ export const ProductSchema = new Schema(
     meterics: {
       allViews: { type: Number, default: 0 },
       debouncedViews: { type: Number, default: 0 },
+      stars: {
+        n1: { type: Number, default: 0 },
+        n2: { type: Number, default: 0 },
+        n3: { type: Number, default: 0 },
+        n4: { type: Number, default: 0 },
+        n5: { type: Number, default: 0 },
+      },
       rating: { type: Number, default: 0 },
       reviewCount: { type: Number, default: 0 },
       shareCount: { type: Number, default: 0 },

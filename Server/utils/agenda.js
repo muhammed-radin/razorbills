@@ -1,6 +1,7 @@
 import { MongoBackend } from "@agendajs/mongo-backend";
 import { Agenda } from "agenda";
 import mongoose from "mongoose";
+import { waitForConnection } from "./db.js";
 
 let agenda = null;
 
@@ -29,6 +30,7 @@ const initAgenda = () => {
     processEvery: "30 seconds", // How often to scan the DB for due jobs
     maxConcurrency: 20, // Max total jobs running at once per server instance
     defaultConcurrency: 5, // Default max concurrent jobs of a single type
+    logging: true, // Enable logging for debugging
   });
 
   // Handle Agenda internal errors safely
@@ -52,9 +54,29 @@ const gracefulShutdown = async () => {
   }
 };
 
-const getAgenda = () => {
+const useAgenda = () => {
   if (!agenda) return initAgenda();
   return agenda;
+};
+
+async function startAssiginTasks(callback) {
+  // stop agenda if it's already running
+  let isStarted = !!agenda._processInterval;
+  if (agenda && isStarted) {
+    await agenda.stop();
+  }
+
+  callback();
+
+  await agenda.start();
+}
+
+const getAgenda = () => {
+  return new Promise((resolve, reject) => {
+    waitForConnection().then(() => {
+      resolve(useAgenda(), startAssiginTasks);
+    });
+  });
 };
 
 // Capture system termination signals for clean shutdown
@@ -66,4 +88,6 @@ export {
   // Getter function to fetch the agenda instance anywhere in your app after initialization
   getAgenda,
   gracefulShutdown,
+  useAgenda,
+  startAssiginTasks,
 };

@@ -8,6 +8,7 @@ import {
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import { InteractionModel } from "../models/schema/interactions.js";
 import { evt, Evts } from "../utils/events.manage.js";
+import { getAgenda, useAgenda } from "../utils/agenda.js";
 
 const router = express.Router();
 
@@ -16,6 +17,12 @@ const router = express.Router();
 ///////////////////////////////////////////////////////////////////////
 
 //////////// VIEWS ////////////
+
+const FLUSH_INTERVAL = 1000 * 60; // 1 minute
+const FLUSH_BUFFER_SIZE = 30; // Flush when buffer reaches this size
+
+const productInteractionBuffer = [];
+
 // Incremental: Buffer all views instantly in memory ( "AllViews")
 const viewBuffer = {}; // { productId: rawIncrementCount }
 
@@ -25,20 +32,176 @@ const userInteractionViewBuffer = {}; // example: { productId: { userId1: 1, use
 // guest interaction ( "uniqueViews" )
 const guestInteractionViewBuffer = {}; // example: { productId: { userId1: 1, userId2: 1 } }
 
-const FLUSH_INTERVAL = 1000 * 60; // 1 minute
-const FLUSH_BUFFER_SIZE = 30; // Flush when buffer reaches this size
+const cartBuffer = {}; // { productId: rawIncrementCount }
 
-const productInteractionBuffer = [];
+const shareBuffer = {}; // { productId: rawIncrementCount }
 
-async function flushInteractionViews(interactionBuffer) {
+const rateBuffer = {}; // { productId: rawIncrementCount }
+
+const wishlistBuffer = {}; // { productId: rawIncrementCount }
+
+const avgRatingBuffer = {}; // { productId: { n1: 1, n2: 1, n3: 1, n4: 1, n5: 1 } }
+
+// agenda jobs
+
+getAgenda().then(async (agenda) => {
+  console.log("Agenda instance obtained in interactions.js");
+  await agenda.stop();
+  agenda.define("flush-interactions", async (job, done) => {
+    let { view, share, wishlist, rate, cart, all } = job.attrs.data;
+
+    if ((!view && !share && !wishlist && !rate && !cart) || all === true) {
+      view = true;
+      share = true;
+      wishlist = true;
+      rate = true;
+      cart = true;
+    }
+
+    if (view === true) {
+      await flushBuffer(viewBuffer, "metrics.allViews", "view");
+    }
+
+    if (share === true) {
+      await flushBuffer(shareBuffer, "metrics.shareCount", "share");
+    }
+
+    if (wishlist === true) {
+      await flushBuffer(wishlistBuffer, "metrics.wishlistCount", "wishlist");
+    }
+
+    // if (rate === true) {
+    //   await flushBuffer(rateBuffer, "metrics.reviewCount", "rate");
+    // }
+
+    if (cart === true) {
+      await flushBuffer(cartBuffer, "metrics.cartCount", "cart");
+    }
+
+    if (view || share || rate || all) {
+      await flushInteractions();
+    }
+
+    return done();
+  });
+
+  agenda.define("flush-and-calculate-product-rating", async (job, done) => {
+    const productIdsToFlush = Object.keys(avgRatingBuffer);
+
+    // Safely check if there is work to do. Always call done() to prevent hanging.
+    if (productIdsToFlush.length === 0) {
+      return done();
+    }
+
+    console.log("Flushing and calculating product ratings...");
+
+    try {
+      // FIXED: Snapshot and pull out items to isolate from incoming concurrent requests
+      const snapshot = {};
+      for (const productId of productIdsToFlush) {
+        snapshot[productId] = avgRatingBuffer[productId];
+        delete avgRatingBuffer[productId]; // Clears it safely from main buffer
+      }
+
+      const promises = Object.entries(snapshot).map(
+        async ([productId, ratings]) => {
+          const totalStar1 = ratings["n1"] || 0;
+          const totalStar2 = ratings["n2"] || 0;
+          const totalStar3 = ratings["n3"] || 0;
+          const totalStar4 = ratings["n4"] || 0;
+          const totalStar5 = ratings["n5"] || 0;
+
+          // FIXED: Sum up how many new reviews were submitted in this specific batch
+          const batchReviewCount =
+            totalStar1 + totalStar2 + totalStar3 + totalStar4 + totalStar5;
+
+          if (batchReviewCount === 0) return null;
+
+          return await db.collection("products").findOneAndUpdate(
+            { id: productId },
+            [
+              {
+                $set: {
+                  // FIXED: $ifNull blocks prevent upsert math breaking on brand new products
+                  "metrics.stars.n5": {
+                    $add: [{ $ifNull: ["$metrics.stars.n5", 0] }, totalStar5],
+                  },
+                  "metrics.stars.n4": {
+                    $add: [{ $ifNull: ["$metrics.stars.n4", 0] }, totalStar4],
+                  },
+                  "metrics.stars.n3": {
+                    $add: [{ $ifNull: ["$metrics.stars.n3", 0] }, totalStar3],
+                  },
+                  "metrics.stars.n2": {
+                    $add: [{ $ifNull: ["$metrics.stars.n2", 0] }, totalStar2],
+                  },
+                  "metrics.stars.n1": {
+                    $add: [{ $ifNull: ["$metrics.stars.n1", 0] }, totalStar1],
+                  },
+
+                  // FIXED: Simply adding the plain batch total count to the database total
+                  "metrics.reviewCount": {
+                    $add: [
+                      { $ifNull: ["$metrics.reviewCount", 0] },
+                      batchReviewCount,
+                    ],
+                  },
+                },
+              },
+              {
+                $set: {
+                  // Step 3: Recalculate the mathematical weighted average
+                  "metrics.rating": {
+                    $divide: [
+                      {
+                        $add: [
+                          { $multiply: [5, "$metrics.stars.n5"] },
+                          { $multiply: [4, "$metrics.stars.n4"] },
+                          { $multiply: [3, "$metrics.stars.n3"] },
+                          { $multiply: [2, "$metrics.stars.n2"] },
+                          { $multiply: [1, "$metrics.stars.n1"] },
+                        ],
+                      },
+                      "$metrics.reviewCount",
+                    ],
+                  },
+                },
+              },
+            ],
+            { upsert: true, returnDocument: "after" }, // Native driver uses returnDocument instead of new: true
+          );
+        },
+      );
+
+      await Promise.all(promises);
+      done();
+    } catch (error) {
+      console.error("Failed to flush product ratings batch:", error);
+      throw error; // Let Agenda handle the error and retry if needed
+    }
+  });
+
+  await agenda.start();
+
+  agenda.every("5 minutes", "flush-interactions", {
+    all: true,
+  });
+
+  agenda.every("30 minutes", "flush-and-calculate-product-rating", {});
+});
+
+function interactionUtil(interactionBuffer) {
   // user interaction
+  let rawBuffer = {}; // { productId: rawIncrementCount }
   if (Object.keys(interactionBuffer).length > 0) {
     const bulkOps = Object.entries(interactionBuffer).map(
       ([productId, users]) => {
         // { productId: { userId: 1 } }
-        // example: productId: ALsdksd83rj..... random id
-        // users: { "sddfe...userid": 1, "askjds_userid": 1 }
+        // example id: productId: ALsdksd83rj..... random id
+        // users id: { "sddfe...userid": 1, "askjds_userid": 1 }
         const totalViews = Object.keys(users).length;
+
+        rawBuffer[productId] = totalViews;
 
         const filter = {
           updateOne: {
@@ -50,47 +213,41 @@ async function flushInteractionViews(interactionBuffer) {
         return filter;
       },
     );
-    db.collection("products").bulkWrite(bulkOps);
-    // Clear the buffer
-    for (const productId in interactionBuffer) {
-      delete interactionBuffer[productId];
-    }
+
+    return {
+      bulkOps: bulkOps,
+      clearBuffer: () => {
+        for (const productId in interactionBuffer) {
+          delete interactionBuffer[productId];
+        }
+      },
+      toRawBuffer: () => {
+        return rawBuffer;
+      },
+    };
+  } else {
+    return null; // No interactions to flush
   }
 }
 
-function flushViews() {
-  // all views
-  if (Object.keys(viewBuffer).length > 0) {
-    const bulkOps = Object.entries(viewBuffer).map(([productId, count]) => {
-      const filter = {
-        updateOne: {
-          filter: { productId },
-          update: { $inc: { "metrics.allViews": count } },
-          upsert: true,
-        },
-      };
-      return filter;
-    });
-    db.collection("products").bulkWrite(bulkOps);
-    // Clear the buffer after flushing
-    for (const productId in viewBuffer) {
-      delete viewBuffer[productId];
+function flushInteractions() {
+  return new Promise((resolve, reject) => {
+    // flush productInteractionBuffer to interactions collection
+    if (productInteractionBuffer.length > 0) {
+      InteractionModel.bulkWrite(productInteractionBuffer)
+        .then(() => {
+          resolve();
+          productInteractionBuffer.length = 0; // Clear the buffer after flushing
+        })
+        .catch((err) => {
+          reject(err);
+          console.error("Error flushing product view interactions:", err);
+          throw err;
+        });
+    } else {
+      resolve();
     }
-  }
-
-  flushInteractionViews(userInteractionViewBuffer);
-  flushInteractionViews(guestInteractionViewBuffer);
-
-  // flush productInteractionBuffer to interactions collection
-  if (productInteractionBuffer.length > 0) {
-    InteractionModel.bulkWrite(productInteractionBuffer)
-      .then(() => {
-        productInteractionBuffer.length = 0; // Clear the buffer after flushing
-      })
-      .catch((err) => {
-        console.error("Error flushing product view interactions:", err);
-      });
-  }
+  });
 }
 
 // viewBuffer incremental middleware
@@ -99,6 +256,75 @@ function addAllViews(req, res, next) {
   viewBuffer[productId] = (viewBuffer[productId] || 0) + 1;
   next();
 }
+
+// Flush Function
+function flushBuffer(buffer, property, bufferName, collection = "products") {
+  return new Promise((resolve, reject) => {
+    console.log(`Flushing ${bufferName} buffer to ${collection} collection...`);
+    if (Object.keys(buffer).length === 0) {
+      console.log(`No ${bufferName} interactions to flush.`);
+      resolve(); // Resolve the promise even if there's nothing to flush
+      return;
+    } else if (Object.keys(buffer).length > 0) {
+      // snapshot the buffer to avoid race conditions
+      const snapshot = {};
+      for (const productId of Object.keys(buffer)) {
+        snapshot[productId] = buffer[productId];
+        delete buffer[productId]; // Clears it safely from main buffer
+      }
+
+      console.log(
+        `Flushing ${Object.keys(snapshot).length} ${bufferName} interactions...`,
+      );
+      const bulkOps = Object.entries(snapshot).map(([productId, count]) => {
+        const filter = {
+          updateOne: {
+            filter: { productId },
+            update: { $inc: { [`${property}`]: count } },
+            upsert: true,
+          },
+        };
+
+        return filter;
+      });
+
+      db.collection(collection)
+        .bulkWrite(bulkOps)
+        .then(() => {
+          resolve(); // Resolve the promise after flushing
+        })
+        .catch((err) => {
+          // Restore the snapshot back to the buffer in case of an error
+          for (const productId in snapshot) {
+            buffer[productId] = snapshot[productId];
+          }
+          reject(err); // Reject the promise if there's an error
+          console.error(`Error flushing ${bufferName} buffer:`, err);
+        });
+
+      if (bufferName === "view") {
+        let userInteractions = interactionUtil(userInteractionViewBuffer);
+        let guestInteractions = interactionUtil(guestInteractionViewBuffer);
+
+        if (userInteractions && userInteractions.toRawBuffer) {
+          const userRawBuffer = userInteractions.toRawBuffer();
+          flushBuffer(userRawBuffer, "metrics.debouncedViews", "userView");
+        }
+
+        if (guestInteractions && guestInteractions.toRawBuffer) {
+          const guestRawBuffer = guestInteractions.toRawBuffer();
+          flushBuffer(guestRawBuffer, "metrics.debouncedViews", "guestView");
+        }
+      }
+
+      // TODO: calucalte rating and save to product collection with Agendajs
+    }
+  });
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////     VIEWS    //////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.post(
   "product/visit",
@@ -174,11 +400,9 @@ router.post(
   },
 );
 
-const flushVisitIntervalId = setInterval(flushViews, FLUSH_INTERVAL);
-
-/////////// SHARES ////////////
-
-const shareBuffer = {}; // { productId: rawIncrementCount }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////// SHARES ///////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.post("product/share", passUserAuth, requireSession, (req, res) => {
   const { productId } = req.body;
@@ -240,37 +464,14 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
   res.status(200).json({ message: "Share recorded successfully" });
 });
 
-const flushShares = () => {
-  if (Object.keys(shareBuffer).length === 0) {
-    return;
-  } else if (Object.keys(shareBuffer).length > 0) {
-    const bulkOps = Object.entries(shareBuffer).map(([productId, count]) => {
-      const filter = {
-        updateOne: {
-          filter: { productId },
-          update: { $inc: { "metrics.allShares": count } },
-          upsert: true,
-        },
-      };
-      return filter;
-    });
-    db.collection("products").bulkWrite(bulkOps);
-    // Clear the buffer after flushing
-    for (const productId in shareBuffer) {
-      delete shareBuffer[productId];
-    }
-  }
-};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////// RATES ///////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const shareIntervalId = setInterval(flushShares, FLUSH_INTERVAL);
-
-///////////// RATES ////////////
 // Rating data stored into db directly, no buffer needed since it's a single value per user per product
 
-const rateBuffer = {}; // { productId: rawIncrementCount }
-
 router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
-  const { productId, rating } = req.body; // rating: 1-5
+  let { productId, rating } = req.body; // rating: 1-5
   const {
     id: userId,
     email: userEmail,
@@ -278,6 +479,8 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
     avatar: userAvatar,
   } = req.user;
   const isAuthenticated = req.user && !req.user.isAnonymous;
+
+  rating = Math.floor(Math.abs(parseInt(rating)));
 
   if (!isAuthenticated) {
     return res.status(400).json({
@@ -296,6 +499,19 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  if (!avgRatingBuffer[productId]) {
+    avgRatingBuffer[productId] = {
+      n1: 0,
+      n2: 0,
+      n3: 0,
+      n4: 0,
+      n5: 0,
+    };
+  }
+
+  avgRatingBuffer[productId]["n" + rating] =
+    (avgRatingBuffer[productId]["n" + rating] || 0) + 1;
+
   productInteractionBuffer.push({
     updateOne: {
       filter: { productId, userId },
@@ -308,6 +524,7 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
           userAvatar: userAvatar ? userAvatar : "",
           userEmail,
           isGuest: !isAuthenticated,
+          rating,
           createdAt: new Date(),
         },
         $set: {
@@ -340,71 +557,11 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
   res.status(200).json({ message: "Rating recorded successfully" });
 });
 
-const flushRates = () => {
-  if (Object.keys(rateBuffer).length === 0) {
-    return;
-  } else if (Object.keys(rateBuffer).length > 0) {
-    const bulkOps = Object.entries(rateBuffer).map(([productId, count]) => {
-      const filter = {
-        updateOne: {
-          filter: { productId },
-          update: { $inc: { "metrics.reviewCount": count } },
-          upsert: true,
-        },
-      };
-      return filter;
-    });
-    db.collection("products").bulkWrite(bulkOps);
-    // Clear the buffer after flushing
-    for (const productId in rateBuffer) {
-      delete rateBuffer[productId];
-    }
-  }
-};
-
-const rateIntervalId = setInterval(flushRates, FLUSH_INTERVAL);
-
-// get product interaction (views, shares, rates) for a specific product
-router.get(
-  "interactions/:productId",
-  requireAuth,
-  passUserAuth,
-  async (req, res) => {
-    const user = req.user;
-    const { productId } = req.params;
-
-    evt.fire(Evts.FLUSH_REQUESTED, true); // Try to Flush all buffers before fetching interactions
-
-    if (!productId) {
-      return res.status(400).json({ error: "Product ID is required" });
-    }
-    if (!user) {
-      return res.status(400).json({ error: "User is required" });
-    }
-
-    try {
-      const interaction = await InteractionModel.findOne({
-        productId,
-        userId: user.id,
-      });
-      if (!interaction) {
-        return res.status(404).json({ error: "Interaction not found" });
-      }
-      res.status(200).json({ interaction });
-    } catch (error) {
-      console.error("Error fetching interactions:", error);
-      res.status(500).json({ error: "Internal server error" });
-    }
-  },
-);
-
-////////////////////////////////////
-///////////// Wishlist /////////////
-////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////// Wishlist /////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Wishlist count as Liked Products
-
-const wishlistBuffer = {}; // { productId: rawIncrementCount }
 
 evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
   if (!wishlist || !wishlist.products || !Array.isArray(wishlist.products)) {
@@ -482,35 +639,9 @@ evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
   });
 });
 
-function flushWishlists() {
-  if (Object.keys(wishlistBuffer).length === 0) {
-    return;
-  } else if (Object.keys(wishlistBuffer).length > 0) {
-    const bulkOps = Object.entries(wishlistBuffer).map(([productId, count]) => {
-      const filter = {
-        updateOne: {
-          filter: { productId },
-          update: { $inc: { "metrics.wishlistCount": count } },
-          upsert: true,
-        },
-      };
-      return filter;
-    });
-    db.collection("products").bulkWrite(bulkOps);
-    // Clear the buffer after flushing
-    for (const productId in wishlistBuffer) {
-      delete wishlistBuffer[productId];
-    }
-  }
-}
-
-const wishlistIntervalId = setInterval(flushWishlists, FLUSH_INTERVAL);
-
-////////////////////////////////////
-//////////// CART //////////////////
-////////////////////////////////////
-
-const cartBuffer = {}; // { productId: rawIncrementCount }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////// CART ////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 evt.on(Evts.CART_ITEM_ADDED, async ({ cart, productId, quantity }) => {
   if (!cart || !productId || !quantity || quantity <= 0) {
@@ -532,46 +663,14 @@ evt.on(Evts.CART_ITEM_ADDED, async ({ cart, productId, quantity }) => {
   });
 });
 
-function flushCarts() {
-  if (Object.keys(cartBuffer).length === 0) {
-    return;
-  } else if (Object.keys(cartBuffer).length > 0) {
-    const bulkOps = Object.entries(cartBuffer).map(([productId, count]) => {
-      const filter = {
-        updateOne: {
-          filter: { productId },
-          update: { $inc: { "metrics.cartCount": count } },
-          upsert: true,
-        },
-      };
-      return filter;
-    });
-    db.collection("products").bulkWrite(bulkOps);
-    // Clear the buffer after flushing
-    for (const productId in cartBuffer) {
-      delete cartBuffer[productId];
-    }
-  }
-}
-
-const cartIntervalId = setInterval(flushCarts, FLUSH_INTERVAL);
-
 evt.on(Evts.FLUSH_REQUESTED, () => {
-  flushViews();
-  flushShares();
-  flushWishlists();
-  flushRates();
-  flushCarts();
+  useAgenda().now("flush-interactions", { all: true });
 });
 
 evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
   // flush if buffer size exceeds threshold
   if (productInteractionBuffer.length >= FLUSH_BUFFER_SIZE) {
-    flushViews();
-    flushShares();
-    flushRates();
-    flushWishlists();
-    flushCarts();
+    evt.fire(Evts.FLUSH_REQUESTED, true);
   }
 
   if (
@@ -582,6 +681,35 @@ evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
   ) {
     flushWishlists();
     flushCarts();
+  }
+});
+
+// get product interaction (views, shares, rates) for a specific product
+router.get("/p/:productId", requireAuth, passUserAuth, async (req, res) => {
+  const user = req.user;
+  const { productId } = req.params;
+
+  evt.fire(Evts.FLUSH_REQUESTED, true); // Try to Flush all buffers before fetching interactions
+
+  if (!productId) {
+    return res.status(400).json({ error: "Product ID is required" });
+  }
+  if (!user) {
+    return res.status(400).json({ error: "User is required" });
+  }
+
+  try {
+    const interaction = await InteractionModel.findOne({
+      productId,
+      userId: user.id,
+    });
+    if (!interaction) {
+      return res.status(404).json({ error: "Interaction not found" });
+    }
+    res.status(200).json({ interaction });
+  } catch (error) {
+    console.error("Error fetching interactions:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 

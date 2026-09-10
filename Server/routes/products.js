@@ -241,4 +241,41 @@ router.delete(
   },
 );
 
+// similar products
+router.get("similar/:id", requireSession, async (req, res) => {
+  const productId = req.params?.id;
+  if (
+    productMemoryCache.getLocalMemory(req.url) &&
+    req.query.realtime !== "true"
+  ) {
+    return res.json(productMemoryCache.getLocalMemory(req.url));
+  }
+
+  const limit = parseInt(req.query?.limit) || parseInt(req.body?.limit) || 5;
+
+  if (productId) {
+    return res.status(400).json({ error: "Product ID is required" });
+  }
+
+  const product = await db.collection("products").findOne({ id: productId });
+  if (!product) {
+    return res.status(404).json({ error: "Product not found" });
+  }
+
+  const similarProducts = await db
+    .collection("products")
+    .find({ tags: { $in: product.tags }, keywords: { $in: product.keywords } })
+    .limit(limit);
+
+  if (similarProducts) {
+    productMemoryCache.setLocalMemory(
+      req.url,
+      { products: similarProducts, fromCache: true },
+      60 * 60 * 24, // One day in seconds
+    );
+  }
+
+  res.json({ products: similarProducts, fromCache: false });
+});
+
 export default router;

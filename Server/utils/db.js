@@ -104,6 +104,21 @@ function checkDatabaseConnection(req, res, next) {
   }
 }
 
+function checkCurrentConnection() {
+  return mongoose.connection.readyState == 1;
+}
+
+async function waitForConnection() {
+  return new Promise((resolve, reject) => {
+    let intervalID = setInterval(() => {
+      if (checkCurrentConnection()) {
+        resolve();
+        clearInterval(intervalID);
+      }
+    }, 1000); // Check every second
+  });
+}
+
 // export db
 const db = mongoose.connection;
 export {
@@ -113,4 +128,6 @@ export {
   dropCollectionByName,
   checkDatabaseConnection,
   startDB,
+  waitForConnection,
+  checkCurrentConnection,
 };
