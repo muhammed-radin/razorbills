@@ -45,7 +45,6 @@ const avgRatingBuffer = {}; // { productId: { n1: 1, n2: 1, n3: 1, n4: 1, n5: 1 
 // agenda jobs
 
 getAgenda().then(async (agenda) => {
-  console.log("Agenda instance obtained in interactions.js");
   await agenda.stop();
   agenda.define("flush-interactions", async (job, done) => {
     let { view, share, wishlist, rate, cart, all } = job.attrs.data;
@@ -92,8 +91,6 @@ getAgenda().then(async (agenda) => {
     if (productIdsToFlush.length === 0) {
       return done();
     }
-
-    console.log("Flushing and calculating product ratings...");
 
     try {
       // FIXED: Snapshot and pull out items to isolate from incoming concurrent requests
@@ -260,9 +257,7 @@ function addAllViews(req, res, next) {
 // Flush Function
 function flushBuffer(buffer, property, bufferName, collection = "products") {
   return new Promise((resolve, reject) => {
-    console.log(`Flushing ${bufferName} buffer to ${collection} collection...`);
     if (Object.keys(buffer).length === 0) {
-      console.log(`No ${bufferName} interactions to flush.`);
       resolve(); // Resolve the promise even if there's nothing to flush
       return;
     } else if (Object.keys(buffer).length > 0) {
@@ -273,9 +268,6 @@ function flushBuffer(buffer, property, bufferName, collection = "products") {
         delete buffer[productId]; // Clears it safely from main buffer
       }
 
-      console.log(
-        `Flushing ${Object.keys(snapshot).length} ${bufferName} interactions...`,
-      );
       const bulkOps = Object.entries(snapshot).map(([productId, count]) => {
         const filter = {
           updateOne: {

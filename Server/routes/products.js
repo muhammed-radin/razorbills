@@ -242,40 +242,155 @@ router.delete(
 );
 
 // similar products
-router.get("similar/:id", requireSession, async (req, res) => {
-  const productId = req.params?.id;
-  if (
-    productMemoryCache.getLocalMemory(req.url) &&
-    req.query.realtime !== "true"
-  ) {
-    return res.json(productMemoryCache.getLocalMemory(req.url));
-  }
+router.get("/similar/:id", requireSession, async (req, res) => {
+  try {
+    const productId = req.params.id;
+    console.log("Fetching similar products for product ID:", productId);
 
-  const limit = parseInt(req.query?.limit) || parseInt(req.body?.limit) || 5;
+    // 1. Check Memory Cache
+    if (
+      productMemoryCache.getLocalMemory(req.url) &&
+      req.query.realtime !== "true"
+    ) {
+      return res.json(productMemoryCache.getLocalMemory(req.url));
+    }
 
-  if (productId) {
-    return res.status(400).json({ error: "Product ID is required" });
-  }
+    const limit = parseInt(req.query?.limit) || parseInt(req.body?.limit) || 5;
 
-  const product = await db.collection("products").findOne({ id: productId });
-  if (!product) {
-    return res.status(404).json({ error: "Product not found" });
-  }
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
 
-  const similarProducts = await db
-    .collection("products")
-    .find({ tags: { $in: product.tags }, keywords: { $in: product.keywords } })
-    .limit(limit);
+    // Fetch target product from DB
+    const targetProduct = await db
+      .collection("products")
+      .findOne({ id: productId });
 
-  if (similarProducts) {
-    productMemoryCache.setLocalMemory(
-      req.url,
-      { products: similarProducts, fromCache: true },
-      60 * 60 * 24, // One day in seconds
+    if (!targetProduct) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    console.log(
+      "Target Product:",
+      targetProduct.tags,
+      targetProduct.keywords,
+      targetProduct.category,
+      targetProduct.brand,
+      targetProduct.id,
     );
-  }
 
-  res.json({ products: similarProducts, fromCache: false });
+    // 2. Query similar items using an aggregation pipeline with multi-stage fallbacks
+    const [results] = await ProductModel.aggregate([
+      {
+        $facet: {
+          // Strategy 1: Smart Similarity based on tags/keywords (Must match category)
+          similar: [
+            {
+              $match: {
+                _id: { $ne: targetProduct._id },
+                id: { $ne: targetProduct.id },
+                category: targetProduct.category,
+              },
+            },
+            {
+              $addFields: {
+                matchedTagsCount: {
+                  $size: {
+                    $setIntersection: ["$tags", targetProduct.tags || []],
+                  },
+                },
+                matchedKeywordsCount: {
+                  $size: {
+                    $setIntersection: [
+                      "$keywords",
+                      targetProduct.keywords || [],
+                    ],
+                  },
+                },
+                brandBonus: {
+                  $cond: [{ $eq: ["$brand", targetProduct.brand] }, 2, 0],
+                },
+              },
+            },
+            {
+              $addFields: {
+                totalScore: {
+                  $add: [
+                    "$matchedTagsCount",
+                    "$matchedKeywordsCount",
+                    "$brandBonus",
+                  ],
+                },
+              },
+            },
+            { $match: { totalScore: { $gt: 0 } } },
+            { $sort: { totalScore: -1 } },
+            { $limit: limit },
+          ],
+
+          // Strategy 2: Fallback to same Category or Brand (Ignoring tags/keywords)
+          sameCategoryOrBrand: [
+            {
+              $match: {
+                _id: { $ne: targetProduct._id },
+                id: { $ne: targetProduct.id },
+                $or: [
+                  { category: targetProduct.category },
+                  { brand: targetProduct.brand },
+                ],
+              },
+            },
+            { $sort: { createdAt: -1 } }, // Newest within the same context
+            { $limit: limit },
+          ],
+
+          // Strategy 3: Hard Fallback to just the latest products globally
+          latestGlobal: [
+            {
+              $match: {
+                _id: { $ne: targetProduct._id },
+                id: { $ne: targetProduct.id },
+              },
+            },
+            { $sort: { createdAt: -1 } }, // Globally newest arrivals
+            { $limit: limit },
+          ],
+        },
+      },
+    ]);
+
+    // 3. Fallback Evaluation Loop
+    let finalProducts = [];
+
+    if (results?.similar && results.similar.length > 0) {
+      finalProducts = results.similar;
+    } else if (
+      results?.sameCategoryOrBrand &&
+      results.sameCategoryOrBrand.length > 0
+    ) {
+      console.log(
+        "Fallback triggered: Returning same category or brand items.",
+      );
+      finalProducts = results.sameCategoryOrBrand;
+    } else {
+      console.log("Fallback triggered: Returning latest global items.");
+      finalProducts = results?.latestGlobal || [];
+    }
+
+    // 4. Cache & Return Payload
+    if (finalProducts && finalProducts.length > 0) {
+      productMemoryCache.setLocalMemory(
+        req.url,
+        { products: finalProducts, fromCache: true },
+        60 * 60 * 24, // One day in seconds
+      );
+    }
+
+    res.json({ result: finalProducts, fromCache: false });
+  } catch (err) {
+    console.error("Error in similar products aggregation:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
