@@ -49,7 +49,6 @@ import HorizontalProductCard from "@/components/horizontal-card/horizontal-card"
 import { LoaderScreen } from "@/components/LoaderScreen";
 import { api } from "@/utils/api";
 import { useTranslation } from "react-i18next";
-import { R } from "../../../dist/assets/index-B5fNWglU";
 
 import { ReviewRating1 } from "@/components/review/review-rating-1"
 import { reviews, storeData } from "./review-rating-1-data";
