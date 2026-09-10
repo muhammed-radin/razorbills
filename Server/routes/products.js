@@ -7,6 +7,7 @@ import { productFeedCache } from "../utils/cache-utils/product-feed.js";
 import { productMemoryCache } from "../utils/cache-utils/product-data.js";
 import {
   passUserAuth,
+  requireAuth,
   requireSession,
 } from "../utils/middlewares/reqiuredAuth.js";
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
@@ -241,7 +242,7 @@ router.delete(
   },
 );
 
-// similar products
+/// similar products
 router.get("/similar/:id", requireSession, async (req, res) => {
   try {
     const productId = req.params.id;
@@ -265,7 +266,6 @@ router.get("/similar/:id", requireSession, async (req, res) => {
     const targetProduct = await db
       .collection("products")
       .findOne({ id: productId });
-
     if (!targetProduct) {
       return res.status(404).json({ error: "Product not found" });
     }
@@ -386,10 +386,10 @@ router.get("/similar/:id", requireSession, async (req, res) => {
       );
     }
 
-    res.json({ result: finalProducts, fromCache: false });
+    return res.json({ result: finalProducts, fromCache: false });
   } catch (err) {
     console.error("Error in similar products aggregation:", err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 });
 

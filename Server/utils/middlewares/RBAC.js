@@ -29,7 +29,7 @@ export const requireAdmin = async (req, res, next) => {
   }
 
   req.user = session.user;
-  next();
+  return next();
 };
 
 // Middleware B: Protect Admin Actions with specific granular capability flags
@@ -71,6 +71,6 @@ export const requirePermission = (requiredCapability) => {
     }
 
     req.user = session.user;
-    next();
+    return next();
   };
 };

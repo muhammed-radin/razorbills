@@ -1,12 +1,37 @@
 import express from "express";
 import { db } from "../utils/db.js";
-import { requireAuth } from "../utils/middlewares/reqiuredAuth.js";
+import {
+  passUserAuth,
+  requireAuth,
+} from "../utils/middlewares/reqiuredAuth.js";
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import createAuth, { getAuthInstance } from "../utils/auth.js";
 import { globalMemory } from "../utils/cache-utils/global-cache.js";
 import settingsRouter from "./settings.js";
 
 const router = express.Router();
+
+// user profile route for users
+router.get("/profile", requireAuth, passUserAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID not found in request" });
+    }
+
+    const user = await db.collection("users").findOne({ id: userId });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error("Error fetching user profile:", err);
+    res.status(500).json({ error: "Failed to fetch user profile" });
+  }
+});
 
 /* GET users listing. */
 router.get(

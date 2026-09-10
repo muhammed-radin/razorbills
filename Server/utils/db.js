@@ -29,6 +29,7 @@ function connectToDatabase() {
               console.log("Error starting Agenda");
               console.error("Agenda start error:", err);
               reject(err);
+              throw err;
             });
         } else {
           console.log("Agenda already started.");

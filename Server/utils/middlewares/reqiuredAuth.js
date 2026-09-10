@@ -7,7 +7,7 @@ export const requireAuth = async (req, res, next) => {
     let session = req.session;
 
     if (!session) {
-      const session = await getAuthInstance().api.getSession({
+      session = await getAuthInstance().api.getSession({
         headers: req.headers,
       });
       req.session = session;
@@ -27,7 +27,7 @@ export const requireAuth = async (req, res, next) => {
     req.user = session.user;
     req.sessionInfo = session.session;
 
-    next(); // User is authenticated, proceed to the route handler
+    return next(); // User is authenticated, proceed to the route handler
   } catch (error) {
     return res.status(500).json({ error: "Internal Auth Error" });
   }
@@ -44,7 +44,7 @@ export const passUserAuth = async (req, res, next) => {
       req.session = session;
     }
 
-    next(); // Proceed regardless of authentication status
+    return next(); // Proceed regardless of authentication status
   } catch (error) {
     return res.status(500).json({ error: "Internal Auth Error" });
   }
@@ -65,8 +65,9 @@ export const requireSession = async (req, res, next) => {
 
     req.user = session.user;
     req.sessionInfo = session.session;
+    req.session = session; // Attach the session to the request object
 
-    next(); // User is authenticated, proceed to the route handler
+    return next(); // User is authenticated, proceed to the route handler
   } catch (error) {
     return res.status(500).json({ error: "Internal Auth Error" });
   }
