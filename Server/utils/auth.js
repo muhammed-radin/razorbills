@@ -22,9 +22,20 @@ export default function createAuth(db) {
     databaseHooks: {
       user: {
         create: {
-          after: async (userData, context) => {
-            userData._id = userData.id; // Ensure _id is set to the same value as id
-            const user = await UserModel.create(userData);
+          before: async (userData, context) => {
+            const user = await UserModel.create({
+              _id: userData.id,
+              id: userData.id,
+              email: userData.email,
+              emailVerified: userData.emailVerified,
+              name: userData.name,
+              image: userData.image,
+              role: "user",
+              adminPermissions: [],
+              isActive: true,
+              addressBook: [],
+            });
+            return { data: userData };
           },
         },
         delete: {
@@ -64,7 +75,7 @@ export default function createAuth(db) {
         // Custom logic for handling existing users during sign-up
         throw new APIError(
           "BAD_REQUEST",
-          "User already exists. Please log in instead.",
+          "User already exists. Please log-in instead.",
           {
             status: 400,
           },
@@ -76,7 +87,7 @@ export default function createAuth(db) {
     plugins: [
       anonymous({
         emailDomainName: "guest.razorbills.app",
-        generateName: (user) => `Guest-${user.id.slice(0, 8)}`,
+        generateName: (user) => `Guest-${Math.floor(Math.random() * 100000)}`,
       }),
       admin({
         adminRoles: ["admin"],
@@ -142,7 +153,7 @@ export default function createAuth(db) {
 
     advanced: {
       database: {
-        generateId: false, // Use Mongoose's default ObjectId generation
+        generateId: "uuid", // Set "false" to use MongoDB's default ObjectId, or "uuid" to use UUIDs
       },
       defaultCookieAttributes: {
         sameSite: "none",

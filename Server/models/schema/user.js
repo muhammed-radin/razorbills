@@ -29,14 +29,10 @@ export const UserSchema = new Schema(
     banExpires: { type: Date, default: null },
     banReason: { type: String, default: null },
 
-    // TODO: what about orderInfo?
-    orderInfo: {
-      orders: { type: Number, default: 0 },
-      lastOrderDate: { type: Date, default: null },
-      lastOrderId: { type: String, default: null },
-    },
+    totalOrders: { type: Number, default: 0 },
     totalSpent: { type: Number, default: 0 },
-    AOV: { type: Number, default: 0 }, // Average Order Value
+    // AOV caluculated in client side, not stored in DB
+    // AOV = totalSpent / totalOrders
   },
   {
     timestamps: true,
