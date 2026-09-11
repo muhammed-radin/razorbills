@@ -193,7 +193,27 @@ router.post("/", requireAuth, passUserAuth, function (req, res) {
 
   OrderModel.create(order)
     .then((result) => {
-      res.json(result);
+      db.collection("users")
+        .updateOne(
+          { id: order.userId },
+          {
+            // inc totalOrders and totalSpent
+            $inc: { totalOrders: 1, totalSpent: order.totalAmount },
+          },
+          {
+            upsert: true,
+            new: true,
+          },
+        )
+        .then((userUpdateResult) => {
+          res.json(result);
+        })
+        .catch((err) => {
+          console.error("Error updating user order info:", err);
+          res
+            .status(500)
+            .json({ code: 500, error: "Failed to update user order info" });
+        });
     })
     .catch((err) => {
       console.error("Error creating order:", err);
