@@ -96,7 +96,7 @@ router.put(
     Category.findOneAndUpdate(
       { id: categoryId },
       { name, icon, Logo, description },
-      { new: true },
+      { returnDocument: "after" },
     )
       .then((updatedCategory) => {
         if (!updatedCategory) {

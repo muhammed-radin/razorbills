@@ -202,7 +202,7 @@ router.post("/", requireAuth, passUserAuth, function (req, res) {
           },
           {
             upsert: true,
-            new: true,
+            returnDocument: "after",
           },
         )
         .then((userUpdateResult) => {

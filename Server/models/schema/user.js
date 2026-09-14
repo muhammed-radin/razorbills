@@ -16,7 +16,7 @@ export const UserSchema = new Schema(
 
     currentlyLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date, default: null },
-    addressBook: { type: [AddressSchema], default: [] },
+    addressBook: { type: [AddressSchema], default: null },
     address: { type: AddressSchema, default: null },
     phoneNumber: { type: String, default: "" },
     preferences: { type: Schema.Types.Mixed, default: {} },
@@ -39,9 +39,10 @@ export const UserSchema = new Schema(
     strict: true, // Allow additional fields not defined in the schema
     collection: "users", // Specify the collection name
     id: true, // Add a virtual 'id' getter that returns the string representation of '_id'
+    _id: true, // Disable the default '_id' field since we are using 'id' as the primary key
   },
 );
 
-export const UserModel = mongoose.model("User", UserSchema, "users");
+export const UserModel = mongoose.model("UserAccount", UserSchema, "users");
 
 export default { UserSchema, UserModel };

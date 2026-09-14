@@ -64,7 +64,10 @@ export const requirePermission = (requiredCapability) => {
     // session.user.adminPermissions looks like: ["read", "write"]
     const permissions = session.user.adminPermissions || [];
 
-    if (!permissions.includes(requiredCapability)) {
+    if (
+      !permissions.includes(requiredCapability) ||
+      !permissions.includes("super-admin")
+    ) {
       return res.status(403).json({
         error: `Forbidden: Missing required permission: ${requiredCapability}`,
       });

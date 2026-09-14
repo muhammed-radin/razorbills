@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 
 export const AddressSchema = new Schema({
   // currently unusable, instead use AddressMold to create new address objects and then save on user profile property addressBook array.
-  id: { type: String, required: true, unique: true },
+  id: { type: String, required: true, unique: false },
   userId: { type: String, required: true },
   name: { type: String, required: true },
   street: { type: String, required: true },

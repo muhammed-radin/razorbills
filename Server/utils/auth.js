@@ -5,9 +5,19 @@ import { admin, anonymous } from "better-auth/plugins";
 import { UserModel } from "../models/schema/user.js";
 import { createAuthMiddleware } from "better-auth/api";
 import { decryptStrict } from "./crypt.js";
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
+import {
+  ErrorEvent,
+  evt,
+  Evts,
+  SessionEvent,
+  UserEvent,
+} from "./events.manage.js";
+import { id } from "zod/v4/locales";
 
 let authInstance = null;
+
+console.log(SessionEvent);
 
 export default function createAuth(db) {
   if (authInstance) {
@@ -19,13 +29,36 @@ export default function createAuth(db) {
       // Extract the raw MongoClient from your Mongoose connection pool
       db,
     ),
+    onAPIError: {
+      onError: async (error, context) => {
+        evt.fire(
+          Evts.ERROR,
+          new ErrorEvent({
+            type: Evts.ERROR,
+            error: error.message || "Unknown error",
+            errorCode: error.code || 500,
+            data: error,
+          }),
+        );
+      },
+    },
     databaseHooks: {
       user: {
         create: {
-          before: async (userData, context) => {
-            const user = await UserModel.create({
-              _id: userData.id,
-              id: userData.id,
+          after: async (userData, context) => {
+            const resolvedUserId = userData.id || userData._id?.toString();
+
+            if (!resolvedUserId) {
+              throw new Error("User ID not found");
+            }
+
+            const normalizedUserData = {
+              ...userData,
+              id: resolvedUserId,
+            };
+
+            const createdUser = await UserModel.create({
+              id: resolvedUserId,
               email: userData.email,
               emailVerified: userData.emailVerified,
               name: userData.name,
@@ -33,19 +66,80 @@ export default function createAuth(db) {
               role: "user",
               adminPermissions: [],
               isActive: true,
-              addressBook: [],
             });
+
+            // Trigger event after user creation
+            evt.fire(
+              Evts.USER_REGISTERED,
+              new UserEvent({
+                type: Evts.USER_REGISTERED,
+                user: userData,
+                isGuest: userData?.isAnonymous || false,
+              }),
+            );
+
             return { data: userData };
           },
         },
         delete: {
           after: async (userData, context) => {
             await UserModel.deleteOne({ id: userData.id });
+            evt.fire(
+              Evts.USER_DELETED,
+              new UserEvent({
+                type: Evts.USER_DELETED,
+                user: userData,
+                isGuest: userData?.isAnonymous || false,
+              }),
+            );
           },
         },
         update: {
           after: async (userData, context) => {
             await UserModel.updateOne({ id: userData.id }, userData);
+            evt.fire(
+              Evts.USER_PROFILE_UPDATED,
+              new UserEvent({
+                type: Evts.USER_PROFILE_UPDATED,
+                user: userData,
+                isGuest: userData?.isAnonymous || false,
+              }),
+            );
+          },
+        },
+      },
+      session: {
+        create: {
+          after: async (sessionData, context) => {
+            evt.fire(
+              Evts.USER_LOGGED_IN,
+              new SessionEvent({
+                type: Evts.USER_LOGGED_IN,
+                session: sessionData,
+              }),
+            );
+          },
+        },
+        delete: {
+          after: async (sessionData, context) => {
+            evt.fire(
+              Evts.USER_LOGGED_OUT,
+              new SessionEvent({
+                type: Evts.USER_LOGGED_OUT,
+                session: sessionData,
+              }),
+            );
+          },
+        },
+        update: {
+          after: async (sessionData, context) => {
+            evt.fire(
+              Evts.USER_LOGGED_IN,
+              new SessionEvent({
+                type: Evts.USER_LOGGED_IN,
+                session: sessionData,
+              }),
+            );
           },
         },
       },
@@ -62,9 +156,60 @@ export default function createAuth(db) {
               // 3. Mutate request body before Better Auth validates or hashes
               ctx.body.password = plainPassword;
             } catch (error) {
+              evt.fire(
+                Evts.ERROR,
+                new ErrorEvent({
+                  type: Evts.ERROR,
+                  error: "Password decryption failed",
+                  errorCode: 400,
+                  data: { path: ctx.path },
+                }),
+              );
               throw new Error("Password decryption failed");
             }
           }
+        }
+      }),
+      after: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === "/sign-out") {
+          evt.fire(
+            Evts.USER_LOGGED_OUT,
+            new UserEvent({
+              type: Evts.USER_LOGGED_OUT,
+              user:
+                ctx?.user || ctx.session?.user || ctx.newSession?.user || null,
+              isGuest:
+                ctx?.user?.isAnonymous ||
+                ctx.session?.user?.isAnonymous ||
+                false,
+            }),
+          );
+        } else if (ctx.path === "/reset-password") {
+          evt.fire(
+            Evts.USER_PASSWORD_CHANGED,
+            new UserEvent({
+              type: Evts.USER_PASSWORD_CHANGED,
+              user:
+                ctx?.user || ctx.session?.user || ctx.newSession?.user || null,
+              isGuest:
+                ctx?.user?.isAnonymous ||
+                ctx.session?.user?.isAnonymous ||
+                false,
+            }),
+          );
+        } else if (ctx.path === "/update-password") {
+          evt.fire(
+            Evts.USER_PASSWORD_CHANGED,
+            new UserEvent({
+              type: Evts.USER_PASSWORD_CHANGED,
+              user:
+                ctx?.user || ctx.session?.user || ctx.newSession?.user || null,
+              isGuest:
+                ctx?.user?.isAnonymous ||
+                ctx.session?.user?.isAnonymous ||
+                false,
+            }),
+          );
         }
       }),
     },
@@ -153,14 +298,16 @@ export default function createAuth(db) {
 
     advanced: {
       database: {
-        generateId: "uuid", // Set "false" to use MongoDB's default ObjectId, or "uuid" to use UUIDs
+        generateId: () => {
+          return new mongoose.Types.ObjectId().toString();
+        }, // Set "false" to use MongoDB's default ObjectId, or "uuid" to use UUIDs
       },
       defaultCookieAttributes: {
         sameSite: "none",
         secure: true,
       },
     },
-    trustedOrigins: [process.env.FRONTEND_URL || "http://localhost:5173"],
+    trustedOrigins: [process.env.FRONTEND_URL],
     baseURL: process.env.BETTER_AUTH_URL,
     secret: process.env.BETTER_AUTH_SECRET,
   });

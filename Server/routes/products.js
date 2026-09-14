@@ -11,6 +11,7 @@ import {
   requireSession,
 } from "../utils/middlewares/reqiuredAuth.js";
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
+import { evt, Evts, ProductEvent } from "../utils/events.manage.js";
 
 const router = express.Router();
 
@@ -20,6 +21,15 @@ router.get("/", requireSession, async function (req, res, next) {
     productMemoryCache.getLocalMemory(req.url) &&
     req.query.realtime !== "true"
   ) {
+    evt.fire(
+      Evts.PRODUCT_SEARCHED,
+      new ProductEvent({
+        type: Evts.PRODUCT_SEARCHED,
+        product: null,
+        response: responseData,
+        isReq: true,
+      }),
+    );
     return res.json(productMemoryCache.getLocalMemory(req.url));
   }
 
@@ -122,6 +132,16 @@ router.get("/", requireSession, async function (req, res, next) {
     fromCache: false,
   };
 
+  evt.fire(
+    Evts.PRODUCT_SEARCHED,
+    new ProductEvent({
+      type: Evts.PRODUCT_SEARCHED,
+      product: null,
+      response: responseData,
+      isReq: true,
+    }),
+  );
+
   productMemoryCache.setLocalMemory(
     req.url,
     { ...responseData, fromCache: true },
@@ -131,6 +151,7 @@ router.get("/", requireSession, async function (req, res, next) {
   res.json(responseData);
 });
 
+// TODO: update status with analytics
 router.get("/status", async function (req, res) {
   // if (productStatusCache.get() !== null && req.query.realtime !== "true") {
   //   return res.json(productStatusCache.get());
@@ -215,6 +236,15 @@ router.post(
     newProduct.owner.name = adminName;
 
     const created = await ProductModel.create(newProduct);
+    evt.fire(
+      Evts.PRODUCT_CREATED,
+      new ProductEvent({
+        type: Evts.PRODUCT_CREATED,
+        product: created,
+        response: null,
+        isReq: true,
+      }),
+    );
     res.json(created);
   },
 );
@@ -227,6 +257,15 @@ router.put(
     const productid = req.params.productid;
     const product = req.body;
     const updated = await ProductModel.updateOne({ id: productid }, product);
+    evt.fire(
+      Evts.PRODUCT_UPDATED,
+      new ProductEvent({
+        type: Evts.PRODUCT_UPDATED,
+        product: updated,
+        response: null,
+        isReq: true,
+      }),
+    );
     res.json(updated);
   },
 );
@@ -238,6 +277,15 @@ router.delete(
   async function (req, res) {
     const productid = req.params.productid;
     const deleted = await ProductModel.deleteOne({ id: productid });
+    evt.fire(
+      Evts.PRODUCT_DELETED,
+      new ProductEvent({
+        type: Evts.PRODUCT_DELETED,
+        product: deleted,
+        response: null,
+        isReq: true,
+      }),
+    );
     res.json(deleted);
   },
 );
@@ -386,9 +434,28 @@ router.get("/similar/:id", requireSession, async (req, res) => {
       );
     }
 
+    evt.fire(
+      Evts.PRODUCT_SEARCHED,
+      new ProductEvent({
+        type: Evts.PRODUCT_SEARCHED,
+        product: null,
+        response: { products: finalProducts, fromCache: false },
+        isReq: true,
+      }),
+    );
+
     return res.json({ result: finalProducts, fromCache: false });
   } catch (err) {
     console.error("Error in similar products aggregation:", err);
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        type: Evts.ERROR,
+        error: err,
+        errorCode: err.code || 500,
+        data: { route: "/similar/:id", message: err.message },
+      }),
+    );
     return res.status(500).json({ error: err.message });
   }
 });

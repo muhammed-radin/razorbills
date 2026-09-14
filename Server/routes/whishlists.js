@@ -5,7 +5,8 @@ import {
   requireAuth,
 } from "../utils/middlewares/reqiuredAuth.js";
 import { WishlistModel } from "../models/schema/whishlist.js";
-import { evt, Evts } from "../utils/events.manage.js";
+import { ErrorEvent, evt, Evts } from "../utils/events.manage.js";
+import { ClassicEvent } from "../models/event.js";
 
 const router = express.Router();
 
@@ -50,9 +51,25 @@ async function syncMiddleware(req, res, next) {
 
   const wishlist = await WishlistModel.findOne({ userId, folder });
   if (!wishlist) {
+    evt.fire(
+      Evts.WISHLIST_ERROR,
+      new ErrorEvent({
+        type: Evts.WISHLIST_ERROR,
+        error: "Wishlist not found",
+        errorCode: 404,
+        data: { userId, folder },
+      }),
+    );
     return res.status(404).json({ error: "Wishlist not found" });
   } else {
     const updatedWishlist = await syncWishlistProducts(wishlist);
+    evt.fire(
+      Evts.WISHLIST_UPDATED,
+      new ClassicEvent(Evts.WISHLIST_UPDATED, false, "wishlist", {
+        userId,
+        folder,
+      }),
+    );
     next();
   }
 }
@@ -94,6 +111,15 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
     const { folder, products } = req.body;
 
     if (!products || !Array.isArray(products)) {
+      evt.fire(
+        Evts.WISHLIST_ERROR,
+        new ErrorEvent({
+          type: Evts.WISHLIST_ERROR,
+          error: "Invalid wishlist data. 'name' and 'products' are required.",
+          errorCode: 400,
+          data: { userId, folder },
+        }),
+      );
       return res.status(400).json({
         error: "Invalid wishlist data. 'name' and 'products' are required.",
       });
@@ -130,19 +156,101 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
           createdAt: new Date(),
         },
       },
-      { upsert: true, new: true },
+      { upsert: true, returnDocument: "after" },
     );
 
-    evt.fire(Evts.WISHLIST_ADDED, newWishList);
+    evt.fire(
+      Evts.WISHLIST_ADDED,
+      new ClassicEvent(Evts.WISHLIST_ADDED, false, "wishlist", {
+        userId,
+        folder,
+        products: filteredProducts,
+      }),
+    );
     filteredProducts.forEach((p) => {
-      evt.fire(Evts.PRODUCT_WISHLISTED, { product: p, userId, folder });
+      evt.fire(
+        Evts.PRODUCT_WISHLISTED,
+        new ClassicEvent(Evts.PRODUCT_WISHLISTED, false, "wishlist", {
+          userId,
+          folder,
+          productId: p.productId,
+        }),
+      );
     });
 
     res.json(newWishList);
   } catch (error) {
-    evt.fire(Evts.WISHLIST_ERROR, { error });
+    evt.fire(
+      Evts.WISHLIST_ERROR,
+      new ErrorEvent({
+        type: Evts.WISHLIST_ERROR,
+        error: error,
+        errorCode: error.code || 500,
+        data: {
+          userId: req.user?.id,
+          folder: req.body?.folder || req.query?.folder || "/",
+        },
+      }),
+    );
     console.error("Error creating wishlist:", error);
     res.status(500).json({ error: "Failed to create wishlist" });
+  }
+});
+
+// remove wishlist product
+router.delete("/", requireAuth, passUserAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(400).json({ error: "User ID not found in request" });
+    }
+
+    const { folder, productId } = req.body;
+
+    const wishlist = await WishlistModel.findOne({ userId, folder });
+    if (!wishlist) {
+      evt.fire(
+        Evts.WISHLIST_ERROR,
+        new ErrorEvent({
+          type: Evts.WISHLIST_ERROR,
+          error: "Wishlist not found",
+          errorCode: 404,
+          data: { userId, folder },
+        }),
+      );
+      return res.status(404).json({ error: "Wishlist not found" });
+    }
+
+    const updatedWishlist = await WishlistModel.updateOne(
+      { userId, folder },
+      { $pull: { products: { productId } } },
+    );
+
+    evt.fire(
+      Evts.WISHLIST_REMOVED,
+      new ClassicEvent(Evts.WISHLIST_REMOVED, false, "wishlist", {
+        userId,
+        folder,
+        productId,
+      }),
+    );
+    res.json(updatedWishlist);
+  } catch (error) {
+    evt.fire(
+      Evts.WISHLIST_ERROR,
+      new ErrorEvent({
+        type: Evts.WISHLIST_ERROR,
+        error: error,
+        errorCode: error.code || 500,
+        data: {
+          userId: req.user?.id,
+          folder: req.body?.folder || req.query?.folder || "/",
+          productId: req.body?.productId,
+        },
+      }),
+    );
+    console.error("Error deleting wishlist:", error);
+    res.status(500).json({ error: "Failed to delete wishlist" });
   }
 });
 

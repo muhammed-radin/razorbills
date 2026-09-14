@@ -52,7 +52,7 @@ app.set("trust proxy", 1);
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   }),
 );
@@ -63,8 +63,8 @@ app.all("/api/auth/*splat", checkDatabaseConnection, initAuth);
 
 app.use(globalApiLimiter);
 app.use(logger("dev"));
-app.use(mongoErrorHandler); // Global MongoDB error handler
 app.use(express.json());
+app.use(mongoErrorHandler); // Global MongoDB error handler
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 

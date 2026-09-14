@@ -23,6 +23,7 @@ const api = {
   client: new axios.create({
     baseURL: apiBase,
     headers: ACTION_HEADER,
+    withCredentials: true, // Ensure cookies are sent with requests
   }),
   enableDecryption: true,
   enableEncryption: true,

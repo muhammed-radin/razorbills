@@ -165,7 +165,7 @@ getAgenda().then(async (agenda) => {
                 },
               },
             ],
-            { upsert: true, returnDocument: "after" }, // Native driver uses returnDocument instead of new: true
+            { upsert: true, returnDocument: "after" }, // Native driver uses returnDocument instead of returnDocument: "after"
           );
         },
       );
@@ -388,6 +388,15 @@ router.post(
       property: "hasViewed",
       timestamp: new Date(),
     });
+    evt.fire(
+      Evts.PRODUCT_VIEWED,
+      new ProductEvent({
+        type: Evts.PRODUCT_VIEWED,
+        product: null,
+        response: { productId, userId, userName },
+        isReq: true,
+      }),
+    );
     res.status(200).json({ message: "View recorded successfully" });
   },
 );
@@ -452,6 +461,16 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
     property: "hasShared",
     timestamp: new Date(),
   });
+
+  evt.fire(
+    Evts.PRODUCT_SHARED,
+    new ProductEvent({
+      type: Evts.PRODUCT_SHARED,
+      product: null,
+      response: { productId, userId, userName },
+      isReq: true,
+    }),
+  );
 
   res.status(200).json({ message: "Share recorded successfully" });
 });
@@ -545,6 +564,16 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
     property: "rating",
     timestamp: new Date(),
   });
+
+  evt.fire(
+    Evts.PRODUCT_RATED,
+    new ProductEvent({
+      type: Evts.PRODUCT_RATED,
+      product: null,
+      response: { productId, userId, userName },
+      isReq: true,
+    }),
+  );
 
   res.status(200).json({ message: "Rating recorded successfully" });
 });

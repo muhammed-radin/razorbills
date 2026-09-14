@@ -163,7 +163,7 @@ OrderSchema.statics.updateOrderStatus = function (orderId, status) {
   return this.findOneAndUpdate(
     { id: orderId },
     { status: status },
-    { new: true },
+    { returnDocument: "after" },
   );
 };
 
@@ -184,7 +184,7 @@ OrderSchema.statics.cancelOrderById = function (orderId, reason) {
       isActive: false,
       status: orderStatusEnum.CANCELLED,
     },
-    { new: true },
+    { returnDocument: "after" },
   );
 };
 
@@ -193,7 +193,7 @@ OrderSchema.statics.updateShipmentInfo = function (orderId, shipmentInfo) {
   return this.findOneAndUpdate(
     { id: orderId },
     { deliveryServiceInfo: shipmentInfo },
-    { new: true },
+    { returnDocument: "after" },
   );
 };
 
@@ -210,7 +210,7 @@ OrderSchema.statics.updateEstimatedDelivery = function (
   return this.findOneAndUpdate(
     { id: orderId },
     { estimatedDelivery: estimatedDate, updatedAt: new Date() },
-    { new: true },
+    { returnDocument: "after" },
   );
 };
 

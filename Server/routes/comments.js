@@ -56,7 +56,7 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
             createdAt: new Date(),
           },
         },
-        { upsert: true, new: true, returnDocument: "after" },
+        { upsert: true, returnDocument: "after" },
       )
       .then((result) => {
         const comment = result;
@@ -282,7 +282,7 @@ function handleCommentUpdateEvent({ comment, type }) {
           db.collection("products").updateOne(
             { id: productId },
             { $set: { "metrics.commentCount": count } },
-            { upsert: true, new: true },
+            { upsert: true, returnDocument: "after" },
           );
         });
     }

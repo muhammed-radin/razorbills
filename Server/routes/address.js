@@ -75,7 +75,7 @@ router.post("/", requireAuth, passUserAuth, (req, res) => {
     .findOneAndUpdate(
       { userId },
       { $push: { addressBook: address } },
-      { upsert: true, new: true, returnDocument: "after" },
+      { upsert: true, returnDocument: "after" },
     )
     .then((user) => {
       if (!user) {
@@ -112,7 +112,7 @@ router.put("/", requireAuth, passUserAuth, (req, res) => {
     .findOneAndUpdate(
       { userId },
       { $set: { address } },
-      { upsert: true, new: true, returnDocument: "after" },
+      { upsert: true, returnDocument: "after" },
     )
     .then((user) => {
       user.addressBook = user.addressBook || [];

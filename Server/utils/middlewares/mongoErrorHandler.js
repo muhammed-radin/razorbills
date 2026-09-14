@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ErrorEvent, evt, Evts } from "../events.manage.js";
 
 // Helper to format structured error responses
 const sendErrorResponse = (
@@ -29,17 +30,41 @@ const mongoErrorHandler = (err, req, res, next) => {
     const field = Object.keys(err.keyValue || {})[0] || "field";
     const value = Object.values(err.keyValue || {})[0] || "";
     const message = `Duplicate value error. The ${field} '${value}' already exists.`;
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        error: message,
+        errorCode: err.code,
+        data: { field, value },
+      }),
+    );
     return sendErrorResponse(res, 400, "fail", message, { field, value });
   }
 
   // Code 121: MongoDB Server-side Document Validation Failure
   if (err.code === 121) {
     const message = "Document failed MongoDB database-level validation rules.";
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        error: message,
+        errorCode: err.code,
+        data: err.errInfo || null,
+      }),
+    );
     return sendErrorResponse(res, 400, "fail", message, err.errInfo || null);
   }
 
   // Code 50: MaxTimeMSExpired (Query execution timeout)
   if (err.code === 50) {
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        error: "Database operation timed out.",
+        errorCode: err.code,
+        data: { query: req.originalUrl, method: req.method },
+      }),
+    );
     return sendErrorResponse(
       res,
       504,
@@ -56,6 +81,14 @@ const mongoErrorHandler = (err, req, res, next) => {
     Object.keys(err.errors).forEach((key) => {
       details[key] = err.errors[key].message;
     });
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        error: "Schema validation failed.",
+        errorCode: 400,
+        data: details,
+      }),
+    );
     return sendErrorResponse(
       res,
       400,
@@ -68,6 +101,14 @@ const mongoErrorHandler = (err, req, res, next) => {
   // Cast Error (Invalid ObjectIds, invalid data types)
   if (err instanceof mongoose.Error.CastError) {
     const message = `Invalid value '${err.value}' provided for field '${err.path}' (Expected type: ${err.kind}).`;
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        error: message,
+        errorCode: 400,
+        data: { path: err.path, value: err.value, expectedType: err.kind },
+      }),
+    );
     return sendErrorResponse(res, 400, "fail", message, {
       path: err.path,
       value: err.value,
@@ -78,6 +119,14 @@ const mongoErrorHandler = (err, req, res, next) => {
   // Server Selection Error (Database connection drop)
   if (err instanceof mongoose.Error.MongooseServerSelectionError) {
     console.error("💥 Database Connection Error:", err.message);
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        error: "Database connection error.",
+        errorCode: 503,
+        data: { message: err.message },
+      }),
+    );
     return sendErrorResponse(
       res,
       503,
@@ -88,6 +137,14 @@ const mongoErrorHandler = (err, req, res, next) => {
 
   // Document Not Found Error (Triggered via findOneOrFail style options)
   if (err instanceof mongoose.Error.DocumentNotFoundError) {
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        error: "Requested document not found in the database.",
+        errorCode: 404,
+        data: { query: req.originalUrl, method: req.method },
+      }),
+    );
     return sendErrorResponse(
       res,
       404,
@@ -97,6 +154,16 @@ const mongoErrorHandler = (err, req, res, next) => {
   }
 
   // --- 3. GLOBAL FALLBACK ---
+
+  // Fire a global error event
+  evt.fire(
+    Evts.ERROR,
+    new ErrorEvent({
+      error: "An unexpected error occurred.",
+      errorCode: 500,
+      data: { message: err.message },
+    }),
+  );
 
   // Log the unhandled error internally for debugging
   console.error("❌ Unhandled Application Error:", err);
