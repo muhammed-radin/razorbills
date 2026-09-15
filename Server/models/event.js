@@ -1,16 +1,15 @@
 class EventEmitter {
   constructor(options = {}) {
     this.events = new Map();
+    this.listenListeners = [];
 
     this.maxListeners = options.maxListeners ?? 10;
-
-    // Global event listener
-    this.onListen = null;
   }
 
-  // --------------------------------
-  // Add listener
-  // --------------------------------
+  // ==========================================
+  // Event listeners
+  // ==========================================
+
   on(event, listener) {
     this.#validateListener(listener);
 
@@ -18,12 +17,10 @@ class EventEmitter {
       this.events.set(event, []);
     }
 
-    const listeners = this.events.get(event);
-
-    listeners.push({
+    this.events.get(event).push({
       listener,
-      once: false,
       original: listener,
+      once: false,
     });
 
     this.#checkMaxListeners(event);
@@ -31,9 +28,6 @@ class EventEmitter {
     return this;
   }
 
-  // --------------------------------
-  // Add one-time listener
-  // --------------------------------
   once(event, listener) {
     this.#validateListener(listener);
 
@@ -46,12 +40,10 @@ class EventEmitter {
       return listener(...args);
     };
 
-    const listeners = this.events.get(event);
-
-    listeners.push({
+    this.events.get(event).push({
       listener: wrapper,
-      once: true,
       original: listener,
+      once: true,
     });
 
     this.#checkMaxListeners(event);
@@ -59,9 +51,6 @@ class EventEmitter {
     return this;
   }
 
-  // --------------------------------
-  // Add listener at beginning
-  // --------------------------------
   prependListener(event, listener) {
     this.#validateListener(listener);
 
@@ -71,8 +60,8 @@ class EventEmitter {
 
     this.events.get(event).unshift({
       listener,
-      once: false,
       original: listener,
+      once: false,
     });
 
     this.#checkMaxListeners(event);
@@ -80,9 +69,6 @@ class EventEmitter {
     return this;
   }
 
-  // --------------------------------
-  // Add one-time listener at beginning
-  // --------------------------------
   prependOnceListener(event, listener) {
     this.#validateListener(listener);
 
@@ -97,8 +83,8 @@ class EventEmitter {
 
     this.events.get(event).unshift({
       listener: wrapper,
-      once: true,
       original: listener,
+      once: true,
     });
 
     this.#checkMaxListeners(event);
@@ -106,20 +92,69 @@ class EventEmitter {
     return this;
   }
 
-  // --------------------------------
-  // Emit event
-  // --------------------------------
-  fire(event, ...data) {
-    const timestamp = Date.now();
+  // ==========================================
+  // Global event listeners
+  // ==========================================
 
-    // Global listener
-    if (typeof this.onListen === "function") {
-      this.onListen({
-        event,
-        data,
-        timestamp,
-      });
+  onListen(listener) {
+    this.#validateListener(listener);
+
+    this.listenListeners.push({
+      listener,
+      original: listener,
+    });
+
+    return this;
+  }
+
+  offListen(listener) {
+    const index = this.listenListeners.findIndex(
+      (entry) => entry.original === listener,
+    );
+
+    if (index !== -1) {
+      this.listenListeners.splice(index, 1);
     }
+
+    return this;
+  }
+
+  removeAllListenListeners() {
+    this.listenListeners = [];
+
+    return this;
+  }
+
+  listenListenersList() {
+    return this.listenListeners.map((entry) => entry.original);
+  }
+
+  listenListenerCount() {
+    return this.listenListeners.length;
+  }
+
+  // ==========================================
+  // Emit
+  // ==========================================
+
+  fire(event, ...data) {
+    const eventInfo = {
+      event,
+      data,
+      timestamp: Date.now(),
+    };
+
+    // --------------------------------------
+    // Notify ALL global listeners
+    // --------------------------------------
+
+    for (const entry of [...this.listenListeners]) {
+      entry.listener(eventInfo);
+    }
+
+    // --------------------------------------
+    // Notify event-specific listeners
+    // --------------------------------------
 
     const listeners = this.events.get(event);
 
@@ -127,8 +162,6 @@ class EventEmitter {
       return false;
     }
 
-    // Copy prevents problems if listeners
-    // modify the event while it is executing.
     for (const entry of [...listeners]) {
       entry.listener(...data);
     }
@@ -136,9 +169,10 @@ class EventEmitter {
     return true;
   }
 
-  // --------------------------------
-  // Remove listener
-  // --------------------------------
+  // ==========================================
+  // Remove event listener
+  // ==========================================
+
   off(event, listener) {
     const listeners = this.events.get(event);
 
@@ -159,9 +193,10 @@ class EventEmitter {
     return this;
   }
 
-  // --------------------------------
-  // Remove all listeners
-  // --------------------------------
+  // ==========================================
+  // Remove all event listeners
+  // ==========================================
+
   removeAllListeners(event) {
     if (event === undefined) {
       this.events.clear();
@@ -172,9 +207,10 @@ class EventEmitter {
     return this;
   }
 
-  // --------------------------------
-  // Get listeners
-  // --------------------------------
+  // ==========================================
+  // Information
+  // ==========================================
+
   listeners(event) {
     const listeners = this.events.get(event);
 
@@ -185,9 +221,6 @@ class EventEmitter {
     return listeners.map((entry) => entry.original);
   }
 
-  // --------------------------------
-  // Get raw listeners
-  // --------------------------------
   rawListeners(event) {
     const listeners = this.events.get(event);
 
@@ -198,30 +231,22 @@ class EventEmitter {
     return listeners.map((entry) => entry.listener);
   }
 
-  // --------------------------------
-  // Listener count
-  // --------------------------------
   listenerCount(event) {
     return this.events.get(event)?.length ?? 0;
   }
 
-  // --------------------------------
-  // Event names
-  // --------------------------------
   eventNames() {
     return [...this.events.keys()];
   }
 
-  // --------------------------------
-  // Check event
-  // --------------------------------
   has(event) {
     return this.events.has(event);
   }
 
-  // --------------------------------
+  // ==========================================
   // Max listeners
-  // --------------------------------
+  // ==========================================
+
   setMaxListeners(number) {
     if (typeof number !== "number" || number < 0 || !Number.isFinite(number)) {
       throw new TypeError("maxListeners must be a non-negative finite number");
@@ -236,18 +261,16 @@ class EventEmitter {
     return this.maxListeners;
   }
 
-  // --------------------------------
-  // Internal validation
-  // --------------------------------
+  // ==========================================
+  // Internal
+  // ==========================================
+
   #validateListener(listener) {
     if (typeof listener !== "function") {
       throw new TypeError("Listener must be a function");
     }
   }
 
-  // --------------------------------
-  // Internal max listener check
-  // --------------------------------
   #checkMaxListeners(event) {
     if (this.maxListeners === 0) {
       return;

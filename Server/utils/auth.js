@@ -17,8 +17,6 @@ import { id } from "zod/v4/locales";
 
 let authInstance = null;
 
-console.log(SessionEvent);
-
 export default function createAuth(db) {
   if (authInstance) {
     return authInstance;
@@ -118,6 +116,13 @@ export default function createAuth(db) {
                 session: sessionData,
               }),
             );
+            evt.fire(
+              Evts.SITE_VIEWED,
+              new SessionEvent({
+                type: Evts.SITE_VIEWED,
+                session: sessionData,
+              }),
+            );
           },
         },
         delete: {
@@ -173,14 +178,15 @@ export default function createAuth(db) {
       after: createAuthMiddleware(async (ctx) => {
         if (ctx.path === "/sign-out") {
           evt.fire(
-            Evts.USER_LOGGED_OUT,
+            Evts.USER_LOGGED_OUT_REQUEST,
             new UserEvent({
-              type: Evts.USER_LOGGED_OUT,
+              type: Evts.USER_LOGGED_OUT_REQUEST,
               user:
                 ctx?.user || ctx.session?.user || ctx.newSession?.user || null,
               isGuest:
                 ctx?.user?.isAnonymous ||
                 ctx.session?.user?.isAnonymous ||
+                ctx.newSession?.user?.isAnonymous ||
                 false,
             }),
           );

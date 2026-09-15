@@ -177,6 +177,28 @@ getAgenda().then(async (agenda) => {
       throw error; // Let Agenda handle the error and retry if needed
     }
   });
+  agenda.define("flush-buffer", async (job, done) => {
+    const { buffer, collection, property, bufferName } = job.attrs.data;
+
+    if (
+      !buffer ||
+      !collection ||
+      !property ||
+      !bufferName ||
+      typeof buffer !== "object"
+    ) {
+      throw new Error(
+        "Missing required parameters for flush-buffer job: buffer, collection, property, bufferName or buffer is not an object",
+      );
+    }
+
+    if (Object.keys(buffer).length === 0) {
+      return done();
+    }
+
+    await flushBuffer(buffer, property, bufferName, collection);
+    return done();
+  });
 
   await agenda.start();
 

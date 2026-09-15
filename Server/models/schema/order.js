@@ -1,22 +1,39 @@
 import mongoose, { Schema } from "mongoose";
 
-export const orderStatusEnum = {
-  QUEUED: "queued", // order is created waiting for admin approval or payment confirmation
-  ORDER_CONFIRMED: "order_confirmed", // order is confirmed by admin or payment is confirmed
+const OrderStatus = Object.freeze({
   PENDING: "pending",
+  CONFIRMED: "confirmed",
   PROCESSING: "processing",
-  PAID: "paid",
   SHIPPED: "shipped",
-  COMPLETED: "completed",
+  DELIVERED: "delivered",
   CANCELLED: "cancelled",
+  RETURN_REQUESTED: "return_requested",
   RETURNED: "returned",
-  REFUNDED: "refunded",
+});
+
+const PaymentStatus = Object.freeze({
+  PENDING: "pending",
+  PAID: "paid",
   FAILED: "failed",
-  ON_HOLD: "on_hold",
-  REFUND_REQUESTED: "refund_requested",
-  REFUND_APPROVED: "refund_approved",
-  REFUND_DECLINED: "refund_declined",
-};
+  REFUNDED: "refunded",
+  PARTIALLY_REFUNDED: "partially_refunded",
+});
+
+const FulfillmentStatus = Object.freeze({
+  UNFULFILLED: "unfulfilled",
+  PROCESSING: "processing",
+  PACKED: "packed",
+  SHIPPED: "shipped",
+  DELIVERED: "delivered",
+});
+
+const CancellationStatus = Object.freeze({
+  NONE: "none",
+  REQUESTED: "requested",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+});
+
 
 export const OrderSchema = new Schema({
   id: { type: String, required: true, unique: true },

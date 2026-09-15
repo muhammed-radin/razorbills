@@ -3,7 +3,6 @@ import { db } from "../utils/db.js";
 import {
   passUserAuth,
   requireAuth,
-  requireSession,
 } from "../utils/middlewares/reqiuredAuth.js";
 import { evt, Evts, ErrorEvent, CommentEvent } from "../utils/events.manage.js";
 

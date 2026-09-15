@@ -22,11 +22,11 @@ router.get("/", requireSession, async function (req, res, next) {
     req.query.realtime !== "true"
   ) {
     evt.fire(
-      Evts.PRODUCT_SEARCHED,
+      Evts.PRODUCT_SEARCHED_FROM_CACHE,
       new ProductEvent({
-        type: Evts.PRODUCT_SEARCHED,
+        type: Evts.PRODUCT_SEARCHED_FROM_CACHE,
         product: null,
-        response: responseData,
+        response: { fromCache: true },
         isReq: true,
       }),
     );
@@ -137,7 +137,22 @@ router.get("/", requireSession, async function (req, res, next) {
     new ProductEvent({
       type: Evts.PRODUCT_SEARCHED,
       product: null,
-      response: responseData,
+      response: {
+        limit,
+        search,
+        category,
+        priceMin,
+        priceMax,
+        keywords,
+        tags,
+        sortBy,
+        sortOrder,
+        ratingMin,
+        ratingMax,
+        inStock,
+        productStartIndex,
+        fromCache: false,
+      },
       isReq: true,
     }),
   );

@@ -137,6 +137,7 @@ const GlobalEventNames = {
   ORDER_UPDATED: "order_updated",
   ORDER_CANCELLED: "order_cancelled",
   ORDER_COMPLETED: "order_completed",
+  ORDER_RETURN_REQUESTED: "order_return_requested",
 
   // Analytics events
   ANALYTICS_UPDATED: "analytics_updated",
@@ -156,6 +157,12 @@ const GlobalEventNames = {
   CART_ITEM_ADDED: "cart_item_added",
   CART_ITEM_REMOVED: "cart_item_removed",
   CART_ITEM_UPDATED: "cart_item_updated",
+
+  // Non Major: User events
+  USER_LOGGED_OUT_REQUEST: "user_logged_out_request",
+
+  // Non Major: Product events
+  PRODUCT_SEARCHED_FROM_CACHE: "site_searched_from_cache",
 
   // Flush events
   FLUSH_REQUESTED: "flush_requested",
