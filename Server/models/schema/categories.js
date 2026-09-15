@@ -1,5 +1,4 @@
 import mongoose, { Schema } from "mongoose";
-import { Product } from "../product.js";
 
 export const CategorySchema = new Schema({
   id: { type: String, required: true, unique: true },
@@ -12,5 +11,9 @@ export const CategorySchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-export const Category = mongoose.model("Category", CategorySchema, "categories");
+export const Category = mongoose.model(
+  "Category",
+  CategorySchema,
+  "categories",
+);
 export default { Category, CategorySchema };

@@ -17,6 +17,8 @@ import {
 } from "./utils/db.js";
 import { validateApiKeys } from "./utils/key.js";
 import createAuth from "./utils/auth.js";
+import { dbEventNames, dbEvents } from "./utils/events.manage.js";
+import mongoErrorHandler from "./utils/middlewares/mongoErrorHandler.js";
 
 // 1. Define global relaxed limiter for standard data routes
 const globalApiLimiter = rateLimit({
@@ -46,23 +48,23 @@ async function initAuth(req, res, next) {
 }
 
 const app = express();
-
 app.set("trust proxy", 1);
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   }),
 );
 
 app.use(startDB);
-app.use("/api/auth/*", authLimiter);
-app.all("/api/auth/*", checkDatabaseConnection, initAuth);
+app.use("/api/auth/*splat", authLimiter);
+app.all("/api/auth/*splat", checkDatabaseConnection, initAuth);
 
 app.use(globalApiLimiter);
 app.use(logger("dev"));
 app.use(express.json());
+app.use(mongoErrorHandler); // Global MongoDB error handler
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 

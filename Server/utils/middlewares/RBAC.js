@@ -1,10 +1,22 @@
 // server/middleware/rbacMiddleware.js
-import createAuth from "../auth.js";
+import createAuth, { getAuthInstance } from "../auth.js";
 
 // Middleware A: Protect Custom User Data Routes (Users access ONLY their own data)
 export const requireAdmin = async (req, res, next) => {
-  const session = await createAuth().api.getSession({ headers: req.headers });
+  const session = await getAuthInstance().api.getSession({
+    headers: req.headers,
+  });
   if (!session) return res.status(401).json({ error: "Unauthorized" });
+
+  if (!session.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  if (session.user.isAnonymous === true) {
+    return res.status(403).json({
+      error: "Forbidden: Anonymous users cannot access this resource.",
+    });
+  }
 
   const isStaff =
     session.user.role === "admin" || session.user.role === "owner";
@@ -17,14 +29,25 @@ export const requireAdmin = async (req, res, next) => {
   }
 
   req.user = session.user;
-  next();
+  return next();
 };
 
 // Middleware B: Protect Admin Actions with specific granular capability flags
 export const requirePermission = (requiredCapability) => {
   return async (req, res, next) => {
-    const session = await createAuth().api.getSession({ headers: req.headers });
+    const session = await getAuthInstance().api.getSession({
+      headers: req.headers,
+    });
     if (!session) return res.status(401).json({ error: "Unauthorized" });
+    if (!session.user) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (session.user.isAnonymous === true) {
+      return res.status(403).json({
+        error: "Forbidden: Anonymous users cannot access this resource.",
+      });
+    }
 
     if (session.user.role === "owner") {
       req.user = session.user;
@@ -41,13 +64,16 @@ export const requirePermission = (requiredCapability) => {
     // session.user.adminPermissions looks like: ["read", "write"]
     const permissions = session.user.adminPermissions || [];
 
-    if (!permissions.includes(requiredCapability)) {
+    if (
+      !permissions.includes(requiredCapability) ||
+      !permissions.includes("super-admin")
+    ) {
       return res.status(403).json({
         error: `Forbidden: Missing required permission: ${requiredCapability}`,
       });
     }
 
     req.user = session.user;
-    next();
+    return next();
   };
 };

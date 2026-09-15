@@ -1,18 +1,43 @@
 import mongoose from "mongoose";
+import { dbEventNames, dbEvents } from "./events.manage.js";
+import { initAgenda } from "./agenda.js";
 const max_tries = 5;
 let tries = 0;
 
 function connectToDatabase() {
+  dbEvents.fire(dbEventNames.CONNECTING, tries);
   return new Promise((resolve, reject) => {
     mongoose
       .connect(process.env.MONGODB_URI)
       .then(async () => {
+        dbEvents.fire(dbEventNames.CONNECTED);
         console.log("Connected!");
-        resolve();
         // Get the database instance
         const db = mongoose.connection.db;
+        // Get the Agenda instance
+        let agenda = initAgenda();
+        const isStarted = !!agenda._processInterval;
+        if (isStarted === false) {
+          agenda
+            .start()
+            .then(() => {
+              console.log("Agenda started successfully.");
+              resolve(db, mongoose.connection, agenda);
+            })
+            .catch((err) => {
+              dbEvents.fire(dbEventNames.ERROR, err);
+              console.log("Error starting Agenda");
+              console.error("Agenda start error:", err);
+              reject(err);
+              throw err;
+            });
+        } else {
+          console.log("Agenda already started.");
+          resolve(db, mongoose.connection, agenda);
+        }
       })
       .catch((err) => {
+        dbEvents.fire(dbEventNames.ERROR, err);
         console.log("Error connecting to MongoDB");
         console.error("Connection error:", err);
         console.log("Retrying in 5 seconds....  (Tries: " + tries + ").");
@@ -21,6 +46,10 @@ function connectToDatabase() {
         }, 5000); // Retry after 5 seconds
         tries++;
         if (tries >= max_tries) {
+          dbEvents.fire(
+            dbEventNames.ERROR,
+            new Error("Max retries reached. Exiting..."),
+          );
           console.log("Max retries reached. Exiting...");
           process.exit(1); // Exit with an error code
         }
@@ -76,6 +105,21 @@ function checkDatabaseConnection(req, res, next) {
   }
 }
 
+function checkCurrentConnection() {
+  return mongoose.connection.readyState == 1;
+}
+
+async function waitForConnection() {
+  return new Promise((resolve, reject) => {
+    let intervalID = setInterval(() => {
+      if (checkCurrentConnection()) {
+        resolve();
+        clearInterval(intervalID);
+      }
+    }, 1000); // Check every second
+  });
+}
+
 // export db
 const db = mongoose.connection;
 export {
@@ -85,4 +129,6 @@ export {
   dropCollectionByName,
   checkDatabaseConnection,
   startDB,
+  waitForConnection,
+  checkCurrentConnection,
 };

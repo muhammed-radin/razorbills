@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { Product } from "../product.js";
+import { AddressSchema } from "./address.js";
 
 const generateId = () =>
   CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
@@ -16,8 +16,8 @@ export const UserSchema = new Schema(
 
     currentlyLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date, default: null },
-    addressBook: { type: [String], default: [] },
-    address: { type: String, default: "" },
+    addressBook: { type: [AddressSchema], default: null },
+    address: { type: AddressSchema, default: null },
     phoneNumber: { type: String, default: "" },
     preferences: { type: Schema.Types.Mixed, default: {} },
     provider: { type: String, default: "local" },
@@ -29,22 +29,20 @@ export const UserSchema = new Schema(
     banExpires: { type: Date, default: null },
     banReason: { type: String, default: null },
 
-    orderInfo: {
-      orders: { type: Number, default: 0 },
-      lastOrderDate: { type: Date, default: null },
-      lastOrderId: { type: String, default: null },
-    },
+    totalOrders: { type: Number, default: 0 },
     totalSpent: { type: Number, default: 0 },
-    AOV: { type: Number, default: 0 }, // Average Order Value
+    // AOV caluculated in client side, not stored in DB
+    // AOV = totalSpent / totalOrders
   },
   {
     timestamps: true,
     strict: true, // Allow additional fields not defined in the schema
     collection: "users", // Specify the collection name
     id: true, // Add a virtual 'id' getter that returns the string representation of '_id'
+    _id: true, // Disable the default '_id' field since we are using 'id' as the primary key
   },
 );
 
-export const UserModel = mongoose.model("User", UserSchema, "users");
+export const UserModel = mongoose.model("UserAccount", UserSchema, "users");
 
 export default { UserSchema, UserModel };

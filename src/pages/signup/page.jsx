@@ -22,7 +22,6 @@ import { useEffect } from "react";
 import { authClient } from "@/lib/auth-client";
 import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
 
-
 const SignUpPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -36,10 +35,7 @@ const SignUpPage = () => {
       .regex(/[A-Z]/, t("auth.passwordUppercase"))
       .regex(/[a-z]/, t("auth.passwordLowercase"))
       .regex(/[0-9]/, t("auth.passwordNumber"))
-      .regex(
-        /[@$!%*?&#]/,
-        t("auth.passwordSpecial"),
-      ),
+      .regex(/[@$!%*?&#]/, t("auth.passwordSpecial")),
   });
 
   const form = useForm({
@@ -81,16 +77,29 @@ const SignUpPage = () => {
                 const { response, data: response_data, user } = payload;
                 if (response.status == 200) {
                   resolveui(t("auth.signupSuccess"));
-                  navigate("/login");
+
+                  authClient
+                    .getSession()
+                    .then(({ data: session, error }) => {
+                      if (session && session.user) {
+                        navigate("/");
+                      } else {
+                        navigate("/login");
+                      }
+
+                      if (error) {
+                        navigate("/login");
+                      }
+                    })
+                    .catch((error) => {
+                      navigate("/login");
+                    });
                 } else {
                   rejectui("Sign-up Failed");
                 }
               },
               onError: (error) => {
                 rejectui(error);
-                toast.error(
-                  `Sign-up failed: ${error?.response?.data?.message || error?.message || "Unknown error"}`,
-                );
               },
             },
           );
@@ -99,7 +108,7 @@ const SignUpPage = () => {
         loading: t("auth.signingUp"),
         success: (msg) => `${msg}`,
         error: (err) =>
-          `${t("auth.signupFailed")}: ${err?.response?.data?.message || err?.message || "Unknown error"}`,
+          `${t("auth.signupFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`,
       },
     );
   };
@@ -111,7 +120,7 @@ const SignUpPage = () => {
         return;
       }
     })();
-  }, []);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">

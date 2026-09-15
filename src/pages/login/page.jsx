@@ -22,7 +22,6 @@ import { useTranslation } from "react-i18next";
 import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
 import { authClient } from "@/lib/auth-client";
 
-
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -78,7 +77,7 @@ const LoginPage = () => {
         loading: t("auth.loggingIn"),
         success: (msg) => `${msg}`,
         error: (err) =>
-          `${t("auth.loginFailed")}: ${err?.error?.message || err?.response?.data?.message || err?.message || err?.error?.statusText || err || "Unknown error"}`,
+          `${t("auth.loginFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`,
       },
     );
   };
@@ -108,7 +107,7 @@ const LoginPage = () => {
         password: decodeURIComponent(pw),
       });
     }
-  }, []);
+  }, [urlParams, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted">

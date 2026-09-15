@@ -5,15 +5,31 @@ import { FeedMold } from "../models/feed.js";
 import { ProductModel, MinimalProduct } from "../models/schema/product.js";
 import { productFeedCache } from "../utils/cache-utils/product-feed.js";
 import { productMemoryCache } from "../utils/cache-utils/product-data.js";
+import {
+  passUserAuth,
+  requireAuth,
+  requireSession,
+} from "../utils/middlewares/reqiuredAuth.js";
+import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
+import { evt, Evts, ProductEvent } from "../utils/events.manage.js";
 
 const router = express.Router();
 
 /* GET */
-router.get("/", async function (req, res, next) {
+router.get("/", requireSession, async function (req, res, next) {
   if (
     productMemoryCache.getLocalMemory(req.url) &&
     req.query.realtime !== "true"
   ) {
+    evt.fire(
+      Evts.PRODUCT_SEARCHED_FROM_CACHE,
+      new ProductEvent({
+        type: Evts.PRODUCT_SEARCHED_FROM_CACHE,
+        product: null,
+        response: { fromCache: true },
+        isReq: true,
+      }),
+    );
     return res.json(productMemoryCache.getLocalMemory(req.url));
   }
 
@@ -116,6 +132,31 @@ router.get("/", async function (req, res, next) {
     fromCache: false,
   };
 
+  evt.fire(
+    Evts.PRODUCT_SEARCHED,
+    new ProductEvent({
+      type: Evts.PRODUCT_SEARCHED,
+      product: null,
+      response: {
+        limit,
+        search,
+        category,
+        priceMin,
+        priceMax,
+        keywords,
+        tags,
+        sortBy,
+        sortOrder,
+        ratingMin,
+        ratingMax,
+        inStock,
+        productStartIndex,
+        fromCache: false,
+      },
+      isReq: true,
+    }),
+  );
+
   productMemoryCache.setLocalMemory(
     req.url,
     { ...responseData, fromCache: true },
@@ -125,6 +166,7 @@ router.get("/", async function (req, res, next) {
   res.json(responseData);
 });
 
+// TODO: update status with analytics
 router.get("/status", async function (req, res) {
   // if (productStatusCache.get() !== null && req.query.realtime !== "true") {
   //   return res.json(productStatusCache.get());
@@ -134,7 +176,7 @@ router.get("/status", async function (req, res) {
   res.json(productStatusCache.get());
 });
 
-router.get("/feed", async function (req, res) {
+router.get("/feed", requireSession, async function (req, res) {
   if (productFeedCache.get() !== null && req.query.realtime !== "true") {
     return res.json(productFeedCache.get());
   }
@@ -143,7 +185,7 @@ router.get("/feed", async function (req, res) {
   res.json(productFeedCache.get());
 });
 
-router.get("/:productid", async function (req, res) {
+router.get("/:productid", requireSession, async function (req, res) {
   const productid = req.params.productid;
   const { title, price, tags, keywords, originalPrice, minimize } = req.query;
   if (!productid) {
@@ -184,33 +226,253 @@ router.get("/:productid", async function (req, res) {
   res.json(await product);
 });
 
-router.post("/new/:productId", async function (req, res) {
-  const productId = req.params.productId;
+router.post(
+  "/new/:productId",
+  requireAdmin,
+  requirePermission("create"),
+  passUserAuth,
+  async function (req, res) {
+    const productId = req.params.productId;
+    if (!req.user || !productId) {
+      return res.status(400).json({ error: "User or Product ID is required" });
+    }
 
-  const product = await db.collection("products").findOne({ id: productId });
-  if (product) {
-    return res
-      .status(403)
-      .json({ error: "Product aleready found in ID: " + productId });
+    const { id: adminId, name: adminName } = req.user;
+
+    const product = await db.collection("products").findOne({ id: productId });
+    if (product) {
+      return res
+        .status(403)
+        .json({ error: "Product aleready found in ID: " + productId });
+    }
+
+    const newProduct = req.body;
+    newProduct.owner.id = adminId;
+    newProduct.owner.name = adminName;
+
+    const created = await ProductModel.create(newProduct);
+    evt.fire(
+      Evts.PRODUCT_CREATED,
+      new ProductEvent({
+        type: Evts.PRODUCT_CREATED,
+        product: created,
+        response: null,
+        isReq: true,
+      }),
+    );
+    res.json(created);
+  },
+);
+
+router.put(
+  "/:productid",
+  requireAdmin,
+  requirePermission("update"),
+  async function (req, res) {
+    const productid = req.params.productid;
+    const product = req.body;
+    const updated = await ProductModel.updateOne({ id: productid }, product);
+    evt.fire(
+      Evts.PRODUCT_UPDATED,
+      new ProductEvent({
+        type: Evts.PRODUCT_UPDATED,
+        product: updated,
+        response: null,
+        isReq: true,
+      }),
+    );
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/:productid",
+  requireAdmin,
+  requirePermission("delete"),
+  async function (req, res) {
+    const productid = req.params.productid;
+    const deleted = await ProductModel.deleteOne({ id: productid });
+    evt.fire(
+      Evts.PRODUCT_DELETED,
+      new ProductEvent({
+        type: Evts.PRODUCT_DELETED,
+        product: deleted,
+        response: null,
+        isReq: true,
+      }),
+    );
+    res.json(deleted);
+  },
+);
+
+/// similar products
+router.get("/similar/:id", requireSession, async (req, res) => {
+  try {
+    const productId = req.params.id;
+    console.log("Fetching similar products for product ID:", productId);
+
+    // 1. Check Memory Cache
+    if (
+      productMemoryCache.getLocalMemory(req.url) &&
+      req.query.realtime !== "true"
+    ) {
+      return res.json(productMemoryCache.getLocalMemory(req.url));
+    }
+
+    const limit = parseInt(req.query?.limit) || parseInt(req.body?.limit) || 5;
+
+    if (!productId) {
+      return res.status(400).json({ error: "Product ID is required" });
+    }
+
+    // Fetch target product from DB
+    const targetProduct = await db
+      .collection("products")
+      .findOne({ id: productId });
+    if (!targetProduct) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    console.log(
+      "Target Product:",
+      targetProduct.tags,
+      targetProduct.keywords,
+      targetProduct.category,
+      targetProduct.brand,
+      targetProduct.id,
+    );
+
+    // 2. Query similar items using an aggregation pipeline with multi-stage fallbacks
+    const [results] = await ProductModel.aggregate([
+      {
+        $facet: {
+          // Strategy 1: Smart Similarity based on tags/keywords (Must match category)
+          similar: [
+            {
+              $match: {
+                _id: { $ne: targetProduct._id },
+                id: { $ne: targetProduct.id },
+                category: targetProduct.category,
+              },
+            },
+            {
+              $addFields: {
+                matchedTagsCount: {
+                  $size: {
+                    $setIntersection: ["$tags", targetProduct.tags || []],
+                  },
+                },
+                matchedKeywordsCount: {
+                  $size: {
+                    $setIntersection: [
+                      "$keywords",
+                      targetProduct.keywords || [],
+                    ],
+                  },
+                },
+                brandBonus: {
+                  $cond: [{ $eq: ["$brand", targetProduct.brand] }, 2, 0],
+                },
+              },
+            },
+            {
+              $addFields: {
+                totalScore: {
+                  $add: [
+                    "$matchedTagsCount",
+                    "$matchedKeywordsCount",
+                    "$brandBonus",
+                  ],
+                },
+              },
+            },
+            { $match: { totalScore: { $gt: 0 } } },
+            { $sort: { totalScore: -1 } },
+            { $limit: limit },
+          ],
+
+          // Strategy 2: Fallback to same Category or Brand (Ignoring tags/keywords)
+          sameCategoryOrBrand: [
+            {
+              $match: {
+                _id: { $ne: targetProduct._id },
+                id: { $ne: targetProduct.id },
+                $or: [
+                  { category: targetProduct.category },
+                  { brand: targetProduct.brand },
+                ],
+              },
+            },
+            { $sort: { createdAt: -1 } }, // Newest within the same context
+            { $limit: limit },
+          ],
+
+          // Strategy 3: Hard Fallback to just the latest products globally
+          latestGlobal: [
+            {
+              $match: {
+                _id: { $ne: targetProduct._id },
+                id: { $ne: targetProduct.id },
+              },
+            },
+            { $sort: { createdAt: -1 } }, // Globally newest arrivals
+            { $limit: limit },
+          ],
+        },
+      },
+    ]);
+
+    // 3. Fallback Evaluation Loop
+    let finalProducts = [];
+
+    if (results?.similar && results.similar.length > 0) {
+      finalProducts = results.similar;
+    } else if (
+      results?.sameCategoryOrBrand &&
+      results.sameCategoryOrBrand.length > 0
+    ) {
+      console.log(
+        "Fallback triggered: Returning same category or brand items.",
+      );
+      finalProducts = results.sameCategoryOrBrand;
+    } else {
+      console.log("Fallback triggered: Returning latest global items.");
+      finalProducts = results?.latestGlobal || [];
+    }
+
+    // 4. Cache & Return Payload
+    if (finalProducts && finalProducts.length > 0) {
+      productMemoryCache.setLocalMemory(
+        req.url,
+        { products: finalProducts, fromCache: true },
+        60 * 60 * 24, // One day in seconds
+      );
+    }
+
+    evt.fire(
+      Evts.PRODUCT_SEARCHED,
+      new ProductEvent({
+        type: Evts.PRODUCT_SEARCHED,
+        product: null,
+        response: { products: finalProducts, fromCache: false },
+        isReq: true,
+      }),
+    );
+
+    return res.json({ result: finalProducts, fromCache: false });
+  } catch (err) {
+    console.error("Error in similar products aggregation:", err);
+    evt.fire(
+      Evts.ERROR,
+      new ErrorEvent({
+        type: Evts.ERROR,
+        error: err,
+        errorCode: err.code || 500,
+        data: { route: "/similar/:id", message: err.message },
+      }),
+    );
+    return res.status(500).json({ error: err.message });
   }
-
-  const newProduct = req.body;
-
-  const created = await ProductModel.create(newProduct);
-  res.json(created);
-});
-
-router.put("/:productid", async function (req, res) {
-  const productid = req.params.productid;
-  const product = req.body;
-  const updated = await ProductModel.updateOne({ id: productid }, product);
-  res.json(updated);
-});
-
-router.delete("/:productid", async function (req, res) {
-  const productid = req.params.productid;
-  const deleted = await ProductModel.deleteOne({ id: productid });
-  res.json(deleted);
 });
 
 export default router;
