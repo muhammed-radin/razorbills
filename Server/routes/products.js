@@ -28,6 +28,7 @@ router.get("/", requireSession, async function (req, res, next) {
         product: null,
         response: { fromCache: true },
         isReq: true,
+        reqPath: req.url,
       }),
     );
     return res.json(productMemoryCache.getLocalMemory(req.url));
@@ -153,6 +154,7 @@ router.get("/", requireSession, async function (req, res, next) {
         productStartIndex,
         fromCache: false,
       },
+      reqPath: req.url,
       isReq: true,
     }),
   );
@@ -258,6 +260,7 @@ router.post(
         product: created,
         response: null,
         isReq: true,
+        reqPath: req.url,
       }),
     );
     res.json(created);
@@ -279,6 +282,7 @@ router.put(
         product: updated,
         response: null,
         isReq: true,
+        reqPath: req.url,
       }),
     );
     res.json(updated);
@@ -299,6 +303,7 @@ router.delete(
         product: deleted,
         response: null,
         isReq: true,
+        reqPath: req.url,
       }),
     );
     res.json(deleted);
@@ -456,6 +461,7 @@ router.get("/similar/:id", requireSession, async (req, res) => {
         product: null,
         response: { products: finalProducts, fromCache: false },
         isReq: true,
+        reqPath: req.url,
       }),
     );
 

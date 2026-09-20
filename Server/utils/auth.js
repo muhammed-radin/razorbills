@@ -17,6 +17,8 @@ import { id } from "zod/v4/locales";
 
 let authInstance = null;
 
+console.log(evt.fire("DEMO", {}));
+
 export default function createAuth(db) {
   if (authInstance) {
     return authInstance;

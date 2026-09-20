@@ -3,17 +3,31 @@ import { db } from "../utils/db.js";
 import {
   evt,
   Evts,
-  LogEvent,
+  RecordEvent,
   ProductEvent,
   SessionEvent,
   UserEvent,
 } from "../utils/events.manage.js";
 import { CounterModel } from "../models/schema/counters.js";
+import { getAgenda } from "../utils/agenda.js";
+import {
+  AnalyticEventModel,
+  DailyAnalyticsModel,
+  EventsRecordModel,
+  SiteAnalyticsCacheModel,
+  SiteAnalyticsModel,
+} from "../models/schema/analytics.js";
+import { UAParser } from "ua-parser-js";
+import dayjs from "dayjs";
+import { toast } from "sonner";
+import { calculateAnalyticsFrom } from "../utils/calc_analytics.js";
 
 const router = express.Router();
 
 const recordsBuffer = [];
 const analyticsRecordsBuffer = [];
+const debugEvents = [];
+
 const analyticsRecordableTypes = [
   // common
   Evts.ERROR,
@@ -32,6 +46,8 @@ const analyticsRecordableTypes = [
   Evts.PRODUCT_WISHLISTED,
   Evts.PRODUCT_CARTED,
   Evts.PRODUCT_COMMENTED,
+  Evts.PRODUCT_LOW_STOCK,
+  Evts.PRODUCT_OUT_OF_STOCK,
 
   // Order based
   Evts.ORDER_COMPLETED,
@@ -57,6 +73,8 @@ const analyticsTitles = {
   [Evts.PRODUCT_WISHLISTED]: "Product Wishlisted",
   [Evts.PRODUCT_CARTED]: "Product Carted",
   [Evts.PRODUCT_COMMENTED]: "Product Commented",
+  [Evts.PRODUCT_LOW_STOCK]: "Product Low Stock",
+  [Evts.PRODUCT_OUT_OF_STOCK]: "Product Out of Stock",
   /////
   [Evts.ORDER_COMPLETED]: "Order Completed",
   [Evts.ORDER_CANCELLED]: "Order Cancelled",
@@ -82,18 +100,60 @@ const analyticsMessages = {
   [Evts.PRODUCT_WISHLISTED]: "Product wishlisted",
   [Evts.PRODUCT_CARTED]: "Product carted",
   [Evts.PRODUCT_COMMENTED]: "Product commented",
+  [Evts.PRODUCT_LOW_STOCK]: "Product low stock",
+  [Evts.PRODUCT_OUT_OF_STOCK]: "Product out of stock",
   /////
   [Evts.ORDER_COMPLETED]: "Order completed",
   [Evts.ORDER_CANCELLED]: "Order cancelled",
   [Evts.ORDER_RETURN_REQUESTED]: "Order return requested",
 };
 
-evt.onListen(function (evt) {
-  let { data: eventData, event: name, timestamp } = evt;
+function getDeviceType(userAgentString) {
+  const parser = new UAParser(userAgentString);
+  const device = parser.getDevice();
+
+  // ua-parser-js returns 'mobile' or 'tablet' for those devices
+  if (device.type === "mobile" || device.type === "tablet") {
+    return device.type;
+  }
+
+  // If type is undefined but browser/os is detected, it's a desktop
+  const result = parser.getResult();
+  if (!device.type && (result.browser.name || result.os.name)) {
+    return "desktop";
+  }
+
+  // Fallback for bots, crawlers, or unrecognizable user-agent strings
+  return "other";
+}
+
+function userAgentParser(event) {
+  let string = event.userAgent || event.session?.userAgent || null;
+
+  const parser = new UAParser(string);
+  const result = parser.getResult();
+  let screen = getDeviceType(string);
+
+  return {
+    browser: result.browser.name || null,
+    browserVersion: result.browser.version || null,
+    os: result.os.name || null,
+    osVersion: result.os.version || null,
+    device: result.device.model || null,
+    deviceType: result.device.type || null,
+    deviceVendor: result.device.vendor || null,
+    screen,
+  };
+}
+
+evt.onListen(function (eventInfo) {
+  let { data: eventData, event: name, timestamp } = eventInfo;
   let event = eventData[0];
   let type = event?.type || name || "Unknown";
 
-  console.log("----> type", type);
+  if (name === Evts.EVENT_RECORDED || event instanceof RecordEvent) {
+    return; // Avoid recording the record event itself to prevent infinite loops
+  }
 
   // push analytics record
   if (event.isMajor == true) {
@@ -131,7 +191,7 @@ evt.onListen(function (evt) {
       };
     }
 
-    const record = new LogEvent({
+    const record = new RecordEvent({
       type: type,
       title: analyticsTitles[type] || type || "Unknown",
       message: message,
@@ -139,14 +199,76 @@ evt.onListen(function (evt) {
       sector: event.sector,
       data,
       timestamp: timestamp || Date.now(),
+      isAnalytics: analyticsRecordableTypes.includes(type) || false,
+      id: event.id,
     });
 
-    recordsBuffer.push(record);
+    evt.fire(Evts.EVENT_RECORDED, record);
+
+    debugEvents.push(eventInfo); // Store the event info in debugEvents for debugging purposes
+
+    let userId =
+      event.user?.id || event.session?.userId || event.order?.id || null;
+    let sessionId = event.session?.id || null;
+    let productId = event.product?.id || event.order?.productId || null;
+    let orderId = event.order?.id || null;
+
+    // Copy of AnalyticEventModel
     if (analyticsRecordableTypes.includes(type)) {
-      delete record[data];
-      delete record["message"];
-      analyticsRecordsBuffer.push(record);
+      analyticsRecordsBuffer.push({
+        type: type,
+        timestamp: timestamp || Date.now(),
+        userId,
+        sessionId,
+        eventId: event.id,
+        path: event.reqPath || null,
+        productId,
+        orderId,
+        search: event.search || null,
+        order: {
+          actor: event.order?.actor || null,
+          actorId: event.order?.actorId || null,
+          revenue: (event.order?.revenue && event.order?.revenue) || 0,
+        },
+        browser: userAgentParser(event).browser,
+        device: userAgentParser(event).screen,
+        os: userAgentParser(event).os,
+        sector: event.sector || null,
+        userAgent: event.session?.userAgent || null,
+        metadata: {
+          isAnalytics: true,
+          provider: event.provider || null,
+        },
+      });
     }
+
+    // Copy of EventsRecordModel
+    recordsBuffer.push({
+      type: type,
+      timestamp: timestamp || Date.now(),
+
+      title: analyticsTitles[type] || type || "Unknown",
+      message: message,
+      userId,
+      sessionId,
+      sector: event.sector || null,
+      path: event.reqPath || null,
+      eventId: event.id,
+      productId,
+      orderId,
+      isError: type === Evts.ERROR || event.isError || false || false,
+      isGuest: event.isGuest || false,
+      isMajor: event.isMajor || false,
+      refId: orderId || productId || userId || null,
+      actor: event.order?.actor || false,
+      actorId: event.order?.actorId || null,
+      metadata: {
+        isAnalytics: true,
+        provider: event.provider || null,
+      },
+      error: event.error || null,
+      errorCode: event.errorCode || null,
+    });
   }
 });
 
@@ -163,8 +285,282 @@ evt.on(Evts.SITE_VIEWED, function (evtData) {
   );
 });
 
+evt.on(Evts.USER_DELETED, async function (evtData) {
+  // first check on our collection "users"
+  await db.collection("users").findOneAndUpdate(
+    { id: evtData.userId },
+    {
+      $set: {
+        isActive: false,
+      },
+    },
+  );
+
+  // then check on our collection "sessions"
+  await db.collection("sessions").findOneAndDelete({ userId: evtData.userId });
+});
+
 router.get("/", async (req, res) => {
-  res.json({ recordsBuffer, analyticsRecordsBuffer });
+  res.json({ recordsBuffer, analyticsRecordsBuffer, debugEvents });
+});
+
+getAgenda().then((agenda, startAssiginTasks) => {
+  startAssiginTasks(() => {
+    agenda.define("flush-records", async (job, done) => {
+      const { recordsBuffer, analyticsRecordsBuffer } = job.attrs.data;
+
+      if (recordsBuffer.length > 0) {
+        try {
+          await EventsRecordModel.insertMany(recordsBuffer);
+          recordsBuffer.length = 0; // Clear the buffer after successful insertion
+        } catch (error) {
+          console.error("Error inserting records:", error);
+          throw error; // Rethrow the error to ensure the job fails and can be retried
+        }
+      }
+
+      if (analyticsRecordsBuffer.length > 0) {
+        try {
+          await AnalyticEventModel.insertMany(analyticsRecordsBuffer);
+          analyticsRecordsBuffer.length = 0; // Clear the buffer after successful insertion
+        } catch (error) {
+          console.error("Error inserting analytics records:", error);
+          throw error; // Rethrow the error to ensure the job fails and can be retried
+        }
+      }
+
+      done(); // Mark the job as done after successful execution
+    });
+
+    agenda.define(
+      "calculate-today-analytics-flush-records",
+      async (job, done) => {
+        const { analyticsRecordsBuffer, recordsBuffer } = job.attrs.data;
+
+        // get today events.
+        // caluclate data of the day by time range ( timestamp )
+        // 1. Get today's start timestamp (12:00 AM / 00:00:00)
+        const startOfToday = dayjs().startOf("day");
+        const startTimestampMs = startOfToday.valueOf(); // Milliseconds (13 digits)
+
+        // 2. Get today's end timestamp (11:59:59 PM)
+        const endOfToday = dayjs().endOf("day");
+        const endTimestampMs = endOfToday.valueOf(); // Milliseconds (13 digits)
+
+        // 3. Get all events between start and end timestamps
+        const events = await AnalyticEventModel.find({
+          timestamp: { $gte: startTimestampMs, $lte: endTimestampMs },
+        });
+
+        let todayEvents = events.concat(analyticsRecordsBuffer); // Include buffered events for today
+
+        // 4. Calculate analytics data based on events
+        const userIDs = new Set();
+
+        const permanentUserIDs = new Set(
+          todayEvents
+            .filter((event) => event.isGuest === false)
+            .map((event) => event.userId),
+        );
+        const guestUserIDs = new Set(
+          todayEvents
+            .filter((event) => event.isGuest === true)
+            .map((event) => event.userId),
+        );
+
+        const calculatedData = {
+          totalEvents: todayEvents.length,
+          uniqueViews: todayEvents.filter((event) => {
+            if (event.userId) userIDs.add(event.userId);
+            return (
+              event.type === Evts.SITE_VIEWED &&
+              event.userId &&
+              userIDs.has(event.userId) == false
+            );
+          }).length,
+          uniqueUsers: permanentUserIDs.size,
+          uniqueGuests: guestUserIDs.size,
+        };
+
+        // TODO: Optimize the calculations.
+
+        // 5. Update the DailyAnalyticsModel with the calculated data
+        const analyticsRecordOFDay = await DailyAnalyticsModel.findOneAndUpdate(
+          {
+            _id: dayjs().format("YYYY-MM-DD"),
+          },
+          [
+            {
+              $set: {
+                date: dayjs().startOf("day").toDate(),
+                _id: dayjs().format("YYYY-MM-DD"),
+
+                // Events
+                "events.total": todayEvents.length,
+                "events.errors": todayEvents.filter((event) => event.isError)
+                  .length,
+                "events.sessions": todayEvents.filter(
+                  (event) => event.type === Evts.USER_LOGGED_IN,
+                ).length,
+
+                // Traffic
+                "traffic.allViews": todayEvents.filter(
+                  (event) => event.type === Evts.SITE_VIEWED,
+                ).length,
+                "traffic.debouncedViews": calculatedData.uniqueViews,
+                "traffic.uniqueUsers": calculatedData.uniqueUsers,
+                "traffic.uniqueGuests": calculatedData.uniqueGuests,
+                "traffic.devices.desktop": todayEvents.filter(
+                  (event) => userAgentParser(event).screen === "desktop",
+                ).length,
+                "traffic.devices.mobile": todayEvents.filter(
+                  (event) => userAgentParser(event).screen === "mobile",
+                ).length,
+                "traffic.devices.tablet": todayEvents.filter(
+                  (event) => userAgentParser(event).screen === "tablet",
+                ).length,
+                "traffic.devices.other": todayEvents.filter(
+                  (event) => userAgentParser(event).screen === "other",
+                ).length,
+                "traffic.soruces.chrome": todayEvents.filter(
+                  (event) => userAgentParser(event).browser === "Chrome",
+                ).length,
+                "traffic.soruces.firefox": todayEvents.filter(
+                  (event) => userAgentParser(event).browser === "Firefox",
+                ).length,
+                "traffic.soruces.safari": todayEvents.filter(
+                  (event) => userAgentParser(event).browser === "Safari",
+                ).length,
+                "traffic.soruces.edge": todayEvents.filter(
+                  (event) => userAgentParser(event).browser === "Edge",
+                ).length,
+                "traffic.soruces.other": todayEvents.filter(
+                  (event) =>
+                    !["Chrome", "Firefox", "Safari", "Edge"].includes(
+                      userAgentParser(event).browser,
+                    ),
+                ).length,
+
+                createdAt: new Date(),
+                updatedAt: new Date(),
+
+                // Users
+                "users.loggedInUsers": todayEvents.filter(
+                  (event) => event.type === Evts.USER_LOGGED_IN,
+                ).length,
+                "users.signedUpUsers": todayEvents.filter(
+                  (event) => event.type === Evts.USER_SIGNED_UP,
+                ).length,
+
+                "users.deletedUsers": todayEvents.filter(
+                  (event) => event.type === Evts.USER_DELETED,
+                ).length,
+                "users.passwordChanged": todayEvents.filter(
+                  (event) => event.type === Evts.USER_PASSWORD_CHANGED,
+                ).length,
+
+                // Products
+                "products.viewed": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_VIEWED,
+                ).length,
+                "products.searched": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_SEARCHED,
+                ).length,
+                "products.lowStock": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_LOW_STOCK,
+                ).length,
+                "products.outOfStock": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_OUT_OF_STOCK,
+                ).length,
+                "products.totalProducts":
+                  todayEvents.filter(
+                    (event) => event.type === Evts.PRODUCT_CREATED,
+                  ).length -
+                  todayEvents.filter(
+                    (event) => event.type === Evts.PRODUCT_DELETED,
+                  ).length,
+
+                // Engagement
+                "engagement.ratings": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_RATED,
+                ).length,
+                "engagement.shares": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_SHARED,
+                ).length,
+                "engagement.wishlists": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_WISHLISTED,
+                ).length,
+                "engagement.comments": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_COMMENTED,
+                ).length,
+
+                // order
+                // TODO: update order events also then update it again
+                "orders.total": todayEvents.filter(
+                  (event) => event.type === Evts.ORDER_PLACED,
+                ).length,
+                "orders.revenue": todayEvents.reduce((acc, event) => {
+                  if (event.type === Evts.ORDER_PLACED) {
+                    return acc + (event.order?.revenue || 0);
+                  }
+                  return acc;
+                }, 0),
+                "orders.cancelled": todayEvents.filter(
+                  (event) => event.type === Evts.ORDER_CANCELLED,
+                ).length,
+                "orders.delivered": todayEvents.filter(
+                  (event) => event.type === Evts.ORDER_COMPLETED,
+                ).length,
+                "orders.returned": todayEvents.filter(
+                  (event) => event.type === Evts.ORDER_RETURN_REQUESTED,
+                ).length,
+
+                // Reviews
+                "reviews.total": todayEvents.filter(
+                  (event) => event.type === Evts.PRODUCT_COMMENTED,
+                ).length,
+              },
+            },
+          ],
+          {
+            insert: true,
+            returnDocument: "after",
+          },
+        );
+
+        await EventsRecordModel.insertMany(recordsBuffer);
+
+        done(); // Mark the job as done after successful execution
+      },
+    );
+
+    agenda.define("calculate-analytics-site", async (job, done) => {
+      const allDaysAnalytics = await DailyAnalyticsModel.find({});
+
+      const calculatedData = calculateAnalyticsFrom(allDaysAnalytics);
+      const last30daysAnalytics = allDaysAnalytics.filter((dayAnalytics) => {
+        const dayDate = dayjs(dayAnalytics.date);
+        const thirtyDaysAgo = dayjs().subtract(30, "day");
+        return dayDate.isAfter(thirtyDaysAgo);
+      });
+
+      const calculatedLast30DaysData =
+        calculateAnalyticsFrom(last30daysAnalytics);
+
+      await SiteAnalyticsModel.updateOne(
+        { _id: "global_counters" },
+        {
+          ...calculatedData,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          activeUsers: calculatedLast30DaysData.users.loggedInUsers,
+        },
+        { upsert: true, returnDocument: "after" },
+      );
+
+      done(); // Mark the job as done after successful execution
+    });
+  });
 });
 
 export default router;
