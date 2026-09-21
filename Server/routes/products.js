@@ -314,7 +314,6 @@ router.delete(
 router.get("/similar/:id", requireSession, async (req, res) => {
   try {
     const productId = req.params.id;
-    console.log("Fetching similar products for product ID:", productId);
 
     // 1. Check Memory Cache
     if (
@@ -337,15 +336,6 @@ router.get("/similar/:id", requireSession, async (req, res) => {
     if (!targetProduct) {
       return res.status(404).json({ error: "Product not found" });
     }
-
-    console.log(
-      "Target Product:",
-      targetProduct.tags,
-      targetProduct.keywords,
-      targetProduct.category,
-      targetProduct.brand,
-      targetProduct.id,
-    );
 
     // 2. Query similar items using an aggregation pipeline with multi-stage fallbacks
     const [results] = await ProductModel.aggregate([
@@ -436,12 +426,8 @@ router.get("/similar/:id", requireSession, async (req, res) => {
       results?.sameCategoryOrBrand &&
       results.sameCategoryOrBrand.length > 0
     ) {
-      console.log(
-        "Fallback triggered: Returning same category or brand items.",
-      );
       finalProducts = results.sameCategoryOrBrand;
     } else {
-      console.log("Fallback triggered: Returning latest global items.");
       finalProducts = results?.latestGlobal || [];
     }
 

@@ -44,7 +44,7 @@ const avgRatingBuffer = {}; // { productId: { n1: 1, n2: 1, n3: 1, n4: 1, n5: 1 
 
 // agenda jobs
 
-getAgenda().then(async (agenda) => {
+getAgenda().then(async ({ agenda }) => {
   await agenda.stop();
   agenda.define("flush-interactions", async (job, done) => {
     let { view, share, wishlist, rate, cart, all } = job.attrs.data;
@@ -330,8 +330,6 @@ function flushBuffer(buffer, property, bufferName, collection = "products") {
           flushBuffer(guestRawBuffer, "metrics.debouncedViews", "guestView");
         }
       }
-
-      // TODO: calucalte rating and save to product collection with Agendajs
     }
   });
 }

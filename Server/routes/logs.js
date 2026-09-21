@@ -304,7 +304,7 @@ router.get("/", async (req, res) => {
   res.json({ recordsBuffer, analyticsRecordsBuffer, debugEvents });
 });
 
-getAgenda().then((agenda, startAssiginTasks) => {
+getAgenda().then(({ agenda, startAssiginTasks }) => {
   startAssiginTasks(() => {
     agenda.define("flush-records", async (job, done) => {
       const { recordsBuffer, analyticsRecordsBuffer } = job.attrs.data;
@@ -528,7 +528,7 @@ getAgenda().then((agenda, startAssiginTasks) => {
           },
         );
 
-        await EventsRecordModel.insertMany(recordsBuffer);
+        agenda.now("flush-records", { recordsBuffer, analyticsRecordsBuffer }); // Flush records after calculating today's analytics
 
         done(); // Mark the job as done after successful execution
       },
@@ -544,8 +544,15 @@ getAgenda().then((agenda, startAssiginTasks) => {
         return dayDate.isAfter(thirtyDaysAgo);
       });
 
-      const calculatedLast30DaysData =
-        calculateAnalyticsFrom(last30daysAnalytics);
+      let lastActiveUsers = 0;
+
+      if (last30daysAnalytics.length > 0) {
+        const calculatedLast30DaysData =
+          calculateAnalyticsFrom(last30daysAnalytics);
+        if (calculatedLast30DaysData.users) {
+          lastActiveUsers = calculatedLast30DaysData.users.loggedInUsers || 0;
+        }
+      }
 
       await SiteAnalyticsModel.updateOne(
         { _id: "global_counters" },
@@ -553,13 +560,25 @@ getAgenda().then((agenda, startAssiginTasks) => {
           ...calculatedData,
           createdAt: new Date(),
           updatedAt: new Date(),
-          activeUsers: calculatedLast30DaysData.users.loggedInUsers,
+          activeUsers: lastActiveUsers,
         },
         { upsert: true, returnDocument: "after" },
       );
 
       done(); // Mark the job as done after successful execution
     });
+
+    agenda.every("1 minute", "flush-records", {
+      recordsBuffer,
+      analyticsRecordsBuffer,
+    });
+
+    agenda.every("6 hours", "calculate-today-analytics-flush-records", {
+      recordsBuffer,
+      analyticsRecordsBuffer,
+    });
+
+    agenda.every("1 month", "calculate-analytics-site");
   });
 });
 
