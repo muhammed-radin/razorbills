@@ -28,6 +28,7 @@ router.get("/", requireSession, async function (req, res, next) {
         product: null,
         response: { fromCache: true },
         isReq: true,
+        reqPath: req.url,
       }),
     );
     return res.json(productMemoryCache.getLocalMemory(req.url));
@@ -153,6 +154,7 @@ router.get("/", requireSession, async function (req, res, next) {
         productStartIndex,
         fromCache: false,
       },
+      reqPath: req.url,
       isReq: true,
     }),
   );
@@ -258,6 +260,7 @@ router.post(
         product: created,
         response: null,
         isReq: true,
+        reqPath: req.url,
       }),
     );
     res.json(created);
@@ -279,6 +282,7 @@ router.put(
         product: updated,
         response: null,
         isReq: true,
+        reqPath: req.url,
       }),
     );
     res.json(updated);
@@ -299,6 +303,7 @@ router.delete(
         product: deleted,
         response: null,
         isReq: true,
+        reqPath: req.url,
       }),
     );
     res.json(deleted);
@@ -309,7 +314,6 @@ router.delete(
 router.get("/similar/:id", requireSession, async (req, res) => {
   try {
     const productId = req.params.id;
-    console.log("Fetching similar products for product ID:", productId);
 
     // 1. Check Memory Cache
     if (
@@ -332,15 +336,6 @@ router.get("/similar/:id", requireSession, async (req, res) => {
     if (!targetProduct) {
       return res.status(404).json({ error: "Product not found" });
     }
-
-    console.log(
-      "Target Product:",
-      targetProduct.tags,
-      targetProduct.keywords,
-      targetProduct.category,
-      targetProduct.brand,
-      targetProduct.id,
-    );
 
     // 2. Query similar items using an aggregation pipeline with multi-stage fallbacks
     const [results] = await ProductModel.aggregate([
@@ -431,12 +426,8 @@ router.get("/similar/:id", requireSession, async (req, res) => {
       results?.sameCategoryOrBrand &&
       results.sameCategoryOrBrand.length > 0
     ) {
-      console.log(
-        "Fallback triggered: Returning same category or brand items.",
-      );
       finalProducts = results.sameCategoryOrBrand;
     } else {
-      console.log("Fallback triggered: Returning latest global items.");
       finalProducts = results?.latestGlobal || [];
     }
 
@@ -456,6 +447,7 @@ router.get("/similar/:id", requireSession, async (req, res) => {
         product: null,
         response: { products: finalProducts, fromCache: false },
         isReq: true,
+        reqPath: req.url,
       }),
     );
 

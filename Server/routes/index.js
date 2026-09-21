@@ -13,6 +13,7 @@ import jobsRouter from "./jobs.js";
 import { devMiddleware } from "../utils/middlewares/dev.js";
 import { evt } from "../utils/events.manage.js";
 import logsRouter from "./logs.js";
+import analyticsRouter from "./analytics.js";
 
 const router = express.Router();
 
@@ -48,5 +49,8 @@ router.use("/jobs", devMiddleware, jobsRouter);
 
 /* Log routes */
 router.use("/logs", requireAuth, logsRouter);
+
+/* Analytics routes */
+router.use("/analytics", requireAuth, analyticsRouter);
 
 export default router;

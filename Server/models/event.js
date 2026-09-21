@@ -289,12 +289,15 @@ class EventEmitter {
 }
 
 class ClassicEvent {
-  constructor(type, isMajor = false, sector = null, data = null) {
+  constructor(type, isMajor = false, sector = null, data = null, id = null) {
     this.type = type;
     this.timestamp = Date.now();
     this.isMajor = isMajor;
     this.sector = sector;
     this.data = data;
+    this.id = id
+      ? id
+      : `${type}-${this.timestamp}-${Math.random().toString(36).substring(2, 15)}`;
   }
 }
 

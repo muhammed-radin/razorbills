@@ -16,12 +16,19 @@ class DatabaseDocumentEvent {
 // Major Events
 
 class ProductEvent extends ClassicEvent {
-  constructor({ type, product, response = null, isReq = false }) {
+  constructor({
+    type,
+    product,
+    response = null,
+    isReq = false,
+    reqPath = null,
+  }) {
     super(type, true, "product");
     this.global = true;
     this.product = product;
     this.response = response;
     this.isReq = isReq;
+    this.reqPath = reqPath;
   }
 }
 
@@ -42,8 +49,17 @@ class OrderEvent extends ClassicEvent {
   }
 }
 
-class LogEvent extends ClassicEvent {
-  constructor({ type, title, message, data, isError = false, sector = null }) {
+class RecordEvent extends ClassicEvent {
+  constructor({
+    type,
+    title,
+    message,
+    data,
+    isError = false,
+    sector = null,
+    isAnalytic = false,
+    id = null,
+  }) {
     super(type, true, sector);
     this.global = true;
     this.title = title;
@@ -51,6 +67,10 @@ class LogEvent extends ClassicEvent {
     this.data = data;
     this.isError = isError;
     this.happenedAt = new Date();
+    this.isAnalytics = isAnalytic || false;
+    if (id) {
+      this.id = id;
+    }
   }
 }
 
@@ -120,6 +140,8 @@ const GlobalEventNames = {
   PRODUCT_WISHLISTED: "product_wishlisted",
   PRODUCT_CARTED: "product_carted",
   PRODUCT_COMMENTED: "product_commented",
+  PRODUCT_LOW_STOCK: "product_low_stock",
+  PRODUCT_OUT_OF_STOCK: "product_out_of_stock",
   PRODUCT_COMMENT_UPDATED: "product_comment_updated",
   PRODUCT_COMMENT_DELETED: "product_comment_deleted",
   PRODUCT_COMMENT_ERROR: "product_comment_error",
@@ -143,6 +165,9 @@ const GlobalEventNames = {
   ANALYTICS_UPDATED: "analytics_updated",
   ANALYTICS_FLUSHED: "analytics_flushed",
 
+  // Log events
+  EVENT_RECORDED: "event_recorded",
+
   ////////////////////// INDIVIDUAL EVENTS //////////////////////////////
   // Wihlist events
   WISHLIST_REMOVED: "wishlist_removed",
@@ -163,6 +188,13 @@ const GlobalEventNames = {
 
   // Non Major: Product events
   PRODUCT_SEARCHED_FROM_CACHE: "site_searched_from_cache",
+  PRODUCT_STOCK_UPDATED: "product_stock_updated",
+  PRODUCT_PRICE_UPDATED: "product_price_updated",
+  PRODUCT_IMAGE_UPDATED: "product_image_updated",
+  PRODUCT_DESCRIPTION_UPDATED: "product_description_updated",
+  PRODUCT_CATEGORY_UPDATED: "product_category_updated",
+  PRODUCT_TAGS_UPDATED: "product_tags_updated",
+  PRODUCT_DISCOUNT_UPDATED: "product_discount_updated",
 
   // Flush events
   FLUSH_REQUESTED: "flush_requested",
@@ -183,6 +215,6 @@ export {
   CommentEvent,
   UserEvent,
   OrderEvent,
-  LogEvent,
+  RecordEvent,
   SessionEvent,
 };

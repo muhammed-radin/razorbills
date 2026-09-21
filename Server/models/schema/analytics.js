@@ -30,6 +30,8 @@ const siteAnalyticsSchema = mongoose.Schema(
       loggedInUsers: { type: Number, default: 0 },
       signedUpUsers: { type: Number, default: 0 },
       totalUsers: { type: Number, default: 0 },
+      deletedUsers: { type: Number, default: 0 },
+      passwordChanged: { type: Number, default: 0 },
     },
 
     products: {
@@ -59,6 +61,13 @@ const siteAnalyticsSchema = mongoose.Schema(
       shares: { type: Number, default: 0 },
       comments: { type: Number, default: 0 },
       ratings: { type: Number, default: 0 },
+      wishlists: { type: Number, default: 0 },
+    },
+
+    events: {
+      total: { type: Number, default: 0 },
+      errors: { type: Number, default: 0 },
+      sessions: { type: Number, default: 0 },
     },
 
     activeUsers: { type: Number, default: 0 },
@@ -104,11 +113,16 @@ const dailyAnalyticsSchema = mongoose.Schema(
     users: {
       loggedInUsers: { type: Number, default: 0 },
       signedUpUsers: { type: Number, default: 0 },
+      deletedUsers: { type: Number, default: 0 },
+      passwordChanged: { type: Number, default: 0 },
     },
 
     products: {
       views: { type: Number, default: 0 },
       searches: { type: Number, default: 0 },
+      lowStock: { type: Number, default: 0 },
+      outOfStock: { type: Number, default: 0 },
+      totalProducts: { type: Number, default: 0 },
     },
 
     orders: {
@@ -130,6 +144,7 @@ const dailyAnalyticsSchema = mongoose.Schema(
       shares: { type: Number, default: 0 },
       comments: { type: Number, default: 0 },
       ratings: { type: Number, default: 0 },
+      wishlists: { type: Number, default: 0 },
     },
   },
   {
@@ -144,30 +159,6 @@ const analyticEventSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
-      enum: [
-        // Traffic
-        "page_view",
-        "search",
-
-        // Users
-        "user_signup",
-        "user_login",
-        "user_logout",
-
-        // Products
-        "product_view",
-
-        // Orders
-        "order_created",
-        "order_delivered",
-        "order_returned",
-        "order_cancelled",
-
-        // Engagement
-        "share",
-        "comment",
-        "rating",
-      ],
     },
 
     // When did it happen?
@@ -181,14 +172,22 @@ const analyticEventSchema = new mongoose.Schema(
       index: true,
     },
 
-    // For guests
-    visitorId: { type: String, default: null, index: true },
+    eventId: {
+      type: String,
+      required: true,
+      index: true,
+    },
 
     // Useful for traffic/session calculations
     sessionId: { type: String, default: null, index: true },
 
     // Page/product/etc.
     path: { type: String, default: null },
+
+    sector: {
+      type: String,
+      default: null,
+    },
 
     productId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -207,6 +206,8 @@ const analyticEventSchema = new mongoose.Schema(
 
     // Order information
     order: {
+      actor: { type: String, default: null },
+      actorId: { type: String, default: null },
       revenue: {
         type: Number,
         default: 0,
@@ -225,6 +226,10 @@ const analyticEventSchema = new mongoose.Schema(
       enum: ["chrome", "firefox", "safari", "edge", "other"],
       default: "other",
     },
+
+    os: { type: String, default: null },
+
+    userAgent: { type: String, default: null },
 
     // Additional information when needed
     metadata: { type: mongoose.Schema.Types.Mixed, default: undefined },
@@ -249,7 +254,11 @@ const eventsRecordSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
-    visitorId: { type: String, default: null, index: true }, // For guests
+    eventId: {
+      type: String,
+      required: true,
+      index: true,
+    },
     sessionId: { type: String, default: null, index: true }, // Useful for traffic/session calculations
     metadata: { type: mongoose.Schema.Types.Mixed, default: undefined },
     sector: {
@@ -281,31 +290,13 @@ const eventsRecordSchema = new mongoose.Schema(
     error: { type: String, default: null }, // the error message
     errorCode: { type: Number, default: null }, // the error code
 
-    orderId: {
+    refId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Order",
       default: null,
     },
-    cartId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Cart",
-      default: null,
-    },
-    interactionId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Interaction",
-      default: null,
-    },
-    wishlistId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Wishlist",
-      default: null,
-    },
-    addressId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Address",
-      default: null,
-    },
+
+    title: { type: String, default: null }, // the title of the event, for example: "User signed up", "Product added to cart", "Order placed", "Error occurred", etc.
+    message: { type: String, default: null }, // the message of the event, for example: "User signed up with email:
   },
   {
     timestamps: true,
@@ -317,23 +308,24 @@ const siteAnalyticsCacheSchema = mongoose.Schema(
   {
     _id: { type: String, required: true, default: "global_counters" },
     year: { type: Number, required: true },
-    months: [
-      {
+    months: {
+      type: Map,
+      of: {
         month: { type: Number, required: true },
         monthName: { type: String, required: true },
-        analytics: [Mongoose.Schema.Types.Mixed], // Store monthly analytics data
+        analytics: [mongoose.Schema.Types.Mixed], // Store monthly analytics data
       },
-    ],
-    weeks: [
-      {
+    },
+    weeks: {
+      type: Map,
+      of: {
         week: { type: Number, required: true },
         weekName: { type: String, required: true },
         weekId: { type: String, required: true }, // Format: YYYY-WW
-        analytics: [Mongoose.Schema.Types.Mixed], // Store weekly analytics data
+        analytics: [mongoose.Schema.Types.Mixed], // Store weekly analytics data
       },
-    ],
-    yearName: { type: String, required: true },
-    analytics: [Mongoose.Schema.Types.Mixed], // Store yearly analytics data
+    },
+    analytics: [mongoose.Schema.Types.Mixed], // Store yearly analytics data
     lastUpdated: { type: Date, default: Date.now },
   },
   {
@@ -365,6 +357,7 @@ export const AnalyticEventModel = mongoose.model(
   "analytic_events",
 );
 
+// currently not used, but can be used in the future for caching analytics data for quick server response
 export const SiteAnalyticsCacheModel = mongoose.model(
   "SiteAnalyticsCache",
   siteAnalyticsCacheSchema,

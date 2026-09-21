@@ -292,7 +292,7 @@ export default function createAuth(db) {
         adminPermissions: {
           type: [String],
           default: [],
-          required: false,
+          required: true,
           input: false,
           returned: true,
         },

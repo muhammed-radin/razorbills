@@ -74,7 +74,7 @@ async function startAssiginTasks(callback) {
 const getAgenda = () => {
   return new Promise((resolve, reject) => {
     waitForConnection().then(() => {
-      resolve(useAgenda(), startAssiginTasks);
+      resolve({ agenda: useAgenda(), startAssiginTasks });
     });
   });
 };

@@ -14,7 +14,7 @@ router.use(
   requireAdmin,
   requirePermission("read"),
   async (req, res, next) => {
-    const agenda = await getAgenda();
+    const { agenda } = await getAgenda();
     const controller = createExpressMiddleware(agenda);
     controller(req, res, next);
   },
@@ -27,7 +27,7 @@ router.get(
   requireAdmin,
   requirePermission("write"),
   async (req, res) => {
-    const agenda = await getAgenda();
+    const { agenda } = await getAgenda();
     await agenda.stop();
     res.send("Agenda jobs stopped.");
   },
