@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
@@ -12,23 +12,37 @@ import {
 } from "@/components/ui/breadcrumb";
 import {
   ShoppingCart,
-  ArrowLeft,
-  ShoppingBag,
-  Heart,
   Trash2,
-  RefreshCw
 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 import EmptyCart from "./components/Empty-cart.jsx";
 import ShoppingCart1 from "@/components/shopping-cart-1.jsx";
-import { cartData } from "@/pages/cart/data/shopping-cart-1-data.js";
+import { useCartStore } from "@/stores/shop";
 
 const CartPage = () => {
   const { t } = useTranslation();
+  const items = useCartStore((s) => s.items);
+  const loading = useCartStore((s) => s.loading);
+  const fetchCart = useCartStore((s) => s.fetch);
+  const clearCart = useCartStore((s) => s.clear);
 
+  useEffect(() => {
+    fetchCart().catch(() => {});
+  }, [fetchCart]);
 
-  const isEmpty = cartData?.isEmpty?.() ?? true;
+  const isEmpty = items.length === 0;
+  const totalCount = items.reduce((sum, i) => sum + (i.quantity ?? 1), 0);
+
+  const handleClearCart = async () => {
+    try {
+      await clearCart();
+      toast.success(t("cart.cleared", { defaultValue: "Cart cleared" }));
+    } catch {
+      toast.error(t("common.error", { defaultValue: "Failed to clear cart" }));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,7 +63,6 @@ const CartPage = () => {
         </Breadcrumb>
 
         {/* Header */}
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div className="flex items-center gap-3 mb-4 sm:mb-0">
             <ShoppingCart className="w-8 h-8 text-primary" />
@@ -57,19 +70,18 @@ const CartPage = () => {
               {t("cart.title")}
               {!isEmpty && (
                 <span className="ml-2 text-lg font-normal text-muted-foreground">
-                  ({cart.getTotalItemsCount()} {cart.getTotalItemsCount() === 1 ? t("common.item") : t("common.items")})
+                  ({totalCount} {totalCount === 1 ? t("common.item") : t("common.items")})
                 </span>
               )}
             </h1>
           </div>
 
           <div className="flex gap-3">
-
             {!isEmpty && (
               <Button
                 variant="outline"
                 onClick={handleClearCart}
-                disabled={isLoading}
+                disabled={loading}
                 className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -79,7 +91,7 @@ const CartPage = () => {
           </div>
         </div>
 
-        {!isEmpty ? (
+        {isEmpty && !loading ? (
           /* Empty Cart State */
           <EmptyCart />
         ) : (

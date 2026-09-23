@@ -146,13 +146,11 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
     const newWishList = await WishlistModel.findOneAndUpdate(
       { userId, folder },
       {
-        $addToSet: { products: filteredProducts },
         $set: { updatedAt: new Date() },
         $setOnInsert: {
           folder: folder || "/",
           userId: userId,
           products: filteredProducts,
-          updatedAt: new Date(),
           createdAt: new Date(),
         },
       },

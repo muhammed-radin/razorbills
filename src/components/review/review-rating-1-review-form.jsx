@@ -7,9 +7,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+import { commentsApi, interactionsApi } from '@/services/shop'
 
 export function ReviewRating1ReviewForm({
-  storeData
+  storeData,
+  productId,
+  onSubmitted,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [rating, setRating] = useState(0)
@@ -20,15 +24,28 @@ export function ReviewRating1ReviewForm({
     review: '',
   })
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsSubmitting(true)
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      if (productId) {
+        await commentsApi.create(productId, formData.review)
+        if (rating > 0) {
+          await interactionsApi.rate(productId, rating).catch(() => {});
+        }
+        toast.success('Review submitted!')
+        onSubmitted?.()
+      } else {
+        // No product context — showcase mode
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      }
       setRating(0)
       setFormData({ name: '', email: '', review: '' })
+    } catch {
+      toast.error('Please log in to submit a review.')
+    } finally {
       setIsSubmitting(false)
-    }, 1000)
+    }
   }
 
   return (

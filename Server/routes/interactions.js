@@ -7,7 +7,7 @@ import {
 } from "../utils/middlewares/reqiuredAuth.js";
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import { InteractionModel } from "../models/schema/interactions.js";
-import { evt, Evts } from "../utils/events.manage.js";
+import { evt, Evts, ProductEvent } from "../utils/events.manage.js";
 import { getAgenda, useAgenda } from "../utils/agenda.js";
 
 const router = express.Router();
@@ -339,7 +339,7 @@ function flushBuffer(buffer, property, bufferName, collection = "products") {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.post(
-  "product/visit",
+  "/product/visit",
   passUserAuth,
   addAllViews,
   requireSession,
@@ -348,7 +348,7 @@ router.post(
 
     const {
       id: userId,
-      avatar: userAvatar,
+      image: userAvatar,
       email: userEmail,
       name: userName,
     } = req.user;
@@ -383,14 +383,10 @@ router.post(
             userEmail,
             isGuest: !isAuthenticated,
             createdAt: new Date(),
-            hasViewed: true,
           },
           $set: {
             updatedAt: new Date(),
             hasViewed: true,
-            isGuest: !isAuthenticated,
-            userName,
-            userAvatar: userAvatar ? userAvatar : "",
           },
         },
         upsert: true,
@@ -425,7 +421,7 @@ router.post(
 ////////////////////////////////////////////////////// SHARES ///////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.post("product/share", passUserAuth, requireSession, (req, res) => {
+router.post("/product/share", passUserAuth, requireSession, (req, res) => {
   const { productId } = req.body;
 
   if (!productId) {
@@ -440,7 +436,12 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
 
   shareBuffer[productId] = (shareBuffer[productId] || 0) + 1;
 
-  const { id: userId, email: userEmail, name: userName } = req.user;
+  const {
+    id: userId,
+    email: userEmail,
+    name: userName,
+    image: userAvatar,
+  } = req.user;
   const isAuthenticated = req.user && !req.user.isAnonymous;
 
   productInteractionBuffer.push({
@@ -455,15 +456,12 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
           userEmail,
           createdAt: new Date(),
           isGuest: !isAuthenticated,
-          hasShared: true,
-          userAvatar: req.user.avatar ? req.user.avatar : "",
+          userAvatar: userAvatar ? userAvatar : "",
         },
         $set: {
           updatedAt: new Date(),
-          isGuest: !isAuthenticated,
           hasShared: true,
-          userName,
-          userAvatar: req.user.avatar ? req.user.avatar : "",
+          hasViewed: true,
         },
       },
       upsert: true,
@@ -501,13 +499,13 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
 
 // Rating data stored into db directly, no buffer needed since it's a single value per user per product
 
-router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
+router.post("/product/rate", requireAuth, passUserAuth, async (req, res) => {
   let { productId, rating } = req.body; // rating: 1-5
   const {
     id: userId,
     email: userEmail,
     name: userName,
-    avatar: userAvatar,
+    image: userAvatar,
   } = req.user;
   const isAuthenticated = req.user && !req.user.isAnonymous;
 
@@ -555,16 +553,12 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
           userAvatar: userAvatar ? userAvatar : "",
           userEmail,
           isGuest: !isAuthenticated,
-          rating,
           createdAt: new Date(),
         },
         $set: {
           updatedAt: new Date(),
-          isGuest: !isAuthenticated,
           rating,
           hasViewed: true,
-          userName,
-          userAvatar: userAvatar ? userAvatar : "",
         },
       },
       upsert: true,
@@ -609,15 +603,7 @@ evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
     return;
   }
 
-  function productWishlisted(
-    productId,
-    userId,
-    userEmail,
-    userName,
-    userAvatar,
-    isGuest,
-    folder,
-  ) {
+  function productWishlisted(productId, userId, folder) {
     if (!productId || !userId || !userEmail || !userName || !isGuest) {
       console.error("Missing required fields for wishlist event");
       return;
@@ -633,21 +619,13 @@ evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
             id: `${productId}_${userId}`,
             productId,
             userId,
-            userName,
-            userAvatar: userAvatar ? userAvatar : "",
-            userEmail,
-            isGuest: isGuest,
             createdAt: new Date(),
-            folder: folder || "/",
-            hasWishlisted: true,
           },
           $set: {
             updatedAt: new Date(),
-            isGuest: isGuest,
             hasWishlisted: true,
-            userName,
-            userAvatar: userAvatar ? userAvatar : "",
             folder: folder || "/",
+            hasViewed: true,
           },
         },
         upsert: true,
@@ -656,24 +634,12 @@ evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
   }
 
   wishlist.products.forEach((product) => {
-    productWishlisted(
-      product.productId,
-      wishlist.userId,
-      wishlist.userEmail,
-      wishlist.userName,
-      wishlist.userAvatar,
-      wishlist.isGuest,
-      wishlist.folder,
-    );
+    productWishlisted(product.productId, wishlist.userId, wishlist.folder);
   });
 
   evt.fire(Evts.INTERACTION_RECORDED, {
     productId: wishlist.products.map((p) => p.productId),
     userId: wishlist.userId,
-    userName: wishlist.userName,
-    userAvatar: wishlist.userAvatar ? wishlist.userAvatar : "",
-    userEmail: wishlist.userEmail,
-    isGuest: wishlist.isGuest,
     interactionType: "wishlist",
     property: "metrics.wishlistCount",
     timestamp: new Date(),
@@ -694,10 +660,6 @@ evt.on(Evts.CART_ITEM_ADDED, async ({ cart, productId, quantity }) => {
   evt.fire(Evts.INTERACTION_RECORDED, {
     productId,
     userId: cart.userId,
-    userName: cart.userName,
-    userAvatar: cart.userAvatar ? cart.userAvatar : "",
-    userEmail: cart.userEmail,
-    isGuest: cart.isGuest,
     interactionType: "cart",
     property: "metrics.cartCount",
     timestamp: new Date(),
@@ -730,8 +692,6 @@ router.get("/p/:productId", requireAuth, passUserAuth, async (req, res) => {
   const user = req.user;
   const { productId } = req.params;
 
-  evt.fire(Evts.FLUSH_REQUESTED, true); // Try to Flush all buffers before fetching interactions
-
   if (!productId) {
     return res.status(400).json({ error: "Product ID is required" });
   }
@@ -747,7 +707,24 @@ router.get("/p/:productId", requireAuth, passUserAuth, async (req, res) => {
     if (!interaction) {
       return res.status(404).json({ error: "Interaction not found" });
     }
-    res.status(200).json({ interaction });
+    // get buffer
+    const bufferedInteraction = productInteractionBuffer.find(
+      (interaction) =>
+        interaction.updateOne.filter.productId === productId &&
+        interaction.updateOne.filter.userId === user.id,
+    );
+    // merge bufferedInteraction with interaction
+    if (bufferedInteraction) {
+      const bufferedData = bufferedInteraction.updateOne.update.$set;
+      interaction.hasViewed = bufferedData.hasViewed || interaction.hasViewed;
+      interaction.hasShared = bufferedData.hasShared || interaction.hasShared;
+      interaction.hasWishlisted =
+        bufferedData.hasWishlisted || interaction.hasWishlisted;
+      interaction.rating = bufferedData.rating || interaction.rating;
+    }
+
+    evt.fire(Evts.FLUSH_REQUESTED, true); // Try to Flush all buffers before fetching interactions
+    return res.status(200).json({ interaction });
   } catch (error) {
     console.error("Error fetching interactions:", error);
     res.status(500).json({ error: "Internal server error" });

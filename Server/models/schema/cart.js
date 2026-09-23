@@ -22,6 +22,7 @@ export const CartSchema = new Schema({
   },
   totalAmount: { type: Number, required: true, default: 0 },
   currency: { type: String, default: "INR" },
+  isGuest: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

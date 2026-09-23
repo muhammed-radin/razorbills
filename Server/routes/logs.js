@@ -208,9 +208,17 @@ evt.onListen(function (eventInfo) {
     debugEvents.push(eventInfo); // Store the event info in debugEvents for debugging purposes
 
     let userId =
-      event.user?.id || event.session?.userId || event.order?.id || null;
+      event.user?.id ||
+      event.response?.userId ||
+      event.session?.userId ||
+      event.order?.id ||
+      null;
     let sessionId = event.session?.id || null;
-    let productId = event.product?.id || event.order?.productId || null;
+    let productId =
+      event.product?.id ||
+      event.response?.productId ||
+      event.order?.productId ||
+      null;
     let orderId = event.order?.id || null;
 
     // Copy of AnalyticEventModel

@@ -1,119 +1,60 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { TrendingDown, Flame, Package } from "lucide-react";
 
 import WishlistHeader from "./components/WishlistHeader";
 import WishlistToolbar from "./components/WishlistToolbar";
 import WishlistProductList from "./components/WishlistProductList";
 import WishlistEmpty from "./components/WishlistEmpty";
 import WishlistSkeleton from "./components/WishlistSkeleton";
-
-// Reference dataset matching the visual specification
-const DEFAULT_WISHLIST_ITEMS = [
-  {
-    id: "1",
-    brand: "Halden",
-    title: "Storm Wool Coat",
-    variant: "Camel · M",
-    stockStatus: "in_stock",
-    stockLabel: "In stock",
-    savedDate: "Saved 3 days ago",
-    originalPrice: 420,
-    price: 385,
-    savings: 35,
-    image: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600&auto=format&fit=crop&q=80",
-    badge: {
-      type: "price_drop",
-      label: "Price Drop Save $35",
-      icon: TrendingDown,
-    },
-    inStock: true,
-  },
-  {
-    id: "2",
-    brand: "Marlow Goods",
-    title: "Italian Penny Loafers",
-    variant: "Walnut · 10",
-    stockStatus: "low_stock",
-    stockLabel: "Only 2 left",
-    savedDate: "Saved 1 week ago",
-    originalPrice: null,
-    price: 295,
-    savings: 0,
-    image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=600&auto=format&fit=crop&q=80",
-    badge: {
-      type: "almost_gone",
-      label: "Almost Gone",
-      icon: Flame,
-    },
-    inStock: true,
-  },
-  {
-    id: "3",
-    brand: "Wren & Field",
-    title: "Cashmere V-Neck Sweater",
-    variant: "Oat · M",
-    stockStatus: "in_stock",
-    stockLabel: "In stock",
-    savedDate: "Restocked 2 days ago",
-    originalPrice: null,
-    price: 228,
-    savings: 0,
-    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=600&auto=format&fit=crop&q=80",
-    badge: {
-      type: "back_in_stock",
-      label: "Back In Stock",
-      icon: Package,
-    },
-    inStock: true,
-  },
-  {
-    id: "4",
-    brand: "Marlow Goods",
-    title: "Slim Card Holder",
-    variant: "Oxblood",
-    stockStatus: "in_stock",
-    stockLabel: "In stock",
-    savedDate: "Saved 4 days ago",
-    originalPrice: null,
-    price: 85,
-    savings: 0,
-    image: "https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&auto=format&fit=crop&q=80",
-    badge: null,
-    inStock: true,
-  },
-  {
-    id: "5",
-    brand: "Wren & Field",
-    title: "Weekend Tote Bag",
-    variant: "Tan",
-    stockStatus: "out_of_stock",
-    stockLabel: "Out of stock",
-    savedDate: "Saved 5 days ago",
-    originalPrice: null,
-    price: 310,
-    savings: 0,
-    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=600&auto=format&fit=crop&q=80",
-    badge: null,
-    inStock: false,
-  },
-];
+import { useWishlistStore, useCartStore } from "@/stores/shop";
 
 export default function Wishlist() {
   const navigate = useNavigate();
+  const storeItems = useWishlistStore((s) => s.items);
+  const storeLoading = useWishlistStore((s) => s.loading);
+  const fetchWishlist = useWishlistStore((s) => s.fetch);
+  const removeFromWishlist = useWishlistStore((s) => s.remove);
+  const addToCart = useCartStore((s) => s.add);
 
-  const [items, setItems] = useState(DEFAULT_WISHLIST_ITEMS);
-  const [selectedIds, setSelectedIds] = useState(
-    DEFAULT_WISHLIST_ITEMS.map((item) => item.id)
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  // Initial render loading simulation
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 200);
-    return () => clearTimeout(timer);
-  }, []);
+    fetchWishlist().catch(() => {});
+  }, [fetchWishlist]);
+
+  // Server snapshots -> display shape
+  const items = useMemo(
+    () =>
+      storeItems.map((p, index) => {
+        const id = String(p.productId ?? p.id ?? index);
+        const price = p.price ?? 0;
+        const originalPrice = p.originalPrice ?? price;
+        return {
+          id,
+          brand: p.brand ?? "",
+          title: p.title ?? "Product",
+          variant: p.sku ?? "",
+          stockStatus: "in_stock",
+          stockLabel: "In stock",
+          savedDate: "",
+          originalPrice: originalPrice > price ? originalPrice : null,
+          price,
+          savings: originalPrice > price ? originalPrice - price : 0,
+          image: p.thumbnail ?? p.image ?? "",
+          badge: null,
+          inStock: true,
+          raw: p,
+        };
+      }),
+    [storeItems],
+  );
+
+  const isLoading = storeLoading;
+
+  useEffect(() => {
+    setSelectedIds(items.map((item) => item.id));
+  }, [storeItems, storeLoading]);
 
   // Compute stats dynamically from active wishlist items
   const stats = useMemo(() => {
@@ -162,25 +103,43 @@ export default function Wishlist() {
   }, [items, selectedIds]);
 
   // Event Handlers
-  const handleRemoveItem = (id, title) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    setSelectedIds((prev) => prev.filter((i) => i !== id));
-    toast.success(`Removed "${title}" from your wishlist`);
+  const handleRemoveItem = async (id, title) => {
+    try {
+      await removeFromWishlist(id);
+      setSelectedIds((prev) => prev.filter((i) => i !== id));
+      toast.success(`Removed "${title}" from your wishlist`);
+    } catch {
+      toast.error("Failed to remove item");
+    }
   };
 
-  const handleAddToCart = (item) => {
-    toast.success(`Added "${item.title}" to cart`);
+  const handleAddToCart = async (item) => {
+    try {
+      await addToCart(item.raw ?? { ...item, productId: item.id }, 1);
+      toast.success(`Added "${item.title}" to cart`);
+    } catch {
+      toast.error("Failed to add to cart");
+    }
   };
 
-  const handleAddSelectedToCart = () => {
+  const handleAddSelectedToCart = async () => {
     const selectedInStock = items.filter(
       (item) => selectedIds.includes(item.id) && item.inStock
     );
     if (selectedInStock.length === 0) return;
 
-    toast.success(
-      `Added ${selectedInStock.length} item${selectedInStock.length > 1 ? "s" : ""} to cart!`
-    );
+    try {
+      await Promise.all(
+        selectedInStock.map((item) =>
+          addToCart(item.raw ?? { ...item, productId: item.id }, 1),
+        ),
+      );
+      toast.success(
+        `Added ${selectedInStock.length} item${selectedInStock.length > 1 ? "s" : ""} to cart!`
+      );
+    } catch {
+      toast.error("Failed to add items to cart");
+    }
   };
 
   const handleNotifyMe = (item) => {
@@ -197,9 +156,7 @@ export default function Wishlist() {
   };
 
   const handleResetDemo = () => {
-    setItems(DEFAULT_WISHLIST_ITEMS);
-    setSelectedIds(DEFAULT_WISHLIST_ITEMS.map((item) => item.id));
-    toast.info("Wishlist items restored");
+    fetchWishlist().catch(() => {});
   };
 
   if (isLoading) {

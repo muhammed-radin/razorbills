@@ -38,29 +38,6 @@ router.get(
 );
 
 router.get(
-  "/:dayid",
-  requireAuth,
-  passUserAuth,
-  requireAdmin,
-  requirePermission("read"),
-  async (req, res) => {
-    try {
-      const analytics = await DailyAnalyticsModel.findOne({
-        _id: req.params.dayid,
-      });
-      if (!analytics) {
-        return res.status(404).json({ error: "Analytics not found" });
-      }
-
-      res.json(analytics || {});
-    } catch (error) {
-      console.error("Error fetching user analytics:", error);
-      res.status(500).json({ error: "Failed to fetch user analytics" });
-    }
-  },
-);
-
-router.get(
   "/events/",
   requireAuth,
   passUserAuth,
@@ -112,6 +89,31 @@ router.get(
     } catch (error) {
       console.error("Error fetching events:", error);
       res.status(500).json({ error: "Failed to fetch events" });
+    }
+  },
+);
+
+// NOTE: /:dayid must be registered AFTER static routes (/events, /report),
+// otherwise "events"/"report" are captured as dayid and those routes 404.
+router.get(
+  "/:dayid",
+  requireAuth,
+  passUserAuth,
+  requireAdmin,
+  requirePermission("read"),
+  async (req, res) => {
+    try {
+      const analytics = await DailyAnalyticsModel.findOne({
+        _id: req.params.dayid,
+      });
+      if (!analytics) {
+        return res.status(404).json({ error: "Analytics not found" });
+      }
+
+      res.json(analytics || {});
+    } catch (error) {
+      console.error("Error fetching user analytics:", error);
+      res.status(500).json({ error: "Failed to fetch user analytics" });
     }
   },
 );

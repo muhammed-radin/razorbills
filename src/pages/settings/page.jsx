@@ -48,19 +48,21 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { api } from "@/utils/api";
+import { settingsApi } from "@/services/shop";
 
 const SettingsPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sample user data
   const [userData, setUserData] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+91 9876543210",
+    name: "",
+    email: "",
+    phone: "",
     avatar: "",
     language: "en",
     theme: "system",
@@ -73,14 +75,46 @@ const SettingsPage = () => {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    // Load profile from the session + preferences from the API
+    api.getUser(false).then((user) => {
+      if (!user) return;
+      setUserData((prev) => ({
+        ...prev,
+        name: user.name ?? prev.name,
+        email: user.email ?? prev.email,
+        phone: user.phoneNumber ?? prev.phone,
+        avatar: user.image ?? prev.avatar,
+      }));
+    }).catch(() => {});
+    settingsApi.get().then((prefs) => {
+      const p = prefs?.prefrences ?? prefs ?? {};
+      setUserData((prev) => ({
+        ...prev,
+        language: p.language ?? prev.language,
+        pushNotifications: p.pushNotificationEnabled ?? prev.pushNotifications,
+        emailNotifications: p.emailNotificationsEnabled ?? prev.emailNotifications,
+        orderUpdates: p.notificationEnabled ?? prev.orderUpdates,
+      }));
+      if (p.language) i18n.changeLanguage(p.language).catch(() => {});
+    }).catch(() => {});
+  }, [i18n]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await settingsApi.save({
+        language: userData.language,
+        notificationEnabled: userData.orderUpdates,
+        pushNotificationEnabled: userData.pushNotifications,
+        emailNotificationsEnabled: userData.emailNotifications,
+      });
+      i18n.changeLanguage(userData.language).catch(() => {});
+      toast.success(t("settings.saved", { defaultValue: "Settings saved" }));
+    } catch {
+      toast.error(t("common.error", { defaultValue: "Failed to save settings" }));
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   const getInitials = (name) => {

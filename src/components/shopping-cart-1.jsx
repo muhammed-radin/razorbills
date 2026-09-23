@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Trash2, Minus, Plus, ShoppingBag, Package, Shield, CreditCard, Store, MoveRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -8,25 +9,46 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { ShoppingCart1SpinningCounter } from './shopping-cart-1-spinning-counter'
 import { cn } from '@/lib/utils'
 import { cartData } from "@/pages/cart/data/shopping-cart-1-data";
+import { useCartStore } from '@/stores/shop'
+import { toast } from 'sonner'
 
 export function ShoppingCart1() {
-  const [items, setItems] = useState(cartData.items)
+  const navigate = useNavigate()
+  const storeItems = useCartStore((s) => s.items)
+  const fetchCart = useCartStore((s) => s.fetch)
+  const setQuantity = useCartStore((s) => s.setQuantity)
+  const removeFromCart = useCartStore((s) => s.remove)
   const [isRemoving, setIsRemoving] = useState(null)
 
+  useEffect(() => {
+    fetchCart().catch(() => {});
+  }, [fetchCart])
+
+  // Normalize server items to the card's display shape
+  const items = storeItems.map((item) => ({
+    id: item.productId,
+    name: item.title ?? item.name,
+    price: item.price,
+    originalPrice: item.originalPrice,
+    quantity: item.quantity,
+    image: item.thumbnail ?? item.image,
+    color: item.color,
+    size: item.size,
+    estimatedDelivery: item.estimatedDelivery ?? '2-4 business days',
+  }))
+
   const updateQuantity = (id, increment) => {
-    setItems(currentItems =>
-      currentItems.map(item =>
-        item.id === id ? { ...item, quantity: Math.max(1, item.quantity + (increment ? 1 : -1)) } : item,
-      ),
-    )
+    const current = items.find((item) => item.id === id)
+    if (!current) return
+    const next = Math.max(1, current.quantity + (increment ? 1 : -1))
+    setQuantity(id, next).catch(() => toast.error('Failed to update quantity'))
   }
 
   const removeItem = (id) => {
     setIsRemoving(id)
-    setTimeout(() => {
-      setItems(currentItems => currentItems.filter(item => item.id !== id))
-      setIsRemoving(null)
-    }, 300)
+    removeFromCart(id)
+      .catch(() => toast.error('Failed to remove item'))
+      .finally(() => setIsRemoving(null))
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -177,6 +199,7 @@ export function ShoppingCart1() {
                 size='lg'
                 className="h-10 px-8 mt-4 w-full cursor-pointer text-base font-medium"
                 disabled={items.length === 0}
+                onClick={() => navigate('/shipping-info')}
               >
                 <ShoppingBag data-icon='inline-start' />
                 Proceed to Checkout
@@ -205,7 +228,11 @@ export function ShoppingCart1() {
             </CardContent>
           </Card>
 
-          <Button variant='outline' className="h-9 px-4 py-2 w-full cursor-pointer">
+          <Button
+            variant='outline'
+            className="h-9 px-4 py-2 w-full cursor-pointer"
+            onClick={() => navigate('/search')}
+          >
             <Store data-icon='inline-start' />
             Continue Shopping
             <MoveRight data-icon='inline-end' />

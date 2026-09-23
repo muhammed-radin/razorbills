@@ -7,6 +7,7 @@ import {
 } from "../utils/middlewares/reqiuredAuth.js";
 import { CommentModel } from "../models/schema/comments.js";
 import { evt, Evts, ErrorEvent, CommentEvent } from "../utils/events.manage.js";
+import { globalMemory } from "../utils/cache-utils/global-cache.js";
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ let isCommentUpdated = false;
 // POST /comments
 router.post("/", requireAuth, passUserAuth, async (req, res) => {
   const { productId, content: commentText } = req.body;
-  const { id: userId, email, name, avatar } = req.user;
+  const { id: userId, email, name, image: avatar } = req.user;
 
   if (!productId || !commentText) {
     evt.fire(
@@ -41,18 +42,14 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
         {
           $set: {
             content: commentText,
-            userName: name,
-            userEmail: email,
-            userAvatar: avatar ? avatar : "",
             updatedAt: new Date(),
           },
           $setOnInsert: {
             productId,
             userId,
-            userEmail: email,
             userName: name,
+            userEmail: email,
             userAvatar: avatar ? avatar : "",
-            content: commentText,
             createdAt: new Date(),
           },
         },
@@ -64,7 +61,7 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
         isCommentUpdated = true;
         evt.fire(
           Evts.PRODUCT_COMMENTED,
-          CommentEvent({
+          new CommentEvent({
             comment,
             type: Evts.PRODUCT_COMMENTED,
           }),
@@ -115,14 +112,19 @@ router.get("/:productId", requireSession, async (req, res) => {
     productId: productId,
   };
 
-  let totalCount = await db.collection("orders").countDocuments(query);
+  let totalCount = await CommentModel.countDocuments(query);
 
   try {
     const comments = await CommentModel.find(query)
       .skip(startIndex)
       .limit(limit)
-      .sort({ [sortBy]: sortOrder, createdAt: -1 })
-      .toArray();
+      .sort({ [sortBy]: sortOrder, createdAt: -1 });
+
+    if (!comments || comments.length === 0) {
+      res.status(404).json({ error: "No comments found for this product" });
+      return;
+    }
+
     results = {
       comments: comments,
       page: page,

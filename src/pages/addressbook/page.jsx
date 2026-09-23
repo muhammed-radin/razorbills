@@ -49,48 +49,30 @@ import {
   MapPinned,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useAddressStore } from "@/stores/shop";
 
-// Sample addresses data
-const sampleAddresses = [
-  {
-    id: 1,
-    name: "John Doe",
-    phone: "+91 9876543210",
-    type: "home",
-    address: "123 Main Street, Apartment 4B",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400001",
-    isDefault: true,
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    phone: "+91 9876543211",
-    type: "work",
-    address: "Tech Park, Building A, Floor 5",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560001",
-    isDefault: false,
-  },
-  {
-    id: 3,
-    name: "John Doe",
-    phone: "+91 9876543212",
-    type: "other",
-    address: "456 Oak Avenue, Near Central Park",
-    city: "Delhi",
-    state: "Delhi",
-    pincode: "110001",
-    isDefault: false,
-  },
-];
+const normalizeAddress = (addr) => ({
+  id: addr._id ?? addr.id,
+  name: addr.name ?? "",
+  phone: addr.phone ?? "",
+  type: addr.type ?? "other",
+  address: addr.address ?? addr.street ?? "",
+  city: addr.city ?? "",
+  state: addr.state ?? "",
+  pincode: addr.pincode ?? addr.pinCode ?? "",
+  isDefault: Boolean(addr.isDefault),
+  raw: addr,
+});
 
 const AddressBookPage = () => {
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
-  const [addresses, setAddresses] = useState(sampleAddresses);
+  const storeAddresses = useAddressStore((s) => s.addresses);
+  const fetchAddresses = useAddressStore((s) => s.fetch);
+  const addAddress = useAddressStore((s) => s.add);
+  const setDefaultAddress = useAddressStore((s) => s.setDefault);
+  const [addresses, setAddresses] = useState([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -108,23 +90,24 @@ const AddressBookPage = () => {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchAddresses().catch(() => {});
+  }, [fetchAddresses]);
 
-  const handleAddAddress = () => {
-    const address = {
-      ...newAddress,
-      id: Date.now(),
-      isDefault: addresses.length === 0 ? true : newAddress.isDefault,
-    };
-    
-    if (address.isDefault) {
-      setAddresses(
-        addresses.map((addr) => ({ ...addr, isDefault: false })).concat(address)
-      );
-    } else {
-      setAddresses([...addresses, address]);
+  useEffect(() => {
+    setAddresses(storeAddresses.map(normalizeAddress));
+  }, [storeAddresses]);
+
+  const handleAddAddress = async () => {
+    try {
+      await addAddress({
+        ...newAddress,
+        isDefault: addresses.length === 0 ? true : newAddress.isDefault,
+      });
+      toast.success(t("address.added", { defaultValue: "Address added" }));
+    } catch {
+      toast.error(t("common.error", { defaultValue: "Failed to add address" }));
+      return;
     }
-    
     setNewAddress({
       name: "",
       phone: "",
@@ -139,6 +122,7 @@ const AddressBookPage = () => {
   };
 
   const handleEditAddress = () => {
+    // Backend has no update-address endpoint yet — apply locally.
     if (!selectedAddress) return;
 
     let updatedAddresses = addresses.map((addr) =>
@@ -156,9 +140,15 @@ const AddressBookPage = () => {
     setAddresses(updatedAddresses);
     setIsEditDialogOpen(false);
     setSelectedAddress(null);
+    toast.info(
+      t("address.localOnlyEdit", {
+        defaultValue: "Edits are kept locally until address update is supported by the API",
+      }),
+    );
   };
 
   const handleDeleteAddress = () => {
+    // Backend has no delete-address endpoint yet — remove locally.
     if (!selectedAddress) return;
 
     const remainingAddresses = addresses.filter(
@@ -175,13 +165,21 @@ const AddressBookPage = () => {
     setSelectedAddress(null);
   };
 
-  const handleSetDefault = (id) => {
-    setAddresses(
-      addresses.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === id,
-      }))
-    );
+  const handleSetDefault = async (id) => {
+    const address = addresses.find((addr) => addr.id === id);
+    if (!address) return;
+    try {
+      await setDefaultAddress(address.raw ?? address);
+      toast.success(t("address.defaultSet", { defaultValue: "Default address updated" }));
+    } catch {
+      // Fall back to local state when the API call fails
+      setAddresses(
+        addresses.map((addr) => ({
+          ...addr,
+          isDefault: addr.id === id,
+        })),
+      );
+    }
   };
 
   const getTypeIcon = (type) => {

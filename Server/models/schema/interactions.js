@@ -6,7 +6,7 @@ export const InteractionSchema = new Schema(
     // Basic
     userId: { type: String, required: true, index: true },
     productId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Product",
       index: true,
       required: true,
@@ -21,6 +21,9 @@ export const InteractionSchema = new Schema(
     hasViewed: { type: Boolean, default: false },
     hasShared: { type: Boolean, default: false },
     hasWishlisted: { type: Boolean, default: false },
+
+    // folder of wishlisted product
+    folder: { type: String, default: "/" },
 
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },

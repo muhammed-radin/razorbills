@@ -22,8 +22,20 @@ class ProductEvent extends ClassicEvent {
     response = null,
     isReq = false,
     reqPath = null,
+    userId = null,
+    actorId = null,
   }) {
-    super(type, true, "product");
+    super({
+      type,
+      isMajor: true,
+      sector: "product",
+      content: { product, response },
+      isReq,
+      reqPath,
+
+      userId,
+      actorId,
+    });
     this.global = true;
     this.product = product;
     this.response = response;
@@ -33,19 +45,39 @@ class ProductEvent extends ClassicEvent {
 }
 
 class UserEvent extends ClassicEvent {
-  constructor({ type, user, isGuest = false }) {
-    super(type, true, "user");
+  constructor({ type, user, isGuest = false, userId = null }) {
+    super({
+      type,
+      isMajor: true,
+      sector: "user",
+      content: { ...user },
+      isGuest,
+      userId: user.id || userId,
+      userName: user.name,
+      userEmail: user.email,
+      userAvatar: user.image,
+      actorId: user.id || userId,
+    });
     this.global = true;
-    this.user = user;
-    this.isGuest = isGuest;
+    this.user = user; // short for user object
+    this.isGuest = user.isGuest || isGuest;
   }
 }
 
 class OrderEvent extends ClassicEvent {
   constructor({ type, order }) {
-    super(type, true, "order");
+    super({
+      type,
+      isMajor: true,
+      sector: "order",
+      content: { ...order },
+      orderId: order.id,
+      userId: order.userId,
+      actorId: order.userId,
+    });
     this.global = true;
     this.order = order;
+    this.isGuest = false; // Guest users cannot place orders, so this is always false for order events
   }
 }
 
@@ -57,17 +89,23 @@ class RecordEvent extends ClassicEvent {
     data,
     isError = false,
     sector = null,
-    isAnalytic = false,
     id = null,
   }) {
-    super(type, true, sector);
+    super({
+      type,
+      isMajor: true,
+      sector: sector || "record",
+      title,
+      message,
+      isError,
+      content: data,
+    });
     this.global = true;
     this.title = title;
     this.message = message;
     this.data = data;
     this.isError = isError;
     this.happenedAt = new Date();
-    this.isAnalytics = isAnalytic || false;
     if (id) {
       this.id = id;
     }
@@ -76,7 +114,16 @@ class RecordEvent extends ClassicEvent {
 
 class SessionEvent extends ClassicEvent {
   constructor({ type, session }) {
-    super(type, true, "session");
+    super({
+      type,
+      isMajor: true,
+      sector: "session",
+      content: { ...session },
+      userId: session.userId,
+      actorId: session.userId,
+      isError: false,
+      userAgent: session.userAgent,
+    });
     this.global = true;
     this.session = session;
     this.happenedAt = new Date();
@@ -86,7 +133,20 @@ class SessionEvent extends ClassicEvent {
 // Non Major Event
 class CommentEvent extends ClassicEvent {
   constructor({ type, comment }) {
-    super(type, false, "comment");
+    super({
+      type,
+      isMajor: false,
+      sector: "comment",
+      content: { ...comment },
+      commentId: comment.id,
+      productId: comment.productId,
+      userId: comment.userId,
+      actorId: comment.userId,
+      userName: comment.userName,
+      userEmail: comment.userEmail,
+      userAvatar: comment.userAvatar,
+      isError: false,
+    });
     this.global = true;
     this.comment = comment;
   }
@@ -94,7 +154,16 @@ class CommentEvent extends ClassicEvent {
 
 class ErrorEvent extends ClassicEvent {
   constructor({ type, error, errorCode = null, data = null }) {
-    super(type);
+    super({
+      type,
+      isMajor: true,
+      sector: "error",
+      content: { error, errorCode, ...data },
+      isError: true,
+
+      error,
+      errorCode,
+    });
     this.global = true;
     this.error = error;
     this.errorCode = errorCode;

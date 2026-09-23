@@ -3,11 +3,11 @@ import mongoose from "mongoose";
 const commentSchema = new mongoose.Schema(
   {
     productId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Product",
       index: true,
     },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
+    userId: { type: String, ref: "User", index: true },
     userName: { type: String, required: true },
     userAvatar: { type: String, default: "" },
     userEmail: { type: String, required: true },
