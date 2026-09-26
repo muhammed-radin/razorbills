@@ -264,6 +264,7 @@ const GlobalEventNames = {
   PRODUCT_CATEGORY_UPDATED: "product_category_updated",
   PRODUCT_TAGS_UPDATED: "product_tags_updated",
   PRODUCT_DISCOUNT_UPDATED: "product_discount_updated",
+  PRODUCT_UNRATED: "product_unrated",
 
   // Flush events
   FLUSH_REQUESTED: "flush_requested",

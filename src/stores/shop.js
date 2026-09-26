@@ -202,10 +202,7 @@ export const useWishlistStore = create((set, get) => ({
   add: async (product, folder = "/") => {
     if (get().serverBacked) {
       try {
-        const doc = await wishlistApi.add(
-          [toWishlistSnapshot(product)],
-          folder,
-        );
+        const doc = await wishlistApi.add(toWishlistSnapshot(product), folder);
         set({ items: doc.products ?? [], error: null });
         return;
       } catch (err) {
@@ -251,9 +248,11 @@ export const useAddressStore = create((set) => ({
     try {
       const [addresses, current] = await Promise.all([
         addressApi.list(),
-        addressApi.current().catch((err) =>
-          err?.response?.status === 404 ? null : Promise.reject(err),
-        ),
+        addressApi
+          .current()
+          .catch((err) =>
+            err?.response?.status === 404 ? null : Promise.reject(err),
+          ),
       ]);
       set({
         addresses: Array.isArray(addresses) ? addresses : [],

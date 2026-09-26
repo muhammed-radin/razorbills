@@ -6,13 +6,11 @@ const post = (url, body, config) => unwrap(api.client.post(url, body, config));
 const put = (url, body, config) => unwrap(api.client.put(url, body, config));
 const patch = (url, body, config) =>
   unwrap(api.client.patch(url, body, config));
-const del = (url, config) =>
-  unwrap(api.client.delete(url, config));
+const del = (url, config) => unwrap(api.client.delete(url, config));
 
 export const cartApi = {
   get: () => get("/api/cart"),
-  add: (productId, quantity = 1) =>
-    post("/api/cart", { productId, quantity }),
+  add: (productId, quantity = 1) => post("/api/cart", { productId, quantity }),
   remove: (productId) => del("/api/cart", { data: { productId } }),
   clear: () => del("/api/cart/clear"),
   setQuantity: (productId, quantity) =>
@@ -21,8 +19,7 @@ export const cartApi = {
 
 export const wishlistApi = {
   get: (folder = "/") => get("/api/wishlists", { params: { folder } }),
-  add: (products, folder = "/") =>
-    post("/api/wishlists", { products, folder }),
+  add: (product, folder = "/") => post("/api/wishlists", { product, folder }),
   remove: (productId, folder = "/") =>
     del("/api/wishlists", { data: { productId, folder } }),
 };
@@ -77,7 +74,8 @@ export const ordersApi = {
 
 export const commentsApi = {
   list: (productId, params) => get(`/api/comments/${productId}`, { params }),
-  create: (productId, content) => post("/api/comments", { productId, content }),
+  create: (productId, content, rating) =>
+    post("/api/comments", { productId, content, rating: rating ?? 0 }),
   update: (productId, content) =>
     put(`/api/comments/${productId}`, { content }),
   remove: (productId) => del(`/api/comments/${productId}`),

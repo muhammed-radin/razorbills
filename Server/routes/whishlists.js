@@ -65,9 +65,15 @@ async function syncMiddleware(req, res, next) {
     const updatedWishlist = await syncWishlistProducts(wishlist);
     evt.fire(
       Evts.WISHLIST_UPDATED,
-      new ClassicEvent(Evts.WISHLIST_UPDATED, false, "wishlist", {
-        userId,
-        folder,
+      new ClassicEvent({
+        type: Evts.WISHLIST_UPDATED,
+        isMajor: false,
+        sector: "wishlist",
+        content: { userId, folder, wishlist: updatedWishlist },
+        userId: userId,
+        wishlist: updatedWishlist,
+        wishlistId: updatedWishlist?._id || null,
+        actorId: userId,
       }),
     );
     next();
@@ -100,7 +106,7 @@ router.get("/", requireAuth, passUserAuth, syncMiddleware, async (req, res) => {
   }
 });
 
-// add new product to wishlist ( upsert )
+// add new single product to wishlist ( upsert )
 router.post("/", requireAuth, passUserAuth, async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -108,38 +114,38 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
       return res.status(400).json({ error: "User ID not found in request" });
     }
 
-    const { folder, products } = req.body;
+    const { product } = req.body;
+    let folder = req.body?.folder || req.query?.folder || "/";
 
-    if (!products || !Array.isArray(products)) {
+    if (!product) {
       evt.fire(
         Evts.WISHLIST_ERROR,
         new ErrorEvent({
           type: Evts.WISHLIST_ERROR,
-          error: "Invalid wishlist data. 'name' and 'products' are required.",
+          error: "Invalid wishlist data. 'product' is required.",
           errorCode: 400,
           data: { userId, folder },
         }),
       );
       return res.status(400).json({
-        error: "Invalid wishlist data. 'name' and 'products' are required.",
+        error: "Invalid wishlist data. 'product' is required.",
       });
     }
 
-    let filteredProducts = products;
+    let filteredProducts = [product];
 
     // get existing wishlist
     const existingWishlist = await WishlistModel.findOne({ userId, folder });
 
-    // validate products: duplicate products
+    // validate products: remove duplicate products and push filtered products.
     if (existingWishlist) {
-      const duplicateProducts = existingWishlist.products.map((product) => {
-        if (products.some((p) => p.productId === product.productId)) {
-          filteredProducts = products.filter(
-            (p) => p.productId !== product.productId,
-          );
-          return product;
+      existingWishlist.products.forEach((existingProduct) => {
+        const isDuplicate = filteredProducts.some(
+          (p) => p.productId === existingProduct.productId,
+        );
+        if (!!isDuplicate) {
+          filteredProducts.push(existingProduct);
         }
-        return null;
       });
     }
 
@@ -157,24 +163,35 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
       { upsert: true, returnDocument: "after" },
     );
 
+    console.log("Wishlist updated/created:", newWishList);
+
     evt.fire(
       Evts.WISHLIST_ADDED,
-      new ClassicEvent(Evts.WISHLIST_ADDED, false, "wishlist", {
-        userId,
-        folder,
+      new ClassicEvent({
+        type: Evts.WISHLIST_ADDED,
+        isMajor: false,
+        sector: "wishlist",
+        content: newWishList,
+        userId: userId,
+        folder: folder,
         products: filteredProducts,
+        wishlistId: newWishList._id,
+        actorId: userId,
       }),
     );
-    filteredProducts.forEach((p) => {
-      evt.fire(
-        Evts.PRODUCT_WISHLISTED,
-        new ClassicEvent(Evts.PRODUCT_WISHLISTED, false, "wishlist", {
-          userId,
-          folder,
-          productId: p.productId,
-        }),
-      );
-    });
+    evt.fire(
+      Evts.PRODUCT_WISHLISTED,
+      new ClassicEvent({
+        type: Evts.PRODUCT_WISHLISTED,
+        isMajor: true,
+        sector: "wishlist",
+        content: newWishList,
+        userId: userId,
+        productId: product.id || product.productId,
+        wishlistId: newWishList._id,
+        actorId: userId,
+      }),
+    );
 
     res.json(newWishList);
   } catch (error) {
@@ -226,10 +243,15 @@ router.delete("/", requireAuth, passUserAuth, async (req, res) => {
 
     evt.fire(
       Evts.WISHLIST_REMOVED,
-      new ClassicEvent(Evts.WISHLIST_REMOVED, false, "wishlist", {
-        userId,
-        folder,
-        productId,
+      new ClassicEvent({
+        type: Evts.WISHLIST_REMOVED,
+        isMajor: false,
+        sector: "wishlist",
+        content: { userId, folder, productId },
+        userId: userId,
+        productId: productId,
+        wishlistId: wishlist._id,
+        actorId: userId,
       }),
     );
     res.json(updatedWishlist);

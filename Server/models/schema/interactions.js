@@ -11,9 +11,6 @@ export const InteractionSchema = new Schema(
       index: true,
       required: true,
     },
-    userName: { type: String, required: true },
-    userAvatar: { type: String, default: "" },
-    userEmail: { type: String, required: true },
 
     // Interactions
     rating: { type: Number, default: null }, // Nullable: 1 per user ( 1-5 stars )

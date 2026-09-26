@@ -44,13 +44,12 @@ export const ProductSchema = new Schema(
     warranty: { type: String, default: null },
     returnPolicy: { type: String, default: null },
     shippingDetails: { type: String, default: null },
-    relatedProducts: { type: [String], default: [] },
     accessories: { type: [String], default: [] },
     priceHistory: { type: [Number], default: [] },
     sku: { type: String, default: "111 122 33" },
     specialInfo: { type: Schema.Types.Mixed, default: {} },
 
-    meterics: {
+    metrics: {
       allViews: { type: Number, default: 0 },
       debouncedViews: { type: Number, default: 0 },
       stars: {

@@ -365,7 +365,7 @@ export const OrderFulfillmentSchema = new Schema(
       type: String,
       default: null,
       trim: true,
-      index: true,
+      // Remove index: true
     },
 
     estimatedDelivery: {

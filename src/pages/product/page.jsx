@@ -50,12 +50,14 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useCartStore, useWishlistStore } from "@/stores/shop";
 import { interactionsApi, productsApi } from "@/services/shop";
-
-import { ReviewRating1 } from "@/components/review/review-rating-1";
+import { useUserSession } from "@/contexts/user-session-context";
+import { ReviewRatingSection } from "@/components/review/review-rating";
 
 const ProductDetailsPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
+  const { data } = useUserSession();
+  const user = data?.user;
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState({ loading: true });
@@ -91,37 +93,35 @@ const ProductDetailsPage = () => {
       });
   }, [id, navigate]);
 
-  const loadInteraction = useCallback(
-    async (productId) => {
-      if (!productId) return;
-      try {
-        const data = await interactionsApi.mine(productId);
-        const doc = data?.interaction ?? data ?? {};
-        setInteraction({
-          hasViewed: Boolean(doc.hasViewed),
-          hasShared: Boolean(doc.hasShared),
-          hasWishlisted: Boolean(doc.hasWishlisted),
-          rating: doc.rating ?? 0,
-        });
-        if (typeof doc.rating === "number" && doc.rating > 0) {
-          setRating(doc.rating);
-        }
-      } catch (error) {
-        // 404 = never interacted -> clean defaults; 401/403 = logged out -> null
-        if (error?.response?.status === 404) {
-          setInteraction({
-            hasViewed: false,
-            hasShared: false,
-            hasWishlisted: false,
-            rating: 0,
-          });
-        } else {
-          setInteraction(null);
-        }
+  const loadInteraction = useCallback(async (productId) => {
+    if (!productId) return;
+    try {
+      const data = await interactionsApi.mine(productId);
+      const doc = data || {};
+      console.log("Fetched interaction:", doc);
+      setInteraction({
+        hasViewed: Boolean(doc.hasViewed),
+        hasShared: Boolean(doc.hasShared),
+        hasWishlisted: Boolean(doc.hasWishlisted),
+        rating: doc.rating ?? 0,
+      });
+      if (typeof doc.rating === "number" && doc.rating > 0) {
+        setRating(doc.rating);
       }
-    },
-    [],
-  );
+    } catch (error) {
+      // 404 = never interacted -> clean defaults; 401/403 = logged out -> null
+      if (error?.response?.status === 404) {
+        setInteraction({
+          hasViewed: false,
+          hasShared: false,
+          hasWishlisted: false,
+          rating: 0,
+        });
+      } else {
+        setInteraction(null);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -453,33 +453,6 @@ const ProductDetailsPage = () => {
                 </Button>
               </div>
             </div>
-
-            {/* Rate this product */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">
-                {t("product.rateThis", { defaultValue: "Rate this product" })}
-              </span>
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => handleRate(star)}
-                    aria-label={`Rate ${star} stars`}
-                    className="p-0.5"
-                  >
-                    <StarIcon
-                      className={cn(
-                        "h-5 w-5",
-                        star <= rating
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300",
-                      )}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Tags */}
@@ -608,7 +581,7 @@ const ProductDetailsPage = () => {
                   <Separator className="my-2" />
                 </CardHeader>
                 <CardContent className="w-full">
-                  <ReviewRating1 productId={id} />
+                  <ReviewRatingSection productId={id} userId={user?.id} />
                 </CardContent>
               </Card>
             </TabsContent>

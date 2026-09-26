@@ -15,7 +15,7 @@ let isCommentUpdated = false;
 
 // POST /comments
 router.post("/", requireAuth, passUserAuth, async (req, res) => {
-  const { productId, content: commentText } = req.body;
+  const { productId, content: commentText, rating } = req.body;
   const { id: userId, email, name, image: avatar } = req.user;
 
   if (!productId || !commentText) {
@@ -42,6 +42,7 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
         {
           $set: {
             content: commentText,
+            rating: rating ?? 0,
             updatedAt: new Date(),
           },
           $setOnInsert: {
@@ -84,69 +85,123 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
 });
 
 // GET /comments/:productId
-router.get("/:productId", requireSession, async (req, res) => {
+router.get("/:productId", requireSession, passUserAuth, async (req, res) => {
+  const productId = req.params.productId;
+
+  // Authenticated user ID, or null for guests
+  const userId = req.user?.id ?? null;
+
+  // Cache must be user-specific because comment ordering depends on userId
+  const cacheKey = `${req.url}:user:${userId ?? "guest"}`;
+
   if (
-    globalMemory?.getLocalMemory(req.url) &&
+    globalMemory?.getLocalMemory(cacheKey) &&
     req.query?.realtime !== "true" &&
     isCommentUpdated === false
   ) {
-    return res.json(globalMemory.getLocalMemory(req.url));
+    return res.json(globalMemory.getLocalMemory(cacheKey));
   }
-  const productId = req.params.productId;
-  let query = {};
-  let results = {};
 
+  let results = {};
   let page = parseInt(req.query?.page) || parseInt(req.body?.page) || 1;
   let limit = parseInt(req.query?.limit) || parseInt(req.body?.limit) || 10;
   let sortBy = req.query?.sortBy || req.body?.sortBy || "createdAt";
   let sortOrder = req.query?.sortOrder === "asc" ? 1 : -1;
   let startIndex =
     parseInt(req.query?.startIndex) || parseInt(req.body?.startIndex) || 0;
-
   if (page > 1) {
     startIndex = (page - 1) * limit;
   }
 
-  // build query based on request parameters
-  query = {
-    productId: productId,
+  // Base query
+  const query = {
+    productId,
   };
 
-  let totalCount = await CommentModel.countDocuments(query);
-
   try {
-    const comments = await CommentModel.find(query)
-      .skip(startIndex)
-      .limit(limit)
-      .sort({ [sortBy]: sortOrder, createdAt: -1 });
+    const totalCount = await CommentModel.countDocuments(query);
+    const comments = await CommentModel.aggregate([
+      // 1. Only comments belonging to this product
+      {
+        $match: {
+          productId,
+        },
+      },
+
+      // 2. Mark current user's comments
+      {
+        $addFields: {
+          isMine: userId
+            ? {
+                $cond: [{ $eq: ["$userId", userId] }, 1, 0],
+              }
+            : 0,
+        },
+      },
+
+      // 3. My comments first.
+      //    Then apply requested date sorting.
+      {
+        $sort: {
+          isMine: -1,
+          [sortBy]: sortOrder,
+          createdAt: -1,
+        },
+      },
+
+      // 4. Pagination
+      {
+        $skip: startIndex,
+      },
+      {
+        $limit: limit,
+      },
+
+      // 5. Don't expose the internal sorting field
+      {
+        $project: {
+          isMine: 0,
+        },
+      },
+    ]);
 
     if (!comments || comments.length === 0) {
-      res.status(404).json({ error: "No comments found for this product" });
-      return;
+      return res.status(404).json({
+        error: "No comments found for this product",
+      });
     }
 
+    const totalPages = Math.ceil(totalCount / limit);
+
     results = {
-      comments: comments,
-      page: page,
-      limit: limit,
+      comments,
+      page,
+      limit,
       count: totalCount,
-      totalPages: Math.ceil(totalCount / limit),
-      next: page < Math.ceil(totalCount / limit) ? page + 1 : null,
+      totalPages,
+      next: page < totalPages ? page + 1 : null,
       previous: page > 1 ? page - 1 : null,
-      startIndex: startIndex,
+      startIndex,
       endIndex: startIndex + comments.length - 1,
+
       sort: {
         by: sortBy,
         order: sortOrder,
       },
+
       fromCache: false,
     };
 
+    // User-specific cache because ordering contains "my comments first"
     globalMemory?.setLocalMemory(
-      req.url,
-      { ...results, fromCache: true },
+      cacheKey,
+      {
+        ...results,
+        fromCache: true,
+      },
       60 * 60 * 6,
     ); // Cache for 6 hours
+
     res.json(results);
   } catch (error) {
     evt.fire(
@@ -158,15 +213,19 @@ router.get("/:productId", requireSession, async (req, res) => {
         data: {},
       }),
     );
+
     console.error("Error fetching comments:", error);
-    res.status(500).json({ error: "Failed to fetch comments" });
+
+    res.status(500).json({
+      error: "Failed to fetch comments",
+    });
   }
 });
 
 // PUT /comments/:productId
 router.put("/:productId", requireAuth, passUserAuth, async (req, res) => {
   const productId = req.params.productId;
-  const { content: commentText } = req.body;
+  const { content: commentText, rating } = req.body;
   const { id: userId } = req.user;
 
   if (!commentText) {
@@ -188,6 +247,7 @@ router.put("/:productId", requireAuth, passUserAuth, async (req, res) => {
       {
         $set: {
           content: commentText,
+          rating: rating ?? 0,
           updatedAt: new Date(),
         },
       },
