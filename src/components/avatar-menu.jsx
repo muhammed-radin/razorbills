@@ -76,8 +76,10 @@ const AvatarMenu = ({ name, img, user, decrypted }) => {
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <User className="mr-1" /> {t("avatarMenu.myProfile")}
+        <DropdownMenuItem asChild>
+          <Link to="/settings">
+            <User className="mr-1" /> {t("avatarMenu.myProfile")}
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
