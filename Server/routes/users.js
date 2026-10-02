@@ -11,6 +11,8 @@ import settingsRouter from "./settings.js";
 
 const router = express.Router();
 
+router.use("/settings", settingsRouter);
+
 // user profile route for users
 router.get("/profile", requireAuth, passUserAuth, async (req, res) => {
   try {
@@ -152,7 +154,5 @@ router.get(
       });
   },
 );
-
-router.use("/settings", settingsRouter);
 
 export default router;

@@ -155,6 +155,7 @@ evt.onListen(function (eventInfo) {
     return; // Avoid recording the record event itself to prevent infinite loops
   }
 
+  debugEvents.push(eventInfo); // Store the event info in debugEvents for debugging purposes
   // push analytics record
   if (event.isMajor == true) {
     let data = {};
@@ -205,8 +206,6 @@ evt.onListen(function (eventInfo) {
 
     evt.fire(Evts.EVENT_RECORDED, record);
 
-    debugEvents.push(eventInfo); // Store the event info in debugEvents for debugging purposes
-
     let userId =
       event.user?.id ||
       event.response?.userId ||
@@ -238,9 +237,9 @@ evt.onListen(function (eventInfo) {
           actorId: event.order?.actorId || null,
           revenue: (event.order?.revenue && event.order?.revenue) || 0,
         },
-        browser: userAgentParser(event).browser,
-        device: userAgentParser(event).screen,
-        os: userAgentParser(event).os,
+        browser: (userAgentParser(event).browser || "").toLowerCase(),
+        device: (userAgentParser(event).screen || "").toLowerCase(),
+        os: (userAgentParser(event).os || "").toLowerCase(),
         sector: event.sector || null,
         userAgent: event.session?.userAgent || null,
         metadata: {

@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -51,6 +57,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { api } from "@/utils/api";
 import { settingsApi } from "@/services/shop";
+import { decrypt } from "@/utils/crypt";
 
 const SettingsPage = () => {
   const { t, i18n } = useTranslation();
@@ -76,27 +83,35 @@ const SettingsPage = () => {
   useEffect(() => {
     setMounted(true);
     // Load profile from the session + preferences from the API
-    api.getUser(false).then((user) => {
-      if (!user) return;
-      setUserData((prev) => ({
-        ...prev,
-        name: user.name ?? prev.name,
-        email: user.email ?? prev.email,
-        phone: user.phoneNumber ?? prev.phone,
-        avatar: user.image ?? prev.avatar,
-      }));
-    }).catch(() => {});
-    settingsApi.get().then((prefs) => {
-      const p = prefs?.prefrences ?? prefs ?? {};
-      setUserData((prev) => ({
-        ...prev,
-        language: p.language ?? prev.language,
-        pushNotifications: p.pushNotificationEnabled ?? prev.pushNotifications,
-        emailNotifications: p.emailNotificationsEnabled ?? prev.emailNotifications,
-        orderUpdates: p.notificationEnabled ?? prev.orderUpdates,
-      }));
-      if (p.language) i18n.changeLanguage(p.language).catch(() => {});
-    }).catch(() => {});
+    api
+      .getUser(false, true)
+      .then((user) => {
+        if (!user) return;
+        setUserData((prev) => ({
+          ...prev,
+          name: decrypt(user.name ?? prev.name),
+          email: user.email ?? prev.email,
+          phone: decrypt(user.phoneNumber ?? prev.phone),
+          avatar: user.image ?? prev.avatar,
+        }));
+      })
+      .catch(() => {});
+    settingsApi
+      .get()
+      .then((prefs) => {
+        const p = prefs?.prefrences ?? prefs ?? {};
+        setUserData((prev) => ({
+          ...prev,
+          language: p.language ?? prev.language,
+          pushNotifications:
+            p.pushNotificationEnabled ?? prev.pushNotifications,
+          emailNotifications:
+            p.emailNotificationsEnabled ?? prev.emailNotifications,
+          orderUpdates: p.notificationEnabled ?? prev.orderUpdates,
+        }));
+        if (p.language) i18n.changeLanguage(p.language).catch(() => {});
+      })
+      .catch(() => {});
   }, [i18n]);
 
   const handleSave = async () => {
@@ -108,10 +123,18 @@ const SettingsPage = () => {
         pushNotificationEnabled: userData.pushNotifications,
         emailNotificationsEnabled: userData.emailNotifications,
       });
+      await api.client.post("/api/users/profile/", {
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        avatar: userData.avatar,
+      });
       i18n.changeLanguage(userData.language).catch(() => {});
       toast.success(t("settings.saved", { defaultValue: "Settings saved" }));
     } catch {
-      toast.error(t("common.error", { defaultValue: "Failed to save settings" }));
+      toast.error(
+        t("common.error", { defaultValue: "Failed to save settings" }),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -148,15 +171,15 @@ const SettingsPage = () => {
         <div
           className={cn(
             "flex items-center gap-3 mb-8 transition-all duration-500",
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
           )}
         >
           <Settings className="w-8 h-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{t("settings.title")}</h1>
-            <p className="text-muted-foreground">
-              {t("settings.subtitle")}
-            </p>
+            <h1 className="text-3xl font-bold text-foreground">
+              {t("settings.title")}
+            </h1>
+            <p className="text-muted-foreground">{t("settings.subtitle")}</p>
           </div>
         </div>
 
@@ -169,7 +192,7 @@ const SettingsPage = () => {
           <TabsList
             className={cn(
               "grid w-full grid-cols-2 sm:grid-cols-4 h-auto p-1 transition-all duration-500 delay-100",
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
             )}
           >
             <TabsTrigger
@@ -184,14 +207,18 @@ const SettingsPage = () => {
               className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
             >
               <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("settings.notifications")}</span>
+              <span className="hidden sm:inline">
+                {t("settings.notifications")}
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="appearance"
               className="flex items-center gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
             >
               <Palette className="w-4 h-4" />
-              <span className="hidden sm:inline">{t("settings.appearance")}</span>
+              <span className="hidden sm:inline">
+                {t("settings.appearance")}
+              </span>
             </TabsTrigger>
             <TabsTrigger
               value="security"
@@ -207,7 +234,7 @@ const SettingsPage = () => {
             value="profile"
             className={cn(
               "transition-all duration-500 delay-200",
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
             )}
           >
             <div className="grid gap-6">
@@ -227,7 +254,10 @@ const SettingsPage = () => {
                     <div className="relative group">
                       <Avatar className="w-24 h-24 border-4 border-primary/20 transition-all duration-300 group-hover:border-primary/40">
                         {userData.avatar ? (
-                          <AvatarImage src={userData.avatar} alt={userData.name} />
+                          <AvatarImage
+                            src={userData.avatar}
+                            alt={userData.name}
+                          />
                         ) : null}
                         <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
                           {getInitials(userData.name)}
@@ -242,13 +272,12 @@ const SettingsPage = () => {
                       <p className="text-muted-foreground text-sm">
                         {userData.email}
                       </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="transition-all duration-300 hover:bg-primary hover:text-primary-foreground"
-                      >
-                        {t("settings.changePhoto")}
-                      </Button>
+                      <p className="text-muted-foreground text-sm">
+                        {userData.phone ||
+                          t("settings.noPhoneNumber", {
+                            defaultValue: "No phone number provided",
+                          })}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -279,16 +308,16 @@ const SettingsPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">{t("settings.emailAddress")}</Label>
+                      <Label htmlFor="email">
+                        {t("settings.emailAddress")}
+                      </Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                           id="email"
                           type="email"
                           value={userData.email}
-                          onChange={(e) =>
-                            setUserData({ ...userData, email: e.target.value })
-                          }
+                          disabled={true}
                           className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
@@ -304,6 +333,9 @@ const SettingsPage = () => {
                           onChange={(e) =>
                             setUserData({ ...userData, phone: e.target.value })
                           }
+                          placeholder={t("settings.phoneNumberPlaceholder", {
+                            defaultValue: "Enter your phone number",
+                          })}
                           className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
                         />
                       </div>
@@ -318,13 +350,12 @@ const SettingsPage = () => {
                       >
                         <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
                           <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
-                          <SelectValue placeholder={t("settings.selectLanguage")} />
+                          <SelectValue
+                            placeholder={t("settings.selectLanguage")}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="hi">Hindi</SelectItem>
-                          <SelectItem value="ta">Tamil</SelectItem>
-                          <SelectItem value="te">Telugu</SelectItem>
                           <SelectItem value="ml">Malayalam</SelectItem>
                         </SelectContent>
                       </Select>
@@ -342,12 +373,14 @@ const SettingsPage = () => {
                       {isLoading ? (
                         <span className="flex items-center gap-2">
                           <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                            Saving...
+                          Saving...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
                           <Save className="w-4 h-4" />
-                          {t("settings.saveSettings")}
+                          {t("settings.saveSettings", {
+                            defaultValue: "Save Settings",
+                          })}
                         </span>
                       )}
                     </Button>
@@ -364,7 +397,9 @@ const SettingsPage = () => {
                         <MapPin className="w-6 h-6" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{t("settings.addressBook")}</h3>
+                        <h3 className="font-semibold">
+                          {t("settings.addressBook")}
+                        </h3>
                         <p className="text-sm text-muted-foreground">
                           {t("settings.manageAddresses")}
                         </p>
@@ -382,17 +417,22 @@ const SettingsPage = () => {
             value="notifications"
             className={cn(
               "transition-all duration-500",
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
             )}
           >
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="w-5 h-5" />
-                  {t("settings.notificationPreferences")}
+                  {t("settings.notificationPreferences", {
+                    defaultValue: "Notification Preferences",
+                  })}
                 </CardTitle>
                 <CardDescription>
-                  {t("settings.chooseNotificationMethod")}
+                  {t("settings.chooseNotificationMethod", {
+                    defaultValue:
+                      "Choose how you want to receive notifications",
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -400,17 +440,26 @@ const SettingsPage = () => {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <Mail className="w-4 h-4" />
-                    {t("settings.emailNotifications")}
+                    {t("settings.emailNotifications", {
+                      defaultValue: "Email Notifications",
+                    })}
                   </h4>
                   <div className="space-y-4 pl-6">
                     <NotificationItem
                       id="emailNotifications"
                       checked={userData.emailNotifications}
                       onChange={(checked) =>
-                        setUserData({ ...userData, emailNotifications: checked })
+                        setUserData({
+                          ...userData,
+                          emailNotifications: checked,
+                        })
                       }
-                      title={t("settings.emailNotifications")}
-                      description={t("settings.receiveNotificationsViaEmail")}
+                      title={t("settings.emailNotifications", {
+                        defaultValue: "Email Notifications",
+                      })}
+                      description={t("settings.receiveNotificationsViaEmail", {
+                        defaultValue: "Receive notifications via email",
+                      })}
                     />
                     <NotificationItem
                       id="newsletter"
@@ -418,8 +467,12 @@ const SettingsPage = () => {
                       onChange={(checked) =>
                         setUserData({ ...userData, newsletter: checked })
                       }
-                      title={t("settings.newsletter")}
-                      description={t("settings.receiveWeeklyNewsletter")}
+                      title={t("settings.newsletter", {
+                        defaultValue: "Newsletter",
+                      })}
+                      description={t("settings.receiveWeeklyNewsletter", {
+                        defaultValue: "Receive weekly newsletter",
+                      })}
                     />
                     <NotificationItem
                       id="promotions"
@@ -427,8 +480,12 @@ const SettingsPage = () => {
                       onChange={(checked) =>
                         setUserData({ ...userData, promotions: checked })
                       }
-                      title={t("settings.promotionalEmails")}
-                      description={t("settings.receivePromotionalOffers")}
+                      title={t("settings.promotionalEmails", {
+                        defaultValue: "Promotional Emails",
+                      })}
+                      description={t("settings.receivePromotionalOffers", {
+                        defaultValue: "Receive promotional offers",
+                      })}
                     />
                   </div>
                 </div>
@@ -439,7 +496,9 @@ const SettingsPage = () => {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <Smartphone className="w-4 h-4" />
-                    {t("settings.pushNotifications")}
+                    {t("settings.pushNotifications", {
+                      defaultValue: "Push Notifications",
+                    })}
                   </h4>
                   <div className="space-y-4 pl-6">
                     <NotificationItem
@@ -449,7 +508,10 @@ const SettingsPage = () => {
                         setUserData({ ...userData, pushNotifications: checked })
                       }
                       title={t("settings.pushNotifications")}
-                      description={t("settings.receivePushNotifications")}
+                      description={t("settings.receivePushNotifications", {
+                        defaultValue:
+                          "Receive push notifications on your device",
+                      })}
                     />
                     <NotificationItem
                       id="orderUpdates"
@@ -458,7 +520,9 @@ const SettingsPage = () => {
                         setUserData({ ...userData, orderUpdates: checked })
                       }
                       title={t("settings.orderUpdates")}
-                      description={t("settings.getNotifiedAboutOrderStatus")}
+                      description={t("settings.getNotifiedAboutOrderStatus", {
+                        defaultValue: "Get notified about order status updates",
+                      })}
                     />
                   </div>
                 </div>
@@ -493,17 +557,21 @@ const SettingsPage = () => {
             value="appearance"
             className={cn(
               "transition-all duration-500",
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
             )}
           >
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="w-5 h-5" />
-                  {t("settings.appearanceSettings")}
+                  {t("settings.appearanceSettings", {
+                    defaultValue: "Appearance Settings",
+                  })}
                 </CardTitle>
                 <CardDescription>
-                  {t("settings.customizeAppAppearance")}
+                  {t("settings.customizeAppAppearance", {
+                    defaultValue: "Customize the appearance of the application",
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -514,7 +582,9 @@ const SettingsPage = () => {
                       value="light"
                       currentTheme={userData.theme}
                       icon={<Sun className="w-6 h-6" />}
-                      label={t("settings.light")}
+                      label={t("settings.light", {
+                        defaultValue: "Light",
+                      })}
                       onClick={() =>
                         setUserData({ ...userData, theme: "light" })
                       }
@@ -523,7 +593,9 @@ const SettingsPage = () => {
                       value="dark"
                       currentTheme={userData.theme}
                       icon={<Moon className="w-6 h-6" />}
-                      label={t("settings.dark")}
+                      label={t("settings.dark", {
+                        defaultValue: "Dark",
+                      })}
                       onClick={() =>
                         setUserData({ ...userData, theme: "dark" })
                       }
@@ -532,7 +604,9 @@ const SettingsPage = () => {
                       value="system"
                       currentTheme={userData.theme}
                       icon={<Smartphone className="w-6 h-6" />}
-                      label={t("settings.system")}
+                      label={t("settings.system", {
+                        defaultValue: "System",
+                      })}
                       onClick={() =>
                         setUserData({ ...userData, theme: "system" })
                       }
@@ -570,7 +644,7 @@ const SettingsPage = () => {
             value="security"
             className={cn(
               "transition-all duration-500",
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
             )}
           >
             <div className="grid gap-6">
@@ -587,7 +661,9 @@ const SettingsPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword">{t("settings.currentPassword")}</Label>
+                    <Label htmlFor="currentPassword">
+                      {t("settings.currentPassword")}
+                    </Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
@@ -611,7 +687,9 @@ const SettingsPage = () => {
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="newPassword">{t("settings.newPassword")}</Label>
+                      <Label htmlFor="newPassword">
+                        {t("settings.newPassword")}
+                      </Label>
                       <Input
                         id="newPassword"
                         type="password"
@@ -620,7 +698,9 @@ const SettingsPage = () => {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">{t("settings.confirmPassword")}</Label>
+                      <Label htmlFor="confirmPassword">
+                        {t("settings.confirmPassword")}
+                      </Label>
                       <Input
                         id="confirmPassword"
                         type="password"
@@ -652,7 +732,9 @@ const SettingsPage = () => {
                     <div className="flex items-center gap-4">
                       <LogOut className="w-5 h-5 text-muted-foreground" />
                       <div>
-                        <p className="font-medium">{t("settings.signOutAll")}</p>
+                        <p className="font-medium">
+                          {t("settings.signOutAll")}
+                        </p>
                         <p className="text-sm text-muted-foreground">
                           {t("settings.signOutAllDesc")}
                         </p>
@@ -699,9 +781,7 @@ const NotificationItem = ({ id, checked, onChange, title, description }) => {
         <Label htmlFor={id} className="cursor-pointer">
           {t(title)}
         </Label>
-        <p className="text-sm text-muted-foreground">
-          {t(description)}
-        </p>
+        <p className="text-sm text-muted-foreground">{t(description)}</p>
       </div>
       <Checkbox
         id={id}
@@ -725,7 +805,7 @@ const ThemeCard = ({ value, currentTheme, icon, label, onClick }) => {
         "flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-all duration-300",
         isSelected
           ? "border-primary bg-primary/10 shadow-md"
-          : "border-border hover:border-primary/50 hover:bg-muted/30"
+          : "border-border hover:border-primary/50 hover:bg-muted/30",
       )}
     >
       <div
@@ -733,7 +813,7 @@ const ThemeCard = ({ value, currentTheme, icon, label, onClick }) => {
           "p-3 rounded-full transition-all duration-300",
           isSelected
             ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground"
+            : "bg-muted text-muted-foreground",
         )}
       >
         {icon}

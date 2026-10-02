@@ -74,12 +74,16 @@ const api = {
   settings() {
     return api.base("/api/users/settings");
   },
-  async getUser(decryptData = true) {
+  async getUser(decryptData = true, fullData = false) {
     const { data: session } = await authClient.getSession();
     if (!session || !session.user) {
       return null;
     }
     let userData = session.user;
+    if (fullData) {
+      const response = await api.client.get("/api/users/profile/");
+      userData = response.data;
+    }
     if (decryptData) {
       userData = decryptObj(userData, false, ["emailVerified"]);
     }

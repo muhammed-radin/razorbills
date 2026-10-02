@@ -264,18 +264,6 @@ const eventsRecordSchema = new mongoose.Schema(
     sector: {
       type: String,
       default: null,
-      enum: [
-        "product",
-        "order",
-        "user",
-        "cart",
-        "wishlist",
-        "error",
-        "address",
-        "analytics",
-        "interaction",
-        "category",
-      ],
     }, // its defines where sector the event happened, for example: product, order, user, cart
     productId: {
       type: String,

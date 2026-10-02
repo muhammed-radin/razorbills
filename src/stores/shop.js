@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { cartApi, wishlistApi, addressApi, ordersApi } from "@/services/shop";
+import { MinimalProduct } from "@/models/product";
 
 const isAuthError = (err) =>
   err?.response?.status === 401 || err?.response?.status === 403;
@@ -149,16 +150,11 @@ export const useCartStore = create((set, get) => ({
   },
 }));
 
-const toWishlistSnapshot = (product) => ({
-  productId: product.productId ?? product.id,
-  title: product.title,
-  thumbnail: product.thumbnail ?? product.image,
-  originalPrice: product.originalPrice ?? product.price,
-  sku: product.sku ?? "",
-  category: product.category ?? "",
-  brand: product.brand ?? "",
-  price: product.price,
-});
+const toWishlistSnapshot = (product) =>
+  new MinimalProduct({
+    ...product,
+    productId: product.productId ?? product.id,
+  });
 
 export const useWishlistStore = create((set, get) => ({
   items: [],

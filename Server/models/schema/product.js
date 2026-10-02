@@ -167,24 +167,16 @@ ProductSchema.methods.toMinimal = function () {
   });
 };
 
+export function toCartProduct(product, quantity = 1) {
+  const minimal = new MinimalProduct({ ...product });
+  delete minimal.description; // Remove description for cart product to reduce payload size
+  minimal.quantity = quantity;
+  minimal.productId = minimal.id; // Ensure productId is set for consistency
+  return minimal;
+}
+
 ProductSchema.methods.toCartProduct = function (quantity = 1) {
-  return {
-    id: this.id,
-    title: this.title,
-    price: this.price,
-    thumbnail: this.thumbnail,
-    currency: this.currency,
-    createdAt: this.createdAt,
-    updatedAt: this.updatedAt,
-    isActive: this.isActive,
-    description: this.description,
-    specialInfo: this.specialInfo,
-    originalPrice: this.originalPrice,
-    category: this.category,
-    stock: this.stock,
-    meterics: this.meterics,
-    quantity,
-  };
+  return toCartProduct(this, quantity);
 };
 
 export const ProductModel = mongoose.model(

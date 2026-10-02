@@ -8,7 +8,7 @@ import {
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import { InteractionModel } from "../models/schema/interactions.js";
 import { evt, Evts, ProductEvent } from "../utils/events.manage.js";
-import { getAgenda, useAgenda } from "../utils/agenda.js";
+import { executeTaskNow, getAgenda, useAgenda } from "../utils/agenda.js";
 
 const router = express.Router();
 
@@ -46,6 +46,7 @@ const avgRatingBuffer = {}; // { productId: { n1: 1, n2: 1, n3: 1, n4: 1, n5: 1 
 
 getAgenda().then(async ({ agenda }) => {
   await agenda.stop();
+  // Flush All interactions and buffers every 5 minutes
   agenda.define("flush-interactions", async (job, done) => {
     let { view, share, wishlist, rate, cart, all } = job.attrs.data;
 
@@ -69,12 +70,21 @@ getAgenda().then(async ({ agenda }) => {
       await flushBuffer(wishlistBuffer, "metrics.wishlistCount", "wishlist");
     }
 
-    // if (rate === true) {
-    //   await flushBuffer(rateBuffer, "metrics.reviewCount", "rate");
-    // }
-
     if (cart === true) {
       await flushBuffer(cartBuffer, "metrics.cartCount", "cart");
+    }
+
+    if (rate === true) {
+      try {
+        await executeTaskNow(agenda, "flush-and-calculate-product-rating", {
+          avgRatingBuffer,
+        });
+      } catch (error) {
+        console.error(
+          "❌ Error executing flush-and-calculate-product-rating task:",
+          error,
+        );
+      }
     }
 
     if (view || share || rate || all) {
@@ -84,7 +94,12 @@ getAgenda().then(async ({ agenda }) => {
     return done();
   });
 
+  // Flush and calculate product ratings every 30 minutes
   agenda.define("flush-and-calculate-product-rating", async (job, done) => {
+    const { avgRatingBuffer } = job.attrs.data || {};
+    if (!avgRatingBuffer || Object.keys(avgRatingBuffer).length === 0) {
+      return done();
+    }
     const productIdsToFlush = Object.keys(avgRatingBuffer);
 
     // Safely check if there is work to do. Always call done() to prevent hanging.
@@ -177,6 +192,8 @@ getAgenda().then(async ({ agenda }) => {
       throw error; // Let Agenda handle the error and retry if needed
     }
   });
+
+  // Indivual flush job for each buffer type. currenlty no were used.
   agenda.define("flush-buffer", async (job, done) => {
     const { buffer, collection, property, bufferName } = job.attrs.data;
 
@@ -206,7 +223,9 @@ getAgenda().then(async ({ agenda }) => {
     all: true,
   });
 
-  agenda.every("30 minutes", "flush-and-calculate-product-rating", {});
+  agenda.every("30 minutes", "flush-and-calculate-product-rating", {
+    avgRatingBuffer,
+  });
 });
 
 export async function searchInteraction(productId, userId) {
@@ -821,8 +840,19 @@ evt.on(Evts.CART_ITEM_ADDED, async ({ cart, productId, quantity }) => {
   });
 });
 
-evt.on(Evts.FLUSH_REQUESTED, () => {
-  useAgenda().now("flush-interactions", { all: true });
+evt.on(Evts.FLUSH_REQUESTED, (enableQueue = true) => {
+  if (enableQueue) {
+    useAgenda().now("flush-interactions", { all: true });
+  } else {
+    executeTaskNow(getAgenda(), "flush-interactions", { all: true }).catch(
+      (err) => {
+        console.error(
+          "[FLUSH_REQ]: Error executing flush-interactions task:",
+          err,
+        );
+      },
+    );
+  }
 });
 
 evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
@@ -838,7 +868,7 @@ evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
     (Object.keys(wishlistBuffer).length >= FLUSH_BUFFER_SIZE ||
       Object.keys(cartBuffer).length >= FLUSH_BUFFER_SIZE)
   ) {
-    evt.fire(Evts.FLUSH_REQUESTED, true);
+    evt.fire(Evts.FLUSH_REQUESTED, false); // Flush immediately without queueing
   }
 });
 

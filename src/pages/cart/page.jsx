@@ -10,16 +10,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-  ShoppingCart,
-  Trash2,
-} from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import EmptyCart from "./components/Empty-cart.jsx";
 import ShoppingCart1 from "@/components/shopping-cart-1.jsx";
 import { useCartStore } from "@/stores/shop";
+import { LoaderScreen } from "@/components/LoaderScreen.jsx";
+import { Skeleton } from "@/components/ui/skeleton.jsx";
 
 const CartPage = () => {
   const { t } = useTranslation();
@@ -30,7 +29,7 @@ const CartPage = () => {
 
   useEffect(() => {
     fetchCart().catch(() => {});
-  }, [fetchCart]);
+  }, []);
 
   const isEmpty = items.length === 0;
   const totalCount = items.reduce((sum, i) => sum + (i.quantity ?? 1), 0);
@@ -70,7 +69,8 @@ const CartPage = () => {
               {t("cart.title")}
               {!isEmpty && (
                 <span className="ml-2 text-lg font-normal text-muted-foreground">
-                  ({totalCount} {totalCount === 1 ? t("common.item") : t("common.items")})
+                  ({totalCount}{" "}
+                  {totalCount === 1 ? t("common.item") : t("common.items")})
                 </span>
               )}
             </h1>
@@ -94,12 +94,20 @@ const CartPage = () => {
         {isEmpty && !loading ? (
           /* Empty Cart State */
           <EmptyCart />
+        ) : isEmpty || loading ? (
+          <div>
+            {/* Skeleton */}
+            <Skeleton className="h-6 w-1/4 mb-4" />
+            <Skeleton className="h-6 w-1/2 mb-4" />
+            <Skeleton className="h-6 w-3/4 mb-4" />
+            <Skeleton className="h-6 w-full mb-4" />
+          </div>
         ) : (
           /* Cart with Items */
           <ShoppingCart1 />
         )}
       </div>
-    </div >
+    </div>
   );
 };
 
