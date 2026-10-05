@@ -19,7 +19,6 @@ import {
 } from "../models/schema/analytics.js";
 import { UAParser } from "ua-parser-js";
 import dayjs from "dayjs";
-import { toast } from "sonner";
 import { calculateAnalyticsFrom } from "../utils/calc_analytics.js";
 
 const router = express.Router();
