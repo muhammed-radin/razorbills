@@ -58,6 +58,57 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAddressStore, AddressMold } from "@/stores/shop";
 import { Preloader } from "@/components/LoaderScreen";
+import {
+  getCountries,
+  getCountryCallingCode,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js";
+import { z } from "zod";
+
+const countryCallingCodes = [
+  ...new Set(getCountries().map((country) => getCountryCallingCode(country))),
+].sort((first, second) => second.length - first.length);
+const MAX_PHONE_DIGITS = 15;
+
+const addressFormSchema = z.object({
+  name: z.string().trim().min(2, "Enter a valid name"),
+  phoneNumber: z
+    .string()
+    .trim()
+    .refine((value) => {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length > MAX_PHONE_DIGITS) return false;
+      if (!/^\+\d{1,3} \d+$/.test(value)) return false;
+
+      const phoneNumber = parsePhoneNumberFromString(digits);
+      return Boolean(phoneNumber?.isValid());
+    }, "Enter a valid international phone number, including country code"),
+  type: z.enum(["home", "work", "other"]),
+  street: z.string().trim().min(1, "Enter a street address"),
+  city: z.string().trim().min(1, "Enter a city"),
+  state: z.string().trim().min(1, "Enter a state"),
+  postalCode: z.string().trim().min(1, "Enter a postal code"),
+});
+
+const formatPhoneInput = (value) => {
+  const digits = value.replace(/\D/g, "").slice(0, MAX_PHONE_DIGITS);
+  if (!digits) return "";
+
+  const callingCode = countryCallingCodes.find((code) =>
+    digits.startsWith(code),
+  );
+  if (!callingCode) return `+${digits}`;
+
+  const nationalNumber = digits.slice(callingCode.length);
+  return `+${callingCode}${nationalNumber ? ` ${nationalNumber}` : " "}`;
+};
+
+const normalizePhoneNumber = (value) => {
+  const phoneNumber = parsePhoneNumberFromString(value.replace(/\D/g, ""));
+  return phoneNumber
+    ? `+${phoneNumber.countryCallingCode} ${phoneNumber.nationalNumber}`
+    : value;
+};
 
 const normalizeAddress = (addr) => ({
   id: addr._id ?? addr.id,
@@ -104,10 +155,11 @@ const AddressBookPage = () => {
     setAddresses(storeAddresses.map(normalizeAddress));
   }, [storeAddresses]);
 
-  const handleAddAddress = async () => {
+  const handleAddAddress = async (address) => {
     try {
       await addAddress({
-        ...newAddress,
+        ...address,
+        phoneNumber: normalizePhoneNumber(address.phoneNumber),
       });
       toast.success(t("address.added", { defaultValue: "Address added" }));
     } catch {
@@ -124,19 +176,19 @@ const AddressBookPage = () => {
       postalCode: "",
     });
     setIsAddDialogOpen(false);
-    fetchAddresses().catch((err) => {
+    fetchAddresses().catch(() => {
       toast.error(
         t("common.error", { defaultValue: "Failed to fetch addresses" }),
       );
     });
   };
 
-  const handleEditAddress = () => {
+  const handleEditAddress = (address) => {
     // Backend has no update-address endpoint yet — apply locally.
-    if (!selectedAddress) return;
+    if (!address) return;
 
     let updatedAddresses = addresses.map((addr) =>
-      addr.id === selectedAddress.id ? selectedAddress : addr,
+      addr.id === address.id ? address : addr,
     );
 
     setAddresses(updatedAddresses);
@@ -147,7 +199,7 @@ const AddressBookPage = () => {
         new Promise((resolve, reject) => {
           useAddressStore
             .getState()
-            .update(selectedAddress)
+            .update(address)
             .then(async () => {
               await useAddressStore.getState().fetch();
               resolve();
@@ -167,10 +219,6 @@ const AddressBookPage = () => {
   const handleDeleteAddress = () => {
     // Backend has no delete-address endpoint yet — remove locally.
     if (!selectedAddress) return;
-
-    const remainingAddresses = addresses.filter(
-      (addr) => addr.id !== selectedAddress.id,
-    );
 
     setIsDeleteDialogOpen(false);
     setSelectedAddress(null);
@@ -555,6 +603,50 @@ const AddressBookPage = () => {
 // Address Form Component
 const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
   const { t } = useTranslation();
+  const [errors, setErrors] = useState({});
+
+  const updateAddress = (field, value) => {
+    setAddress({ ...address, [field]: value });
+    setErrors((currentErrors) => ({ ...currentErrors, [field]: undefined }));
+  };
+
+  const handlePhoneKeyDown = (event) => {
+    if (
+      event.key !== "Backspace" ||
+      event.currentTarget.selectionStart !== event.currentTarget.value.length ||
+      event.currentTarget.selectionEnd !== event.currentTarget.value.length
+    ) {
+      return;
+    }
+
+    const digits = address.phoneNumber.replace(/\D/g, "");
+    const isCountryCodeOnly = countryCallingCodes.includes(digits);
+    if (!isCountryCodeOnly) return;
+
+    event.preventDefault();
+    updateAddress(
+      "phoneNumber",
+      digits.length > 1 ? `+${digits.slice(0, -1)}` : "",
+    );
+  };
+
+  const handleSubmit = () => {
+    const result = addressFormSchema.safeParse(address);
+    if (!result.success) {
+      const nextErrors = {};
+      result.error.issues.forEach((issue) => {
+        nextErrors[issue.path[0]] = issue.message;
+      });
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+    onSubmit({
+      ...result.data,
+      phoneNumber: normalizePhoneNumber(result.data.phoneNumber),
+    });
+  };
 
   return (
     <div className="space-y-4 py-4">
@@ -567,10 +659,13 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
               id="name"
               placeholder={t("address.fullNamePlaceholder")}
               value={address.name}
-              onChange={(e) => setAddress({ ...address, name: e.target.value })}
+              onChange={(e) => updateAddress("name", e.target.value)}
               className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
             />
           </div>
+          {errors.name && (
+            <p className="text-sm text-destructive">{errors.name}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">{t("address.phone")}</Label>
@@ -581,12 +676,16 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
               type="tel"
               placeholder={t("address.phonePlaceholder")}
               value={address.phoneNumber}
+              onKeyDown={handlePhoneKeyDown}
               onChange={(e) =>
-                setAddress({ ...address, phoneNumber: e.target.value })
+                updateAddress("phoneNumber", formatPhoneInput(e.target.value))
               }
               className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
             />
           </div>
+          {errors.phoneNumber && (
+            <p className="text-sm text-destructive">{errors.phoneNumber}</p>
+          )}
         </div>
       </div>
 
@@ -594,7 +693,7 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
         <Label htmlFor="type">{t("address.addressType")}</Label>
         <Select
           value={address.type}
-          onValueChange={(value) => setAddress({ ...address, type: value })}
+          onValueChange={(value) => updateAddress("type", value)}
         >
           <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
             <SelectValue placeholder={t("address.selectType")} />
@@ -620,6 +719,9 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             </SelectItem>
           </SelectContent>
         </Select>
+        {errors.type && (
+          <p className="text-sm text-destructive">{errors.type}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -628,9 +730,12 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
           id="address"
           placeholder={t("address.streetAddressPlaceholder")}
           value={address.street}
-          onChange={(e) => setAddress({ ...address, street: e.target.value })}
+          onChange={(e) => updateAddress("street", e.target.value)}
           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20 min-h-[80px]"
         />
+        {errors.street && (
+          <p className="text-sm text-destructive">{errors.street}</p>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -640,9 +745,12 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             id="city"
             placeholder={t("address.cityPlaceholder")}
             value={address.city}
-            onChange={(e) => setAddress({ ...address, city: e.target.value })}
+            onChange={(e) => updateAddress("city", e.target.value)}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
+          {errors.city && (
+            <p className="text-sm text-destructive">{errors.city}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="state">{t("address.state")}</Label>
@@ -650,9 +758,12 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             id="state"
             placeholder={t("address.statePlaceholder")}
             value={address.state}
-            onChange={(e) => setAddress({ ...address, state: e.target.value })}
+            onChange={(e) => updateAddress("state", e.target.value)}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
+          {errors.state && (
+            <p className="text-sm text-destructive">{errors.state}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="pincode">{t("address.pinCode")}</Label>
@@ -660,18 +771,19 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             id="pincode"
             placeholder={t("address.pinCodePlaceholder")}
             value={address.postalCode}
-            onChange={(e) =>
-              setAddress({ ...address, postalCode: e.target.value })
-            }
+            onChange={(e) => updateAddress("postalCode", e.target.value)}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
+          {errors.postalCode && (
+            <p className="text-sm text-destructive">{errors.postalCode}</p>
+          )}
         </div>
       </div>
 
       <DialogFooter className="pt-4">
         <Button
           type="submit"
-          onClick={onSubmit}
+          onClick={handleSubmit}
           className="w-full sm:w-auto transition-all duration-300 hover:shadow-lg"
         >
           <Check className="w-4 h-4 mr-2" />
