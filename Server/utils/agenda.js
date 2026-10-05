@@ -27,10 +27,9 @@ const initAgenda = () => {
   agenda = new Agenda({
     // Pass the existing MongoDB driver instance directly from Mongoose
     backend: backend,
-    processEvery: "30 seconds", // How often to scan the DB for due jobs
+    processEvery: "15 minutes", // How often to scan the DB for due jobs
     maxConcurrency: 20, // Max total jobs running at once per server instance
     defaultConcurrency: 5, // Default max concurrent jobs of a single type
-    logging: true, // Enable logging for debugging
   });
 
   // Handle Agenda internal errors safely
