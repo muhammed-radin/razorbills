@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { cartApi, wishlistApi, addressApi, ordersApi } from "@/services/shop";
 import { MinimalProduct } from "@/models/product";
+import { authClient } from "@/lib/auth-client";
 
 const isAuthError = (err) =>
   err?.response?.status === 401 || err?.response?.status === 403;
@@ -233,6 +234,36 @@ export const useWishlistStore = create((set, get) => ({
   },
 }));
 
+class Address {
+  constructor({
+    id,
+    name,
+    phoneNumber,
+    userId,
+    street,
+    city,
+    state,
+    postalCode,
+    country,
+    email,
+    type = "home",
+  }) {
+    this.id = id || crypto.randomUUID();
+    this.name = name;
+    this.phoneNumber = phoneNumber;
+    this.userId = userId;
+    this.street = street;
+    this.city = city;
+    this.state = state;
+    this.postalCode = postalCode;
+    this.country = country;
+    this.email = email;
+    this.type = type;
+  }
+}
+
+export { Address as AddressMold };
+
 export const useAddressStore = create((set) => ({
   addresses: [],
   current: null,
@@ -242,17 +273,14 @@ export const useAddressStore = create((set) => ({
   fetch: async () => {
     set({ loading: true, error: null });
     try {
-      const [addresses, current] = await Promise.all([
-        addressApi.list(),
-        addressApi
-          .current()
-          .catch((err) =>
-            err?.response?.status === 404 ? null : Promise.reject(err),
-          ),
-      ]);
+      const addresses = await addressApi.list();
+      addresses.forEach((address) => {
+        if (address.isDefault) {
+          set({ current: address });
+        }
+      });
       set({
         addresses: Array.isArray(addresses) ? addresses : [],
-        current,
         loading: false,
       });
     } catch (err) {
@@ -260,8 +288,23 @@ export const useAddressStore = create((set) => ({
     }
   },
 
+  delete: async (addressId) => {
+    await addressApi.remove(addressId);
+  },
+
+  update: async (address) => {
+    await addressApi.update(address);
+  },
+
   add: async (address) => {
-    const addresses = await addressApi.add(address);
+    const { data: session } = await authClient.getSession();
+    const user = session?.user;
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+    address.userId = user.id;
+    address.email = user.email;
+    const addresses = await addressApi.add(new Address(address));
     set({ addresses: Array.isArray(addresses) ? addresses : [] });
   },
 

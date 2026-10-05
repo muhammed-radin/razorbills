@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -50,17 +56,18 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useAddressStore } from "@/stores/shop";
+import { useAddressStore, AddressMold } from "@/stores/shop";
+import { Preloader } from "@/components/LoaderScreen";
 
 const normalizeAddress = (addr) => ({
   id: addr._id ?? addr.id,
   name: addr.name ?? "",
-  phone: addr.phone ?? "",
+  phoneNumber: addr.phoneNumber ?? addr.phone ?? "",
   type: addr.type ?? "other",
-  address: addr.address ?? addr.street ?? "",
+  street: addr.address ?? addr.street ?? "",
   city: addr.city ?? "",
   state: addr.state ?? "",
-  pincode: addr.pincode ?? addr.pinCode ?? "",
+  postalCode: addr.postalCode ?? addr.pincode ?? addr.pinCode ?? "",
   isDefault: Boolean(addr.isDefault),
   raw: addr,
 });
@@ -71,6 +78,7 @@ const AddressBookPage = () => {
   const storeAddresses = useAddressStore((s) => s.addresses);
   const fetchAddresses = useAddressStore((s) => s.fetch);
   const addAddress = useAddressStore((s) => s.add);
+  const isLoading = useAddressStore((s) => s.loading);
   const setDefaultAddress = useAddressStore((s) => s.setDefault);
   const [addresses, setAddresses] = useState([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -79,13 +87,12 @@ const AddressBookPage = () => {
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [newAddress, setNewAddress] = useState({
     name: "",
-    phone: "",
+    phoneNumber: "",
     type: "home",
-    address: "",
+    street: "",
     city: "",
     state: "",
-    pincode: "",
-    isDefault: false,
+    postalCode: "",
   });
 
   useEffect(() => {
@@ -101,7 +108,6 @@ const AddressBookPage = () => {
     try {
       await addAddress({
         ...newAddress,
-        isDefault: addresses.length === 0 ? true : newAddress.isDefault,
       });
       toast.success(t("address.added", { defaultValue: "Address added" }));
     } catch {
@@ -110,15 +116,19 @@ const AddressBookPage = () => {
     }
     setNewAddress({
       name: "",
-      phone: "",
+      phoneNumber: "",
       type: "home",
-      address: "",
+      street: "",
       city: "",
       state: "",
-      pincode: "",
-      isDefault: false,
+      postalCode: "",
     });
     setIsAddDialogOpen(false);
+    fetchAddresses().catch((err) => {
+      toast.error(
+        t("common.error", { defaultValue: "Failed to fetch addresses" }),
+      );
+    });
   };
 
   const handleEditAddress = () => {
@@ -126,24 +136,31 @@ const AddressBookPage = () => {
     if (!selectedAddress) return;
 
     let updatedAddresses = addresses.map((addr) =>
-      addr.id === selectedAddress.id ? selectedAddress : addr
+      addr.id === selectedAddress.id ? selectedAddress : addr,
     );
-
-    if (selectedAddress.isDefault) {
-      updatedAddresses = updatedAddresses.map((addr) =>
-        addr.id === selectedAddress.id
-          ? addr
-          : { ...addr, isDefault: false }
-      );
-    }
 
     setAddresses(updatedAddresses);
     setIsEditDialogOpen(false);
     setSelectedAddress(null);
-    toast.info(
-      t("address.localOnlyEdit", {
-        defaultValue: "Edits are kept locally until address update is supported by the API",
-      }),
+    toast.promise(
+      () =>
+        new Promise((resolve, reject) => {
+          useAddressStore
+            .getState()
+            .update(selectedAddress)
+            .then(async () => {
+              await useAddressStore.getState().fetch();
+              resolve();
+            })
+            .catch((err) => {
+              reject(err);
+            });
+        }),
+      {
+        loading: t("address.updating", { defaultValue: "Updating address..." }),
+        success: t("address.updated", { defaultValue: "Address updated" }),
+        error: t("common.error", { defaultValue: "Failed to update address" }),
+      },
     );
   };
 
@@ -152,17 +169,32 @@ const AddressBookPage = () => {
     if (!selectedAddress) return;
 
     const remainingAddresses = addresses.filter(
-      (addr) => addr.id !== selectedAddress.id
+      (addr) => addr.id !== selectedAddress.id,
     );
 
-    // If deleted address was default, make the first one default
-    if (selectedAddress.isDefault && remainingAddresses.length > 0) {
-      remainingAddresses[0].isDefault = true;
-    }
-
-    setAddresses(remainingAddresses);
     setIsDeleteDialogOpen(false);
     setSelectedAddress(null);
+    toast.promise(
+      () =>
+        new Promise((resolve, reject) => {
+          useAddressStore
+            .getState()
+            .delete(selectedAddress.id)
+            .then(async () => {
+              await useAddressStore.getState().fetch();
+              resolve();
+            })
+            .catch((error) => {
+              console.error("Error deleting address:", error);
+              reject(error);
+            });
+        }),
+      {
+        loading: t("address.deleting", { defaultValue: "Deleting address..." }),
+        success: t("address.deleted", { defaultValue: "Address deleted" }),
+        error: t("common.error", { defaultValue: "Failed to delete address" }),
+      },
+    );
   };
 
   const handleSetDefault = async (id) => {
@@ -170,7 +202,10 @@ const AddressBookPage = () => {
     if (!address) return;
     try {
       await setDefaultAddress(address.raw ?? address);
-      toast.success(t("address.defaultSet", { defaultValue: "Default address updated" }));
+      await fetchAddresses();
+      toast.success(
+        t("address.defaultSet", { defaultValue: "Default address updated" }),
+      );
     } catch {
       // Fall back to local state when the API call fails
       setAddresses(
@@ -232,7 +267,7 @@ const AddressBookPage = () => {
         <div
           className={cn(
             "flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4 transition-all duration-500",
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
           )}
         >
           <div className="flex items-center gap-3">
@@ -247,9 +282,7 @@ const AddressBookPage = () => {
                 <h1 className="text-3xl font-bold text-foreground">
                   {t("address.title")}
                 </h1>
-                <p className="text-muted-foreground">
-                  {t("address.subtitle")}
-                </p>
+                <p className="text-muted-foreground">{t("address.subtitle")}</p>
               </div>
             </div>
           </div>
@@ -267,9 +300,7 @@ const AddressBookPage = () => {
                   <MapPinned className="w-5 h-5 text-primary" />
                   {t("address.addNew")}
                 </DialogTitle>
-                <DialogDescription>
-                  {t("address.addNewDesc")}
-                </DialogDescription>
+                <DialogDescription>{t("address.addNewDesc")}</DialogDescription>
               </DialogHeader>
               <AddressForm
                 address={newAddress}
@@ -282,11 +313,15 @@ const AddressBookPage = () => {
         </div>
 
         {/* Address List */}
-        {addresses.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Preloader />
+          </div>
+        ) : addresses.length === 0 ? (
           <Card
             className={cn(
               "text-center py-16 transition-all duration-500 delay-200",
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
             )}
           >
             <CardContent>
@@ -320,7 +355,7 @@ const AddressBookPage = () => {
                   mounted
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-4",
-                  address.isDefault && "ring-2 ring-primary/50"
+                  address.isDefault && "ring-2 ring-primary/50",
                 )}
                 style={{ transitionDelay: `${(index + 1) * 100}ms` }}
               >
@@ -343,8 +378,8 @@ const AddressBookPage = () => {
                           address.type === "home"
                             ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
                             : address.type === "work"
-                            ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
-                            : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                              ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+                              : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
                         )}
                       >
                         {getTypeIcon(address.type)}
@@ -364,13 +399,13 @@ const AddressBookPage = () => {
                     <div className="flex items-start gap-2 text-muted-foreground">
                       <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
                       <p>
-                        {address.address}, {address.city}, {address.state} -{" "}
-                        {address.pincode}
+                        {address.street}, {address.city}, {address.state} -{" "}
+                        {address.postalCode}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="w-4 h-4 shrink-0" />
-                      <p>{address.phone}</p>
+                      <p>{address.phoneNumber}</p>
                     </div>
                   </div>
 
@@ -429,7 +464,7 @@ const AddressBookPage = () => {
                 "group cursor-pointer border-dashed border-2 hover:border-primary transition-all duration-500 hover:shadow-md",
                 mounted
                   ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
+                  : "opacity-0 translate-y-4",
               )}
               style={{ transitionDelay: `${(addresses.length + 1) * 100}ms` }}
               onClick={() => setIsAddDialogOpen(true)}
@@ -545,8 +580,10 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
               id="phone"
               type="tel"
               placeholder={t("address.phonePlaceholder")}
-              value={address.phone}
-              onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+              value={address.phoneNumber}
+              onChange={(e) =>
+                setAddress({ ...address, phoneNumber: e.target.value })
+              }
               className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
             />
           </div>
@@ -590,8 +627,8 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
         <Textarea
           id="address"
           placeholder={t("address.streetAddressPlaceholder")}
-          value={address.address}
-          onChange={(e) => setAddress({ ...address, address: e.target.value })}
+          value={address.street}
+          onChange={(e) => setAddress({ ...address, street: e.target.value })}
           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20 min-h-[80px]"
         />
       </div>
@@ -622,8 +659,10 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
           <Input
             id="pincode"
             placeholder={t("address.pinCodePlaceholder")}
-            value={address.pincode}
-            onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+            value={address.postalCode}
+            onChange={(e) =>
+              setAddress({ ...address, postalCode: e.target.value })
+            }
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
         </div>

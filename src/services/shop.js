@@ -29,6 +29,8 @@ export const addressApi = {
   current: () => get("/api/address/current"),
   add: (address) => post("/api/address", { address }),
   setCurrent: (address) => put("/api/address", { address }),
+  remove: (addressId) => del("/api/address", { data: { addressId } }),
+  update: (address) => put("/api/address/update", { address }),
 };
 
 export const ordersApi = {
