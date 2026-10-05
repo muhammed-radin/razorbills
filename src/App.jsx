@@ -63,13 +63,18 @@ function App() {
           } else {
             // Continue as guest
             const { data, error } = await authClient.signIn.anonymous();
-            setIsLoading(false);
             if (error) {
-              toast.error("Failed to sign in as guest. Please try again.");
+              toast.error(
+                "Failed to sign in as guest. Please try again. Error: " +
+                  error.message,
+              );
             } else {
               toast.success("Signed in as guest.");
             }
-            window.location.reload(); // Reload the page to reflect the guest session
+            setTimeout(() => {
+              setIsLoading(false);
+              window.location.reload(); // Reload the page to reflect the guest session
+            }, 1500);
           }
         });
     }
