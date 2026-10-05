@@ -6,16 +6,15 @@ import { SunIcon, MoonIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTheme } from "@/utils/theme-provider";
 import AvatarMenu from "../avatar-menu";
-import LanguageSwitcher from "../language-switcher";
 import { useTranslation } from "react-i18next";
-import { useSession } from "@/lib/auth-client";
+import { useUserSession } from "@/contexts/user-session-context";
 import { Skeleton } from "../ui/skeleton";
 
 const NavbarBlock = () => {
   const { setTheme, theme } = useTheme();
   const { t } = useTranslation();
 
-  const { data, isPending, error } = useSession();
+  const { data, isPending } = useUserSession();
   const user = data?.user;
 
   return (
@@ -47,13 +46,14 @@ const NavbarBlock = () => {
           {/* avatar or auth buttons */}
           {isPending ? (
             <Skeleton className="h-10 w-10 rounded-full" />
-          ) : user ? (
+          ) : user && user.isAnonymous == false ? (
             <AvatarMenu
               name={user.name}
               img={user.profilePicture}
               user={user}
               size={40}
               decrypted={true}
+              isAnonymous={user.isAnonymous}
             />
           ) : (
             <>

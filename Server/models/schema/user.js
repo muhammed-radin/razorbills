@@ -16,7 +16,7 @@ export const UserSchema = new Schema(
 
     currentlyLoggedIn: { type: Boolean, default: false },
     lastLogin: { type: Date, default: null },
-    addressBook: { type: [AddressSchema], default: null },
+    addressBook: { type: [AddressSchema], default: [], required: true },
     address: { type: AddressSchema, default: null },
     phoneNumber: { type: String, default: "" },
     preferences: { type: Schema.Types.Mixed, default: {} },

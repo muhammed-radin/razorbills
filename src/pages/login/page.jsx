@@ -86,7 +86,8 @@ const LoginPage = () => {
 
   useEffect(() => {
     (async function () {
-      if (await api.getUser()) {
+      let user = await api.getUser();
+      if (user && user.isAnonymous === false) {
         navigate("/");
         return;
       }

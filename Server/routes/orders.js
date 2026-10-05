@@ -392,6 +392,40 @@ router.get(
 );
 
 /* =========================================================
+ * GET /user-orders
+ *
+ * Get orders orderd by user
+ * NOTE: must be registered before GET /:id, otherwise "user-orders"
+ * is captured as :id and this route is unreachable.
+ * ========================================================= */
+
+router.get("/user-orders", requireAuth, passUserAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        code: 401,
+        error: "Authenticated user ID is required",
+      });
+    }
+
+    const orders = await OrderModel.find({
+      userId,
+    });
+
+    return res.json(orders);
+  } catch (err) {
+    console.error("Error fetching user orders:", err);
+
+    return res.status(500).json({
+      code: 500,
+      error: "Failed to fetch user orders",
+    });
+  }
+});
+
+/* =========================================================
  * GET /orders/:id
  *
  * Get complete order
@@ -417,38 +451,6 @@ router.get("/:id", requireAuth, passUserAuth, async (req, res) => {
     return res.status(500).json({
       code: 500,
       error: "Failed to fetch order",
-    });
-  }
-});
-
-/* =========================================================
- * GET /user-orders
- *
- * Get orders orderd by user
- * ========================================================= */
-
-router.get("/user-orders", requireAuth, passUserAuth, async (req, res) => {
-  try {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res.status(401).json({
-        code: 401,
-        error: "Authenticated user ID is required",
-      });
-    }
-
-    const orders = await OrderModel.find({
-      userId,
-    });
-
-    return res.json(orders);
-  } catch (err) {
-    console.error("Error fetching user orders:", err);
-
-    return res.status(500).json({
-      code: 500,
-      error: "Failed to fetch user orders",
     });
   }
 });

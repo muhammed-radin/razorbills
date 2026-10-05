@@ -1,16 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 
-import { useTranslation } from "react-i18next";
 import OrderHistory1 from "@/components/order-history-1";
-import { orders } from "./data/order-history-1-data";
+import { useOrderStore } from "@/stores/shop";
 
 export default function Orderhistory() {
-  const { t } = useTranslation();
+  const orders = useOrderStore((s) => s.orders);
+  const loading = useOrderStore((s) => s.loading);
+  const fetchUserOrders = useOrderStore((s) => s.fetchUserOrders);
+
+  useEffect(() => {
+    fetchUserOrders().catch(() => {});
+  }, [fetchUserOrders]);
+
   return (
-   
-      <div className="w-full">
-        <OrderHistory1 orders={orders} />
-      </div>
-    
+    <div className="w-full">
+      <OrderHistory1 orders={orders} loading={loading} />
+    </div>
   );
 }

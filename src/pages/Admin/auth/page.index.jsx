@@ -3,33 +3,14 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/utils/theme-provider";
 
 import { StrictMode, useEffect, useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useUserSession } from "@/contexts/user-session-context";
 import { LoaderScreen } from "@/components/LoaderScreen";
 
 const AdminAuth = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // useEffect(() => {
-  //   authClient.getSession().then((session) => {
-  //     if (session && session.data.user) {
-  //       if (session.data.user.role !== "admin") {
-  //         console.log("User is not an admin. Redirecting to home page.");
-  //         navigate("/");
-  //         return;
-  //       } else {
-  //         setIsAuthenticated(true);
-  //       }
-  //     } else {
-  //       console.log("No session found. Redirecting to home page.");
-  //       console.log("Session:", session);
-  //       setIsAuthenticated(false);
-  //       navigate("/");
-  //     }
-  //   });
-  // }, []);
-
-  const { data, isPending, error } = authClient.useSession();
+  const { data, isPending, error } = useUserSession();
 
   useEffect(() => {
     if (isPending) {
@@ -42,7 +23,7 @@ const AdminAuth = () => {
     if (!data || !data.user || data.user.role !== "admin") {
       navigate("/404");
     }
-  }, [data]);
+  }, [data, error, isPending, navigate]);
 
   return (
     <StrictMode>

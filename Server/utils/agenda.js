@@ -79,11 +79,61 @@ const getAgenda = () => {
   });
 };
 
+/**
+ * Executes an Agenda task immediately by bypassing the database queue.
+ * @param {Object} agenda - Your instantiated Agenda instance.
+ * @param {string} taskName - The name of the registered task to run.
+ * @param {Object} [data={}] - Optional data to pass to the task payload.
+ * @returns {Promise<any>} The result of the task execution.
+ */
+async function executeTaskNow(agenda, taskName, data = {}) {
+  // 1. Access Agenda's internal definition map
+  const definition = agenda.definitions && agenda.definitions[taskName];
+
+  if (!definition || typeof definition.fn !== "function") {
+    throw new Error(
+      `[AgendaUtil] Task "${taskName}" is not defined or missing a processor function.`,
+    );
+  }
+
+  // 2. Mock a minimal job structure that matches Agenda's expected API
+  const mockJob = {
+    attrs: {
+      name: taskName,
+      data: data,
+      failedAt: null,
+      failReason: null,
+    },
+    // Mock standard utility methods to prevent runtime crashes if called inside the task
+    touch: async () => {},
+    fail: function (reason) {
+      this.attrs.failedAt = new Date();
+      this.attrs.failReason = reason instanceof Error ? reason.message : reason;
+    },
+  };
+
+  const mockDone = (err) => {
+    if (err) throw err;
+  };
+
+  // 3. Execute the processor function directly and return its output
+  try {
+    return await definition.fn(mockJob, mockDone);
+  } catch (error) {
+    console.error(
+      `[AgendaUtil] Error executing task "${taskName}" directly:`,
+      error,
+    );
+    throw error;
+  }
+}
+
 // Capture system termination signals for clean shutdown
 process.on("SIGTERM", gracefulShutdown);
 process.on("SIGINT", gracefulShutdown);
 
 export {
+  executeTaskNow,
   initAgenda,
   // Getter function to fetch the agenda instance anywhere in your app after initialization
   getAgenda,

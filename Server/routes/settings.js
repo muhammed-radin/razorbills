@@ -14,12 +14,18 @@ router.get("/", requireAuth, passUserAuth, async (req, res) => {
       return res.status(400).json({ error: "User ID not found in request" });
     }
 
-    const user = await db.collection("users").findOne({ userId });
+    const user = await db.collection("users").findOne({ id: userId });
+    console.log("Fetched user settings:", user); // Log the fetched user data
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found! - 404" });
     }
 
-    res.json(user.prefrences || {});
+    res.json({
+      ...(user.prefrences || {}),
+      phone: user.phoneNumber,
+      email: user.email,
+      id: user.id,
+    });
   } catch (error) {
     console.error("Error fetching user settings:", error);
     res.status(500).json({ error: "Failed to fetch user settings" });
@@ -40,7 +46,7 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
       emailNotificationsEnabled,
     } = req.body;
 
-    const user = await db.collection("users").findOne({ userId });
+    const user = await db.collection("users").findOne({ id: userId });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

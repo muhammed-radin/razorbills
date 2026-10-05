@@ -7,6 +7,7 @@ import {
 import { WishlistModel } from "../models/schema/whishlist.js";
 import { ErrorEvent, evt, Evts } from "../utils/events.manage.js";
 import { ClassicEvent } from "../models/event.js";
+import { MinimalProduct } from "../models/schema/product.js";
 
 const router = express.Router();
 
@@ -30,7 +31,7 @@ async function syncWishlistProducts(wishlist) {
     return wishlist;
   }
 
-  const products = prroductsFinded.map((product) => {
+  const products = productsFinded.map((product) => {
     return product?.toMinimal();
   });
 
@@ -65,9 +66,15 @@ async function syncMiddleware(req, res, next) {
     const updatedWishlist = await syncWishlistProducts(wishlist);
     evt.fire(
       Evts.WISHLIST_UPDATED,
-      new ClassicEvent(Evts.WISHLIST_UPDATED, false, "wishlist", {
-        userId,
-        folder,
+      new ClassicEvent({
+        type: Evts.WISHLIST_UPDATED,
+        isMajor: false,
+        sector: "wishlist",
+        content: { userId, folder, wishlist: updatedWishlist },
+        userId: userId,
+        wishlist: updatedWishlist,
+        wishlistId: updatedWishlist?._id || null,
+        actorId: userId,
       }),
     );
     next();
@@ -100,83 +107,120 @@ router.get("/", requireAuth, passUserAuth, syncMiddleware, async (req, res) => {
   }
 });
 
-// add new product to wishlist ( upsert )
+// add new single product to wishlist ( upsert )
 router.post("/", requireAuth, passUserAuth, async (req, res) => {
   try {
     const userId = req.user?.id;
+
     if (!userId) {
-      return res.status(400).json({ error: "User ID not found in request" });
+      return res.status(400).json({
+        error: "User ID not found in request",
+      });
     }
 
-    const { folder, products } = req.body;
+    const { product: productFromBody } = req.body;
+    const product = new MinimalProduct({
+      ...productFromBody,
+      id: productFromBody?.productId || productFromBody?.id,
+    });
+    product.productId = product.id; // Ensure productId is set for consistency
+    console.log(product, "wishlist product to be added");
+    console.log(req.body, "wishlist request body");
+    const folder = req.body?.folder || req.query?.folder || "/";
 
-    if (!products || !Array.isArray(products)) {
+    if (!product) {
       evt.fire(
         Evts.WISHLIST_ERROR,
         new ErrorEvent({
           type: Evts.WISHLIST_ERROR,
-          error: "Invalid wishlist data. 'name' and 'products' are required.",
+          error: "Invalid wishlist data. 'product' is required.",
           errorCode: 400,
           data: { userId, folder },
         }),
       );
+
       return res.status(400).json({
-        error: "Invalid wishlist data. 'name' and 'products' are required.",
+        error: "Invalid wishlist data. 'product' is required.",
       });
     }
 
-    let filteredProducts = products;
+    const productId = product.id;
 
-    // get existing wishlist
-    const existingWishlist = await WishlistModel.findOne({ userId, folder });
-
-    // validate products: duplicate products
-    if (existingWishlist) {
-      const duplicateProducts = existingWishlist.products.map((product) => {
-        if (products.some((p) => p.productId === product.productId)) {
-          filteredProducts = products.filter(
-            (p) => p.productId !== product.productId,
-          );
-          return product;
-        }
-        return null;
+    if (!productId) {
+      return res.status(400).json({
+        error: "Product ID is required.",
       });
     }
 
+    // Get existing wishlist
+    const wishlist = await WishlistModel.findOne({
+      userId,
+      folder,
+    });
+
+    const existingProducts = wishlist?.products || [];
+
+    // Add only if product ID doesn't already exist
+    const alreadyExists = existingProducts.some(
+      (item) =>
+        (item.id || item.productId)?.toString() === productId.toString(),
+    );
+
+    const filteredProducts = alreadyExists
+      ? existingProducts
+      : [...existingProducts, product];
+
+    // Create wishlist if it doesn't exist,
+    // otherwise update it with the unique products array.
     const newWishList = await WishlistModel.findOneAndUpdate(
       { userId, folder },
       {
-        $addToSet: { products: filteredProducts },
-        $set: { updatedAt: new Date() },
-        $setOnInsert: {
-          folder: folder || "/",
-          userId: userId,
-          products: filteredProducts,
+        $set: {
           updatedAt: new Date(),
+          products: filteredProducts,
+        },
+        $setOnInsert: {
+          folder,
+          userId,
           createdAt: new Date(),
         },
       },
-      { upsert: true, returnDocument: "after" },
+      {
+        upsert: true,
+        returnDocument: "after",
+      },
     );
+
+    console.log("Wishlist updated/created:", newWishList);
 
     evt.fire(
       Evts.WISHLIST_ADDED,
-      new ClassicEvent(Evts.WISHLIST_ADDED, false, "wishlist", {
+      new ClassicEvent({
+        type: Evts.WISHLIST_ADDED,
+        isMajor: false,
+        sector: "wishlist",
+        content: newWishList,
         userId,
         folder,
         products: filteredProducts,
+        wishlistId: newWishList._id,
+        actorId: userId,
       }),
     );
-    filteredProducts.forEach((p) => {
-      evt.fire(
-        Evts.PRODUCT_WISHLISTED,
-        new ClassicEvent(Evts.PRODUCT_WISHLISTED, false, "wishlist", {
-          userId,
-          folder,
-          productId: p.productId,
-        }),
-      );
-    });
+
+    evt.fire(
+      Evts.PRODUCT_WISHLISTED,
+      new ClassicEvent({
+        type: Evts.PRODUCT_WISHLISTED,
+        isMajor: true,
+        sector: "wishlist",
+        content: newWishList,
+        userId,
+        productId,
+        wishlistId: newWishList._id,
+        actorId: userId,
+      }),
+    );
 
     res.json(newWishList);
   } catch (error) {
@@ -184,7 +228,7 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
       Evts.WISHLIST_ERROR,
       new ErrorEvent({
         type: Evts.WISHLIST_ERROR,
-        error: error,
+        error,
         errorCode: error.code || 500,
         data: {
           userId: req.user?.id,
@@ -192,8 +236,12 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
         },
       }),
     );
+
     console.error("Error creating wishlist:", error);
-    res.status(500).json({ error: "Failed to create wishlist" });
+
+    res.status(500).json({
+      error: "Failed to create wishlist",
+    });
   }
 });
 
@@ -204,6 +252,8 @@ router.delete("/", requireAuth, passUserAuth, async (req, res) => {
     if (!userId) {
       return res.status(400).json({ error: "User ID not found in request" });
     }
+
+    console.log("wishlist delete request body:", req.body);
 
     const { folder, productId } = req.body;
 
@@ -228,10 +278,15 @@ router.delete("/", requireAuth, passUserAuth, async (req, res) => {
 
     evt.fire(
       Evts.WISHLIST_REMOVED,
-      new ClassicEvent(Evts.WISHLIST_REMOVED, false, "wishlist", {
-        userId,
-        folder,
-        productId,
+      new ClassicEvent({
+        type: Evts.WISHLIST_REMOVED,
+        isMajor: false,
+        sector: "wishlist",
+        content: { userId, folder, productId },
+        userId: userId,
+        productId: productId,
+        wishlistId: wishlist._id,
+        actorId: userId,
       }),
     );
     res.json(updatedWishlist);

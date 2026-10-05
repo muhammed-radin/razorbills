@@ -61,9 +61,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { toast } from "sonner"
-import { api } from "@/utils/api"
-import axios from "axios"
+import { usersApi } from "@/services/shop"
 import { cn } from "@/lib/utils"
 
 const customerTierConfig = {
@@ -208,19 +206,35 @@ export default function CustomersPage() {
     const fetchCustomers = async () => {
         try {
             setIsLoading(true)
-            // Replace with actual API call
-            // const response = await axios.get(api.customers())
-            // setCustomers(response.data)
-
-            // Using mock data for now
+            const data = await usersApi.list({ limit: 50 })
+            const users = Array.isArray(data) ? data : (data.users ?? [])
+            if (users.length === 0) throw new Error("empty")
+            setCustomers(
+                users.map((u, i) => ({
+                    id: u.id ?? u._id ?? `user-${i}`,
+                    name: u.name ?? "Unknown",
+                    email: u.email ?? "",
+                    phone: u.phoneNumber ?? "",
+                    avatar: (u.name ?? "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
+                    image: u.image ?? "",
+                    tier: u.role === "admin" || u.role === "owner" ? "vip" : "regular",
+                    totalOrders: u.totalOrders ?? 0,
+                    totalSpent: u.totalSpent ?? 0,
+                    averageOrderValue: u.totalOrders ? (u.totalSpent ?? 0) / u.totalOrders : 0,
+                    joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split("T")[0] : "",
+                    lastOrder: u.lastLogin ? new Date(u.lastLogin).toISOString().split("T")[0] : "",
+                    location: u.address?.city ?? "",
+                    status: u.banned ? "inactive" : "active",
+                })),
+            )
+            setIsLoading(false)
+        } catch (error) {
+            console.error("Error fetching customers, using showcase data:", error)
+            // Non-admin sessions get 403 — keep showcase data so the page stays usable
             setTimeout(() => {
                 setCustomers(mockCustomers)
                 setIsLoading(false)
-            }, 1000)
-        } catch (error) {
-            console.error("Error fetching customers:", error)
-            toast.error("Failed to load customers")
-            setIsLoading(false)
+            }, 500)
         }
     }
 

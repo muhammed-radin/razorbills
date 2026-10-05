@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -49,139 +55,254 @@ import {
   MapPinned,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useAddressStore, AddressMold } from "@/stores/shop";
+import { Preloader } from "@/components/LoaderScreen";
+import {
+  getCountries,
+  getCountryCallingCode,
+  parsePhoneNumberFromString,
+} from "libphonenumber-js";
+import { z } from "zod";
 
-// Sample addresses data
-const sampleAddresses = [
-  {
-    id: 1,
-    name: "John Doe",
-    phone: "+91 9876543210",
-    type: "home",
-    address: "123 Main Street, Apartment 4B",
-    city: "Mumbai",
-    state: "Maharashtra",
-    pincode: "400001",
-    isDefault: true,
-  },
-  {
-    id: 2,
-    name: "John Doe",
-    phone: "+91 9876543211",
-    type: "work",
-    address: "Tech Park, Building A, Floor 5",
-    city: "Bangalore",
-    state: "Karnataka",
-    pincode: "560001",
-    isDefault: false,
-  },
-  {
-    id: 3,
-    name: "John Doe",
-    phone: "+91 9876543212",
-    type: "other",
-    address: "456 Oak Avenue, Near Central Park",
-    city: "Delhi",
-    state: "Delhi",
-    pincode: "110001",
-    isDefault: false,
-  },
-];
+const countryCallingCodes = [
+  ...new Set(getCountries().map((country) => getCountryCallingCode(country))),
+].sort((first, second) => second.length - first.length);
+const MAX_E164_DIGITS = 15;
+const INDIA_CALLING_CODE = "91";
+const INDIA_POSTAL_CODE_LENGTH = 6;
+
+const addressFormSchema = z.object({
+  name: z.string().trim().min(2, "Enter a valid name"),
+  phoneNumber: z
+    .string()
+    .trim()
+    .refine((value) => {
+      const digits = value.replace(/\D/g, "");
+      if (!/^\+\d{1,3} \d+$/.test(value)) return false;
+
+      const phoneNumber = parsePhoneNumberFromString(`+${digits}`);
+      if (!phoneNumber?.isValid()) return false;
+
+      const nationalDigits = phoneNumber.nationalNumber.length;
+      const maxNationalDigits =
+        phoneNumber.countryCallingCode === INDIA_CALLING_CODE
+          ? 10
+          : MAX_E164_DIGITS - phoneNumber.countryCallingCode.length;
+
+      return nationalDigits <= maxNationalDigits;
+    }, "Enter a valid international phone number, including country code"),
+  type: z.enum(["home", "work", "other"]),
+  street: z.string().trim().min(1, "Enter a street address"),
+  city: z.string().trim().min(1, "Enter a city"),
+  state: z.string().trim().min(1, "Enter a state"),
+  postalCode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Enter a valid 6-digit Indian postal code"),
+});
+
+const formatPhoneInput = (value) => {
+  const rawDigits = value.replace(/\D/g, "");
+  const callingCode = countryCallingCodes.find((code) =>
+    rawDigits.startsWith(code),
+  );
+  const maxDigits = callingCode
+    ? callingCode === INDIA_CALLING_CODE
+      ? callingCode.length + 10
+      : MAX_E164_DIGITS
+    : MAX_E164_DIGITS;
+  const digits = rawDigits.slice(0, maxDigits);
+  if (!digits) return "";
+
+  if (!callingCode) return `+${digits}`;
+
+  const nationalNumber = digits.slice(callingCode.length);
+  return `+${callingCode}${nationalNumber ? ` ${nationalNumber}` : " "}`;
+};
+
+const formatPostalCode = (value) =>
+  value.replace(/\D/g, "").slice(0, INDIA_POSTAL_CODE_LENGTH);
+
+const normalizePhoneNumber = (value) => {
+  const phoneNumber = parsePhoneNumberFromString(
+    `+${value.replace(/\D/g, "")}`,
+  );
+  return phoneNumber
+    ? `+${phoneNumber.countryCallingCode} ${phoneNumber.nationalNumber}`
+    : value;
+};
+
+const normalizeAddress = (addr) => ({
+  id: addr._id ?? addr.id,
+  name: addr.name ?? "",
+  phoneNumber: addr.phoneNumber ?? addr.phone ?? "",
+  type: addr.type ?? "other",
+  street: addr.address ?? addr.street ?? "",
+  city: addr.city ?? "",
+  state: addr.state ?? "",
+  postalCode: addr.postalCode ?? addr.pincode ?? addr.pinCode ?? "",
+  isDefault: Boolean(addr.isDefault),
+  raw: addr,
+});
 
 const AddressBookPage = () => {
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
-  const [addresses, setAddresses] = useState(sampleAddresses);
+  const storeAddresses = useAddressStore((s) => s.addresses);
+  const fetchAddresses = useAddressStore((s) => s.fetch);
+  const addAddress = useAddressStore((s) => s.add);
+  const isLoading = useAddressStore((s) => s.loading);
+  const setDefaultAddress = useAddressStore((s) => s.setDefault);
+  const [addresses, setAddresses] = useState([]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
   const [newAddress, setNewAddress] = useState({
     name: "",
-    phone: "",
+    phoneNumber: "",
     type: "home",
-    address: "",
+    street: "",
     city: "",
     state: "",
-    pincode: "",
-    isDefault: false,
+    postalCode: "",
   });
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchAddresses().catch(() => {});
+  }, [fetchAddresses]);
 
-  const handleAddAddress = () => {
-    const address = {
-      ...newAddress,
-      id: Date.now(),
-      isDefault: addresses.length === 0 ? true : newAddress.isDefault,
-    };
-    
-    if (address.isDefault) {
-      setAddresses(
-        addresses.map((addr) => ({ ...addr, isDefault: false })).concat(address)
-      );
-    } else {
-      setAddresses([...addresses, address]);
+  useEffect(() => {
+    setAddresses(storeAddresses.map(normalizeAddress));
+  }, [storeAddresses]);
+
+  const handleAddAddress = async (address) => {
+    try {
+      await addAddress({
+        ...address,
+        phoneNumber: normalizePhoneNumber(address.phoneNumber),
+      });
+      toast.success(t("address.added", { defaultValue: "Address added" }));
+    } catch {
+      toast.error(t("common.error", { defaultValue: "Failed to add address" }));
+      return;
     }
-    
     setNewAddress({
       name: "",
-      phone: "",
+      phoneNumber: "",
       type: "home",
-      address: "",
+      street: "",
       city: "",
       state: "",
-      pincode: "",
-      isDefault: false,
+      postalCode: "",
     });
     setIsAddDialogOpen(false);
+    fetchAddresses().catch(() => {
+      toast.error(
+        t("common.error", { defaultValue: "Failed to fetch addresses" }),
+      );
+    });
   };
 
-  const handleEditAddress = () => {
-    if (!selectedAddress) return;
+  const handleEditAddress = (address) => {
+    // Backend has no update-address endpoint yet — apply locally.
+    if (!address) return;
 
     let updatedAddresses = addresses.map((addr) =>
-      addr.id === selectedAddress.id ? selectedAddress : addr
+      addr.id === address.id ? address : addr,
     );
-
-    if (selectedAddress.isDefault) {
-      updatedAddresses = updatedAddresses.map((addr) =>
-        addr.id === selectedAddress.id
-          ? addr
-          : { ...addr, isDefault: false }
-      );
-    }
 
     setAddresses(updatedAddresses);
     setIsEditDialogOpen(false);
     setSelectedAddress(null);
+    toast.promise(
+      () =>
+        new Promise((resolve, reject) => {
+          useAddressStore
+            .getState()
+            .update(address)
+            .then(async () => {
+              await useAddressStore.getState().fetch();
+              resolve();
+            })
+            .catch((err) => {
+              reject(err);
+            });
+        }),
+      {
+        loading: t("address.updating", { defaultValue: "Updating address..." }),
+        success: t("address.updated", { defaultValue: "Address updated" }),
+        error: t("common.error", { defaultValue: "Failed to update address" }),
+      },
+    );
   };
 
   const handleDeleteAddress = () => {
+    // Backend has no delete-address endpoint yet — remove locally.
     if (!selectedAddress) return;
 
-    const remainingAddresses = addresses.filter(
-      (addr) => addr.id !== selectedAddress.id
-    );
-
-    // If deleted address was default, make the first one default
-    if (selectedAddress.isDefault && remainingAddresses.length > 0) {
-      remainingAddresses[0].isDefault = true;
-    }
-
-    setAddresses(remainingAddresses);
     setIsDeleteDialogOpen(false);
     setSelectedAddress(null);
+    toast.promise(
+      () =>
+        new Promise((resolve, reject) => {
+          useAddressStore
+            .getState()
+            .delete(selectedAddress.id)
+            .then(async () => {
+              await useAddressStore.getState().fetch();
+              resolve();
+            })
+            .catch((error) => {
+              console.error("Error deleting address:", error);
+              reject(error);
+            });
+        }),
+      {
+        loading: t("address.deleting", { defaultValue: "Deleting address..." }),
+        success: t("address.deleted", { defaultValue: "Address deleted" }),
+        error: t("common.error", { defaultValue: "Failed to delete address" }),
+      },
+    );
   };
 
-  const handleSetDefault = (id) => {
-    setAddresses(
-      addresses.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === id,
-      }))
-    );
+  const handleSetDefault = async (id) => {
+    const address = addresses.find((addr) => addr.id === id);
+    if (!address) return;
+    try {
+      toast.promise(
+        () =>
+          new Promise((resolve, reject) => {
+            setDefaultAddress(address.raw ?? address)
+              .then(() => {
+                fetchAddresses();
+                resolve();
+              })
+              .catch((err) => reject());
+          }),
+        {
+          loading: t("address.settingDefault", {
+            defaultValue: "Setting default address...",
+          }),
+          success: t("address.defaultSet", {
+            defaultValue: "Default address updated",
+          }),
+          error: t("common.error", {
+            defaultValue: "Failed to set default address",
+          }),
+        },
+      );
+    } catch {
+      // Fall back to local state when the API call fails
+      setAddresses(
+        addresses.map((addr) => ({
+          ...addr,
+          isDefault: addr.id === id,
+        })),
+      );
+    }
   };
 
   const getTypeIcon = (type) => {
@@ -234,7 +355,7 @@ const AddressBookPage = () => {
         <div
           className={cn(
             "flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4 transition-all duration-500",
-            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
           )}
         >
           <div className="flex items-center gap-3">
@@ -249,9 +370,7 @@ const AddressBookPage = () => {
                 <h1 className="text-3xl font-bold text-foreground">
                   {t("address.title")}
                 </h1>
-                <p className="text-muted-foreground">
-                  {t("address.subtitle")}
-                </p>
+                <p className="text-muted-foreground">{t("address.subtitle")}</p>
               </div>
             </div>
           </div>
@@ -269,9 +388,7 @@ const AddressBookPage = () => {
                   <MapPinned className="w-5 h-5 text-primary" />
                   {t("address.addNew")}
                 </DialogTitle>
-                <DialogDescription>
-                  {t("address.addNewDesc")}
-                </DialogDescription>
+                <DialogDescription>{t("address.addNewDesc")}</DialogDescription>
               </DialogHeader>
               <AddressForm
                 address={newAddress}
@@ -284,11 +401,15 @@ const AddressBookPage = () => {
         </div>
 
         {/* Address List */}
-        {addresses.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center py-16">
+            <Preloader />
+          </div>
+        ) : addresses.length === 0 ? (
           <Card
             className={cn(
               "text-center py-16 transition-all duration-500 delay-200",
-              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
             )}
           >
             <CardContent>
@@ -322,7 +443,7 @@ const AddressBookPage = () => {
                   mounted
                     ? "opacity-100 translate-y-0"
                     : "opacity-0 translate-y-4",
-                  address.isDefault && "ring-2 ring-primary/50"
+                  address.isDefault && "ring-2 ring-primary/50",
                 )}
                 style={{ transitionDelay: `${(index + 1) * 100}ms` }}
               >
@@ -345,8 +466,8 @@ const AddressBookPage = () => {
                           address.type === "home"
                             ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
                             : address.type === "work"
-                            ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
-                            : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                              ? "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+                              : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
                         )}
                       >
                         {getTypeIcon(address.type)}
@@ -366,13 +487,13 @@ const AddressBookPage = () => {
                     <div className="flex items-start gap-2 text-muted-foreground">
                       <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
                       <p>
-                        {address.address}, {address.city}, {address.state} -{" "}
-                        {address.pincode}
+                        {address.street}, {address.city}, {address.state} -{" "}
+                        {address.postalCode}
                       </p>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="w-4 h-4 shrink-0" />
-                      <p>{address.phone}</p>
+                      <p>{address.phoneNumber}</p>
                     </div>
                   </div>
 
@@ -431,7 +552,7 @@ const AddressBookPage = () => {
                 "group cursor-pointer border-dashed border-2 hover:border-primary transition-all duration-500 hover:shadow-md",
                 mounted
                   ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-4"
+                  : "opacity-0 translate-y-4",
               )}
               style={{ transitionDelay: `${(addresses.length + 1) * 100}ms` }}
               onClick={() => setIsAddDialogOpen(true)}
@@ -522,6 +643,50 @@ const AddressBookPage = () => {
 // Address Form Component
 const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
   const { t } = useTranslation();
+  const [errors, setErrors] = useState({});
+
+  const updateAddress = (field, value) => {
+    setAddress({ ...address, [field]: value });
+    setErrors((currentErrors) => ({ ...currentErrors, [field]: undefined }));
+  };
+
+  const handlePhoneKeyDown = (event) => {
+    if (
+      event.key !== "Backspace" ||
+      event.currentTarget.selectionStart !== event.currentTarget.value.length ||
+      event.currentTarget.selectionEnd !== event.currentTarget.value.length
+    ) {
+      return;
+    }
+
+    const digits = address.phoneNumber.replace(/\D/g, "");
+    const isCountryCodeOnly = countryCallingCodes.includes(digits);
+    if (!isCountryCodeOnly) return;
+
+    event.preventDefault();
+    updateAddress(
+      "phoneNumber",
+      digits.length > 1 ? `+${digits.slice(0, -1)}` : "",
+    );
+  };
+
+  const handleSubmit = () => {
+    const result = addressFormSchema.safeParse(address);
+    if (!result.success) {
+      const nextErrors = {};
+      result.error.issues.forEach((issue) => {
+        nextErrors[issue.path[0]] = issue.message;
+      });
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+    onSubmit({
+      ...result.data,
+      phoneNumber: normalizePhoneNumber(result.data.phoneNumber),
+    });
+  };
 
   return (
     <div className="space-y-4 py-4">
@@ -534,10 +699,13 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
               id="name"
               placeholder={t("address.fullNamePlaceholder")}
               value={address.name}
-              onChange={(e) => setAddress({ ...address, name: e.target.value })}
+              onChange={(e) => updateAddress("name", e.target.value)}
               className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
             />
           </div>
+          {errors.name && (
+            <p className="text-sm text-destructive">{errors.name}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">{t("address.phone")}</Label>
@@ -547,11 +715,17 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
               id="phone"
               type="tel"
               placeholder={t("address.phonePlaceholder")}
-              value={address.phone}
-              onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+              value={address.phoneNumber}
+              onKeyDown={handlePhoneKeyDown}
+              onChange={(e) =>
+                updateAddress("phoneNumber", formatPhoneInput(e.target.value))
+              }
               className="pl-10 transition-all duration-300 focus:ring-2 focus:ring-primary/20"
             />
           </div>
+          {errors.phoneNumber && (
+            <p className="text-sm text-destructive">{errors.phoneNumber}</p>
+          )}
         </div>
       </div>
 
@@ -559,7 +733,7 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
         <Label htmlFor="type">{t("address.addressType")}</Label>
         <Select
           value={address.type}
-          onValueChange={(value) => setAddress({ ...address, type: value })}
+          onValueChange={(value) => updateAddress("type", value)}
         >
           <SelectTrigger className="transition-all duration-300 focus:ring-2 focus:ring-primary/20">
             <SelectValue placeholder={t("address.selectType")} />
@@ -585,6 +759,9 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             </SelectItem>
           </SelectContent>
         </Select>
+        {errors.type && (
+          <p className="text-sm text-destructive">{errors.type}</p>
+        )}
       </div>
 
       <div className="space-y-2">
@@ -592,10 +769,13 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
         <Textarea
           id="address"
           placeholder={t("address.streetAddressPlaceholder")}
-          value={address.address}
-          onChange={(e) => setAddress({ ...address, address: e.target.value })}
+          value={address.street}
+          onChange={(e) => updateAddress("street", e.target.value)}
           className="transition-all duration-300 focus:ring-2 focus:ring-primary/20 min-h-[80px]"
         />
+        {errors.street && (
+          <p className="text-sm text-destructive">{errors.street}</p>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -605,9 +785,12 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             id="city"
             placeholder={t("address.cityPlaceholder")}
             value={address.city}
-            onChange={(e) => setAddress({ ...address, city: e.target.value })}
+            onChange={(e) => updateAddress("city", e.target.value)}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
+          {errors.city && (
+            <p className="text-sm text-destructive">{errors.city}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="state">{t("address.state")}</Label>
@@ -615,26 +798,34 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             id="state"
             placeholder={t("address.statePlaceholder")}
             value={address.state}
-            onChange={(e) => setAddress({ ...address, state: e.target.value })}
+            onChange={(e) => updateAddress("state", e.target.value)}
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
+          {errors.state && (
+            <p className="text-sm text-destructive">{errors.state}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="pincode">{t("address.pinCode")}</Label>
           <Input
             id="pincode"
             placeholder={t("address.pinCodePlaceholder")}
-            value={address.pincode}
-            onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
+            value={address.postalCode}
+            onChange={(e) =>
+              updateAddress("postalCode", formatPostalCode(e.target.value))
+            }
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
+          {errors.postalCode && (
+            <p className="text-sm text-destructive">{errors.postalCode}</p>
+          )}
         </div>
       </div>
 
       <DialogFooter className="pt-4">
         <Button
           type="submit"
-          onClick={onSubmit}
+          onClick={handleSubmit}
           className="w-full sm:w-auto transition-all duration-300 hover:shadow-lg"
         >
           <Check className="w-4 h-4 mr-2" />

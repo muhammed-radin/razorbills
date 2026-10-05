@@ -5,8 +5,13 @@ import {
   requireAuth,
 } from "../utils/middlewares/reqiuredAuth.js";
 import { evt, Evts, ErrorEvent, CommentEvent } from "../utils/events.manage.js";
+import { AddressSchema } from "../models/schema/address.js";
+import { decryptAddress, encryptAddress } from "../utils/crypt.js";
 
 const router = express.Router();
+
+const decryptAddressBook = (addressBook = []) =>
+  addressBook.map(decryptAddress);
 
 // get addressBook
 router.get("/", requireAuth, passUserAuth, (req, res) => {
@@ -16,20 +21,34 @@ router.get("/", requireAuth, passUserAuth, (req, res) => {
   }
 
   db.collection("users")
-    .findOne({ userId })
+    .findOne({ id: userId })
     .then((user) => {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      user.addressBook = user.addressBook.map((address) => {
-        if (address && address._id == user.address?._id) {
+      const addressBook = Array.isArray(user.addressBook)
+        ? decryptAddressBook(user.addressBook)
+        : [];
+      let currentAddress = user.address ? decryptAddress(user.address) : null;
+
+      if (!currentAddress && addressBook.length > 0) {
+        currentAddress = addressBook[0];
+        db.collection("users").updateOne(
+          { id: userId },
+          { $set: { address: encryptAddress(currentAddress) } },
+        );
+      }
+
+      const responseAddressBook = addressBook.map((address) => {
+        if (address && address.id == currentAddress?.id) {
           address.isDefault = true;
         } else {
           address.isDefault = false;
         }
         return address;
       });
-      res.json(user.addressBook || []);
+
+      res.json(responseAddressBook);
     })
     .catch((err) => {
       console.error("Error fetching address book:", err);
@@ -45,7 +64,7 @@ router.get("/current", requireAuth, passUserAuth, (req, res) => {
   }
 
   db.collection("users")
-    .findOne({ userId })
+    .findOne({ id: userId })
     .then((user) => {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -53,8 +72,7 @@ router.get("/current", requireAuth, passUserAuth, (req, res) => {
       if (!user.address) {
         return res.status(404).json({ error: "Current address not set" });
       }
-      user.address.isDefault = true;
-      res.json(user.address || []);
+      res.json(decryptAddress(user.address));
     })
     .catch((err) => {
       console.error("Error fetching current address:", err);
@@ -70,10 +88,15 @@ router.post("/", requireAuth, passUserAuth, (req, res) => {
   }
 
   const { address } = req.body;
+  const encryptedAddress = encryptAddress(address);
+
   db.collection("users")
     .findOneAndUpdate(
-      { userId },
-      { $push: { addressBook: address } },
+      { id: userId },
+      {
+        $push: { addressBook: encryptedAddress },
+        $set: { address: encryptedAddress },
+      },
       { upsert: true, returnDocument: "after" },
     )
     .then((user) => {
@@ -82,9 +105,9 @@ router.post("/", requireAuth, passUserAuth, (req, res) => {
       }
       res.json({
         message: "Address added successfully",
-        address: user.address,
-        addressBook: user.addressBook,
-        userId: user.userId,
+        address: decryptAddress(user.address),
+        addressBook: decryptAddressBook(user.addressBook),
+        userId: user.id,
       });
     })
     .catch((err) => {
@@ -93,7 +116,7 @@ router.post("/", requireAuth, passUserAuth, (req, res) => {
     });
 });
 
-// set current address
+// update/set current address
 router.put("/", requireAuth, passUserAuth, (req, res) => {
   const userId = req.user?.id;
   if (!userId) {
@@ -109,24 +132,94 @@ router.put("/", requireAuth, passUserAuth, (req, res) => {
 
   db.collection("users")
     .findOneAndUpdate(
-      { userId },
-      { $set: { address } },
+      { id: userId },
+      { $set: { address: encryptAddress(address) } },
       { upsert: true, returnDocument: "after" },
     )
     .then((user) => {
-      user.addressBook = user.addressBook || [];
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
       res.status(200).json({
         message: "Current address set successfully",
-        address: user.address,
-        userId: user.userId,
+        address: decryptAddress(user.address),
+        userId: user.id,
       });
     })
     .catch((err) => {
       console.error("Error setting current address:", err);
       res.status(500).json({ error: "Failed to set current address" });
+    });
+});
+
+// delete address
+router.delete("/", requireAuth, passUserAuth, (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(400).json({ error: "User ID not found in request" });
+  }
+
+  const { addressId } = req.body;
+
+  if (!addressId) {
+    return res.status(400).json({ error: "Address ID is required" });
+  }
+
+  db.collection("users")
+    .findOneAndUpdate(
+      { id: userId },
+      { $pull: { addressBook: { id: addressId } } },
+      { returnDocument: "after" },
+    )
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({
+        message: "Address deleted successfully",
+        addressBook: decryptAddressBook(user.addressBook),
+        userId: user.id,
+      });
+    })
+    .catch((err) => {
+      console.error("Error deleting address:", err);
+      res.status(500).json({ error: "Failed to delete address" });
+    });
+});
+
+// update address
+router.put("/update", requireAuth, passUserAuth, (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(400).json({ error: "User ID not found in request" });
+  }
+
+  const { address } = req.body;
+  const addressId = address?.id || address?._id || address?.addressId;
+
+  if (!addressId) {
+    return res.status(400).json({ error: "Address ID is required" });
+  }
+
+  db.collection("users")
+    .findOneAndUpdate(
+      { id: userId },
+      { $set: { "addressBook.$[elem]": encryptAddress(address) } },
+      { arrayFilters: [{ "elem.id": addressId }], returnDocument: "after" },
+    )
+    .then((user) => {
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json({
+        message: "Address updated successfully",
+        addressBook: decryptAddressBook(user.addressBook),
+        userId: user.id,
+      });
+    })
+    .catch((err) => {
+      console.error("Error updating address:", err);
+      res.status(500).json({ error: "Failed to update address" });
     });
 });
 

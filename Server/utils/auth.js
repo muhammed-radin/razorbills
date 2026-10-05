@@ -73,6 +73,7 @@ export default function createAuth(db) {
                 type: Evts.USER_REGISTERED,
                 user: userData,
                 isGuest: userData?.isAnonymous || false,
+                userId: resolvedUserId,
               }),
             );
 
@@ -88,6 +89,7 @@ export default function createAuth(db) {
                 type: Evts.USER_DELETED,
                 user: userData,
                 isGuest: userData?.isAnonymous || false,
+                userId: userData.id,
               }),
             );
           },
@@ -101,6 +103,7 @@ export default function createAuth(db) {
                 type: Evts.USER_PROFILE_UPDATED,
                 user: userData,
                 isGuest: userData?.isAnonymous || false,
+                userId: userData.id,
               }),
             );
           },
@@ -188,6 +191,11 @@ export default function createAuth(db) {
                 ctx.session?.user?.isAnonymous ||
                 ctx.newSession?.user?.isAnonymous ||
                 false,
+              userId:
+                ctx?.user?.id ||
+                ctx.session?.user?.id ||
+                ctx.newSession?.user?.id ||
+                null,
             }),
           );
         } else if (ctx.path === "/reset-password") {
@@ -201,6 +209,11 @@ export default function createAuth(db) {
                 ctx?.user?.isAnonymous ||
                 ctx.session?.user?.isAnonymous ||
                 false,
+              userId:
+                ctx?.user?.id ||
+                ctx.session?.user?.id ||
+                ctx.newSession?.user?.id ||
+                null,
             }),
           );
         } else if (ctx.path === "/update-password") {
@@ -214,6 +227,11 @@ export default function createAuth(db) {
                 ctx?.user?.isAnonymous ||
                 ctx.session?.user?.isAnonymous ||
                 false,
+              userId:
+                ctx?.user?.id ||
+                ctx.session?.user?.id ||
+                ctx.newSession?.user?.id ||
+                null,
             }),
           );
         }

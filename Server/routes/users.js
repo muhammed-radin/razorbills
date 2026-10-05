@@ -11,6 +11,8 @@ import settingsRouter from "./settings.js";
 
 const router = express.Router();
 
+router.use("/settings", settingsRouter);
+
 // user profile route for users
 router.get("/profile", requireAuth, passUserAuth, async (req, res) => {
   try {
@@ -30,6 +32,38 @@ router.get("/profile", requireAuth, passUserAuth, async (req, res) => {
   } catch (err) {
     console.error("Error fetching user profile:", err);
     res.status(500).json({ error: "Failed to fetch user profile" });
+  }
+});
+
+router.post("/profile", requireAuth, passUserAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID not found in request" });
+    }
+
+    const { name, email, phone } = req.body;
+
+    const updateFields = {};
+    if (name) updateFields.name = name;
+    if (email) updateFields.email = email;
+    if (phone) updateFields.phoneNumber = phone;
+
+    const result = await db
+      .collection("users")
+      .updateOne({ id: userId }, { $set: updateFields });
+
+    if (result.modifiedCount === 0) {
+      return res
+        .status(404)
+        .json({ error: "User not found or no changes made" });
+    }
+
+    res.json({ message: "Profile updated successfully" });
+  } catch (err) {
+    console.error("Error updating user profile:", err);
+    res.status(500).json({ error: "Failed to update user profile" });
   }
 });
 
@@ -152,7 +186,5 @@ router.get(
       });
   },
 );
-
-router.use("/settings", settingsRouter);
 
 export default router;

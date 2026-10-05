@@ -238,7 +238,9 @@ export function DialogAlertProvider({ children }) {
                 });
               }}
             >
-              {config.buttonText || config.secondaryButtonText ? "OK" : "Close"}
+              {config.buttonText || config.secondaryButtonText
+                ? "Continue"
+                : "Close"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

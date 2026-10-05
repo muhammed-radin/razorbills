@@ -289,15 +289,67 @@ class EventEmitter {
 }
 
 class ClassicEvent {
-  constructor(type, isMajor = false, sector = null, data = null, id = null) {
+  constructor({
+    type,
+    isMajor = false,
+    sector = "global",
+    content = {},
+    id = null,
+    userId = null,
+    userName = null,
+    userEmail = null,
+    userAvatar = null,
+    isGuest = false,
+
+    isReq = false,
+    reqPath = null,
+    isError = false,
+    userAgent = null,
+
+    error = null,
+    errorCode = null,
+
+    title = null,
+    message = null,
+
+    orderId = null,
+    wishlistId = null,
+    cartId = null,
+    productId = null,
+    actorId = null,
+  }) {
     this.type = type;
     this.timestamp = Date.now();
-    this.isMajor = isMajor;
     this.sector = sector;
-    this.data = data;
+    this.content = content;
+    this.isMajor = isMajor;
+
+    this.isReq = isReq;
+    this.reqPath = reqPath;
+    this.isError = isError;
+
+    this.userId = userId;
+    this.userName = userName;
+    this.userEmail = userEmail;
+    this.userAvatar = userAvatar;
+    this.isGuest = isGuest;
+
+    this.title = title;
+    this.message = message;
+    this.userAgent = userAgent || null;
+
+    this.error = error;
+    this.errorCode = errorCode;
+
+    this.orderId = orderId;
+    this.wishlistId = wishlistId;
+    this.cartId = cartId;
+    this.productId = productId;
+    this.actorId = actorId;
+
     this.id = id
       ? id
-      : `${type}-${this.timestamp}-${Math.random().toString(36).substring(2, 15)}`;
+      : `${type}-${this.timestamp}-${sector}-${Math.random().toString(36).substring(2, 15)}`;
   }
 }
 

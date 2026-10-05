@@ -16,7 +16,8 @@ import { evt, Evts, ProductEvent } from "../utils/events.manage.js";
 const router = express.Router();
 
 /* GET */
-router.get("/", requireSession, async function (req, res, next) {
+router.get("/", requireSession, passUserAuth, async function (req, res, next) {
+  const userId = req.user?.id;
   if (
     productMemoryCache.getLocalMemory(req.url) &&
     req.query.realtime !== "true"
@@ -29,6 +30,7 @@ router.get("/", requireSession, async function (req, res, next) {
         response: { fromCache: true },
         isReq: true,
         reqPath: req.url,
+        userId,
       }),
     );
     return res.json(productMemoryCache.getLocalMemory(req.url));
@@ -156,6 +158,7 @@ router.get("/", requireSession, async function (req, res, next) {
       },
       reqPath: req.url,
       isReq: true,
+      userId,
     }),
   );
 
@@ -193,7 +196,6 @@ router.get("/:productid", requireSession, async function (req, res) {
   if (!productid) {
     return res.status(400).json({ error: "Product ID is required" });
   }
-  // const product = await db.collection("products").findOne({ id: productid });
 
   const query = { id: productid };
 
@@ -225,7 +227,7 @@ router.get("/:productid", requireSession, async function (req, res) {
     const minimalProduct = new MinimalProduct(product);
     return res.json(minimalProduct);
   }
-  res.json(await product);
+  res.json(product);
 });
 
 router.post(
@@ -261,6 +263,9 @@ router.post(
         response: null,
         isReq: true,
         reqPath: req.url,
+        userId: adminId,
+        actorId: adminId,
+        productId: created.id,
       }),
     );
     res.json(created);
@@ -271,6 +276,7 @@ router.put(
   "/:productid",
   requireAdmin,
   requirePermission("update"),
+  passUserAuth,
   async function (req, res) {
     const productid = req.params.productid;
     const product = req.body;
@@ -283,6 +289,9 @@ router.put(
         response: null,
         isReq: true,
         reqPath: req.url,
+        userId: req.user.id,
+        actorId: req.user.id,
+        productId: productid,
       }),
     );
     res.json(updated);
@@ -293,6 +302,7 @@ router.delete(
   "/:productid",
   requireAdmin,
   requirePermission("delete"),
+  passUserAuth,
   async function (req, res) {
     const productid = req.params.productid;
     const deleted = await ProductModel.deleteOne({ id: productid });
@@ -304,6 +314,9 @@ router.delete(
         response: null,
         isReq: true,
         reqPath: req.url,
+        userId: req.user.id,
+        actorId: req.user.id,
+        productId: productid,
       }),
     );
     res.json(deleted);
@@ -311,7 +324,7 @@ router.delete(
 );
 
 /// similar products
-router.get("/similar/:id", requireSession, async (req, res) => {
+router.get("/similar/:id", requireSession, passUserAuth, async (req, res) => {
   try {
     const productId = req.params.id;
 
@@ -448,6 +461,9 @@ router.get("/similar/:id", requireSession, async (req, res) => {
         response: { products: finalProducts, fromCache: false },
         isReq: true,
         reqPath: req.url,
+        userId: req.user.id,
+        actorId: req.user.id,
+        productId,
       }),
     );
 

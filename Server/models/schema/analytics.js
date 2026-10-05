@@ -166,7 +166,7 @@ const analyticEventSchema = new mongoose.Schema(
 
     // User who performed the event
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "User",
       default: null,
       index: true,
@@ -190,13 +190,13 @@ const analyticEventSchema = new mongoose.Schema(
     },
 
     productId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Product",
       default: null,
     },
 
     orderId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Order",
       default: null,
     },
@@ -217,8 +217,8 @@ const analyticEventSchema = new mongoose.Schema(
     // Traffic information
     device: {
       type: String,
-      enum: ["desktop", "mobile", "tablet", "unknown"],
-      default: "unknown",
+      enum: ["desktop", "mobile", "tablet", "other"],
+      default: "other",
     },
 
     browser: {
@@ -249,7 +249,7 @@ const eventsRecordSchema = new mongoose.Schema(
     },
     timestamp: { type: Date, required: true, default: Date.now, index: true },
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "User",
       default: null,
       index: true,
@@ -264,21 +264,9 @@ const eventsRecordSchema = new mongoose.Schema(
     sector: {
       type: String,
       default: null,
-      enum: [
-        "product",
-        "order",
-        "user",
-        "cart",
-        "wishlist",
-        "error",
-        "address",
-        "analytics",
-        "interaction",
-        "category",
-      ],
     }, // its defines where sector the event happened, for example: product, order, user, cart
     productId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: "Product",
       default: null,
     },
@@ -291,7 +279,7 @@ const eventsRecordSchema = new mongoose.Schema(
     errorCode: { type: Number, default: null }, // the error code
 
     refId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       default: null,
     },
 

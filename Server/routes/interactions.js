@@ -7,8 +7,8 @@ import {
 } from "../utils/middlewares/reqiuredAuth.js";
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import { InteractionModel } from "../models/schema/interactions.js";
-import { evt, Evts } from "../utils/events.manage.js";
-import { getAgenda, useAgenda } from "../utils/agenda.js";
+import { evt, Evts, ProductEvent } from "../utils/events.manage.js";
+import { executeTaskNow, getAgenda, useAgenda } from "../utils/agenda.js";
 
 const router = express.Router();
 
@@ -46,6 +46,7 @@ const avgRatingBuffer = {}; // { productId: { n1: 1, n2: 1, n3: 1, n4: 1, n5: 1 
 
 getAgenda().then(async ({ agenda }) => {
   await agenda.stop();
+  // Flush All interactions and buffers every 5 minutes
   agenda.define("flush-interactions", async (job, done) => {
     let { view, share, wishlist, rate, cart, all } = job.attrs.data;
 
@@ -69,12 +70,21 @@ getAgenda().then(async ({ agenda }) => {
       await flushBuffer(wishlistBuffer, "metrics.wishlistCount", "wishlist");
     }
 
-    // if (rate === true) {
-    //   await flushBuffer(rateBuffer, "metrics.reviewCount", "rate");
-    // }
-
     if (cart === true) {
       await flushBuffer(cartBuffer, "metrics.cartCount", "cart");
+    }
+
+    if (rate === true) {
+      try {
+        await executeTaskNow(agenda, "flush-and-calculate-product-rating", {
+          avgRatingBuffer,
+        });
+      } catch (error) {
+        console.error(
+          "❌ Error executing flush-and-calculate-product-rating task:",
+          error,
+        );
+      }
     }
 
     if (view || share || rate || all) {
@@ -84,7 +94,12 @@ getAgenda().then(async ({ agenda }) => {
     return done();
   });
 
+  // Flush and calculate product ratings every 30 minutes
   agenda.define("flush-and-calculate-product-rating", async (job, done) => {
+    const { avgRatingBuffer } = job.attrs.data || {};
+    if (!avgRatingBuffer || Object.keys(avgRatingBuffer).length === 0) {
+      return done();
+    }
     const productIdsToFlush = Object.keys(avgRatingBuffer);
 
     // Safely check if there is work to do. Always call done() to prevent hanging.
@@ -177,6 +192,8 @@ getAgenda().then(async ({ agenda }) => {
       throw error; // Let Agenda handle the error and retry if needed
     }
   });
+
+  // Indivual flush job for each buffer type. currenlty no were used.
   agenda.define("flush-buffer", async (job, done) => {
     const { buffer, collection, property, bufferName } = job.attrs.data;
 
@@ -206,8 +223,51 @@ getAgenda().then(async ({ agenda }) => {
     all: true,
   });
 
-  agenda.every("30 minutes", "flush-and-calculate-product-rating", {});
+  agenda.every("30 minutes", "flush-and-calculate-product-rating", {
+    avgRatingBuffer,
+  });
 });
+
+export async function searchInteraction(productId, userId) {
+  let interaction = null;
+  if (!productId || !userId) {
+    return interaction;
+  }
+  let buffers = productInteractionBuffer.filter((interaction) => {
+    return (
+      interaction.updateOne.filter.productId === productId &&
+      interaction.updateOne.filter.userId === userId
+    );
+  });
+  let mergeBuffer = buffers.reduce((acc, interaction) => {
+    const bufferedData = interaction.updateOne?.update?.$set || {};
+    const setOnInsertData = interaction.updateOne?.update?.$setOnInsert || {};
+    const accBufferedData = acc.updateOne?.update?.$set || {};
+    const accSetOnInsertData = acc.updateOne?.update?.$setOnInsert || {};
+
+    return {
+      ...accBufferedData,
+      ...accSetOnInsertData,
+      ...setOnInsertData,
+      ...bufferedData,
+    };
+  }, {});
+  if (Object.keys(mergeBuffer).length > 0) {
+    interaction = {
+      productId,
+      userId,
+      // Fallbacks Properties:
+      hasViewed: false,
+      hasShared: false,
+      hasWishlisted: false,
+      rating: null,
+      ...mergeBuffer,
+    };
+    return interaction;
+  }
+  interaction = await InteractionModel.findOne({ productId, userId });
+  return interaction ?? null;
+}
 
 function interactionUtil(interactionBuffer) {
   // user interaction
@@ -224,7 +284,7 @@ function interactionUtil(interactionBuffer) {
 
         const filter = {
           updateOne: {
-            filter: { productId },
+            filter: { id: productId },
             update: { $inc: { "metrics.debouncedViews": totalViews } },
             upsert: true,
           },
@@ -291,10 +351,13 @@ function flushBuffer(buffer, property, bufferName, collection = "products") {
       }
 
       const bulkOps = Object.entries(snapshot).map(([productId, count]) => {
+        console.log(
+          `Flushing ${bufferName} buffer for productId: ${productId}, count: ${count}`,
+        );
         const filter = {
           updateOne: {
-            filter: { productId },
-            update: { $inc: { [`${property}`]: count } },
+            filter: { id: productId },
+            update: { $inc: { [property]: count } },
             upsert: true,
           },
         };
@@ -339,23 +402,28 @@ function flushBuffer(buffer, property, bufferName, collection = "products") {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 router.post(
-  "product/visit",
+  "/product/visit",
   passUserAuth,
   addAllViews,
   requireSession,
   (req, res) => {
     const isAuthenticated = req.user && !req.user.isAnonymous;
 
-    const {
-      id: userId,
-      avatar: userAvatar,
-      email: userEmail,
-      name: userName,
-    } = req.user;
+    const { id: userId } = req.user;
     const { productId } = req.body;
 
-    if (!productId || !userId || !userEmail || !userName) {
+    if (!productId || !userId) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const previousInteraction = searchInteraction(productId, userId);
+    if (previousInteraction && previousInteraction.hasViewed == true) {
+      console.log(
+        `User ${userId} has already viewed product ${productId}. No action taken.`,
+      );
+      return res.status(200).json({
+        message: "View already recorded. No action taken.",
+      });
     }
 
     if (isAuthenticated) {
@@ -378,19 +446,12 @@ router.post(
             id: `${productId}_${userId}`,
             productId,
             userId,
-            userName,
-            userAvatar: userAvatar ? userAvatar : "",
-            userEmail,
             isGuest: !isAuthenticated,
             createdAt: new Date(),
-            hasViewed: true,
           },
           $set: {
             updatedAt: new Date(),
             hasViewed: true,
-            isGuest: !isAuthenticated,
-            userName,
-            userAvatar: userAvatar ? userAvatar : "",
           },
         },
         upsert: true,
@@ -400,9 +461,6 @@ router.post(
     evt.fire(Evts.INTERACTION_RECORDED, {
       productId,
       userId,
-      userName,
-      userAvatar: userAvatar ? userAvatar : "",
-      userEmail,
       isGuest: !isAuthenticated,
       interactionType: "view",
       property: "hasViewed",
@@ -413,7 +471,7 @@ router.post(
       new ProductEvent({
         type: Evts.PRODUCT_VIEWED,
         product: null,
-        response: { productId, userId, userName },
+        response: { productId, userId },
         isReq: true,
       }),
     );
@@ -425,7 +483,7 @@ router.post(
 ////////////////////////////////////////////////////// SHARES ///////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-router.post("product/share", passUserAuth, requireSession, (req, res) => {
+router.post("/product/share", passUserAuth, requireSession, (req, res) => {
   const { productId } = req.body;
 
   if (!productId) {
@@ -440,8 +498,18 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
 
   shareBuffer[productId] = (shareBuffer[productId] || 0) + 1;
 
-  const { id: userId, email: userEmail, name: userName } = req.user;
+  const { id: userId } = req.user;
   const isAuthenticated = req.user && !req.user.isAnonymous;
+
+  const previousInteraction = searchInteraction(productId, userId);
+  if (previousInteraction && previousInteraction.hasShared == true) {
+    console.log(
+      `User ${userId} has already shared product ${productId}. No action taken.`,
+    );
+    return res.status(200).json({
+      message: "Share already recorded. No action taken.",
+    });
+  }
 
   productInteractionBuffer.push({
     updateOne: {
@@ -451,19 +519,13 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
           id: `${productId}_${userId}`,
           productId,
           userId,
-          userName,
-          userEmail,
           createdAt: new Date(),
           isGuest: !isAuthenticated,
-          hasShared: true,
-          userAvatar: req.user.avatar ? req.user.avatar : "",
         },
         $set: {
           updatedAt: new Date(),
-          isGuest: !isAuthenticated,
           hasShared: true,
-          userName,
-          userAvatar: req.user.avatar ? req.user.avatar : "",
+          hasViewed: true,
         },
       },
       upsert: true,
@@ -473,9 +535,6 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
   evt.fire(Evts.INTERACTION_RECORDED, {
     productId,
     userId,
-    userName,
-    userAvatar: userAvatar ? userAvatar : "",
-    userEmail,
     isGuest: !isAuthenticated,
     interactionType: "share",
     property: "hasShared",
@@ -487,7 +546,7 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
     new ProductEvent({
       type: Evts.PRODUCT_SHARED,
       product: null,
-      response: { productId, userId, userName },
+      response: { productId, userId },
       isReq: true,
     }),
   );
@@ -501,14 +560,9 @@ router.post("product/share", passUserAuth, requireSession, (req, res) => {
 
 // Rating data stored into db directly, no buffer needed since it's a single value per user per product
 
-router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
+router.post("/product/rate", requireAuth, passUserAuth, async (req, res) => {
   let { productId, rating } = req.body; // rating: 1-5
-  const {
-    id: userId,
-    email: userEmail,
-    name: userName,
-    avatar: userAvatar,
-  } = req.user;
+  const { id: userId } = req.user;
   const isAuthenticated = req.user && !req.user.isAnonymous;
 
   rating = Math.floor(Math.abs(parseInt(rating)));
@@ -526,9 +580,11 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
     });
   }
 
-  if (!productId || !userId || !userEmail || !userName) {
+  if (!productId || !userId) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
+  let previousInteraction = await searchInteraction(productId, userId);
 
   if (!avgRatingBuffer[productId]) {
     avgRatingBuffer[productId] = {
@@ -540,6 +596,10 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
     };
   }
 
+  if (previousInteraction && typeof previousInteraction.rating === "number") {
+    const previousRating = previousInteraction.rating;
+    avgRatingBuffer[productId]["n" + previousRating] -= 1;
+  }
   avgRatingBuffer[productId]["n" + rating] =
     (avgRatingBuffer[productId]["n" + rating] || 0) + 1;
 
@@ -551,20 +611,13 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
           id: `${productId}_${userId}`,
           productId,
           userId,
-          userName,
-          userAvatar: userAvatar ? userAvatar : "",
-          userEmail,
           isGuest: !isAuthenticated,
-          rating,
           createdAt: new Date(),
         },
         $set: {
           updatedAt: new Date(),
-          isGuest: !isAuthenticated,
           rating,
           hasViewed: true,
-          userName,
-          userAvatar: userAvatar ? userAvatar : "",
         },
       },
       upsert: true,
@@ -572,13 +625,13 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
   });
 
   rateBuffer[productId] = (rateBuffer[productId] || 0) + 1;
+  if (previousInteraction && typeof previousInteraction.rating === "number") {
+    rateBuffer[productId] -= 1;
+  }
 
   evt.fire(Evts.INTERACTION_RECORDED, {
     productId,
     userId,
-    userName,
-    userAvatar: userAvatar ? userAvatar : "",
-    userEmail,
     isGuest: !isAuthenticated,
     interactionType: "rate",
     property: "rating",
@@ -590,12 +643,90 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
     new ProductEvent({
       type: Evts.PRODUCT_RATED,
       product: null,
-      response: { productId, userId, userName },
+      response: { productId, userId },
       isReq: true,
     }),
   );
 
   res.status(200).json({ message: "Rating recorded successfully" });
+});
+
+router.delete("/product/rate", requireAuth, passUserAuth, async (req, res) => {
+  let { productId } = req.body;
+  const { id: userId } = req.user;
+  const isAuthenticated = req.user && !req.user.isAnonymous;
+
+  if (!isAuthenticated) {
+    return res.status(400).json({
+      error:
+        "User information is required. guest users cannot rate products. Please log in to rate.",
+    });
+  }
+
+  if (!productId || !userId) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  let previousInteraction = await searchInteraction(productId, userId);
+
+  if (!avgRatingBuffer[productId]) {
+    avgRatingBuffer[productId] = {
+      n1: 0,
+      n2: 0,
+      n3: 0,
+      n4: 0,
+      n5: 0,
+    };
+  }
+
+  if (previousInteraction && typeof previousInteraction.rating === "number") {
+    const previousRating = previousInteraction.rating;
+    avgRatingBuffer[productId]["n" + previousRating] -= 1;
+  }
+
+  rateBuffer[productId] = (rateBuffer[productId] || 0) - 1;
+
+  productInteractionBuffer.push({
+    updateOne: {
+      filter: { productId, userId },
+      update: {
+        $setOnInsert: {
+          id: `${productId}_${userId}`,
+          productId,
+          userId,
+          isGuest: !isAuthenticated,
+          createdAt: new Date(),
+        },
+        $set: {
+          updatedAt: new Date(),
+          rating: null,
+          hasViewed: true,
+        },
+      },
+      upsert: true,
+    },
+  });
+
+  evt.fire(Evts.INTERACTION_RECORDED, {
+    productId,
+    userId,
+    isGuest: !isAuthenticated,
+    interactionType: "rate",
+    property: "rating",
+    timestamp: new Date(),
+  });
+
+  evt.fire(
+    Evts.PRODUCT_UNRATED,
+    new ProductEvent({
+      type: Evts.PRODUCT_UNRATED,
+      product: null,
+      response: { productId, userId },
+      isReq: true,
+    }),
+  );
+
+  res.status(200).json({ message: "Rating deleted successfully" });
 });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -604,76 +735,85 @@ router.post("product/rate", requireAuth, passUserAuth, async (req, res) => {
 
 // Wishlist count as Liked Products
 
-evt.on(Evts.WISHLIST_ADDED, async (wishlist) => {
-  if (!wishlist || !wishlist.products || !Array.isArray(wishlist.products)) {
+function setWishlistProductInteraction(
+  productId,
+  userId,
+  folder,
+  toAdd = true,
+) {
+  if (!productId || !userId) {
+    console.error("Missing required fields for wishlist event");
     return;
   }
 
-  function productWishlisted(
-    productId,
-    userId,
-    userEmail,
-    userName,
-    userAvatar,
-    isGuest,
-    folder,
+  const previousInteraction = searchInteraction(productId, userId);
+  if (
+    previousInteraction &&
+    previousInteraction.hasWishlisted == true &&
+    toAdd
   ) {
-    if (!productId || !userId || !userEmail || !userName || !isGuest) {
-      console.error("Missing required fields for wishlist event");
-      return;
-    }
-
-    wishlistBuffer[productId] = (wishlistBuffer[productId] || 0) + 1;
-
-    productInteractionBuffer.push({
-      updateOne: {
-        filter: { productId, userId },
-        update: {
-          $setOnInsert: {
-            id: `${productId}_${userId}`,
-            productId,
-            userId,
-            userName,
-            userAvatar: userAvatar ? userAvatar : "",
-            userEmail,
-            isGuest: isGuest,
-            createdAt: new Date(),
-            folder: folder || "/",
-            hasWishlisted: true,
-          },
-          $set: {
-            updatedAt: new Date(),
-            isGuest: isGuest,
-            hasWishlisted: true,
-            userName,
-            userAvatar: userAvatar ? userAvatar : "",
-            folder: folder || "/",
-          },
-        },
-        upsert: true,
-      },
-    });
+    console.log(
+      `User ${userId} has already wishlisted product ${productId}. No action taken.`,
+    );
+    return;
   }
 
-  wishlist.products.forEach((product) => {
-    productWishlisted(
-      product.productId,
-      wishlist.userId,
-      wishlist.userEmail,
-      wishlist.userName,
-      wishlist.userAvatar,
-      wishlist.isGuest,
-      wishlist.folder,
-    );
+  if (toAdd) {
+    wishlistBuffer[productId] = (wishlistBuffer[productId] || 0) + 1;
+  } else {
+    wishlistBuffer[productId] = (wishlistBuffer[productId] || 0) - 1;
+  }
+
+  productInteractionBuffer.push({
+    updateOne: {
+      filter: { productId, userId },
+      update: {
+        $setOnInsert: {
+          id: `${productId}_${userId}`,
+          productId,
+          userId,
+          createdAt: new Date(),
+        },
+        $set: {
+          updatedAt: new Date(),
+          hasWishlisted: !!toAdd,
+          folder: folder || "/",
+          hasViewed: true,
+        },
+      },
+      upsert: true,
+    },
   });
+}
+
+evt.on(Evts.PRODUCT_WISHLISTED, async (event) => {
+  const { productId, userId, folder } = event;
+  if (!event || !event.productId || !event.userId) {
+    return;
+  }
+
+  setWishlistProductInteraction(productId, userId, folder, true);
 
   evt.fire(Evts.INTERACTION_RECORDED, {
-    productId: wishlist.products.map((p) => p.productId),
-    userId: wishlist.userId,
-    userName: wishlist.userName,
-    userAvatar: wishlist.userAvatar ? wishlist.userAvatar : "",
-    userEmail: wishlist.userEmail,
-    isGuest: wishlist.isGuest,
+    productId,
+    userId,
+    interactionType: "wishlist",
+    property: "metrics.wishlistCount",
+    timestamp: new Date(),
+  });
+});
+
+evt.on(Evts.WISHLIST_REMOVED, async (event) => {
+  const { productId, userId, folder } = event;
+  if (!event || !event.productId || !event.userId) {
+    return;
+  }
+
+  setWishlistProductInteraction(productId, userId, folder, false);
+
+  evt.fire(Evts.INTERACTION_RECORDED, {
+    productId,
+    userId,
     interactionType: "wishlist",
     property: "metrics.wishlistCount",
     timestamp: new Date(),
@@ -694,18 +834,25 @@ evt.on(Evts.CART_ITEM_ADDED, async ({ cart, productId, quantity }) => {
   evt.fire(Evts.INTERACTION_RECORDED, {
     productId,
     userId: cart.userId,
-    userName: cart.userName,
-    userAvatar: cart.userAvatar ? cart.userAvatar : "",
-    userEmail: cart.userEmail,
-    isGuest: cart.isGuest,
     interactionType: "cart",
     property: "metrics.cartCount",
     timestamp: new Date(),
   });
 });
 
-evt.on(Evts.FLUSH_REQUESTED, () => {
-  useAgenda().now("flush-interactions", { all: true });
+evt.on(Evts.FLUSH_REQUESTED, (enableQueue = true) => {
+  if (enableQueue) {
+    useAgenda().now("flush-interactions", { all: true });
+  } else {
+    executeTaskNow(getAgenda(), "flush-interactions", { all: true }).catch(
+      (err) => {
+        console.error(
+          "[FLUSH_REQ]: Error executing flush-interactions task:",
+          err,
+        );
+      },
+    );
+  }
 });
 
 evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
@@ -716,12 +863,12 @@ evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
 
   if (
     interaction &&
-    (interaction.type === "wishlist" || interaction.type === "cart") &&
-    (wishlistBuffer.length >= FLUSH_BUFFER_SIZE ||
-      cartBuffer.length >= FLUSH_BUFFER_SIZE)
+    (interaction.interactionType === "wishlist" ||
+      interaction.interactionType === "cart") &&
+    (Object.keys(wishlistBuffer).length >= FLUSH_BUFFER_SIZE ||
+      Object.keys(cartBuffer).length >= FLUSH_BUFFER_SIZE)
   ) {
-    flushWishlists();
-    flushCarts();
+    evt.fire(Evts.FLUSH_REQUESTED, false); // Flush immediately without queueing
   }
 });
 
@@ -729,8 +876,6 @@ evt.on(Evts.INTERACTION_RECORDED, (interaction) => {
 router.get("/p/:productId", requireAuth, passUserAuth, async (req, res) => {
   const user = req.user;
   const { productId } = req.params;
-
-  evt.fire(Evts.FLUSH_REQUESTED, true); // Try to Flush all buffers before fetching interactions
 
   if (!productId) {
     return res.status(400).json({ error: "Product ID is required" });
@@ -747,7 +892,24 @@ router.get("/p/:productId", requireAuth, passUserAuth, async (req, res) => {
     if (!interaction) {
       return res.status(404).json({ error: "Interaction not found" });
     }
-    res.status(200).json({ interaction });
+    // get buffer
+    const bufferedInteraction = productInteractionBuffer.find(
+      (interaction) =>
+        interaction.updateOne.filter.productId === productId &&
+        interaction.updateOne.filter.userId === user.id,
+    );
+    // merge bufferedInteraction with interaction
+    if (bufferedInteraction) {
+      const bufferedData = bufferedInteraction.updateOne.update.$set;
+      interaction.hasViewed = bufferedData.hasViewed || interaction.hasViewed;
+      interaction.hasShared = bufferedData.hasShared || interaction.hasShared;
+      interaction.hasWishlisted =
+        bufferedData.hasWishlisted || interaction.hasWishlisted;
+      interaction.rating = bufferedData.rating || interaction.rating;
+    }
+
+    evt.fire(Evts.FLUSH_REQUESTED, true); // Try to Flush all buffers before fetching interactions
+    return res.status(200).json(interaction);
   } catch (error) {
     console.error("Error fetching interactions:", error);
     res.status(500).json({ error: "Internal server error" });

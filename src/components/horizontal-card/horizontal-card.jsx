@@ -13,6 +13,7 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { currency } from "@/utils/currency";
 import { useTranslation } from "react-i18next";
+import { useCartStore, useWishlistStore } from "@/stores/shop";
 
 const HorizontalProductCardComponent = ({
   variant,
@@ -30,10 +31,12 @@ const HorizontalProductCardComponent = ({
 }) => {
   const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const navigate = useNavigate();
+  const addToCart = useCartStore((s) => s.add);
+  const toggleWishlist = useWishlistStore((s) => s.toggle);
+  const wishlistHas = useWishlistStore((s) => s.has);
   const [imageError, setImageError] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const navigate = useNavigate();
 
   // Staggered animation on mount
   useEffect(() => {
@@ -68,15 +71,17 @@ const HorizontalProductCardComponent = ({
     variantStyle = "border-0 shadow-none bg-transparent";
   }
 
+  const isFavorite = wishlistHas(productData?.id ?? productData?.productId);
+
   const handleFavoriteClick = useCallback((e) => {
     e.stopPropagation();
-    setIsFavorite((prev) => !prev);
-  }, []);
+    toggleWishlist(productData).catch(() => {});
+  }, [toggleWishlist, productData]);
 
   const handleAddToCart = useCallback(
     (e) => {
       e.stopPropagation();
-      console.log("Add to cart:", productData.title);
+      addToCart(productData, 1).catch(() => {});
     },
     [productData.title],
   );

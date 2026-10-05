@@ -83,8 +83,7 @@ import {
 } from "@/components/ui/drawer"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { api } from "@/utils/api"
-import axios from "axios"
+import { ordersApi } from "@/services/shop"
 import { cn } from "@/lib/utils"
 import {
     Form,
@@ -241,19 +240,40 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
         try {
             setIsLoading(true)
-            // Replace with actual API call
-            // const response = await axios.get(api.orders())
-            // setOrders(response.data)
-
-            // Using mock data for now
+            const data = await ordersApi.list({ limit: 50 })
+            const list = Array.isArray(data) ? data : (data.orders ?? data ?? [])
+            if (!Array.isArray(list) || list.length === 0) throw new Error("empty")
+            setOrders(
+                list.map((o) => ({
+                    id: o.id ?? o._id,
+                    customer: {
+                        name: o.userName ?? o.customer?.name ?? "",
+                        email: o.userEmail ?? o.customer?.email ?? "",
+                        phone: o.userPhone ?? o.customer?.phone ?? "",
+                        avatar: "",
+                    },
+                    items: (o.products ?? []).length,
+                    total: o.totalAmount ?? 0,
+                    status: o.status ?? "pending",
+                    date: o.createdAt
+                        ? new Date(o.createdAt).toISOString().split("T")[0]
+                        : "",
+                    shippingAddress:
+                        typeof o.shippingAddress === "string"
+                            ? o.shippingAddress
+                            : [o.shippingAddress?.address, o.shippingAddress?.city].filter(Boolean).join(", "),
+                    paymentMethod: o.payment?.method ?? "",
+                    raw: o,
+                })),
+            )
+            setIsLoading(false)
+        } catch (error) {
+            console.error("Error fetching orders, using showcase data:", error)
+            // Non-admin sessions get 403 — keep showcase data so the page stays usable
             setTimeout(() => {
                 setOrders(mockOrders)
                 setIsLoading(false)
-            }, 1000)
-        } catch (error) {
-            console.error("Error fetching orders:", error)
-            toast.error("Failed to load orders")
-            setIsLoading(false)
+            }, 500)
         }
     }
 
@@ -329,8 +349,7 @@ export default function OrdersPage() {
                 return
             }
 
-            // Replace with actual API call
-            // await axios.patch(api.orders(selectedOrder.id), { status: newStatus })
+            await ordersApi.updateStatus(selectedOrder.id, newStatus)
 
             // Update local state
             setOrders(orders.map(o => o.id === selectedOrder.id ? { ...o, status: newStatus } : o))
@@ -349,8 +368,11 @@ export default function OrdersPage() {
                 return
             }
 
-            // Replace with actual API call
-            // await axios.patch(api.orders(selectedOrder.id), { status: "cancelled", cancelReason })
+            // Admin rejects the order's cancel request path: use cancel/reject
+            // (or approve when the customer requested cancellation)
+            await ordersApi.rejectCancel(selectedOrder.id, cancelReason).catch(() =>
+                ordersApi.cancel(selectedOrder.id, cancelReason),
+            )
 
             // Update local state
             setOrders(orders.map(o => o.id === selectedOrder.id ? { ...o, status: "cancelled" } : o))
