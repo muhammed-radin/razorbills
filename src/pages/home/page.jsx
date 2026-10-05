@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FolderOpen, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +20,6 @@ import OfferSection from "./components/OfferSection";
 import WhyRazorbills from "./components/WhyRazorbills";
 import RecommendationSection from "./components/RecommendationSection";
 import ServiceHighlights from "./components/ServiceHighlights";
-import MobileBottomNav, { DesktopSpacer } from "./components/MobileBottomNav";
 import { ProductRail } from "./components/FeaturedProducts";
 import { SectionHeading, Reveal } from "./components/Reveal";
 import { useCartStore, useWishlistStore } from "@/stores/shop";
@@ -50,6 +50,7 @@ function normalize(p) {
 }
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [latest, setLatest] = useState([]);
   const [featured, setFeatured] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -113,10 +114,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen w-full bg-background text-foreground pb-[env(safe-area-inset-bottom)]">
       <Helmet>
-        <title>Razorbills — Kerala&apos;s Electronics Store | Phones, Laptops, Components</title>
+        <title>{t("home.helmetTitle")}</title>
         <meta
           name="description"
-          content="Shop genuine electronics in Kerala: ESP32, Arduino, phones, laptops, audio & gaming. 24h dispatch, GST invoice, 7-day returns."
+          content={t("home.helmetDescription")}
         />
       </Helmet>
 
@@ -134,12 +135,12 @@ export default function HomePage() {
       {(loading || newArrivals.length > 0) && (
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
           <SectionHeading
-            eyebrow="Just landed"
-            title="New arrivals this week"
-            description="The freshest stock from our catalogue."
+            eyebrow={t("homepage.arrivals.eyebrow")}
+            title={t("homepage.arrivals.title")}
+            description={t("homepage.arrivals.description")}
             action={
               <Button variant="outline" className="rounded-xl" asChild>
-                <Link to="/search">Shop all <ArrowRight className="size-4" /></Link>
+                <Link to="/search">{t("homepage.arrivals.shopAll")} <ArrowRight className="size-4" /></Link>
               </Button>
             }
           />
@@ -156,20 +157,18 @@ export default function HomePage() {
               <EmptyMedia variant="icon">
                 <FolderOpen />
               </EmptyMedia>
-              <EmptyTitle>{loadError ? "Couldn't load products" : "No products yet"}</EmptyTitle>
+              <EmptyTitle>{loadError ? t("homepage.empty.loadFailed") : t("homepage.empty.noProducts")}</EmptyTitle>
               <EmptyDescription>
-                {loadError
-                  ? "We couldn't reach the catalogue. Check your connection and try again."
-                  : "Our catalogue is being stocked. Contact us and we'll arrange what you need."}
+                {loadError ? t("homepage.empty.retryHint") : t("homepage.empty.stocking")}
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent className="flex-row justify-center gap-2">
               {loadError ? (
-                <Button onClick={() => window.location.reload()}>Retry</Button>
+                <Button onClick={() => window.location.reload()}>{t("homepage.empty.retry")}</Button>
               ) : (
-                <Button asChild><Link to="/contact">Contact store</Link></Button>
+                <Button asChild><Link to="/contact">{t("homepage.empty.contact")}</Link></Button>
               )}
-              <Button variant="outline" asChild><Link to="/search">Browse search</Link></Button>
+              <Button variant="outline" asChild><Link to="/search">{t("homepage.empty.browse")}</Link></Button>
             </EmptyContent>
           </Empty>
         </section>
@@ -178,8 +177,6 @@ export default function HomePage() {
       )}
 
       <ServiceHighlights />
-      <DesktopSpacer />
-      <MobileBottomNav />
     </div>
   );
 }

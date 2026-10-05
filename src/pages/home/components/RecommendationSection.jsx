@@ -1,19 +1,21 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Sparkles, GraduationCap, Wrench, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Reveal, SectionHeading } from "./Reveal";
 import ProductCard from "./ProductCard";
 
-const personas = [
-  { id: "students", label: "Students", icon: GraduationCap, hint: "Budget kits under ₹999" },
-  { id: "makers", label: "Makers", icon: Wrench, hint: "Boards, sensors & tools" },
-  { id: "home", label: "Home", icon: Building2, hint: "Audio, smart & living" },
-];
-
 export default function RecommendationSection({ products }) {
+  const { t } = useTranslation();
   const [persona, setPersona] = useState("makers");
+
+  const personas = [
+    { id: "students", label: t("homepage.recommend.students"), icon: GraduationCap, hint: t("homepage.recommend.studentsHint") },
+    { id: "makers", label: t("homepage.recommend.makers"), icon: Wrench, hint: t("homepage.recommend.makersHint") },
+    { id: "home", label: t("homepage.recommend.home"), icon: Building2, hint: t("homepage.recommend.homeHint") },
+  ];
 
   const picks = useMemo(() => {
     if (!products?.length) return { hero: null, rest: [] };
@@ -30,13 +32,13 @@ export default function RecommendationSection({ products }) {
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
       <SectionHeading
-        eyebrow="Picked for you"
-        title="Feels personal, because it is"
-        description="Tell us who you're shopping for — we reshape the shelf around labs, hostels and homes."
+        eyebrow={t("homepage.recommend.eyebrow")}
+        title={t("homepage.recommend.title")}
+        description={t("homepage.recommend.description")}
         action={
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs text-muted-foreground">
-              <Sparkles className="size-3.5" /> Live catalogue picks
+              <Sparkles className="size-3.5" /> {t("homepage.recommend.livePicks")}
             </span>
           </div>
         }
@@ -70,11 +72,11 @@ export default function RecommendationSection({ products }) {
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
               <div className="relative p-5 sm:p-6">
                 <Badge className="bg-white text-black hover:bg-white border-0">
-                  <Sparkles className="size-3 mr-1" /> Top match for {persona}
+                  <Sparkles className="size-3 mr-1" /> {t("homepage.recommend.topMatch", { persona: personas.find((p) => p.id === persona)?.label })}
                 </Badge>
                 <h3 className="mt-3 text-xl sm:text-2xl font-extrabold leading-tight line-clamp-2">{picks.hero.title}</h3>
-                <Button className="mt-4 rounded-xl" asChild>
-                  <Link to={`/product/${picks.hero.id || picks.hero.productId}`}>Shop this pick <ArrowRight className="size-4" /></Link>
+                <Button className="mt-4 rounded-xl w-full sm:w-auto" asChild>
+                  <Link to={`/product/${picks.hero.id || picks.hero.productId}`} className="inline-flex items-center justify-center gap-2">{t("homepage.recommend.shopPick")} <ArrowRight className="size-4" /></Link>
                 </Button>
               </div>
             </div>

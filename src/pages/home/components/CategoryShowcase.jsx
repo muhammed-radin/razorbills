@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   ArrowRight, ArrowUpRight, LayoutGrid, Smartphone, Laptop, Camera,
   Headphones, Gamepad2, Cpu, Lightbulb, Cable, Tv, Watch, Speaker,
@@ -35,18 +36,19 @@ function iconFor(c) {
 
 // Live categories only — icon tiles, no stock imagery.
 export default function CategoryShowcase({ categories, loading }) {
+  const { t } = useTranslation();
   if (!loading && (!categories || categories.length === 0)) return null;
   const tiles = (categories || []).slice(0, 6);
 
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
       <SectionHeading
-        eyebrow="Curated aisles"
-        title="Shop by category"
-        description="Browse the live catalogue — every aisle stocked from our real store inventory."
+        eyebrow={t("homepage.categories.eyebrow")}
+        title={t("homepage.categories.title")}
+        description={t("homepage.categories.description")}
         action={
           <Button variant="outline" className="rounded-xl" asChild>
-            <Link to="/categories">All categories <ArrowRight className="size-4" /></Link>
+            <Link to="/categories">{t("homepage.categories.all")} <ArrowRight className="size-4" /></Link>
           </Button>
         }
       />
@@ -91,7 +93,7 @@ export default function CategoryShowcase({ categories, loading }) {
                       <p className="mt-1 text-sm text-muted-foreground line-clamp-2 max-w-xs">{c.description}</p>
                     )}
                     <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground group-hover:text-foreground">
-                      Explore <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
+                      {t("homepage.categories.explore")} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
                     </span>
                   </Link>
                 </Reveal>

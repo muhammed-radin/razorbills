@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, ChevronLeft, ChevronRight, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,6 +54,7 @@ export function ProductRail({ products, loading }) {
 }
 
 export default function FeaturedProducts({ products, loading }) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState("all");
   const tabs = useMemo(() => {
     const cats = [...new Set((products || []).map((p) => p.category).filter(Boolean))].slice(0, 5);
@@ -71,12 +73,12 @@ export default function FeaturedProducts({ products, loading }) {
     <section className="border-y bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
         <SectionHeading
-          eyebrow="Trending in Kerala"
-          title="Featured drops people love"
-          description="Hand-picked essentials from our live catalogue."
+          eyebrow={t("homepage.featured.eyebrow")}
+          title={t("homepage.featured.title")}
+          description={t("homepage.featured.description")}
           action={
             <Button variant="ghost" className="rounded-xl" asChild>
-              <Link to="/search">View everything <ArrowRight className="size-4" /></Link>
+              <Link to="/search">{t("homepage.featured.viewAll")} <ArrowRight className="size-4" /></Link>
             </Button>
           }
         />
@@ -84,13 +86,13 @@ export default function FeaturedProducts({ products, loading }) {
           {tabs.length > 1 && (
             <div className="mb-5 flex items-center gap-2 overflow-x-auto pb-1">
               <span className="mr-1 hidden sm:inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1.5 text-xs font-bold text-orange-600">
-                <Flame className="size-3.5" /> Hot
+                <Flame className="size-3.5" /> {t("homepage.featured.hot")}
               </span>
               <Tabs value={tab} onValueChange={setTab}>
                 <TabsList className="h-auto rounded-2xl p-1">
-                  {tabs.map((t) => (
-                    <TabsTrigger key={t} value={t} className="rounded-xl px-4 py-2 text-xs sm:text-sm capitalize">
-                      {t === "all" ? "All" : t}
+                  {tabs.map((tb) => (
+                    <TabsTrigger key={tb} value={tb} className="rounded-xl px-4 py-2 text-xs sm:text-sm capitalize">
+                      {tb === "all" ? t("common.all") : tb}
                     </TabsTrigger>
                   ))}
                 </TabsList>

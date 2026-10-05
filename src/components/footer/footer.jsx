@@ -28,14 +28,14 @@ export const Footer = () => {
 
   const columns = [
     {
-      title: "Shop",
+      title: t("footer.shop"),
       links: [
-        { title: "Phones", href: "/search?transform=phones" },
-        { title: "Laptops", href: "/search?transform=laptops" },
-        { title: "Audio", href: "/search?transform=audio" },
-        { title: "Gaming", href: "/search?transform=gaming" },
-        { title: "Components", href: "/search?transform=components" },
-        { title: "All categories", href: "/categories" },
+        { title: t("footer.phones"), href: "/search?transform=phones" },
+        { title: t("footer.laptops"), href: "/search?transform=laptops" },
+        { title: t("footer.audio"), href: "/search?transform=audio" },
+        { title: t("footer.gaming"), href: "/search?transform=gaming" },
+        { title: t("footer.components"), href: "/search?transform=components" },
+        { title: t("footer.allCategories"), href: "/categories" },
       ],
     },
     {
@@ -75,20 +75,20 @@ export const Footer = () => {
           <div className="absolute -bottom-16 -left-16 size-56 rounded-full bg-violet-500/15 blur-3xl" />
           <div className="relative grid gap-6 md:grid-cols-[1.2fr_1fr] items-center">
             <div>
-              <Badge className="rounded-full">Maker deals, weekly</Badge>
+              <Badge className="rounded-full">{t("footer.newsletterBadge")}</Badge>
               <h3 className="mt-3 text-xl sm:text-2xl font-extrabold tracking-tight">
-                Price drops & new stock alerts
+                {t("footer.newsletterTitle")}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                One short email a week. No spam — just ESP32 restocks, audio deals and Kerala delivery updates.
+                {t("footer.newsletterDesc")}
               </p>
             </div>
             <form
               className="flex gap-2 rounded-2xl border bg-background p-2 shadow-sm"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!email.includes("@")) return toast.error("Enter a valid email");
-                toast.success("Subscribed! Welcome to Razorbills.");
+                if (!email.includes("@")) return toast.error(t("footer.invalidEmail"));
+                toast.success(t("footer.subscribed"));
                 setEmail("");
               }}
             >
@@ -101,7 +101,7 @@ export const Footer = () => {
               />
               <Button type="submit" className="rounded-xl shrink-0">
                 <Send className="size-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">Subscribe</span>
+                <span className="hidden sm:inline">{t("footer.subscribe")}</span>
               </Button>
             </form>
           </div>
@@ -113,10 +113,10 @@ export const Footer = () => {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-muted-foreground leading-relaxed">
-            {t("footer.tagline")} Built for makers, students and families across Kerala.
+            {t("footer.tagline")}
           </p>
           <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <p className="inline-flex items-center gap-2"><MapPin className="size-4" /> Kochi, Kerala, India</p>
+            <p className="inline-flex items-center gap-2"><MapPin className="size-4" /> {t("footer.location")}</p>
             <p className="flex items-center gap-2"><Phone className="size-4" /> +91 98470 00000</p>
             <p className="flex items-center gap-2"><Mail className="size-4" /> care@razorbills.in</p>
           </div>
@@ -169,11 +169,11 @@ export const Footer = () => {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-background px-4 py-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5"><Truck className="size-3.5 text-emerald-600" /> 24h dispatch in Kerala</span>
+          <span className="inline-flex items-center gap-1.5"><Truck className="size-3.5 text-emerald-600" /> {t("footer.trustDispatch")}</span>
           <span className="hidden sm:inline">·</span>
-          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-emerald-600" /> 100% genuine stock</span>
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-emerald-600" /> {t("footer.trustGenuine")}</span>
           <span className="hidden sm:inline">·</span>
-          <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-600" /> 7-day easy returns</span>
+          <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-600" /> {t("footer.trustReturns")}</span>
         </div>
       </div>
 
@@ -182,9 +182,9 @@ export const Footer = () => {
         <div className="py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <span>&copy; {new Date().getFullYear()} RazorBills. {t("footer.allRightsReserved")}</span>
           <span className="inline-flex items-center gap-3">
-            <Link to="/privacy" className="hover:text-foreground">Privacy</Link>
-            <Link to="/terms" className="hover:text-foreground">Terms</Link>
-            <Link to="/shipping" className="hover:text-foreground">Shipping</Link>
+            <Link to="/privacy" className="hover:text-foreground">{t("footer.privacy")}</Link>
+            <Link to="/terms" className="hover:text-foreground">{t("footer.terms")}</Link>
+            <Link to="/shipping" className="hover:text-foreground">{t("footer.shipping")}</Link>
           </span>
         </div>
       </div>

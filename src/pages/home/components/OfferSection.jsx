@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, BadgePercent, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ function useCountdown(hours = 26) {
 
 // Renders the biggest live discount from the catalogue. Nothing to show → nothing rendered.
 export default function OfferSection({ product }) {
+  const { t } = useTranslation();
   const { hh, mm, ss } = useCountdown(31);
   if (!product) return null;
   const deal = product;
@@ -42,18 +44,18 @@ export default function OfferSection({ product }) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge className="bg-amber-400 text-black hover:bg-amber-400 border-0">
-                  <BadgePercent className="size-3.5 mr-1" /> Deal of the week
+                  <BadgePercent className="size-3.5 mr-1" /> {t("homepage.offer.badge")}
                 </Badge>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs backdrop-blur">
-                  <Timer className="size-3.5" /> Ends in {hh}:{mm}:{ss}
+                  <Timer className="size-3.5" /> {t("homepage.offer.endsIn")} {hh}:{mm}:{ss}
                 </span>
               </div>
               <h2 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05]">
-                Upgrade your desk.
-                <span className="block text-white/60">Keep the change.</span>
+                {t("homepage.offer.titleA")}
+                <span className="block text-white/60">{t("homepage.offer.titleB")}</span>
               </h2>
               <p className="mt-3 max-w-md text-sm sm:text-base text-white/70">
-                Our sharpest live price drop — with GST invoice and 7-day easy returns.
+                {t("homepage.offer.description")}
               </p>
               <div className="mt-5 flex flex-wrap items-baseline gap-3">
                 <span className="text-3xl font-extrabold">{currency(deal.price)}</span>
@@ -62,18 +64,18 @@ export default function OfferSection({ product }) {
                 )}
                 {savings > 0 && (
                   <Badge variant="secondary" className="bg-emerald-400/15 text-emerald-300 border-emerald-300/20">
-                    Save {currency(savings)}
+                    {t("homepage.offer.save", { amount: currency(savings) })}
                   </Badge>
                 )}
               </div>
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <Button size="lg" className="rounded-2xl bg-white text-black hover:bg-white/90" asChild>
                   <Link to={`/product/${deal.id}`}>
-                    Grab the deal <ArrowRight className="size-4" />
+                    {t("homepage.offer.grab")} <ArrowRight className="size-4" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="rounded-2xl border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white" asChild>
-                  <Link to="/search">All offers</Link>
+                  <Link to="/search">{t("homepage.offer.allOffers")}</Link>
                 </Button>
               </div>
             </div>
@@ -87,10 +89,10 @@ export default function OfferSection({ product }) {
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between gap-3 rounded-2xl border border-white/15 bg-black/55 backdrop-blur px-4 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold">{deal.title}</p>
-                  <p className="text-xs text-white/60">Free express delivery in Kerala</p>
+                  <p className="text-xs text-white/60">{t("homepage.offer.freeDelivery")}</p>
                 </div>
                 <div className="flex gap-1.5 text-center">
-                  {[[hh, "hrs"], [mm, "min"], [ss, "sec"]].map(([v, l]) => (
+                  {[[hh, t("homepage.offer.hrs")], [mm, t("homepage.offer.min")], [ss, t("homepage.offer.sec")]].map(([v, l]) => (
                     <div key={l} className="rounded-xl bg-white/10 px-2.5 py-1.5 border border-white/10">
                       <p className="text-sm font-extrabold tabular-nums">{v}</p>
                       <p className="text-[10px] text-white/60">{l}</p>

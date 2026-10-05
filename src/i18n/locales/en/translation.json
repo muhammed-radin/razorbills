@@ -43,7 +43,10 @@
     "toggleTheme": "Toggle theme",
     "toggleLanguage": "Change Language",
     "english": "English",
-    "malayalam": "മലയാളം"
+    "malayalam": "മലയാളം",
+    "home": "Home",
+    "cart": "Cart",
+    "account": "Account"
   },
   "avatarMenu": {
     "myProfile": "My Profile",
@@ -72,7 +75,27 @@
     "aboutUs": "About Us",
     "privacyPolicy": "Privacy Policy",
     "termsConditions": "Terms & Conditions",
-    "allRightsReserved": "All rights reserved."
+    "allRightsReserved": "All rights reserved.",
+    "shop": "Shop",
+    "phones": "Phones",
+    "laptops": "Laptops",
+    "audio": "Audio",
+    "gaming": "Gaming",
+    "components": "Components",
+    "allCategories": "All categories",
+    "newsletterBadge": "Maker deals, weekly",
+    "newsletterTitle": "Price drops & new stock alerts",
+    "newsletterDesc": "One short email a week. No spam — just restocks, deals and Kerala delivery updates.",
+    "subscribe": "Subscribe",
+    "location": "Kochi, Kerala, India",
+    "trustDispatch": "24h dispatch in Kerala",
+    "trustGenuine": "100% genuine stock",
+    "trustReturns": "7-day easy returns",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "shipping": "Shipping",
+    "invalidEmail": "Enter a valid email",
+    "subscribed": "Subscribed! Welcome to Razorbills."
   },
   "home": {
     "helmetTitle": "RazorBills - High-Quality Electronic Components",
@@ -514,7 +537,6 @@
     "title": "Terms & Conditions",
     "lastUpdated": "Last updated",
     "welcome": "Welcome to RazorBills. By accessing or using our website, you agree to be bound by these Terms and Conditions.",
-
     "sections": {
       "useOfWebsite": {
         "title": "Use of Website",
@@ -734,5 +756,123 @@
     "accountDesc": "Manage session and authentication",
     "logout": "Log Out",
     "logoutDesc": "Sign out of your administrator account"
+  },
+  "homepage": {
+    "hero": {
+      "badge": "Kerala's own electronics store",
+      "titleA": "Everything",
+      "titleB": "electronic.",
+      "titleC": "Delivered fast.",
+      "subtitle": "From development boards and sensors to phones, laptops and audio — Razorbills brings trusted, genuine tech to makers, students and families across Kerala.",
+      "searchPlaceholder": "Search products, brands, categories…",
+      "shopTrending": "Shop trending now",
+      "browseCategories": "Browse categories",
+      "trustDispatch": "Fast dispatch in Kerala",
+      "trustGenuine": "100% genuine stock",
+      "trustGst": "GST invoice included",
+      "featured": "Featured",
+      "view": "View",
+      "statGenuine": "Genuine",
+      "statStock": "Stock",
+      "statFast": "Fast",
+      "statDispatch": "Dispatch",
+      "statReturns": "7-day",
+      "statReturnsLabel": "Returns",
+      "genuineStock": "Genuine stock",
+      "gstInvoice": "GST invoice",
+      "keralaDelivery": "Kerala delivery",
+      "allDistricts": "All districts",
+      "emptyTitle": "Fresh stock on the way",
+      "emptyDesc": "Our catalogue is being updated. Search the store or browse categories to see what's live.",
+      "exploreStore": "Explore the store"
+    },
+    "categories": {
+      "eyebrow": "Curated aisles",
+      "title": "Shop by category",
+      "description": "Browse the live catalogue — every aisle stocked from our real store inventory.",
+      "all": "All categories",
+      "explore": "Explore"
+    },
+    "featured": {
+      "eyebrow": "Trending in Kerala",
+      "title": "Featured drops people love",
+      "description": "Hand-picked essentials from our live catalogue.",
+      "viewAll": "View everything",
+      "hot": "Hot"
+    },
+    "offer": {
+      "badge": "Deal of the week",
+      "titleA": "Upgrade your desk.",
+      "titleB": "Keep the change.",
+      "description": "Our sharpest live price drop — with GST invoice and 7-day easy returns.",
+      "save": "Save {{amount}}",
+      "grab": "Grab the deal",
+      "allOffers": "All offers",
+      "endsIn": "Ends in",
+      "hrs": "hrs",
+      "min": "min",
+      "sec": "sec",
+      "freeDelivery": "Free express delivery in Kerala"
+    },
+    "why": {
+      "eyebrow": "Why Razorbills",
+      "title": "Tech shopping, minus the trust issues",
+      "description": "We combine a local store's accountability with the speed of a modern platform.",
+      "fastTitle": "Fast dispatch",
+      "fastText": "Orders ship quickly from our Kerala hub with live tracking.",
+      "keralaTitle": "Built for Kerala",
+      "keralaText": "GST invoices and delivery across the state, with local support.",
+      "genuineTitle": "100% genuine",
+      "genuineText": "Sourced from authorised distributors. No clones, no grey stock.",
+      "supportTitle": "Maker-first support",
+      "supportText": "Help with wiring, code and compatibility — before and after you buy.",
+      "chipBoards": "Boards, sensors & components",
+      "chipReturns": "7-day easy returns"
+    },
+    "arrivals": {
+      "eyebrow": "Just landed",
+      "title": "New arrivals this week",
+      "description": "The freshest stock from our catalogue.",
+      "shopAll": "Shop all"
+    },
+    "empty": {
+      "noProducts": "No products yet",
+      "loadFailed": "Couldn't load products",
+      "stocking": "Our catalogue is being stocked. Contact us and we'll arrange what you need.",
+      "retryHint": "We couldn't reach the catalogue. Check your connection and try again.",
+      "contact": "Contact store",
+      "browse": "Browse search",
+      "retry": "Retry"
+    },
+    "recommend": {
+      "eyebrow": "Picked for you",
+      "title": "Feels personal, because it is",
+      "description": "Tell us who you're shopping for — we reshape the shelf around labs, hostels and homes.",
+      "livePicks": "Live catalogue picks",
+      "students": "Students",
+      "studentsHint": "Budget picks under ₹999",
+      "makers": "Makers",
+      "makersHint": "Boards, sensors & tools",
+      "home": "Home",
+      "homeHint": "Audio, smart & living",
+      "topMatch": "Top match for {{persona}}",
+      "shopPick": "Shop this pick"
+    },
+    "services": {
+      "deliveryTitle": "Fast Kerala delivery",
+      "deliveryText": "Same-day dispatch · 2–4 day statewide",
+      "secureTitle": "Secure payments",
+      "secureText": "UPI, cards, netbanking & COD",
+      "warrantyTitle": "Warranty + GST bill",
+      "warrantyText": "Brand warranty on every product",
+      "returnsTitle": "7-day returns",
+      "returnsText": "No-question replacements",
+      "supportTitle": "Malayalam support",
+      "supportText": "Chat & call, 9 AM – 9 PM"
+    },
+    "card": {
+      "add": "Add",
+      "added": "Added"
+    }
   }
 }

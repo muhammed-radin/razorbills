@@ -1,25 +1,27 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Home, LayoutGrid, Search, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/shop";
 import { Badge } from "@/components/ui/badge";
 
 export default function MobileBottomNav() {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const count = useCartStore((s) => s.items.reduce((a, i) => a + (i.quantity || 1), 0));
 
   const items = [
-    { id: "home", label: "Home", icon: Home, to: "/", active: pathname === "/" },
-    { id: "categories", label: "Categories", icon: LayoutGrid, to: "/categories", active: pathname.startsWith("/categories") },
-    { id: "search", label: "Search", icon: Search, to: "/search", active: pathname.startsWith("/search") },
-    { id: "cart", label: "Cart", icon: ShoppingCart, to: "/cart", active: pathname.startsWith("/cart"), badge: count },
-    { id: "account", label: "Account", icon: User, to: "/settings", active: pathname.startsWith("/settings") || pathname.startsWith("/order") || pathname.startsWith("/wishlist") },
+    { id: "home", label: t("nav.home"), icon: Home, to: "/", active: pathname === "/" },
+    { id: "categories", label: t("nav.categories"), icon: LayoutGrid, to: "/categories", active: pathname.startsWith("/categories") },
+    { id: "search", label: t("nav.search"), icon: Search, to: "/search", active: pathname.startsWith("/search") },
+    { id: "cart", label: t("nav.cart"), icon: ShoppingCart, to: "/cart", active: pathname.startsWith("/cart"), badge: count },
+    { id: "account", label: t("nav.account"), icon: User, to: "/settings", active: pathname.startsWith("/settings") || pathname.startsWith("/order") || pathname.startsWith("/wishlist") },
   ];
 
   return (
     <nav
-      aria-label="Mobile navigation"
+      aria-label={t("nav.categories")}
       className="fixed inset-x-0 bottom-0 z-40 md:hidden border-t bg-background/90 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
@@ -28,6 +30,7 @@ export default function MobileBottomNav() {
           <button
             key={it.id}
             onClick={() => navigate(it.to)}
+            aria-current={it.active ? "page" : undefined}
             className="group relative flex flex-col items-center gap-0.5 py-1.5 rounded-2xl active:scale-95 transition-transform"
           >
             <span
@@ -57,9 +60,4 @@ export default function MobileBottomNav() {
       </div>
     </nav>
   );
-}
-
-// Re-export a no-op for desktop safety
-export function DesktopSpacer() {
-  return <div className="h-[76px] md:hidden" />;
 }

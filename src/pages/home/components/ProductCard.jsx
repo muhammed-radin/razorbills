@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { currency } from "@/utils/currency";
+import { useTranslation } from "react-i18next";
 import { useCartStore, useWishlistStore } from "@/stores/shop";
 import { toast } from "sonner";
 import RatingStar from "@/components/rating-star";
 
 export default function ProductCard({ product, index = 0 }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [imgOk, setImgOk] = useState(false);
   const [added, setAdded] = useState(false);
@@ -31,10 +33,10 @@ export default function ProductCard({ product, index = 0 }) {
     try {
       await addToCart(product, 1);
       setAdded(true);
-      toast.success("Added to cart");
+      toast.success(t("product.addedToCart"));
       setTimeout(() => setAdded(false), 1400);
     } catch {
-      toast.error("Could not add to cart");
+      toast.error(t("common.tryAgain"));
     }
   };
 
@@ -42,9 +44,9 @@ export default function ProductCard({ product, index = 0 }) {
     e.stopPropagation();
     try {
       await toggle(product);
-      toast.success(wished ? "Removed from wishlist" : "Saved to wishlist");
+      toast.success(wished ? t("product.removeFromFavorites") : t("product.addToFavorites"));
     } catch {
-      toast.error("Wishlist update failed");
+      toast.error(t("common.tryAgain"));
     }
   };
 
@@ -104,11 +106,11 @@ export default function ProductCard({ product, index = 0 }) {
         )}
       </div>
 
-      <CardContent className="p-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <CardContent className="p-3 sm:p-4">
+        <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
           {product.brand || product.category || "Razorbills"}
         </p>
-        <h3 className="mt-1 line-clamp-2 min-h-10 text-sm font-semibold leading-snug">
+        <h3 className="mt-1 line-clamp-2 min-h-9 sm:min-h-10 text-[13px] sm:text-sm font-semibold leading-snug">
           <Link to={`/product/${pid}`} onClick={(e) => e.stopPropagation()}>
             {product.title}
           </Link>
@@ -116,20 +118,20 @@ export default function ProductCard({ product, index = 0 }) {
         {hasRating && (
           <div className="mt-1.5 flex items-center gap-1.5">
             <RatingStar filled={product.rating} size="3" />
-            <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-0.5 text-[11px] sm:text-xs text-muted-foreground">
               <Star className="size-3 fill-amber-400 text-amber-400" />
               {product.rating}
               {product.reviews ? ` (${product.reviews > 1000 ? `${(product.reviews / 1000).toFixed(1)}k` : product.reviews})` : ""}
             </span>
           </div>
         )}
-        <div className="mt-2 flex items-end justify-between gap-2">
-          <div>
-            <p className="text-base sm:text-lg font-extrabold tracking-tight">
+        <div className="mt-2 flex flex-col items-stretch gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-[15px] sm:text-lg font-extrabold tracking-tight tabular-nums truncate">
               {currency(product.price)}
             </p>
             {product.originalPrice != null && product.originalPrice !== product.price && (
-              <p className="text-xs text-muted-foreground line-through">
+              <p className="text-[11px] sm:text-xs text-muted-foreground line-through tabular-nums truncate">
                 {currency(product.originalPrice)}
               </p>
             )}
@@ -139,12 +141,12 @@ export default function ProductCard({ product, index = 0 }) {
             onClick={handleAdd}
             disabled={product.stock <= 0}
             className={cn(
-              "rounded-xl gap-1.5 transition-all",
+              "rounded-xl gap-1.5 transition-all min-h-9 w-full justify-center sm:w-auto",
               added && "bg-emerald-600 hover:bg-emerald-600"
             )}
           >
             {added ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
-            {added ? "Added" : "Add"}
+            {added ? t("homepage.card.added") : t("homepage.card.add")}
           </Button>
         </div>
       </CardContent>

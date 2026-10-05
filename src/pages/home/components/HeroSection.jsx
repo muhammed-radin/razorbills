@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, BadgeCheck, MapPin, Search, ShieldCheck, Sparkles, Truck, Zap, Store } from "lucide-react";
+import { ArrowRight, BadgeCheck, MapPin, Search, ShieldCheck, Truck, Zap, Store } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ function FloatingChip({ className = "", children, delay = "0s" }) {
 }
 
 export default function HeroSection({ featured, loading }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const heroProduct = featured?.[0];
@@ -38,8 +40,8 @@ export default function HeroSection({ featured, loading }) {
           <div>
             <Reveal>
               <div className="inline-flex items-center gap-2 rounded-full border bg-background/80 backdrop-blur px-3 py-1.5 text-xs font-medium shadow-sm">
-                <Sparkles className="size-3.5 text-emerald-600" />
-                <span>Kerala&apos;s own electronics store</span>
+                <BadgeCheck className="size-3.5 text-emerald-600" />
+                <span>{t("homepage.hero.badge")}</span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-muted-foreground">
                   <MapPin className="size-3" /> Kochi · Kozhikode · Trivandrum
                 </span>
@@ -48,19 +50,17 @@ export default function HeroSection({ featured, loading }) {
 
             <Reveal delay={90}>
               <h1 className="mt-5 text-[2.4rem] leading-[1.02] sm:text-6xl lg:text-[4.4rem] font-extrabold tracking-tight">
-                Everything
+                {t("homepage.hero.titleA")}
                 <span className="block bg-gradient-to-r from-emerald-500 via-teal-500 to-violet-500 bg-clip-text text-transparent">
-                  electronic.
+                  {t("homepage.hero.titleB")}
                 </span>
-                Delivered fast.
+                {t("homepage.hero.titleC")}
               </h1>
             </Reveal>
 
             <Reveal delay={170}>
               <p className="mt-4 max-w-xl text-sm sm:text-lg text-muted-foreground leading-relaxed">
-                From development boards and sensors to phones, laptops and audio —
-                Razorbills brings trusted, genuine tech to makers, students and
-                families across Kerala.
+                {t("homepage.hero.subtitle")}
               </p>
             </Reveal>
 
@@ -76,11 +76,11 @@ export default function HeroSection({ featured, loading }) {
                 <Input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search products, brands, categories…"
+                  placeholder={t("homepage.hero.searchPlaceholder")}
                   className="border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm sm:text-base"
                 />
                 <Button type="submit" className="rounded-xl px-4 sm:px-6 shrink-0">
-                  Search
+                  {t("common.search")}
                 </Button>
               </form>
             </Reveal>
@@ -89,12 +89,12 @@ export default function HeroSection({ featured, loading }) {
               <div className="mt-5 flex flex-col sm:flex-row gap-3">
                 <Button size="lg" className="rounded-2xl px-7 group" asChild>
                   <Link to="/search">
-                    Shop trending now
+                    {t("homepage.hero.shopTrending")}
                     <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" className="rounded-2xl px-7" asChild>
-                  <Link to="/categories">Browse categories</Link>
+                  <Link to="/categories">{t("homepage.hero.browseCategories")}</Link>
                 </Button>
               </div>
             </Reveal>
@@ -102,13 +102,13 @@ export default function HeroSection({ featured, loading }) {
             <Reveal delay={380}>
               <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3 text-xs sm:text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5">
-                  <Truck className="size-4 text-emerald-600" /> Fast dispatch in Kerala
+                  <Truck className="size-4 text-emerald-600" /> {t("homepage.hero.trustDispatch")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="size-4 text-emerald-600" /> 100% genuine stock
+                  <ShieldCheck className="size-4 text-emerald-600" /> {t("homepage.hero.trustGenuine")}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <BadgeCheck className="size-4 text-emerald-600" /> GST invoice included
+                  <BadgeCheck className="size-4 text-emerald-600" /> {t("homepage.hero.trustGst")}
                 </span>
               </div>
             </Reveal>
@@ -139,7 +139,7 @@ export default function HeroSection({ featured, loading }) {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                       <div className="absolute top-3 left-3 flex gap-2">
                         <Badge className="bg-white/95 text-black hover:bg-white text-[11px]">
-                          <Zap className="size-3 mr-1" /> Featured
+                          <Zap className="size-3 mr-1" /> {t("homepage.hero.featured")}
                         </Badge>
                         {heroProduct.category && (
                           <Badge variant="secondary" className="backdrop-blur bg-black/40 text-white border-white/20 text-[11px]">
@@ -149,21 +149,21 @@ export default function HeroSection({ featured, loading }) {
                       </div>
                       <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 flex items-end justify-between gap-3">
                         <div className="text-white min-w-0">
-                          <p className="text-[11px] uppercase tracking-widest text-white/70">Featured</p>
+                          <p className="text-[11px] uppercase tracking-widest text-white/70">{t("homepage.hero.featured")}</p>
                           <p className="font-bold leading-tight line-clamp-2 text-sm sm:text-lg max-w-[280px]">
                             {heroProduct.title}
                           </p>
                         </div>
                         <Button size="sm" className="rounded-xl shrink-0" asChild>
-                          <Link to={`/product/${heroProduct.id}`}>View</Link>
+                          <Link to={`/product/${heroProduct.id}`}>{t("homepage.hero.view")}</Link>
                         </Button>
                       </div>
                     </div>
                     <div className="grid grid-cols-3 divide-x border-t bg-background/80 backdrop-blur text-center">
                       {[
-                        { k: "Genuine", v: "Stock" },
-                        { k: "Fast", v: "Dispatch" },
-                        { k: "7-day", v: "Returns" },
+                        { k: t("homepage.hero.statGenuine"), v: t("homepage.hero.statStock") },
+                        { k: t("homepage.hero.statFast"), v: t("homepage.hero.statDispatch") },
+                        { k: t("homepage.hero.statReturns"), v: t("homepage.hero.statReturnsLabel") },
                       ].map((s) => (
                         <div key={s.v} className="py-3">
                           <p className="font-extrabold text-sm sm:text-base">{s.k}</p>
@@ -177,12 +177,12 @@ export default function HeroSection({ featured, loading }) {
                     <span className="grid size-14 place-items-center rounded-3xl bg-muted">
                       <Store className="size-7 text-muted-foreground" />
                     </span>
-                    <h3 className="mt-5 text-xl font-extrabold tracking-tight">Fresh stock on the way</h3>
+                    <h3 className="mt-5 text-xl font-extrabold tracking-tight">{t("homepage.hero.emptyTitle")}</h3>
                     <p className="mt-2 max-w-xs text-sm text-muted-foreground">
-                      Our catalogue is being updated. Search the store or browse categories to see what&apos;s live.
+                      {t("homepage.hero.emptyDesc")}
                     </p>
                     <Button className="mt-5 rounded-xl" asChild>
-                      <Link to="/search">Explore the store</Link>
+                      <Link to="/search">{t("homepage.hero.exploreStore")}</Link>
                     </Button>
                   </div>
                 )}
@@ -196,8 +196,8 @@ export default function HeroSection({ featured, loading }) {
                         <BadgeCheck className="size-4 text-emerald-600" />
                       </span>
                       <div className="text-left">
-                        <p className="text-xs font-bold leading-none">Genuine stock</p>
-                        <p className="text-[11px] text-muted-foreground">GST invoice</p>
+                        <p className="text-xs font-bold leading-none">{t("homepage.hero.genuineStock")}</p>
+                        <p className="text-[11px] text-muted-foreground">{t("homepage.hero.gstInvoice")}</p>
                       </div>
                     </div>
                   </FloatingChip>
@@ -207,8 +207,8 @@ export default function HeroSection({ featured, loading }) {
                         <Truck className="size-4 text-amber-600" />
                       </span>
                       <div className="text-left">
-                        <p className="text-xs font-bold leading-none">Kerala delivery</p>
-                        <p className="text-[11px] text-muted-foreground">All districts</p>
+                        <p className="text-xs font-bold leading-none">{t("homepage.hero.keralaDelivery")}</p>
+                        <p className="text-[11px] text-muted-foreground">{t("homepage.hero.allDistricts")}</p>
                       </div>
                     </div>
                   </FloatingChip>
