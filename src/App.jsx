@@ -4,11 +4,12 @@ import MobileBottomNav from "@/components/mobile-bottom-nav/MobileBottomNav";
 import { Footer } from "./components/footer/footer";
 import { ThemeProvider } from "./utils/theme-provider";
 import ScrollToTop from "./utils/ScrollToTop"; // Import the ScrollToTop component
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useUserSession } from "./contexts/user-session-context";
 import { alert } from "./components/dialog-alert-provider";
 import { authClient } from "./lib/auth-client";
 import { toast } from "sonner";
+import { LoaderScreen } from "./components/LoaderScreen";
 
 const HIDE_CHROME_PATHS = ["/login", "/signup", "/forgot-password"];
 const GUEST_ACCESS_PATHS = [
@@ -40,6 +41,7 @@ function App() {
   const isGuestAccess =
     GUEST_ACCESS_PATHS.includes(location.pathname) ||
     location.pathname.startsWith("/product/");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isAtLeastGuest) {
@@ -54,18 +56,20 @@ function App() {
           secondaryButtonText: "Continue as Guest",
         })
         .then(async (confirmed) => {
+          setIsLoading(true);
           if (confirmed) {
             // Redirect to login page
             navigate("/login");
           } else {
             // Continue as guest
             const { data, error } = await authClient.signIn.anonymous();
+            setIsLoading(false);
             if (error) {
               toast.error("Failed to sign in as guest. Please try again.");
             } else {
               toast.success("Signed in as guest.");
-              window.location.reload(); // Reload the page to reflect the guest session
             }
+            window.location.reload(); // Reload the page to reflect the guest session
           }
         });
     }
@@ -80,7 +84,7 @@ function App() {
       <ScrollToTop />
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         {!hideChrome && <NavbarBlock />}
-        <Outlet />
+        {isLoading ? <LoaderScreen /> : <Outlet />}
         <Footer />
         {!hideChrome && <MobileBottomNav />}
       </ThemeProvider>
