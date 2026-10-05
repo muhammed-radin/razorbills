@@ -6,8 +6,12 @@ import {
 } from "../utils/middlewares/reqiuredAuth.js";
 import { evt, Evts, ErrorEvent, CommentEvent } from "../utils/events.manage.js";
 import { AddressSchema } from "../models/schema/address.js";
+import { decryptAddress, encryptAddress } from "../utils/crypt.js";
 
 const router = express.Router();
+
+const decryptAddressBook = (addressBook = []) =>
+  addressBook.map(decryptAddress);
 
 // get addressBook
 router.get("/", requireAuth, passUserAuth, (req, res) => {
@@ -22,20 +26,21 @@ router.get("/", requireAuth, passUserAuth, (req, res) => {
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
-      if (!user.addressBook || Array.isArray(user.addressBook) === false) {
-        user.addressBook = [];
-      }
+      const addressBook = Array.isArray(user.addressBook)
+        ? decryptAddressBook(user.addressBook)
+        : [];
+      let currentAddress = user.address ? decryptAddress(user.address) : null;
 
-      if (!user.address && user.addressBook.length > 0) {
-        user.address = user.addressBook[0];
+      if (!currentAddress && addressBook.length > 0) {
+        currentAddress = addressBook[0];
         db.collection("users").updateOne(
           { id: userId },
-          { $set: { address: user.address } },
+          { $set: { address: encryptAddress(currentAddress) } },
         );
       }
 
-      user.addressBook = user.addressBook.map((address) => {
-        if (address && address.id == user.address?.id) {
+      const responseAddressBook = addressBook.map((address) => {
+        if (address && address.id == currentAddress?.id) {
           address.isDefault = true;
         } else {
           address.isDefault = false;
@@ -43,7 +48,7 @@ router.get("/", requireAuth, passUserAuth, (req, res) => {
         return address;
       });
 
-      res.json(user.addressBook || []);
+      res.json(responseAddressBook);
     })
     .catch((err) => {
       console.error("Error fetching address book:", err);
@@ -67,7 +72,7 @@ router.get("/current", requireAuth, passUserAuth, (req, res) => {
       if (!user.address) {
         return res.status(404).json({ error: "Current address not set" });
       }
-      res.json(user.address || []);
+      res.json(decryptAddress(user.address));
     })
     .catch((err) => {
       console.error("Error fetching current address:", err);
@@ -83,13 +88,14 @@ router.post("/", requireAuth, passUserAuth, (req, res) => {
   }
 
   const { address } = req.body;
+  const encryptedAddress = encryptAddress(address);
 
   db.collection("users")
     .findOneAndUpdate(
       { id: userId },
       {
-        $push: { addressBook: address },
-        $set: { address }, // Set the new address as the current address
+        $push: { addressBook: encryptedAddress },
+        $set: { address: encryptedAddress },
       },
       { upsert: true, returnDocument: "after" },
     )
@@ -99,8 +105,8 @@ router.post("/", requireAuth, passUserAuth, (req, res) => {
       }
       res.json({
         message: "Address added successfully",
-        address: user.address,
-        addressBook: user.addressBook,
+        address: decryptAddress(user.address),
+        addressBook: decryptAddressBook(user.addressBook),
         userId: user.id,
       });
     })
@@ -127,17 +133,16 @@ router.put("/", requireAuth, passUserAuth, (req, res) => {
   db.collection("users")
     .findOneAndUpdate(
       { id: userId },
-      { $set: { address } },
+      { $set: { address: encryptAddress(address) } },
       { upsert: true, returnDocument: "after" },
     )
     .then((user) => {
-      user.addressBook = user.addressBook || [];
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
       res.status(200).json({
         message: "Current address set successfully",
-        address: user.address,
+        address: decryptAddress(user.address),
         userId: user.id,
       });
     })
@@ -172,7 +177,7 @@ router.delete("/", requireAuth, passUserAuth, (req, res) => {
       }
       res.json({
         message: "Address deleted successfully",
-        addressBook: user.addressBook,
+        addressBook: decryptAddressBook(user.addressBook),
         userId: user.id,
       });
     })
@@ -199,7 +204,7 @@ router.put("/update", requireAuth, passUserAuth, (req, res) => {
   db.collection("users")
     .findOneAndUpdate(
       { id: userId },
-      { $set: { "addressBook.$[elem]": address } },
+      { $set: { "addressBook.$[elem]": encryptAddress(address) } },
       { arrayFilters: [{ "elem.id": addressId }], returnDocument: "after" },
     )
     .then((user) => {
@@ -208,7 +213,7 @@ router.put("/update", requireAuth, passUserAuth, (req, res) => {
       }
       res.json({
         message: "Address updated successfully",
-        addressBook: user.addressBook,
+        addressBook: decryptAddressBook(user.addressBook),
         userId: user.id,
       });
     })

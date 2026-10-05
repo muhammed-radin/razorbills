@@ -1,4 +1,5 @@
 import { api } from "@/utils/api";
+import { decryptAddress, encryptAddress } from "@/utils/crypt";
 
 const unwrap = (promise) => promise.then((res) => res.data);
 const get = (url, config) => unwrap(api.client.get(url, config));
@@ -24,13 +25,41 @@ export const wishlistApi = {
     del("/api/wishlists", { data: { productId, folder } }),
 };
 
+const decryptAddressResponse = (response) => ({
+  ...response,
+  address: response.address
+    ? decryptAddress(response.address)
+    : response.address,
+  addressBook: Array.isArray(response.addressBook)
+    ? response.addressBook.map(decryptAddress)
+    : response.addressBook,
+});
+
 export const addressApi = {
-  list: () => get("/api/address"),
-  current: () => get("/api/address/current"),
-  add: (address) => post("/api/address", { address }),
-  setCurrent: (address) => put("/api/address", { address }),
+  list: async () => {
+    const addresses = await get("/api/address");
+    return Array.isArray(addresses) ? addresses.map(decryptAddress) : [];
+  },
+  current: async () => decryptAddress(await get("/api/address/current")),
+  add: async (address) =>
+    decryptAddressResponse(
+      await post("/api/address", {
+        address: encryptAddress(address),
+      }),
+    ),
+  setCurrent: async (address) =>
+    decryptAddressResponse(
+      await put("/api/address", {
+        address: encryptAddress(address),
+      }),
+    ),
   remove: (addressId) => del("/api/address", { data: { addressId } }),
-  update: (address) => put("/api/address/update", { address }),
+  update: async (address) =>
+    decryptAddressResponse(
+      await put("/api/address/update", {
+        address: encryptAddress(address),
+      }),
+    ),
 };
 
 export const ordersApi = {

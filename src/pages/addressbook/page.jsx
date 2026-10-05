@@ -68,7 +68,9 @@ import { z } from "zod";
 const countryCallingCodes = [
   ...new Set(getCountries().map((country) => getCountryCallingCode(country))),
 ].sort((first, second) => second.length - first.length);
-const MAX_PHONE_DIGITS = 15;
+const MAX_E164_DIGITS = 15;
+const INDIA_CALLING_CODE = "91";
+const INDIA_POSTAL_CODE_LENGTH = 6;
 
 const addressFormSchema = z.object({
   name: z.string().trim().min(2, "Enter a valid name"),
@@ -77,34 +79,55 @@ const addressFormSchema = z.object({
     .trim()
     .refine((value) => {
       const digits = value.replace(/\D/g, "");
-      if (digits.length > MAX_PHONE_DIGITS) return false;
       if (!/^\+\d{1,3} \d+$/.test(value)) return false;
 
-      const phoneNumber = parsePhoneNumberFromString(digits);
-      return Boolean(phoneNumber?.isValid());
+      const phoneNumber = parsePhoneNumberFromString(`+${digits}`);
+      if (!phoneNumber?.isValid()) return false;
+
+      const nationalDigits = phoneNumber.nationalNumber.length;
+      const maxNationalDigits =
+        phoneNumber.countryCallingCode === INDIA_CALLING_CODE
+          ? 10
+          : MAX_E164_DIGITS - phoneNumber.countryCallingCode.length;
+
+      return nationalDigits <= maxNationalDigits;
     }, "Enter a valid international phone number, including country code"),
   type: z.enum(["home", "work", "other"]),
   street: z.string().trim().min(1, "Enter a street address"),
   city: z.string().trim().min(1, "Enter a city"),
   state: z.string().trim().min(1, "Enter a state"),
-  postalCode: z.string().trim().min(1, "Enter a postal code"),
+  postalCode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Enter a valid 6-digit Indian postal code"),
 });
 
 const formatPhoneInput = (value) => {
-  const digits = value.replace(/\D/g, "").slice(0, MAX_PHONE_DIGITS);
+  const rawDigits = value.replace(/\D/g, "");
+  const callingCode = countryCallingCodes.find((code) =>
+    rawDigits.startsWith(code),
+  );
+  const maxDigits = callingCode
+    ? callingCode === INDIA_CALLING_CODE
+      ? callingCode.length + 10
+      : MAX_E164_DIGITS
+    : MAX_E164_DIGITS;
+  const digits = rawDigits.slice(0, maxDigits);
   if (!digits) return "";
 
-  const callingCode = countryCallingCodes.find((code) =>
-    digits.startsWith(code),
-  );
   if (!callingCode) return `+${digits}`;
 
   const nationalNumber = digits.slice(callingCode.length);
   return `+${callingCode}${nationalNumber ? ` ${nationalNumber}` : " "}`;
 };
 
+const formatPostalCode = (value) =>
+  value.replace(/\D/g, "").slice(0, INDIA_POSTAL_CODE_LENGTH);
+
 const normalizePhoneNumber = (value) => {
-  const phoneNumber = parsePhoneNumberFromString(value.replace(/\D/g, ""));
+  const phoneNumber = parsePhoneNumberFromString(
+    `+${value.replace(/\D/g, "")}`,
+  );
   return phoneNumber
     ? `+${phoneNumber.countryCallingCode} ${phoneNumber.nationalNumber}`
     : value;
@@ -249,10 +272,27 @@ const AddressBookPage = () => {
     const address = addresses.find((addr) => addr.id === id);
     if (!address) return;
     try {
-      await setDefaultAddress(address.raw ?? address);
-      await fetchAddresses();
-      toast.success(
-        t("address.defaultSet", { defaultValue: "Default address updated" }),
+      toast.promise(
+        () =>
+          new Promise((resolve, reject) => {
+            setDefaultAddress(address.raw ?? address)
+              .then(() => {
+                fetchAddresses();
+                resolve();
+              })
+              .catch((err) => reject());
+          }),
+        {
+          loading: t("address.settingDefault", {
+            defaultValue: "Setting default address...",
+          }),
+          success: t("address.defaultSet", {
+            defaultValue: "Default address updated",
+          }),
+          error: t("common.error", {
+            defaultValue: "Failed to set default address",
+          }),
+        },
       );
     } catch {
       // Fall back to local state when the API call fails
@@ -771,7 +811,9 @@ const AddressForm = ({ address, setAddress, onSubmit, submitLabel }) => {
             id="pincode"
             placeholder={t("address.pinCodePlaceholder")}
             value={address.postalCode}
-            onChange={(e) => updateAddress("postalCode", e.target.value)}
+            onChange={(e) =>
+              updateAddress("postalCode", formatPostalCode(e.target.value))
+            }
             className="transition-all duration-300 focus:ring-2 focus:ring-primary/20"
           />
           {errors.postalCode && (

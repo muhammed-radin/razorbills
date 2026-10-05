@@ -27,6 +27,30 @@ function encrypt(plaintext) {
   ).toString();
 }
 
+function encryptAddress(address) {
+  return Object.fromEntries(
+    Object.entries(address).map(([key, value]) => [
+      key,
+      key === "id" ? value : encrypt(JSON.stringify(value)),
+    ]),
+  );
+}
+
+function decryptAddress(address) {
+  return Object.fromEntries(
+    Object.entries(address).map(([key, value]) => {
+      if (key === "id" || typeof value !== "string") return [key, value];
+
+      try {
+        const decrypted = decrypt(value);
+        return [key, JSON.parse(decrypted)];
+      } catch {
+        return [key, value];
+      }
+    }),
+  );
+}
+
 /**
  *
  * @param {Object} obj - The object to decrypt.
@@ -61,4 +85,12 @@ function decryptObj(obj, strict = false, excludeKeys = []) {
   return decryptedObj;
 }
 
-export { decryptStrict, decrypt, encryptStrict, encrypt, decryptObj };
+export {
+  decryptStrict,
+  decrypt,
+  encryptStrict,
+  encrypt,
+  encryptAddress,
+  decryptAddress,
+  decryptObj,
+};
