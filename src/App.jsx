@@ -44,7 +44,10 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isPending) return;
+    async function validateIt() {
+          setIsLoading(true);
+    const { data: session } = await authClient.getSession();
+      const isAtLeastGuest = !!session?.user;
     if (isAtLeastGuest ) {
       console.log("10001");
       // User is authenticated, you can perform actions here if needed
@@ -58,7 +61,6 @@ function App() {
           secondaryButtonText: "Continue as Guest",
         })
         .then(async (confirmed) => {
-          setIsLoading(true);
           if (confirmed) {
             // Redirect to login page
             navigate("/login");
@@ -80,10 +82,13 @@ function App() {
           }
         });
     }
+    
 
     if (isAtLeastGuest && isGuestAccess === false) {
       navigate("/"); // Navigate to the current path if authenticated and not on a guest access page
     }
+    }
+    validateIt();
   }, [location.pathname]);
 
   return (
