@@ -36,7 +36,7 @@ function App() {
   const location = useLocation();
   const hideChrome = HIDE_CHROME_PATHS.includes(location.pathname);
   const { data: session } = useUserSession(); // Access the user session context
-  const isAtLeastGuest = session?.user && session?.user.isAnonymous === true;
+  const isAtLeastGuest = !!session?.user;
   const navigate = useNavigate();
   const isGuestAccess =
     GUEST_ACCESS_PATHS.includes(location.pathname) ||
