@@ -35,7 +35,7 @@ const GUEST_ACCESS_PATHS = [
 function App() {
   const location = useLocation();
   const hideChrome = HIDE_CHROME_PATHS.includes(location.pathname);
-  const { data: session } = authClient.useSession(); // Access the user session context
+  const { data: session, isPending } = authClient.useSession(); // Access the user session context
   const isAtLeastGuest = !!session?.user;
   const navigate = useNavigate();
   const isGuestAccess =
@@ -44,8 +44,9 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (isAtLeastGuest) {
-      window.alert("000");
+    if (isPending) return;
+    if (isAtLeastGuest ) {
+      console.log("10001");
       // User is authenticated, you can perform actions here if needed
     } else {
       alert
