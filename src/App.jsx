@@ -45,7 +45,7 @@ function App() {
 
   useEffect(() => {
     if (isAtLeastGuest) {
-      alert("000");
+      window.alert("000");
       // User is authenticated, you can perform actions here if needed
     } else {
       alert
