@@ -85,7 +85,7 @@ function App() {
     }
     
 
-    if (isAtLeastGuest && isGuestAccess === false) {
+    if (isAtLeastGuest && isGuestAccess === false && session?.user?.isAnonymous === true) {
       navigate("/"); // Navigate to the current path if authenticated and not on a guest access page
     }
     }
