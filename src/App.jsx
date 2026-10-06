@@ -50,6 +50,7 @@ function App() {
       const isAtLeastGuest = !!session?.user;
     if (isAtLeastGuest ) {
       console.log("10001");
+          setIsLoading(false);
       // User is authenticated, you can perform actions here if needed
     } else {
       alert
