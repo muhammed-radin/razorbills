@@ -23,6 +23,8 @@ export const wishlistApi = {
   add: (product, folder = "/") => post("/api/wishlists", { product, folder }),
   remove: (productId, folder = "/") =>
     del("/api/wishlists", { data: { productId, folder } }),
+  setProducts: (products, folder = "/") =>
+    put("/api/wishlists", { products, folder }),
 };
 
 const decryptAddressResponse = (response) => ({

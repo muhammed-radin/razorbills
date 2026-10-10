@@ -4,9 +4,15 @@ import { clickToGProvider } from "../auth";
 import { encrypt } from "../crypt";
 import { generateHashLink } from "../route-util";
 
-export default function onUserGoogleSignIn() {
+export default function onUserGoogleSignIn(setIsInputDisabled) {
   function navigate(path) {
     window.location.href = generateHashLink(path);
+  }
+
+  function setInputDisabledState(state) {
+    if (typeof setIsInputDisabled === "function") {
+      setIsInputDisabled(state);
+    }
   }
 
   toast.promise(
@@ -54,6 +60,7 @@ export default function onUserGoogleSignIn() {
                     response.data.token
                   ) {
                     resolveui("Google Sign-In successful");
+                    sessionStorage.removeItem("session"); // Clear any existing session data
                     navigate("/");
                   } else {
                     rejectui("Google Sign-In failed");
@@ -81,9 +88,12 @@ export default function onUserGoogleSignIn() {
       }),
     {
       loading: "Signing in...",
-      success: (msg) => `${msg}`,
+      success: (msg) => {
+        setInputDisabledState(false);
+        return `${msg}`;
+      },
       error: (err) => {
-        console.log(err);
+        setInputDisabledState(false);
         return `Sign-in failed: ${err || err.errorMessage || err.message || err.response?.data?.message || "Unknown error"}`;
       },
     },

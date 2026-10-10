@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { cartApi, wishlistApi, addressApi, ordersApi } from "@/services/shop";
 import { MinimalProduct } from "@/models/product";
-import { authClient } from "@/lib/auth-client";
+import { api } from "@/utils/api";
+import { openAuthenticationModal } from "@/utils/signin-modal-required";
 
 const isAuthError = (err) =>
   err?.response?.status === 401 || err?.response?.status === 403;
@@ -164,6 +165,12 @@ export const useWishlistStore = create((set, get) => ({
   serverBacked: true,
 
   fetch: async (folder = "/") => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      set({ items: [], serverBacked: false });
+      throw new Error("User is not signed in"); // User is not signed in, exit the function
+    }
+
     set({ loading: true, error: null });
     try {
       const doc = await wishlistApi.get(folder);
@@ -188,6 +195,11 @@ export const useWishlistStore = create((set, get) => ({
     get().items.some((p) => (p.productId ?? p.id) === productId),
 
   toggle: async (product, folder = "/") => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error("User is not signed in"); // User is not signed in, exit the function
+    }
+
     const productId = product.productId ?? product.id;
     if (get().has(productId)) {
       await get().remove(productId, folder);
@@ -197,7 +209,12 @@ export const useWishlistStore = create((set, get) => ({
   },
 
   add: async (product, folder = "/") => {
-    if (get().serverBacked) {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error("User is not signed in"); // User is not signed in, exit the function
+    }
+
+    if (get().serverBacked && isSignedIn) {
       try {
         const doc = await wishlistApi.add(toWishlistSnapshot(product), folder);
         set({ items: doc.products ?? [], error: null });
@@ -216,7 +233,12 @@ export const useWishlistStore = create((set, get) => ({
   },
 
   remove: async (productId, folder = "/") => {
-    if (get().serverBacked) {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error("User is not signed in"); // User is not signed in, exit the function
+    }
+
+    if (get().serverBacked && isSignedIn) {
       try {
         const doc = await wishlistApi.remove(productId, folder);
         set({ items: doc.products ?? [], error: null });
@@ -231,6 +253,19 @@ export const useWishlistStore = create((set, get) => ({
     );
     writeLocal("guest-wishlist", items);
     set({ items });
+  },
+
+  syncToServer: async () => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error("User is not signed in"); // User is not signed in, exit the function
+    }
+
+    if (!get().serverBacked && isSignedIn) {
+      wishlistApi.setProducts(get().items, "/").catch((err) => {
+        set({ error: err });
+      });
+    }
   },
 }));
 
@@ -297,7 +332,7 @@ export const useAddressStore = create((set) => ({
   },
 
   add: async (address) => {
-    const { data: session } = await authClient.getSession();
+    const { data: session } = await api.getSession();
     const user = session?.user;
     if (!user) {
       throw new Error("User not authenticated");

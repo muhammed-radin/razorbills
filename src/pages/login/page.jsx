@@ -13,11 +13,11 @@ import { Separator } from "@/components/ui/separator";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { set, z } from "zod";
 import { encryptStrict } from "@/utils/crypt";
 import { api } from "@/utils/api";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
 import { authClient } from "@/lib/auth-client";
@@ -25,6 +25,7 @@ import { authClient } from "@/lib/auth-client";
 const LoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   const formSchema = z.object({
     email: z.string().email(t("auth.invalidEmail")),
@@ -46,6 +47,7 @@ const LoginPage = () => {
       password: encryptStrict(password),
     };
 
+    setIsInputDisabled(true); // Disable inputs during submission
     sumbitForm(encryptedData);
   };
 
@@ -58,6 +60,7 @@ const LoginPage = () => {
               const { response, data, user } = payload;
               if (response.status == 200) {
                 resolveui(t("auth.loginSuccess"));
+                sessionStorage.removeItem("session"); // Clear any existing session data
                 navigate("/");
               } else {
                 rejectui(response.statusText || "Login failed");
@@ -75,9 +78,14 @@ const LoginPage = () => {
         }),
       {
         loading: t("auth.loggingIn"),
-        success: (msg) => `${msg}`,
-        error: (err) =>
-          `${t("auth.loginFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`,
+        success: (msg) => {
+          setIsInputDisabled(false); // Re-enable inputs after submission
+          return `${msg}`;
+        },
+        error: (err) => {
+          setIsInputDisabled(false); // Re-enable inputs after submission
+          return `${t("auth.loginFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`;
+        },
       },
     );
   };
@@ -118,7 +126,14 @@ const LoginPage = () => {
           {t("auth.loginTitle")}
         </p>
 
-        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignIn}>
+        <Button
+          className="mt-8 w-full gap-3"
+          disabled={isInputDisabled}
+          onClick={() => {
+            setIsInputDisabled(true);
+            onUserGoogleSignIn(setIsInputDisabled);
+          }}
+        >
           <GoogleLogo />
           {t("auth.continueWithGoogle")}
         </Button>
@@ -145,6 +160,7 @@ const LoginPage = () => {
                       type="email"
                       placeholder={t("auth.emailPlaceholder")}
                       className="w-full"
+                      disabled={isInputDisabled} // Disable input when isInputDisabled is true
                       {...field}
                     />
                   </FormControl>
@@ -163,6 +179,7 @@ const LoginPage = () => {
                       type="password"
                       placeholder={t("auth.passwordPlaceholder")}
                       className="w-full"
+                      disabled={isInputDisabled} // Disable input when isInputDisabled is true
                       {...field}
                     />
                   </FormControl>
@@ -170,7 +187,13 @@ const LoginPage = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="mt-4 w-full">
+            <Button
+              type="submit"
+              className="mt-4 w-full"
+              disabled={isInputDisabled}
+            >
+              {" "}
+              {/* Disable button when isInputDisabled is true */}
               {t("auth.continueWithEmail")}
             </Button>
           </form>

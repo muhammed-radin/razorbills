@@ -245,6 +245,113 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
   }
 });
 
+// set wishlist products (replace all products)
+router.put("/", requireAuth, passUserAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(400).json({ error: "User ID not found in request" });
+    }
+
+    const { folder, products } = req.body;
+
+    if (!Array.isArray(products)) {
+      return res.status(400).json({
+        error: "Invalid wishlist data. 'products' must be an array.",
+      });
+    }
+
+    // const updatedWishlist = await WishlistModel.findOneAndUpdate(
+    //   { userId, folder },
+    //   { $set: { products, updatedAt: new Date() } },
+    //   { upsert: true, returnDocument: "after" },
+    // );
+
+    const currentWishlist = await WishlistModel.findOne({ userId, folder });
+
+    if (currentWishlist) {
+      const removedProducts = currentWishlist.products.filter(
+        (item) =>
+          !products.some(
+            (newItem) =>
+              (newItem.id || newItem.productId)?.toString() ===
+              (item.id || item.productId)?.toString(),
+          ),
+      );
+
+      removedProducts.forEach((product) => {
+        evt.fire(
+          Evts.WISHLIST_REMOVED,
+          new ClassicEvent({
+            type: Evts.WISHLIST_REMOVED,
+            isMajor: false,
+            sector: "wishlist",
+            content: { userId, folder, product },
+            userId: userId,
+            productId: product.id || product.productId,
+            wishlistId: currentWishlist._id,
+            actorId: userId,
+          }),
+        );
+      });
+    }
+
+    const updatedWishlist = await WishlistModel.updateOne(
+      { userId, folder },
+      { $set: { products, updatedAt: new Date() } },
+      { upsert: true },
+    );
+
+    evt.fire(
+      Evts.WISHLIST_UPDATED,
+      new ClassicEvent({
+        type: Evts.WISHLIST_UPDATED,
+        isMajor: false,
+        sector: "wishlist",
+        content: { userId, folder, products },
+        userId: userId,
+        folder: folder,
+        products: products,
+        wishlistId: updatedWishlist._id,
+        actorId: userId,
+      }),
+    );
+
+    products.forEach((product) => {
+      evt.fire(
+        Evts.PRODUCT_WISHLISTED,
+        new ClassicEvent({
+          type: Evts.PRODUCT_WISHLISTED,
+          isMajor: true,
+          sector: "wishlist",
+          content: { userId, folder, product },
+          userId: userId,
+          productId: product.id || product.productId,
+          wishlistId: updatedWishlist._id,
+          actorId: userId,
+        }),
+      );
+    });
+
+    res.json(updatedWishlist);
+  } catch (error) {
+    evt.fire(
+      Evts.WISHLIST_ERROR,
+      new ErrorEvent({
+        type: Evts.WISHLIST_ERROR,
+        error: error,
+        errorCode: error.code || 500,
+        data: {
+          userId: req.user?.id,
+          folder: req.body?.folder || req.query?.folder || "/",
+        },
+      }),
+    );
+    console.error("Error updating wishlist:", error);
+    res.status(500).json({ error: "Failed to update wishlist" });
+  }
+});
+
 // remove wishlist product
 router.delete("/", requireAuth, passUserAuth, async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { decryptObj } from "./crypt";
+import { decrypt, decryptObj, encrypt } from "./crypt";
 import { authClient } from "@/lib/auth-client";
 
 const apiBase = import.meta.env.VITE_API_ENDPOINT;
@@ -90,8 +90,20 @@ const api = {
     userData.session = session;
     return userData;
   },
+  async getSession() {
+    if (sessionStorage.getItem("session")) {
+      const session = JSON.parse(decrypt(sessionStorage.getItem("session")));
+      return { ...session, updated: null }; // Add updated timestamp
+    }
+    const session = await authClient.getSession();
+    if (session) {
+      sessionStorage.setItem("session", encrypt(JSON.stringify(session)));
+    }
+    return { ...session, updated: new Date().toISOString() }; // Add updated timestamp
+  },
   actions: {
     logOut() {
+      sessionStorage.removeItem("session"); // Clear session data from storage
       return authClient.signOut();
     },
   },

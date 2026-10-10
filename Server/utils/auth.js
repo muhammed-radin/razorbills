@@ -3,7 +3,7 @@ import { APIError, betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { admin, anonymous } from "better-auth/plugins";
 import { UserModel } from "../models/schema/user.js";
-import { createAuthMiddleware } from "better-auth/api";
+import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { decryptStrict } from "./crypt.js";
 import mongoose, { Mongoose } from "mongoose";
 import {
@@ -179,59 +179,41 @@ export default function createAuth(db) {
         }
       }),
       after: createAuthMiddleware(async (ctx) => {
-        if (ctx.path === "/sign-out") {
+        const session = await getSessionFromCtx(ctx);
+        console.log(
+          "Session after auth action:",
+          session,
+          ctx.context?.session,
+        );
+        const isSessionFound = !!session; // TODO: Fix this session null error, currently session is null after sign-in, sign-up, and sign-out actions. Need to investigate why.
+        if (isSessionFound && ctx.path === "/sign-out") {
           evt.fire(
             Evts.USER_LOGGED_OUT_REQUEST,
             new UserEvent({
               type: Evts.USER_LOGGED_OUT_REQUEST,
-              user:
-                ctx?.user || ctx.session?.user || ctx.newSession?.user || null,
-              isGuest:
-                ctx?.user?.isAnonymous ||
-                ctx.session?.user?.isAnonymous ||
-                ctx.newSession?.user?.isAnonymous ||
-                false,
-              userId:
-                ctx?.user?.id ||
-                ctx.session?.user?.id ||
-                ctx.newSession?.user?.id ||
-                null,
+              user: session?.user || null,
+              isGuest: session?.user?.isAnonymous || false,
+              userId: session?.user?.id || null,
             }),
           );
-        } else if (ctx.path === "/reset-password") {
+        } else if (isSessionFound && ctx.path === "/reset-password") {
           evt.fire(
             Evts.USER_PASSWORD_CHANGED,
             new UserEvent({
               type: Evts.USER_PASSWORD_CHANGED,
-              user:
-                ctx?.user || ctx.session?.user || ctx.newSession?.user || null,
-              isGuest:
-                ctx?.user?.isAnonymous ||
-                ctx.session?.user?.isAnonymous ||
-                false,
-              userId:
-                ctx?.user?.id ||
-                ctx.session?.user?.id ||
-                ctx.newSession?.user?.id ||
-                null,
+              user: session?.user || null,
+              isGuest: session?.user?.isAnonymous || false,
+              userId: session?.user?.id || null,
             }),
           );
-        } else if (ctx.path === "/update-password") {
+        } else if (isSessionFound && ctx.path === "/update-password") {
           evt.fire(
             Evts.USER_PASSWORD_CHANGED,
             new UserEvent({
               type: Evts.USER_PASSWORD_CHANGED,
-              user:
-                ctx?.user || ctx.session?.user || ctx.newSession?.user || null,
-              isGuest:
-                ctx?.user?.isAnonymous ||
-                ctx.session?.user?.isAnonymous ||
-                false,
-              userId:
-                ctx?.user?.id ||
-                ctx.session?.user?.id ||
-                ctx.newSession?.user?.id ||
-                null,
+              user: session?.user || null,
+              isGuest: session?.user?.isAnonymous || false,
+              userId: session?.user?.id || null,
             }),
           );
         }

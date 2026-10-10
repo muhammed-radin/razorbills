@@ -18,13 +18,14 @@ import { api } from "@/utils/api";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
 
 const SignUpPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   const formSchema = z.object({
     email: z.string().email(t("auth.invalidEmail")),
@@ -54,7 +55,7 @@ const SignUpPage = () => {
       password: encryptStrict(password),
       name: encrypt(name),
     };
-
+    setIsInputDisabled(true); // Disable inputs during submission
     sumbitForm(encryptedData);
   };
 
@@ -106,9 +107,14 @@ const SignUpPage = () => {
         }),
       {
         loading: t("auth.signingUp"),
-        success: (msg) => `${msg}`,
-        error: (err) =>
-          `${t("auth.signupFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`,
+        success: (msg) => {
+          setIsInputDisabled(false);
+          return `${msg}`;
+        },
+        error: (err) => {
+          setIsInputDisabled(false);
+          return `${t("auth.signupFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`;
+        },
       },
     );
   };
@@ -131,7 +137,14 @@ const SignUpPage = () => {
           {t("auth.signupTitle")}
         </p>
 
-        <Button className="mt-8 w-full gap-3" onClick={onUserGoogleSignIn}>
+        <Button
+          className="mt-8 w-full gap-3"
+          disabled={isInputDisabled}
+          onClick={() => {
+            setIsInputDisabled(true);
+            onUserGoogleSignIn(setIsInputDisabled);
+          }}
+        >
           <GoogleLogo />
           {t("auth.continueWithGoogle")}
         </Button>
@@ -158,6 +171,7 @@ const SignUpPage = () => {
                       type="text"
                       placeholder={t("auth.fullNamePlaceholder")}
                       className="w-full"
+                      disabled={isInputDisabled}
                       {...field}
                     />
                   </FormControl>
@@ -176,6 +190,7 @@ const SignUpPage = () => {
                       type="email"
                       placeholder={t("auth.emailPlaceholder")}
                       className="w-full"
+                      disabled={isInputDisabled}
                       {...field}
                     />
                   </FormControl>
@@ -194,6 +209,7 @@ const SignUpPage = () => {
                       type="password"
                       placeholder={t("auth.passwordPlaceholder")}
                       className="w-full"
+                      disabled={isInputDisabled}
                       {...field}
                     />
                   </FormControl>
@@ -201,7 +217,11 @@ const SignUpPage = () => {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="mt-4 w-full">
+            <Button
+              type="submit"
+              className="mt-4 w-full"
+              disabled={isInputDisabled}
+            >
               {t("auth.continueWithEmail")}
             </Button>
           </form>
