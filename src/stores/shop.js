@@ -47,6 +47,11 @@ export const useCartStore = create((set, get) => ({
   serverBacked: true,
 
   fetch: async () => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
+
     set({ loading: true, error: null });
     try {
       const cart = await cartApi.get();
@@ -67,6 +72,11 @@ export const useCartStore = create((set, get) => ({
   },
 
   add: async (product, quantity = 1) => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
+
     const productId = product.productId ?? product.id;
     if (get().serverBacked) {
       try {
@@ -103,6 +113,11 @@ export const useCartStore = create((set, get) => ({
   },
 
   setQuantity: async (productId, quantity) => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
+
     if (get().serverBacked) {
       try {
         const cart = await cartApi.setQuantity(productId, quantity);
@@ -121,6 +136,10 @@ export const useCartStore = create((set, get) => ({
   },
 
   remove: async (productId) => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
     if (get().serverBacked) {
       try {
         const cart = await cartApi.remove(productId);
@@ -137,6 +156,10 @@ export const useCartStore = create((set, get) => ({
   },
 
   clear: async () => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
     if (get().serverBacked) {
       try {
         await cartApi.clear();
@@ -168,7 +191,7 @@ export const useWishlistStore = create((set, get) => ({
     const isSignedIn = await openAuthenticationModal();
     if (!isSignedIn) {
       set({ items: [], serverBacked: false });
-      throw new Error("User is not signed in"); // User is not signed in, exit the function
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
     }
 
     set({ loading: true, error: null });
@@ -197,7 +220,7 @@ export const useWishlistStore = create((set, get) => ({
   toggle: async (product, folder = "/") => {
     const isSignedIn = await openAuthenticationModal();
     if (!isSignedIn) {
-      throw new Error("User is not signed in"); // User is not signed in, exit the function
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
     }
 
     const productId = product.productId ?? product.id;
@@ -211,7 +234,7 @@ export const useWishlistStore = create((set, get) => ({
   add: async (product, folder = "/") => {
     const isSignedIn = await openAuthenticationModal();
     if (!isSignedIn) {
-      throw new Error("User is not signed in"); // User is not signed in, exit the function
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
     }
 
     if (get().serverBacked && isSignedIn) {
@@ -235,7 +258,7 @@ export const useWishlistStore = create((set, get) => ({
   remove: async (productId, folder = "/") => {
     const isSignedIn = await openAuthenticationModal();
     if (!isSignedIn) {
-      throw new Error("User is not signed in"); // User is not signed in, exit the function
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
     }
 
     if (get().serverBacked && isSignedIn) {
@@ -258,7 +281,7 @@ export const useWishlistStore = create((set, get) => ({
   syncToServer: async () => {
     const isSignedIn = await openAuthenticationModal();
     if (!isSignedIn) {
-      throw new Error("User is not signed in"); // User is not signed in, exit the function
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
     }
 
     if (!get().serverBacked && isSignedIn) {

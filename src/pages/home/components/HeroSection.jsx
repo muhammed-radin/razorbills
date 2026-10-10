@@ -52,8 +52,7 @@ export default function HeroSection({ featured, loading }) {
                 <BadgeCheck className="size-3.5 text-emerald-600" />
                 <span>{t("homepage.hero.badge")}</span>
                 <span className="hidden sm:inline-flex items-center gap-1 text-muted-foreground">
-                  <MapPin className="size-3" /> Malappuram · Kozhikode ·
-                  Trivandrum
+                  <MapPin className="size-3" /> Malappuram · Kerala
                 </span>
               </div>
             </Reveal>

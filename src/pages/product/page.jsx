@@ -549,35 +549,6 @@ const ProductDetailsPage = () => {
                   <CardDescription>
                     {t("product.reviewsSubtitle")}
                   </CardDescription>
-                  <Drawer>
-                    <DrawerTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="ml-auto my-1"
-                      >
-                        {t("product.writeReview")}
-                      </Button>
-                    </DrawerTrigger>
-                    <DrawerContent>
-                      <DrawerHeader>
-                        <DrawerTitle>
-                          {t("product.reviewDrawerTitle")}
-                        </DrawerTitle>
-                        <DrawerDescription>
-                          {t("product.reviewDrawerDesc")}
-                        </DrawerDescription>
-                      </DrawerHeader>
-                      <DrawerFooter className="space-x-2 flex flex-row items-center justify-center">
-                        <Button>{t("product.submitReview")}</Button>
-                        <DrawerClose asChild>
-                          <Button variant="outline">
-                            {t("common.cancel")}
-                          </Button>
-                        </DrawerClose>
-                      </DrawerFooter>
-                    </DrawerContent>
-                  </Drawer>
                   <Separator className="my-2" />
                 </CardHeader>
                 <CardContent className="w-full">
