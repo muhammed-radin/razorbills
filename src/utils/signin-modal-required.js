@@ -22,7 +22,7 @@ async function openAuthenticationModal() {
     description:
       "Please log in to access this page, or continue as a guest to explore limited features. Guest access requires cookies to be enabled.",
     buttonText: "Login",
-    secondaryButtonText: "Continue as Guest",
+    secondaryButtonText: "Close",
   });
 
   if (result) {
