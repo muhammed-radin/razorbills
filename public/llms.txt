@@ -1,0 +1,30 @@
+ # Razorbills
+
+## Overview
+
+Razorbills is a web project. This file provides a concise guide for language models working with the project.
+
+## Repository guidance
+
+- Preserve the existing architecture, naming conventions, and formatting.
+- Prefer small, focused changes that directly address the requested task.
+- Do not modify generated files, secrets, or deployment configuration unless explicitly requested.
+- Update relevant documentation when behavior or public interfaces change.
+- Validate changes with the project's existing lint, type-check, and test commands when available.
+
+## Code changes
+
+- Keep changes scoped to the affected feature or bug.
+- Reuse existing components, utilities, and styles before introducing new abstractions.
+- Maintain accessibility, responsive behavior, and existing error handling.
+- Avoid breaking public APIs and preserve backward compatibility where practical.
+
+## Security and privacy
+
+- Never commit credentials, tokens, private keys, or personal data.
+- Treat user-controlled input as untrusted and validate it at system boundaries.
+- Do not weaken authentication, authorization, or security controls.
+
+## Communication
+
+Summarize what changed, mention any validation performed, and call out assumptions or remaining limitations.

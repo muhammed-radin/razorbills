@@ -2,7 +2,10 @@ import { create } from "zustand";
 import { cartApi, wishlistApi, addressApi, ordersApi } from "@/services/shop";
 import { MinimalProduct } from "@/models/product";
 import { api } from "@/utils/api";
-import { openAuthenticationModal } from "@/utils/signin-modal-required";
+import {
+  openAuthenticationModal,
+  validateSignInModalRequired,
+} from "@/utils/signin-modal-required";
 
 const isAuthError = (err) =>
   err?.response?.status === 401 || err?.response?.status === 403;
@@ -47,7 +50,7 @@ export const useCartStore = create((set, get) => ({
   serverBacked: true,
 
   fetch: async () => {
-    const isSignedIn = await openAuthenticationModal();
+    const isSignedIn = await validateSignInModalRequired();
     if (!isSignedIn) {
       throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
     }
@@ -188,7 +191,7 @@ export const useWishlistStore = create((set, get) => ({
   serverBacked: true,
 
   fetch: async (folder = "/") => {
-    const isSignedIn = await openAuthenticationModal();
+    const isSignedIn = await validateSignInModalRequired();
     if (!isSignedIn) {
       set({ items: [], serverBacked: false });
       throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
@@ -329,6 +332,10 @@ export const useAddressStore = create((set) => ({
   error: null,
 
   fetch: async () => {
+    const isSignedIn = await validateSignInModalRequired();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
     set({ loading: true, error: null });
     try {
       const addresses = await addressApi.list();
@@ -347,14 +354,29 @@ export const useAddressStore = create((set) => ({
   },
 
   delete: async (addressId) => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
+
     await addressApi.remove(addressId);
   },
 
   update: async (address) => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
+
     await addressApi.update(address);
   },
 
   add: async (address) => {
+    const isSignedIn = await openAuthenticationModal();
+    if (!isSignedIn) {
+      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+    }
+
     const { data: session } = await api.getSession();
     const user = session?.user;
     if (!user) {
