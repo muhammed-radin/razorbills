@@ -4,7 +4,12 @@ import { Heart, ShoppingCart, Star, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { currency } from "@/utils/currency";
 import { useTranslation } from "react-i18next";
@@ -24,7 +29,10 @@ export default function ProductCard({ product, index = 0 }) {
 
   const discount =
     product.originalPrice != null && product.originalPrice > product.price
-      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+      ? Math.round(
+          ((product.originalPrice - product.price) / product.originalPrice) *
+            100,
+        )
       : 0;
   const hasRating = Number(product.rating) > 0;
 
@@ -44,7 +52,9 @@ export default function ProductCard({ product, index = 0 }) {
     e.stopPropagation();
     try {
       await toggle(product);
-      toast.success(wished ? t("product.removeFromFavorites") : t("product.addToFavorites"));
+      toast.success(
+        wished ? t("product.removeFromFavorites") : t("product.addToFavorites"),
+      );
     } catch {
       toast.error(t("common.tryAgain"));
     }
@@ -61,11 +71,14 @@ export default function ProductCard({ product, index = 0 }) {
         <img
           src={product.thumbnail || product.image}
           alt={product.title}
+          width="400"
+          height="400"
           loading="lazy"
+          decoding="async"
           onLoad={() => setImgOk(true)}
           className={cn(
             "h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]",
-            !imgOk && "opacity-0"
+            !imgOk && "opacity-0",
           )}
         />
         <div className="absolute left-3 top-3 flex flex-col gap-1.5">
@@ -75,7 +88,10 @@ export default function ProductCard({ product, index = 0 }) {
             </Badge>
           )}
           {product.badge && (
-            <Badge variant="secondary" className="backdrop-blur bg-background/85">
+            <Badge
+              variant="secondary"
+              className="backdrop-blur bg-background/85"
+            >
               {product.badge}
             </Badge>
           )}
@@ -90,13 +106,15 @@ export default function ProductCard({ product, index = 0 }) {
                   "absolute right-3 top-3 grid size-9 place-items-center rounded-full border backdrop-blur transition active:scale-90",
                   wished
                     ? "bg-rose-500 border-rose-500 text-white shadow-lg"
-                    : "bg-background/85 hover:bg-background"
+                    : "bg-background/85 hover:bg-background",
                 )}
               >
                 <Heart className={cn("size-4", wished && "fill-current")} />
               </button>
             </TooltipTrigger>
-            <TooltipContent>{wished ? "Saved" : "Add to wishlist"}</TooltipContent>
+            <TooltipContent>
+              {wished ? "Saved" : "Add to wishlist"}
+            </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         {product.stock <= 0 && (
@@ -121,7 +139,9 @@ export default function ProductCard({ product, index = 0 }) {
             <span className="inline-flex items-center gap-0.5 text-[11px] sm:text-xs text-muted-foreground">
               <Star className="size-3 fill-amber-400 text-amber-400" />
               {product.rating}
-              {product.reviews ? ` (${product.reviews > 1000 ? `${(product.reviews / 1000).toFixed(1)}k` : product.reviews})` : ""}
+              {product.reviews
+                ? ` (${product.reviews > 1000 ? `${(product.reviews / 1000).toFixed(1)}k` : product.reviews})`
+                : ""}
             </span>
           </div>
         )}
@@ -130,11 +150,12 @@ export default function ProductCard({ product, index = 0 }) {
             <p className="text-[15px] sm:text-lg font-extrabold tracking-tight tabular-nums truncate">
               {currency(product.price)}
             </p>
-            {product.originalPrice != null && product.originalPrice !== product.price && (
-              <p className="text-[11px] sm:text-xs text-muted-foreground line-through tabular-nums truncate">
-                {currency(product.originalPrice)}
-              </p>
-            )}
+            {product.originalPrice != null &&
+              product.originalPrice !== product.price && (
+                <p className="text-[11px] sm:text-xs text-muted-foreground line-through tabular-nums truncate">
+                  {currency(product.originalPrice)}
+                </p>
+              )}
           </div>
           <Button
             size="sm"
@@ -142,10 +163,14 @@ export default function ProductCard({ product, index = 0 }) {
             disabled={product.stock <= 0}
             className={cn(
               "rounded-xl gap-1.5 transition-all min-h-9 w-full justify-center sm:w-auto",
-              added && "bg-emerald-600 hover:bg-emerald-600"
+              added && "bg-emerald-600 hover:bg-emerald-600",
             )}
           >
-            {added ? <Check className="size-4" /> : <ShoppingCart className="size-4" />}
+            {added ? (
+              <Check className="size-4" />
+            ) : (
+              <ShoppingCart className="size-4" />
+            )}
             {added ? t("homepage.card.added") : t("homepage.card.add")}
           </Button>
         </div>

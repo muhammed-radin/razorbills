@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -16,20 +16,23 @@ import { api } from "@/utils/api";
 import HeroSection from "./components/HeroSection";
 import CategoryShowcase from "./components/CategoryShowcase";
 import FeaturedProducts from "./components/FeaturedProducts";
-import OfferSection from "./components/OfferSection";
-import WhyRazorbills from "./components/WhyRazorbills";
-import RecommendationSection from "./components/RecommendationSection";
-import ServiceHighlights from "./components/ServiceHighlights";
 import { ProductRail } from "./components/FeaturedProducts";
 import { SectionHeading, Reveal } from "./components/Reveal";
-import { useCartStore, useWishlistStore } from "@/stores/shop";
+
+const OfferSection = lazy(() => import("./components/OfferSection"));
+const WhyRazorbills = lazy(() => import("./components/WhyRazorbills"));
+const RecommendationSection = lazy(
+  () => import("./components/RecommendationSection"),
+);
+const ServiceHighlights = lazy(() => import("./components/ServiceHighlights"));
 
 // Normalize a raw API product into the shape homepage components expect.
 // Returns null when the record is missing the essentials (no placeholder filling).
 function normalize(p) {
   if (!p) return null;
   const id = p.id || p._id || p.productId;
-  const thumbnail = p.thumbnail || p.image || (Array.isArray(p.images) ? p.images[0] : null);
+  const thumbnail =
+    p.thumbnail || p.image || (Array.isArray(p.images) ? p.images[0] : null);
   if (!id || !p.title || thumbnail == null || p.price == null) return null;
   const metrics = p.metrics || p.meterics || {};
   return {
@@ -58,8 +61,23 @@ export default function HomePage() {
   const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
-    useCartStore.getState().fetch().catch(() => {});
-    useWishlistStore.getState().fetch().catch(() => {});
+    const hydrateUserState = async () => {
+      const { useCartStore, useWishlistStore } = await import("@/stores/shop");
+      useCartStore
+        .getState()
+        .fetch()
+        .catch(() => {});
+      useWishlistStore
+        .getState()
+        .fetch()
+        .catch(() => {});
+    };
+    if (window.requestIdleCallback) {
+      const idleId = window.requestIdleCallback(hydrateUserState);
+      return () => window.cancelIdleCallback(idleId);
+    }
+    const timeoutId = window.setTimeout(hydrateUserState, 1200);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   useEffect(() => {
@@ -97,16 +115,16 @@ export default function HomePage() {
   // Live data only — no placeholder products.
   const trending = useMemo(
     () => (featured.length ? featured : latest),
-    [featured, latest]
+    [featured, latest],
   );
   const newArrivals = useMemo(() => latest, [latest]);
   const dealProduct = useMemo(() => {
     const discounted = trending.filter(
-      (p) => p.originalPrice != null && p.originalPrice > p.price
+      (p) => p.originalPrice != null && p.originalPrice > p.price,
     );
     const pool = discounted.length ? discounted : trending;
     return [...pool].sort(
-      (a, b) => (b.originalPrice || b.price) - (a.originalPrice || a.price)
+      (a, b) => (b.originalPrice || b.price) - (a.originalPrice || a.price),
     )[0];
   }, [trending]);
   const hasProducts = latest.length > 0 || featured.length > 0;
@@ -115,10 +133,7 @@ export default function HomePage() {
     <div className="min-h-screen w-full bg-background text-foreground pb-[env(safe-area-inset-bottom)]">
       <Helmet>
         <title>{t("home.helmetTitle")}</title>
-        <meta
-          name="description"
-          content={t("home.helmetDescription")}
-        />
+        <meta name="description" content={t("home.helmetDescription")} />
       </Helmet>
 
       <HeroSection featured={trending} loading={loading} />
@@ -127,56 +142,76 @@ export default function HomePage() {
 
       <FeaturedProducts products={trending} loading={loading} />
 
-      {dealProduct && <OfferSection product={dealProduct} />}
+      <Suspense fallback={null}>
+        {dealProduct && <OfferSection product={dealProduct} />}
 
-      <WhyRazorbills />
+        <WhyRazorbills />
 
-      {/* New arrivals rail — only when the feed has items */}
-      {(loading || newArrivals.length > 0) && (
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <SectionHeading
-            eyebrow={t("homepage.arrivals.eyebrow")}
-            title={t("homepage.arrivals.title")}
-            description={t("homepage.arrivals.description")}
-            action={
-              <Button variant="outline" className="rounded-xl" asChild>
-                <Link to="/search">{t("homepage.arrivals.shopAll")} <ArrowRight className="size-4" /></Link>
-              </Button>
-            }
-          />
-          <Reveal delay={100}>
-            <ProductRail products={newArrivals.slice(0, 10)} loading={loading} />
-          </Reveal>
-        </section>
-      )}
+        {/* New arrivals rail — only when the feed has items */}
+        {(loading || newArrivals.length > 0) && (
+          <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+            <SectionHeading
+              eyebrow={t("homepage.arrivals.eyebrow")}
+              title={t("homepage.arrivals.title")}
+              description={t("homepage.arrivals.description")}
+              action={
+                <Button variant="outline" className="rounded-xl" asChild>
+                  <Link to="/search">
+                    {t("homepage.arrivals.shopAll")}{" "}
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              }
+            />
+            <Reveal delay={100}>
+              <ProductRail
+                products={newArrivals.slice(0, 10)}
+                loading={loading}
+              />
+            </Reveal>
+          </section>
+        )}
 
-      {!loading && !hasProducts ? (
-        <section className="mx-auto max-w-3xl px-4 py-10">
-          <Empty className="border rounded-3xl">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <FolderOpen />
-              </EmptyMedia>
-              <EmptyTitle>{loadError ? t("homepage.empty.loadFailed") : t("homepage.empty.noProducts")}</EmptyTitle>
-              <EmptyDescription>
-                {loadError ? t("homepage.empty.retryHint") : t("homepage.empty.stocking")}
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent className="flex-row justify-center gap-2">
-              {loadError ? (
-                <Button onClick={() => window.location.reload()}>{t("homepage.empty.retry")}</Button>
-              ) : (
-                <Button asChild><Link to="/contact">{t("homepage.empty.contact")}</Link></Button>
-              )}
-              <Button variant="outline" asChild><Link to="/search">{t("homepage.empty.browse")}</Link></Button>
-            </EmptyContent>
-          </Empty>
-        </section>
-      ) : (
-        trending.length > 0 && <RecommendationSection products={trending} />
-      )}
+        {!loading && !hasProducts ? (
+          <section className="mx-auto max-w-3xl px-4 py-10">
+            <Empty className="border rounded-3xl">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FolderOpen />
+                </EmptyMedia>
+                <EmptyTitle>
+                  {loadError
+                    ? t("homepage.empty.loadFailed")
+                    : t("homepage.empty.noProducts")}
+                </EmptyTitle>
+                <EmptyDescription>
+                  {loadError
+                    ? t("homepage.empty.retryHint")
+                    : t("homepage.empty.stocking")}
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent className="flex-row justify-center gap-2">
+                {loadError ? (
+                  <Button onClick={() => window.location.reload()}>
+                    {t("homepage.empty.retry")}
+                  </Button>
+                ) : (
+                  <Button asChild>
+                    <Link to="/contact">{t("homepage.empty.contact")}</Link>
+                  </Button>
+                )}
+                <Button variant="outline" asChild>
+                  <Link to="/search">{t("homepage.empty.browse")}</Link>
+                </Button>
+              </EmptyContent>
+            </Empty>
+          </section>
+        ) : (
+          trending.length > 0 && <RecommendationSection products={trending} />
+        )}
 
-      <ServiceHighlights />
+        <ServiceHighlights />
+      </Suspense>
     </div>
   );
 }

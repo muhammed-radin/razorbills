@@ -1,134 +1,149 @@
-import React, { lazy, Suspense } from "react";
-import { Route, Routes } from "react-router-dom";
+import React from "react";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 
-// Eagerly loaded layout/wrapper shell (Keep fast for client)
-import App from "../App";
 import { LoaderScreen } from "@/components/LoaderScreen";
 
-// Lazy load Admin shells to isolate heavy dependencies (mdxeditor, recharts, etc.)
-const AdminAuth = lazy(() => import("@/pages/Admin/auth/page.index"));
-const AdminApp = lazy(() => import("@/pages/Admin/admin.app"));
+const lazyRoute = (importer) => ({
+  lazy: async () => ({ Component: (await importer()).default }),
+});
 
-// --- LAZY IMPORT MAPS ---
-
-// Main Client Pages
-const HomePage = lazy(() => import("../pages/home/page"));
-const ProductSearchPage = lazy(() => import("@/pages/search/page"));
-const ProductDetailsPage = lazy(() => import("@/pages/product/page"));
-const CartPage = lazy(() => import("@/pages/cart/page"));
-const LoginPage = lazy(() => import("@/pages/login/page"));
-const SignUpPage = lazy(() => import("@/pages/signup/page"));
-const PrivacyPolicyPage = lazy(() => import("@/pages/privacy/page"));
-const NotFoundPage = lazy(() => import("@/pages/notfound/page"));
-const RedirectPage = lazy(() => import("@/pages/redirect/gprovider"));
-const Orderhistory = lazy(() => import("@/pages/orderhistory/Orderhistory"));
-const Wishlist = lazy(() => import("@/pages/wishlist/Wishlist"));
-const SettingsPage = lazy(() => import("@/pages/settings/page"));
-const AddressBookPage = lazy(() => import("@/pages/addressbook/page"));
-const AboutPage = lazy(() => import("@/pages/aboutUs/page"));
-const TermsAndConditions = lazy(
-  () => import("@/pages/TermsAndConditions/TermsAndConditions"),
-);
-const ContactUs = lazy(() => import("@/pages/contactus/page"));
-const ShippingInfo = lazy(() => import("@/pages/shippingInfo/page"));
-const Return = lazy(() => import("@/pages/return/page"));
-const CategoriesPage = lazy(() => import("@/pages/categories/categories.page"));
-const ForgotPasswordPage = lazy(
-  () => import("@/pages/forgot-password/page"),
-);
-const PaymentSuccessPage = lazy(
-  () => import("@/pages/payment-success/page"),
-);
-const OrderStatusPage = lazy(() => import("@/pages/order-status/page"));
-
-// Admin Pages
-const AdminDashboardPage = lazy(() => import("@/pages/Admin/dashboard/page"));
-const AdminProductsPage = lazy(() => import("@/pages/Admin/products/page"));
-const NewProductPage = lazy(
-  () => import("@/pages/Admin/products/pages/new/page"),
-);
-const EditProductPage = lazy(
-  () => import("@/pages/Admin/products/pages/edit/[id]"),
-);
-const OrdersPage = lazy(() => import("@/pages/Admin/orders"));
-const CustomersPage = lazy(() => import("@/pages/Admin/customers"));
-const AdminSettingsPage = lazy(() => import("@/pages/Admin/settings/page"));
-
-// --- ROUTE CONFIGURATION MAPS ---
-
-const clientRoutes = [
-  { index: true, element: <HomePage /> },
-  { path: "search", element: <ProductSearchPage /> },
-  { path: "product/:id", element: <ProductDetailsPage /> },
-  { path: "cart", element: <CartPage /> },
-  { path: "login", element: <LoginPage /> },
-  { path: "signup", element: <SignUpPage /> },
-  { path: "forgot-password", element: <ForgotPasswordPage /> },
-  { path: "payment-success", element: <PaymentSuccessPage /> },
-  { path: "payment/success", element: <PaymentSuccessPage /> },
-  { path: "order-status", element: <OrderStatusPage /> },
-  { path: "order/status", element: <OrderStatusPage /> },
-  { path: "privacy", element: <PrivacyPolicyPage /> },
-  { path: "404", element: <NotFoundPage /> },
-  { path: "*", element: <NotFoundPage /> },
-  { path: "redirect", element: <RedirectPage /> },
-  { path: "order", element: <Orderhistory /> },
-  { path: "wishlist", element: <Wishlist /> },
-  { path: "settings", element: <SettingsPage /> },
-  { path: "addressbook", element: <AddressBookPage /> },
-  { path: "about", element: <AboutPage /> },
-  { path: "terms", element: <TermsAndConditions /> },
-  { path: "contact", element: <ContactUs /> },
-  { path: "shipping", element: <ShippingInfo /> },
-  { path: "return", element: <Return /> },
-  { path: "categories", element: <CategoriesPage /> },
-];
-
-const adminSubRoutes = [
-  { index: true, element: <AdminDashboardPage /> },
-  { path: "dashboard", element: <AdminDashboardPage /> },
-  { path: "products", element: <AdminProductsPage /> },
-  { path: "products/new", element: <NewProductPage /> },
-  { path: "products/:id/edit", element: <EditProductPage /> },
-  { path: "orders", element: <OrdersPage /> },
-  { path: "customers", element: <CustomersPage /> },
-  { path: "settings", element: <AdminSettingsPage /> },
-];
-
-// --- MAIN ROUTER COMPONENT ---
+const router = createHashRouter([
+  {
+    ...lazyRoute(() => import("./SessionLayout")),
+    children: [
+      {
+        path: "/",
+        ...lazyRoute(() => import("../App")),
+        children: [
+          { index: true, ...lazyRoute(() => import("../pages/home/page")) },
+          { path: "search", ...lazyRoute(() => import("@/pages/search/page")) },
+          {
+            path: "product/:id",
+            ...lazyRoute(() => import("@/pages/product/page")),
+          },
+          { path: "cart", ...lazyRoute(() => import("@/pages/cart/page")) },
+          { path: "login", ...lazyRoute(() => import("@/pages/login/page")) },
+          { path: "signup", ...lazyRoute(() => import("@/pages/signup/page")) },
+          {
+            path: "forgot-password",
+            ...lazyRoute(() => import("@/pages/forgot-password/page")),
+          },
+          {
+            path: "payment-success",
+            ...lazyRoute(() => import("@/pages/payment-success/page")),
+          },
+          {
+            path: "payment/success",
+            ...lazyRoute(() => import("@/pages/payment-success/page")),
+          },
+          {
+            path: "order-status",
+            ...lazyRoute(() => import("@/pages/order-status/page")),
+          },
+          {
+            path: "order/status",
+            ...lazyRoute(() => import("@/pages/order-status/page")),
+          },
+          {
+            path: "privacy",
+            ...lazyRoute(() => import("@/pages/privacy/page")),
+          },
+          { path: "404", ...lazyRoute(() => import("@/pages/notfound/page")) },
+          {
+            path: "redirect",
+            ...lazyRoute(() => import("@/pages/redirect/gprovider")),
+          },
+          {
+            path: "order",
+            ...lazyRoute(() => import("@/pages/orderhistory/Orderhistory")),
+          },
+          {
+            path: "wishlist",
+            ...lazyRoute(() => import("@/pages/wishlist/Wishlist")),
+          },
+          {
+            path: "settings",
+            ...lazyRoute(() => import("@/pages/settings/page")),
+          },
+          {
+            path: "addressbook",
+            ...lazyRoute(() => import("@/pages/addressbook/page")),
+          },
+          { path: "about", ...lazyRoute(() => import("@/pages/aboutUs/page")) },
+          {
+            path: "terms",
+            ...lazyRoute(
+              () => import("@/pages/TermsAndConditions/TermsAndConditions"),
+            ),
+          },
+          {
+            path: "contact",
+            ...lazyRoute(() => import("@/pages/contactus/page")),
+          },
+          {
+            path: "shipping",
+            ...lazyRoute(() => import("@/pages/shippingInfo/page")),
+          },
+          { path: "return", ...lazyRoute(() => import("@/pages/return/page")) },
+          {
+            path: "categories",
+            ...lazyRoute(() => import("@/pages/categories/categories.page")),
+          },
+          { path: "*", ...lazyRoute(() => import("@/pages/notfound/page")) },
+        ],
+      },
+      {
+        path: "auth",
+        ...lazyRoute(() => import("@/pages/Admin/auth/page.index")),
+        children: [
+          {
+            path: "admin",
+            ...lazyRoute(() => import("@/pages/Admin/admin.app")),
+            children: [
+              {
+                index: true,
+                ...lazyRoute(() => import("@/pages/Admin/dashboard/page")),
+              },
+              {
+                path: "dashboard",
+                ...lazyRoute(() => import("@/pages/Admin/dashboard/page")),
+              },
+              {
+                path: "products",
+                ...lazyRoute(() => import("@/pages/Admin/products/page")),
+              },
+              {
+                path: "products/new",
+                ...lazyRoute(
+                  () => import("@/pages/Admin/products/pages/new/page"),
+                ),
+              },
+              {
+                path: "products/:id/edit",
+                ...lazyRoute(
+                  () => import("@/pages/Admin/products/pages/edit/[id]"),
+                ),
+              },
+              {
+                path: "orders",
+                ...lazyRoute(() => import("@/pages/Admin/orders")),
+              },
+              {
+                path: "customers",
+                ...lazyRoute(() => import("@/pages/Admin/customers")),
+              },
+              {
+                path: "settings",
+                ...lazyRoute(() => import("@/pages/Admin/settings/page")),
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+]);
 
 export default function Router() {
-  return (
-    // Global fallback loader while any lazy route chunk is being downloaded
-    <Suspense fallback={<LoaderScreen />}>
-      <Routes>
-        {/* Client Layout Shell */}
-        <Route path="/" element={<App />}>
-          {clientRoutes.map((route, index) => (
-            <Route
-              key={route.path || `client-${index}`}
-              index={route.index}
-              path={route.path}
-              element={route.element}
-            />
-          ))}
-        </Route>
-
-        {/* Admin Authentication Shell */}
-        <Route path="/auth" element={<AdminAuth />}>
-          {/* Admin Application Layout Shell */}
-          <Route path="admin" element={<AdminApp />}>
-            {adminSubRoutes.map((route, index) => (
-              <Route
-                key={route.path || `admin-${index}`}
-                index={route.index}
-                path={route.path}
-                element={route.element}
-              />
-            ))}
-          </Route>
-        </Route>
-      </Routes>
-    </Suspense>
-  );
+  return <RouterProvider router={router} fallbackElement={<LoaderScreen />} />;
 }

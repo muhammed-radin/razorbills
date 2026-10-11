@@ -15,9 +15,9 @@ export function ProductRail({ products, loading }) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="flex gap-3 sm:gap-4 overflow-hidden">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="space-y-2">
+          <div key={i} className="w-[200px] shrink-0 space-y-2 sm:w-[260px]">
             <Skeleton className="aspect-square rounded-3xl" />
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
@@ -36,16 +36,29 @@ export function ProductRail({ products, loading }) {
         className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {products.map((p, i) => (
-          <div key={p.id || p.productId || i} className="w-[200px] sm:w-[260px] shrink-0 snap-start">
+          <div
+            key={p.id || p.productId || i}
+            className="w-[200px] sm:w-[260px] shrink-0 snap-start"
+          >
             <ProductCard product={p} index={i} />
           </div>
         ))}
       </div>
       <div className="hidden md:flex gap-2 absolute -top-16 right-0">
-        <Button variant="outline" size="icon" className="rounded-full" onClick={() => scrollBy(-1)}>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          onClick={() => scrollBy(-1)}
+        >
           <ChevronLeft className="size-4" />
         </Button>
-        <Button variant="outline" size="icon" className="rounded-full" onClick={() => scrollBy(1)}>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          onClick={() => scrollBy(1)}
+        >
           <ChevronRight className="size-4" />
         </Button>
       </div>
@@ -57,7 +70,9 @@ export default function FeaturedProducts({ products, loading }) {
   const { t } = useTranslation();
   const [tab, setTab] = useState("all");
   const tabs = useMemo(() => {
-    const cats = [...new Set((products || []).map((p) => p.category).filter(Boolean))].slice(0, 5);
+    const cats = [
+      ...new Set((products || []).map((p) => p.category).filter(Boolean)),
+    ].slice(0, 5);
     return ["all", ...cats];
   }, [products]);
 
@@ -78,7 +93,10 @@ export default function FeaturedProducts({ products, loading }) {
           description={t("homepage.featured.description")}
           action={
             <Button variant="ghost" className="rounded-xl" asChild>
-              <Link to="/search">{t("homepage.featured.viewAll")} <ArrowRight className="size-4" /></Link>
+              <Link to="/search">
+                {t("homepage.featured.viewAll")}{" "}
+                <ArrowRight className="size-4" />
+              </Link>
             </Button>
           }
         />
@@ -91,7 +109,11 @@ export default function FeaturedProducts({ products, loading }) {
               <Tabs value={tab} onValueChange={setTab}>
                 <TabsList className="h-auto rounded-2xl p-1">
                   {tabs.map((tb) => (
-                    <TabsTrigger key={tb} value={tb} className="rounded-xl px-4 py-2 text-xs sm:text-sm capitalize">
+                    <TabsTrigger
+                      key={tb}
+                      value={tb}
+                      className="rounded-xl px-4 py-2 text-xs sm:text-sm capitalize"
+                    >
                       {tb === "all" ? t("common.all") : tb}
                     </TabsTrigger>
                   ))}

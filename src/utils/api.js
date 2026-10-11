@@ -1,6 +1,8 @@
 import axios from "axios";
 import { decrypt, decryptObj, encrypt } from "./crypt";
-import { authClient } from "@/lib/auth-client";
+
+const getAuthClient = async () =>
+  (await import("@/lib/auth-client")).authClient;
 
 const apiBase = import.meta.env.VITE_API_ENDPOINT;
 const ACTION_HEADER = {
@@ -75,6 +77,7 @@ const api = {
     return api.base("/api/users/settings");
   },
   async getUser(decryptData = true, fullData = false) {
+    const authClient = await getAuthClient();
     const { data: session } = await authClient.getSession();
     if (!session || !session.user) {
       return null;
@@ -95,6 +98,7 @@ const api = {
       const session = JSON.parse(decrypt(sessionStorage.getItem("session")));
       return { ...session, updated: null }; // Add updated timestamp
     }
+    const authClient = await getAuthClient();
     const session = await authClient.getSession();
     if (session) {
       sessionStorage.setItem("session", encrypt(JSON.stringify(session)));
@@ -102,8 +106,9 @@ const api = {
     return { ...session, updated: new Date().toISOString() }; // Add updated timestamp
   },
   actions: {
-    logOut() {
+    async logOut() {
       sessionStorage.removeItem("session"); // Clear session data from storage
+      const authClient = await getAuthClient();
       return authClient.signOut();
     },
   },

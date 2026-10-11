@@ -6,7 +6,6 @@ import { ThemeProvider } from "./utils/theme-provider";
 import ScrollToTop from "./utils/ScrollToTop"; // Import the ScrollToTop component
 import { useEffect, useState } from "react";
 import { alert } from "./components/dialog-alert-provider";
-import { authClient } from "./lib/auth-client";
 import { toast } from "sonner";
 import { LoaderScreen } from "./components/LoaderScreen";
 import { api } from "./utils/api";
@@ -43,9 +42,7 @@ function App() {
 
   useEffect(() => {
     async function validateIt() {
-      setIsLoading(true);
       const { data: session } = await api.getSession();
-      console.log("Session data in App.jsx:", session);
       const isSessionFound = !!session;
       if (isSessionFound) {
         setIsLoading(false);
@@ -68,6 +65,7 @@ function App() {
               // Redirect to login page
               navigate("/login");
             } else {
+              const { authClient } = await import("./lib/auth-client");
               // Continue as guest
               const { error } = await authClient.signIn.anonymous();
               if (error) {
@@ -96,7 +94,7 @@ function App() {
       }
     }
     validateIt();
-  }, [location.pathname]);
+  }, [isGuestAccess, location.pathname, navigate]);
 
   return (
     <>

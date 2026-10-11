@@ -1,7 +1,13 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Sparkles, GraduationCap, Wrench, Building2 } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  GraduationCap,
+  Wrench,
+  Building2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Reveal, SectionHeading } from "./Reveal";
@@ -12,17 +18,43 @@ export default function RecommendationSection({ products }) {
   const [persona, setPersona] = useState("makers");
 
   const personas = [
-    { id: "students", label: t("homepage.recommend.students"), icon: GraduationCap, hint: t("homepage.recommend.studentsHint") },
-    { id: "makers", label: t("homepage.recommend.makers"), icon: Wrench, hint: t("homepage.recommend.makersHint") },
-    { id: "home", label: t("homepage.recommend.home"), icon: Building2, hint: t("homepage.recommend.homeHint") },
+    {
+      id: "students",
+      label: t("homepage.recommend.students"),
+      icon: GraduationCap,
+      hint: t("homepage.recommend.studentsHint"),
+    },
+    {
+      id: "makers",
+      label: t("homepage.recommend.makers"),
+      icon: Wrench,
+      hint: t("homepage.recommend.makersHint"),
+    },
+    {
+      id: "home",
+      label: t("homepage.recommend.home"),
+      icon: Building2,
+      hint: t("homepage.recommend.homeHint"),
+    },
   ];
 
   const picks = useMemo(() => {
     if (!products?.length) return { hero: null, rest: [] };
     let filtered = products;
-    if (persona === "students") filtered = products.filter((p) => p.price < 2500);
-    if (persona === "makers") filtered = products.filter((p) => /arduino|esp|raspberry|sensor|cpu|component|board|module/i.test(`${p.title} ${p.category}`));
-    if (persona === "home") filtered = products.filter((p) => /audio|phone|laptop|smart|speaker|watch/i.test(`${p.title} ${p.category}`));
+    if (persona === "students")
+      filtered = products.filter((p) => p.price < 2500);
+    if (persona === "makers")
+      filtered = products.filter((p) =>
+        /arduino|esp|raspberry|sensor|cpu|component|board|module/i.test(
+          `${p.title} ${p.category}`,
+        ),
+      );
+    if (persona === "home")
+      filtered = products.filter((p) =>
+        /audio|phone|laptop|smart|speaker|watch/i.test(
+          `${p.title} ${p.category}`,
+        ),
+      );
     if (!filtered.length) filtered = products;
     return { hero: filtered[0], rest: filtered.slice(1, 5) };
   }, [products, persona]);
@@ -38,7 +70,8 @@ export default function RecommendationSection({ products }) {
         action={
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs text-muted-foreground">
-              <Sparkles className="size-3.5" /> {t("homepage.recommend.livePicks")}
+              <Sparkles className="size-3.5" />{" "}
+              {t("homepage.recommend.livePicks")}
             </span>
           </div>
         }
@@ -58,7 +91,11 @@ export default function RecommendationSection({ products }) {
             >
               <p.icon className="size-5" />
               <p className="mt-2 text-sm font-bold">{p.label}</p>
-              <p className={`text-[11px] sm:text-xs ${persona === p.id ? "opacity-80" : "text-muted-foreground"}`}>{p.hint}</p>
+              <p
+                className={`text-[11px] sm:text-xs ${persona === p.id ? "opacity-80" : "text-muted-foreground"}`}
+              >
+                {p.hint}
+              </p>
             </button>
           ))}
         </div>
@@ -68,15 +105,34 @@ export default function RecommendationSection({ products }) {
         <div className="grid gap-3 sm:gap-4 lg:grid-cols-[1fr_1.6fr]">
           <Reveal>
             <div className="relative overflow-hidden rounded-3xl border bg-[#101828] text-white min-h-[320px] flex flex-col justify-end">
-              <img src={picks.hero.thumbnail || picks.hero.image} alt={picks.hero.title} className="absolute inset-0 h-full w-full object-cover opacity-70" />
+              <img
+                src={picks.hero.thumbnail || picks.hero.image}
+                alt={picks.hero.title}
+                width="800"
+                height="600"
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-cover opacity-70"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
               <div className="relative p-5 sm:p-6">
                 <Badge className="bg-white text-black hover:bg-white border-0">
-                  <Sparkles className="size-3 mr-1" /> {t("homepage.recommend.topMatch", { persona: personas.find((p) => p.id === persona)?.label })}
+                  <Sparkles className="size-3 mr-1" />{" "}
+                  {t("homepage.recommend.topMatch", {
+                    persona: personas.find((p) => p.id === persona)?.label,
+                  })}
                 </Badge>
-                <h3 className="mt-3 text-xl sm:text-2xl font-extrabold leading-tight line-clamp-2">{picks.hero.title}</h3>
+                <h3 className="mt-3 text-xl sm:text-2xl font-extrabold leading-tight line-clamp-2">
+                  {picks.hero.title}
+                </h3>
                 <Button className="mt-4 rounded-xl w-full sm:w-auto" asChild>
-                  <Link to={`/product/${picks.hero.id || picks.hero.productId}`} className="inline-flex items-center justify-center gap-2">{t("homepage.recommend.shopPick")} <ArrowRight className="size-4" /></Link>
+                  <Link
+                    to={`/product/${picks.hero.id || picks.hero.productId}`}
+                    className="inline-flex items-center justify-center gap-2"
+                  >
+                    {t("homepage.recommend.shopPick")}{" "}
+                    <ArrowRight className="size-4" />
+                  </Link>
                 </Button>
               </div>
             </div>
