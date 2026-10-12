@@ -13,6 +13,8 @@ import {
     CheckCircle2,
     XCircle,
     Clock,
+    AlertCircle,
+    Undo2,
     DollarSign,
     TrendingUp,
     Calendar,
@@ -83,7 +85,7 @@ import {
 } from "@/components/ui/drawer"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { ordersApi } from "@/services/shop"
+import { ordersApi, paymentsApi, shipmentsApi } from "@/services/shop"
 import { cn } from "@/lib/utils"
 import {
     Form,
@@ -126,7 +128,35 @@ const statusConfig = {
         color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
         dotColor: "bg-red-500",
     },
+    confirmed: {
+        label: "Confirmed",
+        icon: CheckCircle2,
+        color: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20",
+        dotColor: "bg-teal-500",
+    },
+    packed: {
+        label: "Packed",
+        icon: Package,
+        color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20",
+        dotColor: "bg-cyan-500",
+    },
+    returned: {
+        label: "Returned",
+        icon: Undo2,
+        color: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20",
+        dotColor: "bg-orange-500",
+    },
 }
+
+/* Crash-safe lookup: unknown/future statuses (confirmed, packed, returned,
+ * refunded, …) must render a neutral badge, never throw on `.icon`. */
+const getStatus = (status) =>
+    statusConfig[status] ?? {
+        label: String(status ?? "Unknown").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()),
+        icon: AlertCircle,
+        color: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
+        dotColor: "bg-gray-500",
+    };
 
 // Form Schema for Edit Order
 const editOrderFormSchema = z.object({
@@ -154,97 +184,21 @@ export default function OrdersPage() {
     const [newStatus, setNewStatus] = useState("")
     const [cancelReason, setCancelReason] = useState("")
 
-    // Mock data - Replace with actual API calls
-    const mockOrders = [
-        {
-            id: "ORD-2026-0001",
-            customer: {
-                name: "John Doe",
-                email: "john.doe@example.com",
-                phone: "+1 234 567 8900",
-                avatar: "JD",
-            },
-            items: 3,
-            total: 1299.99,
-            status: "delivered",
-            date: "2026-01-02",
-            shippingAddress: "123 Main St, New York, NY 10001",
-            paymentMethod: "Credit Card",
-        },
-        {
-            id: "ORD-2026-0002",
-            customer: {
-                name: "Jane Smith",
-                email: "jane.smith@example.com",
-                phone: "+1 234 567 8901",
-                avatar: "JS",
-            },
-            items: 1,
-            total: 799.99,
-            status: "shipped",
-            date: "2026-01-03",
-            shippingAddress: "456 Oak Ave, Los Angeles, CA 90001",
-            paymentMethod: "PayPal",
-        },
-        {
-            id: "ORD-2026-0003",
-            customer: {
-                name: "Bob Wilson",
-                email: "bob.wilson@example.com",
-                phone: "+1 234 567 8902",
-                avatar: "BW",
-            },
-            items: 5,
-            total: 2499.99,
-            status: "processing",
-            date: "2026-01-04",
-            shippingAddress: "789 Pine Rd, Chicago, IL 60601",
-            paymentMethod: "Credit Card",
-        },
-        {
-            id: "ORD-2026-0004",
-            customer: {
-                name: "Alice Johnson",
-                email: "alice.j@example.com",
-                phone: "+1 234 567 8903",
-                avatar: "AJ",
-            },
-            items: 2,
-            total: 599.99,
-            status: "pending",
-            date: "2026-01-04",
-            shippingAddress: "321 Elm St, Houston, TX 77001",
-            paymentMethod: "Debit Card",
-        },
-        {
-            id: "ORD-2026-0005",
-            customer: {
-                name: "Charlie Brown",
-                email: "charlie.b@example.com",
-                phone: "+1 234 567 8904",
-                avatar: "CB",
-            },
-            items: 1,
-            total: 299.99,
-            status: "cancelled",
-            date: "2026-01-03",
-            shippingAddress: "654 Maple Dr, Phoenix, AZ 85001",
-            paymentMethod: "Credit Card",
-        },
-    ]
-
+    // Live orders from GET /api/orders/list (admin, read permission).
     useEffect(() => {
         fetchOrders()
     }, [])
 
+    const [loadError, setLoadError] = useState(null)
+
     const fetchOrders = async () => {
         try {
             setIsLoading(true)
+            setLoadError(null)
             const data = await ordersApi.list({ limit: 50 })
             const list = Array.isArray(data) ? data : (data.orders ?? data ?? [])
-            if (!Array.isArray(list) || list.length === 0) throw new Error("empty")
             setOrders(
-                list.map((o) => ({
+                (Array.isArray(list) ? list : []).map((o) => ({
                     id: o.id ?? o._id,
                     customer: {
                         name: o.userName ?? o.customer?.name ?? "",
@@ -263,17 +217,25 @@ export default function OrdersPage() {
                             ? o.shippingAddress
                             : [o.shippingAddress?.address, o.shippingAddress?.city].filter(Boolean).join(", "),
                     paymentMethod: o.payment?.method ?? "",
+                    paymentStatus: o.payment?.status ?? "pending",
+                    codStatus: o.payment?.codStatus ?? null,
+                    fulfillmentStatus: o.fulfillment?.status ?? "unfulfilled",
+                    awb: o.fulfillment?.awb ?? o.fulfillment?.trackingNumber ?? null,
+                    courier: o.fulfillment?.courierName ?? null,
                     raw: o,
                 })),
             )
             setIsLoading(false)
         } catch (error) {
-            console.error("Error fetching orders, using showcase data:", error)
-            // Non-admin sessions get 403 — keep showcase data so the page stays usable
-            setTimeout(() => {
-                setOrders(mockOrders)
-                setIsLoading(false)
-            }, 500)
+            console.error("Error fetching orders:", error)
+            // Never render fake rows as if they were real orders.
+            setOrders([])
+            setLoadError(
+                error?.response?.status === 403
+                    ? "Admin access required to view orders."
+                    : "Could not load orders. Check the connection and retry.",
+            )
+            setIsLoading(false)
         }
     }
 
@@ -316,12 +278,38 @@ export default function OrdersPage() {
         setCancelSheetOpen(true)
     }
 
-    const saveOrderEdit = async (values) => {
-        try {
-            // Replace with actual API call
-            // await axios.put(api.orders(selectedOrder.id), values)
+    const [savingEdit, setSavingEdit] = useState(false)
 
-            // Update local state
+    const saveOrderEdit = async (values) => {
+        if (savingEdit) return
+        try {
+            setSavingEdit(true)
+            // Persist editable shipment fields via PATCH /api/orders/:id/shipping.
+            // Customer identity lives in the user record, so only the
+            // shipment snapshot + note-safe fields are sent to the server.
+            const raw = selectedOrder?.raw ?? {}
+            const prevShip =
+                raw.shippingAddress && typeof raw.shippingAddress === "object"
+                    ? raw.shippingAddress
+                    : {}
+            const street = String(values.shippingAddress ?? "").split(",")[0];
+            const shipment = {
+                ...(prevShip.serviceName ? { serviceName: prevShip.serviceName } : {}),
+                shippingAddress: {
+                    ...prevShip,
+                    name: values.customerName,
+                    email: values.customerEmail,
+                    phone: values.customerPhone,
+                    street: (street ?? "").trim() || prevShip.street || "",
+                    address: values.shippingAddress,
+                },
+            }
+            const updated = await ordersApi.patchShipping(selectedOrder.id, {
+                serviceName: shipment.serviceName,
+                shippingAddress: shipment.shippingAddress,
+            }).catch(() => null)
+
+            const serverShip = updated?.shippingAddress ?? updated?.order?.shippingAddress
             const updatedOrder = {
                 ...selectedOrder,
                 customer: {
@@ -332,13 +320,89 @@ export default function OrdersPage() {
                 },
                 shippingAddress: values.shippingAddress,
                 paymentMethod: values.paymentMethod,
+                raw: updated?.order ?? updated ?? selectedOrder.raw,
+                ...(serverShip
+                    ? {
+                          shippingAddress:
+                              typeof serverShip === "string"
+                                  ? serverShip
+                                  : [serverShip.address, serverShip.city].filter(Boolean).join(", "),
+                      }
+                    : {}),
             }
             setOrders(orders.map(o => o.id === selectedOrder.id ? updatedOrder : o))
             toast.success("Order updated successfully")
             setEditSheetOpen(false)
         } catch (error) {
             console.error("Error updating order:", error)
-            toast.error("Failed to update order")
+            toast.error(error?.response?.data?.error ?? "Failed to update order")
+        } finally {
+            setSavingEdit(false)
+        }
+    }
+
+    const exportOrdersCsv = () => {
+        try {
+            const rows = [
+                ["orderId", "date", "customer", "email", "items", "total", "status", "paymentMethod", "paymentStatus", "fulfillment", "awb"],
+                ...filteredOrders.map((o) => [
+                    o.id, o.date, o.customer.name, o.customer.email, o.items,
+                    Number(o.total ?? 0).toFixed(2), o.status, o.paymentMethod,
+                    o.paymentStatus, o.fulfillmentStatus, o.awb ?? "",
+                ]),
+            ]
+            const csv = rows
+                .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
+                .join("\n")
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `razorbills-orders-${new Date().toISOString().split("T")[0]}.csv`
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            URL.revokeObjectURL(url)
+            toast.success(`Exported ${filteredOrders.length} order(s) to CSV`)
+        } catch (error) {
+            console.error("CSV export failed:", error)
+            toast.error("Failed to export orders")
+        }
+    }
+
+    const downloadInvoice = (order) => {
+        try {
+            const raw = order.raw ?? {}
+            const lines = (raw.products ?? []).map(
+                (p) => `  - ${p.title ?? p.productId} x${p.quantity ?? 1} @ ₹${Number(p.price ?? 0).toFixed(2)}`,
+            )
+            const text = [
+                "RAZORBILLS — TAX INVOICE",
+                `Order: ${order.id}`,
+                `Date: ${order.date}`,
+                `Customer: ${order.customer.name} <${order.customer.email}> ${order.customer.phone}`,
+                `Ship to: ${order.shippingAddress}`,
+                `Payment: ${order.paymentMethod} (${order.paymentStatus})`,
+                `Status: ${order.status} / Fulfillment: ${order.fulfillmentStatus}`,
+                "",
+                "Items:",
+                ...lines,
+                "",
+                `Total: ₹${Number(order.total ?? 0).toFixed(2)}`,
+            ].join("\n")
+            const blob = new Blob([text], { type: "text/plain;charset=utf-8" })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `invoice-${order.id}.txt`
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            URL.revokeObjectURL(url)
+            toast.success(`Invoice for ${order.id} downloaded`)
+        } catch (error) {
+            console.error("Invoice download failed:", error)
+            toast.error("Failed to generate invoice")
         }
     }
 
@@ -353,7 +417,7 @@ export default function OrdersPage() {
 
             // Update local state
             setOrders(orders.map(o => o.id === selectedOrder.id ? { ...o, status: newStatus } : o))
-            toast.success(`Order status updated to ${statusConfig[newStatus].label}`)
+            toast.success(`Order status updated to ${getStatus(newStatus).label}`)
             setStatusSheetOpen(false)
         } catch (error) {
             console.error("Error updating status:", error)
@@ -392,10 +456,91 @@ export default function OrdersPage() {
             shipped: orders.filter(o => o.status === "shipped").length,
             delivered: orders.filter(o => o.status === "delivered").length,
             cancelled: orders.filter(o => o.status === "cancelled").length,
-            revenue: orders.reduce((sum, o) => sum + o.total, 0),
+            // Revenue counts VERIFIED paid orders only (never unpaid COD).
+            revenue: orders
+                .filter(o => o.paymentStatus === "paid")
+                .reduce((sum, o) => sum + o.total, 0),
         }
         return stats
     }
+
+    const refreshOrders = async () => {
+        try {
+            const data = await ordersApi.list({ limit: 50 })
+            const list = Array.isArray(data) ? data : (data.orders ?? [])
+            setOrders(
+                list.map((o) => ({
+                    id: o.id ?? o._id,
+                    customer: {
+                        name: o.userName ?? o.customer?.name ?? o.shippingAddress?.name ?? "",
+                        email: o.userEmail ?? o.customer?.email ?? o.shippingAddress?.email ?? "",
+                        phone: o.userPhone ?? o.customer?.phone ?? "",
+                        avatar: "",
+                    },
+                    items: (o.products ?? []).length,
+                    total: o.totalAmount ?? 0,
+                    status: o.status ?? "pending",
+                    date: o.createdAt ? new Date(o.createdAt).toISOString().split("T")[0] : "",
+                    shippingAddress:
+                        typeof o.shippingAddress === "string"
+                            ? o.shippingAddress
+                            : [o.shippingAddress?.street, o.shippingAddress?.city].filter(Boolean).join(", "),
+                    paymentMethod: o.payment?.method ?? "",
+                    paymentStatus: o.payment?.status ?? "pending",
+                    codStatus: o.payment?.codStatus ?? null,
+                    fulfillmentStatus: o.fulfillment?.status ?? "unfulfilled",
+                    awb: o.fulfillment?.awb ?? o.fulfillment?.trackingNumber ?? null,
+                    courier: o.fulfillment?.courierName ?? null,
+                    raw: o,
+                })),
+            )
+        } catch (error) {
+            console.error("Error refreshing orders:", error)
+        }
+    }
+
+    /* Fulfillment + shipment + COD admin operations. */
+    const runAdminOp = async (label, fn) => {
+        try {
+            await fn()
+            toast.success(label)
+            await refreshOrders()
+        } catch (error) {
+            console.error(label, error)
+            toast.error(error?.response?.data?.error ?? `Failed: ${label}`)
+        }
+    }
+
+    const opProcess = (order) => runAdminOp("Order moved to processing", () => ordersApi.process(order.id))
+    const opPacked = (order) => runAdminOp("Order marked packed", () => ordersApi.packed(order.id))
+    const opShip = (order) =>
+        runAdminOp("Order marked shipped", () =>
+            ordersApi.ship(order.id, {
+                trackingNumber: order.awb ?? undefined,
+                serviceName: order.courier ?? undefined,
+            }),
+        )
+    const opDeliver = (order) => runAdminOp("Order marked delivered", () => ordersApi.deliver(order.id))
+    const opCreateShipment = (order) =>
+        runAdminOp("Shipment creation requested", () => shipmentsApi.create(order.id, {}))
+    const opTrackShipment = async (order) => {
+        try {
+            const resp = await shipmentsApi.track(order.id)
+            if (resp?.stub) toast.info("Shipmozo not configured — tracking stubbed.")
+            else if (resp?.trackingAvailable === false) toast.info(resp?.message ?? "No tracking yet.")
+            else {
+                toast.success(`Tracking synced${resp?.awb ? `: ${resp.awb}` : ""}`)
+                const url = resp?.trackingUrl
+                if (url) window.open(url, "_blank", "noopener,noreferrer")
+            }
+            await refreshOrders()
+        } catch (error) {
+            console.error("Track shipment failed", error)
+            toast.error(error?.response?.data?.error ?? "Tracking sync failed")
+        }
+    }
+    const opCollectCod = (order) =>
+        runAdminOp("COD collected", () => paymentsApi.collectCod(order.id, order.total))
 
     const filteredOrders = orders
         .filter(order => {
@@ -446,6 +591,14 @@ export default function OrdersPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
             <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8">
+                {loadError && (
+                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                        <span className="flex-1 text-destructive">{loadError}</span>
+                        <Button onClick={fetchOrders} variant="outline" size="sm">
+                            Retry
+                        </Button>
+                    </div>
+                )}
                 {/* Beautiful Hero Header */}
                 <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
                     <div className="absolute -top-32 -right-32 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -506,7 +659,7 @@ export default function OrdersPage() {
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-xs sm:text-sm text-white/70 truncate">Revenue</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">${stats.revenue.toFixed(2)}</p>
+                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">₹{stats.revenue.toFixed(2)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -552,7 +705,7 @@ export default function OrdersPage() {
                                         <SelectItem value="amount-asc">Lowest Amount</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Button className="h-10 sm:h-11 px-4 sm:px-6 shadow-lg col-span-2 sm:col-span-1 text-xs sm:text-sm">
+                                <Button onClick={exportOrdersCsv} className="h-10 sm:h-11 px-4 sm:px-6 shadow-lg col-span-2 sm:col-span-1 text-xs sm:text-sm">
                                     <Download className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     Export
                                 </Button>
@@ -614,7 +767,7 @@ export default function OrdersPage() {
                                 </Card>
                             ) : (
                                 filteredOrders.map((order) => {
-                                    const StatusIcon = statusConfig[order.status].icon
+                                    const StatusIcon = getStatus(order.status).icon
                                     return (
                                         <Card key={order.id} className="border-2 shadow-lg hover:shadow-xl transition-shadow">
                                             <CardContent className="p-3 sm:p-4">
@@ -647,7 +800,37 @@ export default function OrdersPage() {
                                                                     <Truck className="mr-2 h-4 w-4" />
                                                                     Update Status
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => opProcess(order)}>
+                                                                    <RefreshCw className="mr-2 h-4 w-4" />
+                                                                    Move to Processing
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => opPacked(order)}>
+                                                                    <Package className="mr-2 h-4 w-4" />
+                                                                    Mark Packed
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => opCreateShipment(order)}>
+                                                                    <Truck className="mr-2 h-4 w-4" />
+                                                                    Create Shipmozo Shipment
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => opShip(order)}>
+                                                                    <Truck className="mr-2 h-4 w-4" />
+                                                                    Mark Shipped
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => opTrackShipment(order)}>
+                                                                    <Eye className="mr-2 h-4 w-4" />
+                                                                    Track Shipment
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => opDeliver(order)}>
+                                                                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                                                                    Mark Delivered
+                                                                </DropdownMenuItem>
+                                                                {order.paymentMethod === "cod" && (
+                                                                    <DropdownMenuItem onClick={() => opCollectCod(order)}>
+                                                                        <DollarSign className="mr-2 h-4 w-4" />
+                                                                        Collect COD
+                                                                    </DropdownMenuItem>
+                                                                )}
+                                                                <DropdownMenuItem onClick={() => downloadInvoice(order)}>
                                                                     <FileText className="mr-2 h-4 w-4" />
                                                                     Generate Invoice
                                                                 </DropdownMenuItem>
@@ -682,14 +865,14 @@ export default function OrdersPage() {
                                                         <div className="text-center">
                                                             <p className="text-xs text-muted-foreground mb-1">Total</p>
                                                             <p className="font-bold text-sm sm:text-base">
-                                                                ${order.total.toFixed(2)}
+                                                                ₹{order.total.toFixed(2)}
                                                             </p>
                                                         </div>
                                                         <div className="text-center">
                                                             <p className="text-xs text-muted-foreground mb-1">Status</p>
-                                                            <Badge className={cn("gap-1 text-[10px] sm:text-xs border", statusConfig[order.status].color)}>
+                                                            <Badge className={cn("gap-1 text-[10px] sm:text-xs border", getStatus(order.status).color)}>
                                                                 <StatusIcon className="h-3 w-3" />
-                                                                <span className="hidden sm:inline">{statusConfig[order.status].label}</span>
+                                                                <span className="hidden sm:inline">{getStatus(order.status).label}</span>
                                                             </Badge>
                                                         </div>
                                                     </div>
@@ -733,7 +916,7 @@ export default function OrdersPage() {
                                             </TableRow>
                                         ) : (
                                             filteredOrders.map((order) => {
-                                                const StatusIcon = statusConfig[order.status].icon
+                                                const StatusIcon = getStatus(order.status).icon
                                                 return (
                                                     <TableRow key={order.id} className="hover:bg-muted/30 transition-colors">
                                                         <TableCell>
@@ -759,14 +942,14 @@ export default function OrdersPage() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <span className="font-bold text-lg">
-                                                                ${order.total.toFixed(2)}
+                                                                ₹{order.total.toFixed(2)}
                                                             </span>
                                                         </TableCell>
                                                         <TableCell>
-                                                            <Badge className={cn("gap-2 border", statusConfig[order.status].color)}>
-                                                                <span className={cn("h-2 w-2 rounded-full", statusConfig[order.status].dotColor)}></span>
+                                                            <Badge className={cn("gap-2 border", getStatus(order.status).color)}>
+                                                                <span className={cn("h-2 w-2 rounded-full", getStatus(order.status).dotColor)}></span>
                                                                 <StatusIcon className="h-3.5 w-3.5" />
-                                                                <span>{statusConfig[order.status].label}</span>
+                                                                <span>{getStatus(order.status).label}</span>
                                                             </Badge>
                                                         </TableCell>
                                                         <TableCell>
@@ -793,7 +976,37 @@ export default function OrdersPage() {
                                                                         <Truck className="mr-2 h-4 w-4" />
                                                                         Update Status
                                                                     </DropdownMenuItem>
-                                                                    <DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => opProcess(order)}>
+                                                                        <RefreshCw className="mr-2 h-4 w-4" />
+                                                                        Move to Processing
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => opPacked(order)}>
+                                                                        <Package className="mr-2 h-4 w-4" />
+                                                                        Mark Packed
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => opCreateShipment(order)}>
+                                                                        <Truck className="mr-2 h-4 w-4" />
+                                                                        Create Shipmozo Shipment
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => opShip(order)}>
+                                                                        <Truck className="mr-2 h-4 w-4" />
+                                                                        Mark Shipped
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => opTrackShipment(order)}>
+                                                                        <Eye className="mr-2 h-4 w-4" />
+                                                                        Track Shipment
+                                                                    </DropdownMenuItem>
+                                                                    <DropdownMenuItem onClick={() => opDeliver(order)}>
+                                                                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                                                                        Mark Delivered
+                                                                    </DropdownMenuItem>
+                                                                    {order.paymentMethod === "cod" && (
+                                                                        <DropdownMenuItem onClick={() => opCollectCod(order)}>
+                                                                            <DollarSign className="mr-2 h-4 w-4" />
+                                                                            Collect COD
+                                                                        </DropdownMenuItem>
+                                                                    )}
+                                                                    <DropdownMenuItem onClick={() => downloadInvoice(order)}>
                                                                         <FileText className="mr-2 h-4 w-4" />
                                                                         Generate Invoice
                                                                     </DropdownMenuItem>
@@ -945,9 +1158,10 @@ export default function OrdersPage() {
                                     <Button
                                         type="submit"
                                         className="flex-1"
+                                        disabled={savingEdit}
                                     >
                                         <Edit className="mr-2 h-4 w-4" />
-                                        Save Changes
+                                        {savingEdit ? "Saving…" : "Save Changes"}
                                     </Button>
                                 </SheetFooter>
                             </form>
@@ -992,17 +1206,17 @@ export default function OrdersPage() {
                                         <>
                                             <div className={cn(
                                                 "h-3 w-3 rounded-full",
-                                                statusConfig[selectedOrder.status]?.dotColor
+                                                getStatus(selectedOrder.status).dotColor
                                             )} />
                                             <Badge className={cn(
                                                 "gap-2 border",
-                                                statusConfig[selectedOrder.status]?.color
+                                                getStatus(selectedOrder.status).color
                                             )}>
                                                 {React.createElement(
-                                                    statusConfig[selectedOrder.status]?.icon,
+                                                    getStatus(selectedOrder.status).icon,
                                                     { className: "h-3.5 w-3.5" }
                                                 )}
-                                                <span>{statusConfig[selectedOrder.status]?.label}</span>
+                                                <span>{getStatus(selectedOrder.status).label}</span>
                                             </Badge>
                                         </>
                                     )}
@@ -1144,13 +1358,13 @@ export default function OrdersPage() {
                                         {selectedOrder?.status && (
                                             <Badge className={cn(
                                                 "gap-1",
-                                                statusConfig[selectedOrder.status]?.color
+                                                getStatus(selectedOrder.status).color
                                             )}>
                                                 {React.createElement(
-                                                    statusConfig[selectedOrder.status]?.icon,
+                                                    getStatus(selectedOrder.status).icon,
                                                     { className: "h-3 w-3" }
                                                 )}
-                                                <span>{statusConfig[selectedOrder.status]?.label}</span>
+                                                <span>{getStatus(selectedOrder.status).label}</span>
                                             </Badge>
                                         )}
                                     </div>

@@ -1,4 +1,4 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useNavigation } from "react-router-dom";
 import NavbarBlock from "@/components/navbar/navbar";
 import MobileBottomNav from "@/components/mobile-bottom-nav/MobileBottomNav";
 import { Footer } from "./components/footer/footer";
@@ -35,6 +35,9 @@ function App() {
   const location = useLocation();
   const hideChrome = HIDE_CHROME_PATHS.includes(location.pathname);
   const navigate = useNavigate();
+  const navigation = useNavigation();
+  const isNavigating = navigation.state === "loading";
+
   const isGuestAccess =
     GUEST_ACCESS_PATHS.includes(location.pathname) ||
     location.pathname.startsWith("/product/");
@@ -101,7 +104,7 @@ function App() {
       <ScrollToTop />
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         {!hideChrome && <NavbarBlock />}
-        {isLoading ? <LoaderScreen /> : <Outlet />}
+        {isLoading || isNavigating ? <LoaderScreen /> : <Outlet />}
         <Footer />
         {!hideChrome && <MobileBottomNav />}
       </ThemeProvider>

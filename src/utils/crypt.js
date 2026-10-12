@@ -1,31 +1,47 @@
 import CryptoJS from "crypto-js";
 
-function decryptStrict(ciphertext) {
-  const bytes = CryptoJS.AES.decrypt(
-    ciphertext,
-    import.meta.env.VITE_CRYPTED_STRICT,
-  );
+
+function decrypt(ciphertext, strict = false) {
+  const key = strict ? import.meta.env.VITE_CRYPTED_STRICT : import.meta.env.VITE_CRYPTED;
+  const bytes = CryptoJS.AES.decrypt(ciphertext, key);
   return bytes.toString(CryptoJS.enc.Utf8);
 }
 
-function decrypt(ciphertext) {
-  const bytes = CryptoJS.AES.decrypt(ciphertext, import.meta.env.VITE_CRYPTED);
-  return bytes.toString(CryptoJS.enc.Utf8);
+function encrypt(plaintext, strict = false) {
+  const key = strict ? import.meta.env.VITE_CRYPTED_STRICT : import.meta.env.VITE_CRYPTED;
+  return CryptoJS.AES.encrypt(
+    plaintext,
+    key,
+  ).toString();
+}
+
+/**
+ * Decrypt a single PII field (e.g. user `name`) encrypted with CRYPTED.
+ * Values are stored as `U2FsdGVkX1…` ciphertext; anything else (plain text,
+ * numbers, null) passes through untouched. Never blanks a value: if
+ * decryption yields nothing, the original is returned.
+ */
+function decryptField(value, strict = false) {
+  if (typeof value !== "string" || !value.startsWith("U2FsdGVkX1")) {
+    return value;
+  }
+  try {
+    return decrypt(value, strict) || value;
+  } catch {
+    return value;
+  }
+}
+
+
+function decryptStrict(ciphertext) {
+  return decryptField(ciphertext, true);
 }
 
 function encryptStrict(plaintext) {
-  return CryptoJS.AES.encrypt(
-    plaintext,
-    import.meta.env.VITE_CRYPTED_STRICT,
-  ).toString();
+  return encrypt(plaintext, true);
 }
 
-function encrypt(plaintext) {
-  return CryptoJS.AES.encrypt(
-    plaintext,
-    import.meta.env.VITE_CRYPTED,
-  ).toString();
-}
+
 
 function encryptAddress(address) {
   return Object.fromEntries(
@@ -36,13 +52,12 @@ function encryptAddress(address) {
   );
 }
 
-function decryptAddress(address) {
-  return Object.fromEntries(
+function decryptAddress(address) {  return Object.fromEntries(
     Object.entries(address).map(([key, value]) => {
       if (key === "id" || typeof value !== "string") return [key, value];
 
       try {
-        const decrypted = decrypt(value);
+        const decrypted = decryptField(value);
         return [key, JSON.parse(decrypted)];
       } catch {
         return [key, value];
@@ -87,7 +102,8 @@ function decryptObj(obj, strict = false, excludeKeys = []) {
 
 export {
   decryptStrict,
-  decrypt,
+  decryptField as decrypt,
+  decryptField,
   encryptStrict,
   encrypt,
   encryptAddress,

@@ -229,6 +229,49 @@ const GlobalEventNames = {
   ORDER_CANCELLED: "order_cancelled",
   ORDER_COMPLETED: "order_completed",
   ORDER_RETURN_REQUESTED: "order_return_requested",
+  ORDER_CREATE_ATTEMPT: "order_create_attempt",
+  ORDER_CREATE_FAILED: "order_create_failed",
+  ORDER_STATUS_CHANGED: "order_status_changed",
+
+  // Payment events (server-authoritative only)
+  CHECKOUT_STARTED: "checkout_started",
+  PAYMENT_INITIATED: "payment_initiated",
+  PAYMENT_CHECKOUT_OPENED: "payment_checkout_opened",
+  PAYMENT_SUCCEEDED: "payment_succeeded",
+  PAYMENT_FAILED: "payment_failed",
+  PAYMENT_CANCELLED: "payment_cancelled",
+  PAYMENT_VERIFICATION_FAILED: "payment_verification_failed",
+  PAYMENT_WEBHOOK_RECEIVED: "payment_webhook_received",
+  PAYMENT_WEBHOOK_VERIFIED: "payment_webhook_verified",
+  PAYMENT_DUPLICATE_IGNORED: "payment_duplicate_ignored",
+  COD_CREATED: "cod_created",
+  COD_COLLECTION_PENDING: "cod_collection_pending",
+  COD_COLLECTED: "cod_collected",
+  COD_COLLECTION_FAILED: "cod_collection_failed",
+
+  // Shipment events
+  SHIPMENT_SERVICEABILITY_CHECK: "shipment_serviceability_check",
+  SHIPMENT_CREATE_ATTEMPT: "shipment_create_attempt",
+  SHIPMENT_CREATED: "shipment_created",
+  SHIPMENT_CREATE_FAILED: "shipment_create_failed",
+  SHIPMENT_PICKUP: "shipment_pickup",
+  SHIPMENT_IN_TRANSIT: "shipment_in_transit",
+  SHIPMENT_OUT_FOR_DELIVERY: "shipment_out_for_delivery",
+  SHIPMENT_DELIVERED: "shipment_delivered",
+  SHIPMENT_CANCELLED: "shipment_cancelled",
+  SHIPMENT_RTO: "shipment_rto",
+  SHIPMENT_TRACK_SYNCED: "shipment_track_synced",
+
+  // Customer care events (never log message bodies)
+  TICKET_CREATED: "ticket_created",
+  TICKET_REPLIED: "ticket_replied",
+  TICKET_RESOLVED: "ticket_resolved",
+  TICKET_REOPENED: "ticket_reopened",
+  TICKET_CLOSED: "ticket_closed",
+
+  // Search events
+  SEARCH_SUBMITTED: "search_submitted",
+  SEARCH_RATE_LIMITED: "search_rate_limited",
 
   // Analytics events
   ANALYTICS_UPDATED: "analytics_updated",

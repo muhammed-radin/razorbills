@@ -110,4 +110,6 @@ export function calculateAnalyticsFrom(daysAnalytics = []) {
 
     return acc; // Return the accumulator for the next iteration
   }, result);
+
+  return result;
 }

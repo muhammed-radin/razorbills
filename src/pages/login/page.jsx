@@ -61,6 +61,7 @@ const LoginPage = () => {
               if (response.status == 200) {
                 resolveui(t("auth.loginSuccess"));
                 sessionStorage.removeItem("session"); // Clear any existing session data
+                sessionStorage.removeItem("session_at");
                 navigate("/");
               } else {
                 rejectui(response.statusText || "Login failed");

@@ -94,14 +94,19 @@ router.get(
     }
 
     // build query based on request parameters
-    query = {
-      // null query for now, can be extended later
-    };
+    // Admin search across name / email / id (literal, no operators).
+    const search = String(req.query?.search ?? req.body?.search ?? "").trim();
+    query = {};
+    if (search) {
+      const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+      query = { $or: [{ name: rx }, { email: rx }, { id: rx }] };
+    }
 
     let totalCount = await db.collection("users").countDocuments(query);
 
     db.collection("users")
       .find(query)
+      .sort({ [sortBy]: sortOrder })
       .skip(startIndex)
       .limit(limit)
       .toArray()
@@ -144,8 +149,9 @@ router.get(
   requirePermission("read"),
   function (req, res, next) {
     const userId = req.params.id;
+    // Never expose sensitive internals (hashes, tokens, permissions).
     db.collection("users")
-      .findOne({ id: userId })
+      .findOne({ id: userId }, { projection: { password: 0, token: 0 } })
       .then((user) => {
         if (!user) {
           return res.status(404).json({ error: "User not found" });
@@ -164,8 +170,7 @@ router.get(
   requireAuth,
   requireAdmin,
   requirePermission("read"),
-  (req, res) => {
-    const userId = req.params.id;
+  (req, res) => {    const userId = req.params.id;
 
     getAuthInstance()
       .api.getUser({
@@ -184,6 +189,42 @@ router.get(
         console.error("Error fetching user from auth:", err);
         res.status(500).json({ error: "Failed to fetch user from auth" });
       });
+  },
+);
+
+/* PATCH /users/:id/status { banned: boolean, banReason? }
+ * Admin-only account activate/deactivate. Never allows self-ban or
+ * role changes (roles are managed elsewhere). */
+router.patch(
+  "/:id/status",
+  requireAuth,
+  requireAdmin,
+  requirePermission("update"),
+  async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { banned, banReason } = req.body ?? {};
+      if (typeof banned !== "boolean") {
+        return res.status(400).json({ error: "banned (boolean) is required" });
+      }
+      if (req.user?.id === userId) {
+        return res.status(400).json({ error: "You cannot change your own status" });
+      }
+      const update = banned
+        ? { banned: true, banReason: String(banReason ?? "Disabled by admin").slice(0, 500), isActive: false }
+        : { banned: false, banReason: "", isActive: true };
+      const result = await db.collection("users").updateOne({ id: userId }, { $set: update });
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      const user = await db
+        .collection("users")
+        .findOne({ id: userId }, { projection: { password: 0, token: 0 } });
+      res.json({ success: true, user });
+    } catch (err) {
+      console.error("Error updating user status:", err);
+      res.status(500).json({ error: "Failed to update user status" });
+    }
   },
 );
 

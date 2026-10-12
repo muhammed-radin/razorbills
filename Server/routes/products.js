@@ -49,10 +49,16 @@ router.get("/", requireSession, passUserAuth, async function (req, res, next) {
   let tags = req.query?.tags || req.body?.tags || "";
   let sortBy = req.query?.sortBy || req.body?.sortBy || "createdAt";
   let sortOrder = req.query?.sortOrder === "asc" ? 1 : -1;
-  let ratingMin =
-    parseFloat(req.query?.ratingMin) || parseFloat(req.body?.ratingMin) || 0;
+  // Rating bounds apply ONLY when explicitly requested. The old code always
+  // injected rating: {$gte: 0, $lte: 5}, which silently hides every product
+  // without a rating field from all listings and searches.
+  const ratingMinRaw = req.query?.ratingMin ?? req.body?.ratingMin;
+  const ratingMaxRaw = req.query?.ratingMax ?? req.body?.ratingMax;
+  let ratingMin = parseFloat(ratingMinRaw) || 0;
   let ratingMax =
-    parseFloat(req.query?.ratingMax) || parseFloat(req.body?.ratingMax) || 5;
+    ratingMaxRaw !== undefined && ratingMaxRaw !== null && ratingMaxRaw !== ""
+      ? parseFloat(ratingMaxRaw) || 5
+      : 5;
   let inStock =
     req.query?.inStock == "true" || req.body?.inStock == "true" || false;
 
@@ -74,8 +80,11 @@ router.get("/", requireSession, passUserAuth, async function (req, res, next) {
   query.isActive = true;
 
   if (search) {
-    // find in title, category, keywords, tags and description
+    // find in id, sku, brand, title, category, keywords, tags and description
     query.$or = [
+      { id: { $regex: search, $options: "i" } },
+      { sku: { $regex: search, $options: "i" } },
+      { brand: { $regex: search, $options: "i" } },
       { title: { $regex: search, $options: "i" } },
       { category: { $regex: search, $options: "i" } },
       { keywords: { $regex: search, $options: "i" } },
@@ -96,7 +105,9 @@ router.get("/", requireSession, passUserAuth, async function (req, res, next) {
     query.stock = { $gt: 0 };
   }
   query.price = { $gte: priceMin, $lte: priceMax };
-  query.rating = { $gte: ratingMin, $lte: ratingMax };
+  if (ratingMinRaw !== undefined || ratingMaxRaw !== undefined) {
+    query.rating = { $gte: ratingMin, $lte: ratingMax };
+  }
 
   // example: using full query to test URL
   // /api/products?search=electronics&category=electronics&priceMin=10&priceMax=100&keywords=wireless&tags=wireless,bluetooth&sortBy=price&sortOrder=asc&ratingMin=3&ratingMax=5&inStock=true

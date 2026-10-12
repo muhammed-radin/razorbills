@@ -17,6 +17,11 @@ export const OrderStatus = Object.freeze({
   RETURNED: "returned",
 });
 
+export const PaymentMethod = Object.freeze({
+  RAZORPAY: "razorpay",
+  COD: "cod",
+});
+
 export const PaymentStatus = Object.freeze({
   PENDING: "pending",
   PAID: "paid",
@@ -25,6 +30,13 @@ export const PaymentStatus = Object.freeze({
   REFUND_PENDING: "refund_pending",
   PARTIALLY_REFUNDED: "partially_refunded",
   REFUNDED: "refunded",
+});
+
+export const CODStatus = Object.freeze({
+  NOT_APPLICABLE: "na",
+  PENDING_COLLECTION: "pending_collection",
+  COLLECTED: "collected",
+  FAILED: "failed",
 });
 
 export const FulfillmentStatus = Object.freeze({
@@ -276,6 +288,8 @@ export const OrderPaymentSchema = new Schema(
       type: String,
       required: true,
       trim: true,
+      lowercase: true,
+      enum: [...Object.values(PaymentMethod), "card", "upi", "netbanking"],
     },
 
     status: {
@@ -290,6 +304,28 @@ export const OrderPaymentSchema = new Schema(
       trim: true,
       index: true,
     },
+
+    /* Razorpay references (never store secrets) */
+    razorpayOrderId: { type: String, default: null, trim: true, index: true },
+    razorpayPaymentId: { type: String, default: null, trim: true, index: true },
+    razorpaySignature: { type: String, default: null, trim: true },
+    idempotencyKey: { type: String, default: null, trim: true, index: true },
+    attempts: { type: Number, default: 0, min: 0 },
+    verifiedAt: { type: Date, default: null },
+    failureReason: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+
+    /* COD collection tracking (independent of order status) */
+    codStatus: {
+      type: String,
+      enum: Object.values(CODStatus),
+      default: CODStatus.NOT_APPLICABLE,
+    },
+    codCollectedAt: { type: Date, default: null },
+    codCollectedBy: { type: String, default: null, trim: true },
 
     amountPaid: {
       type: Number,
@@ -331,6 +367,22 @@ export const OrderPaymentSchema = new Schema(
   },
 );
 
+/* Shipment tracking history entry (Shipmozo sync / webhook) */
+export const ShipmentHistorySchema = new Schema(
+  {
+    status: { type: String, default: null, trim: true },
+    message: { type: String, default: null, trim: true },
+    location: { type: String, default: null, trim: true },
+    timestamp: { type: Date, default: Date.now },
+    source: {
+      type: String,
+      enum: ["api", "webhook", "poll", "admin", "system"],
+      default: "api",
+    },
+  },
+  { _id: false, id: false },
+);
+
 /* =========================================================
  * FULFILLMENT / SHIPPING
  * ========================================================= */
@@ -367,6 +419,20 @@ export const OrderFulfillmentSchema = new Schema(
       trim: true,
       // Remove index: true
     },
+
+    /* Shipmozo references (server-side only) */
+    shipmozoOrderId: { type: String, default: null, trim: true, index: true },
+    shipmentId: { type: String, default: null, trim: true },
+    awb: { type: String, default: null, trim: true, index: true },
+    courierName: { type: String, default: null, trim: true },
+    trackingUrl: { type: String, default: null, trim: true },
+    labelUrl: { type: String, default: null, trim: true },
+    pickupPincode: { type: String, default: null, trim: true },
+    deliveryPincode: { type: String, default: null, trim: true },
+    packageWeightKg: { type: Number, default: null, min: 0 },
+    history: { type: [ShipmentHistorySchema], default: [] },
+    lastSyncAt: { type: Date, default: null },
+    shipmentFailure: { type: String, default: null, trim: true },
 
     estimatedDelivery: {
       type: Date,
@@ -415,6 +481,13 @@ export const OrderCancellationSchema = new Schema(
       type: String,
       default: null,
       trim: true,
+    },
+
+    detail: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 1000,
     },
 
     rejectionReason: {
@@ -471,6 +544,13 @@ export const OrderReturnSchema = new Schema(
       type: String,
       default: null,
       trim: true,
+    },
+
+    detail: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: 1000,
     },
 
     rejectionReason: {
@@ -698,6 +778,17 @@ export const OrderSchema = new Schema(
       default: Date.now,
       index: true,
     },
+
+    /* Idempotency: client-generated key to prevent duplicate orders
+     * on retries / double-submit / payment callbacks. */
+    idempotencyKey: {
+      type: String,
+      default: null,
+      trim: true,
+      index: true,
+    },
+
+    codFee: { type: Number, default: 0, min: 0 },
   },
 
   {
@@ -815,6 +906,27 @@ OrderSchema.methods.markPaymentFailed = async function (reason = null) {
   return this.save();
 };
 
+/* COD: mark cash collected only via trusted admin workflow.
+ * Never marks payment.status=paid; COD uses codStatus independently. */
+OrderSchema.methods.markCodCollected = async function ({
+  actorId = null,
+  amount = null,
+} = {}) {
+  if (this.payment.method !== PaymentMethod.COD) {
+    throw new Error("Only COD orders can record cash collection.");
+  }
+  if (this.payment.codStatus === CODStatus.COLLECTED) {
+    return this; // idempotent
+  }
+  this.payment.codStatus = CODStatus.COLLECTED;
+  this.payment.codCollectedAt = new Date();
+  this.payment.codCollectedBy = actorId;
+  if (amount !== null && Number.isFinite(Number(amount))) {
+    this.payment.amountPaid = Number(amount);
+  }
+  return this.save();
+};
+
 OrderSchema.methods.getRemainingRefundAmount = function () {
   return Math.max(0, this.payment.amountPaid - this.payment.refundedAmount);
 };
@@ -918,10 +1030,14 @@ OrderSchema.methods.canCancel = function () {
 
 OrderSchema.methods.requestCancellation = async function ({
   reason = null,
+  detail = null,
   actorId = null,
 } = {}) {
   if (!this.canCancel()) {
     throw new Error(`Cannot cancel order from status: ${this.status}`);
+  }
+  if (this.cancellation.status === CancellationStatus.REQUESTED) {
+    throw new Error("A cancellation request is already pending review.");
   }
 
   this.cancellation.status = CancellationStatus.REQUESTED;
@@ -929,6 +1045,7 @@ OrderSchema.methods.requestCancellation = async function ({
   this.cancellation.requestedAt = new Date();
 
   this.cancellation.reason = reason;
+  this.cancellation.detail = detail ? String(detail).slice(0, 1000) : null;
   this.cancellation.actorId = actorId;
 
   return this.save();
@@ -999,9 +1116,15 @@ OrderSchema.methods.canRequestReturn = function () {
   return this.status === OrderStatus.DELIVERED;
 };
 
-OrderSchema.methods.requestReturn = async function ({ reason = null } = {}) {
+OrderSchema.methods.requestReturn = async function ({
+  reason = null,
+  detail = null,
+} = {}) {
   if (!this.canRequestReturn()) {
     throw new Error(`Cannot request return from status: ${this.status}`);
+  }
+  if (this.return.status === ReturnStatus.REQUESTED) {
+    throw new Error("A return request is already pending review.");
   }
 
   this.return.status = ReturnStatus.REQUESTED;
@@ -1009,6 +1132,7 @@ OrderSchema.methods.requestReturn = async function ({ reason = null } = {}) {
   this.return.requestedAt = new Date();
 
   this.return.reason = reason;
+  this.return.detail = detail ? String(detail).slice(0, 1000) : null;
 
   return this.transitionTo(OrderStatus.RETURN_REQUESTED, {
     actor: "user",
@@ -1445,6 +1569,12 @@ OrderSchema.index({
   "fulfillment.trackingNumber": 1,
 });
 
+OrderSchema.index({ idempotencyKey: 1 }, { sparse: true });
+OrderSchema.index({ "payment.razorpayOrderId": 1 }, { sparse: true });
+OrderSchema.index({ "payment.razorpayPaymentId": 1 }, { sparse: true });
+OrderSchema.index({ "fulfillment.awb": 1 }, { sparse: true });
+OrderSchema.index({ "payment.method": 1, "payment.status": 1 });
+
 /* =========================================================
  * MODEL
  * ========================================================= */
@@ -1456,7 +1586,9 @@ export default {
   OrderModel,
 
   OrderStatus,
+  PaymentMethod,
   PaymentStatus,
+  CODStatus,
   FulfillmentStatus,
   CancellationStatus,
   ReturnStatus,

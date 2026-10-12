@@ -1,5 +1,5 @@
 import axios from "axios";
-import { decrypt, decryptObj, encrypt } from "./crypt";
+import { decrypt, decryptObj, encrypt, decryptField } from "./crypt";
 
 const getAuthClient = async () =>
   (await import("@/lib/auth-client")).authClient;
@@ -90,24 +90,62 @@ const api = {
     if (decryptData) {
       userData = decryptObj(userData, false, ["emailVerified"]);
     }
+    // Names are end-to-end encrypted at rest; always present decrypted.
+    if (userData && typeof userData.name === "string") {
+      userData = { ...userData, name: decryptField(userData.name) };
+    }
     userData.session = session;
     return userData;
   },
   async getSession() {
-    if (sessionStorage.getItem("session")) {
-      const session = JSON.parse(decrypt(sessionStorage.getItem("session")));
-      return { ...session, updated: null }; // Add updated timestamp
+    // Session cache with TTL: reuse for 5 minutes so route changes
+    // don't hammer /api/auth/get-session (and the auth rate limiter).
+    const SESSION_TTL_MS = 5 * 60 * 1000;
+    try {
+      const raw = sessionStorage.getItem("session");
+      const at = Number(sessionStorage.getItem("session_at") || 0);
+      if (raw && at && Date.now() - at < SESSION_TTL_MS) {
+        const session = JSON.parse(decrypt(raw));
+        return { ...session, updated: null };
+      }
+    } catch {
+      // Corrupt cache: fall through to a live fetch.
     }
     const authClient = await getAuthClient();
-    const session = await authClient.getSession();
-    if (session) {
-      sessionStorage.setItem("session", encrypt(JSON.stringify(session)));
+    const live = await authClient.getSession();
+    // Names are end-to-end encrypted at rest: present them decrypted to
+    // every consumer (navbar, sidebar, greetings). Build a fresh wrapper
+    // (never mutate the auth client's internal state) and cache that, so
+    // cached and live sessions share one decrypted shape.
+    const session =
+      live?.data?.user && typeof live.data.user.name === "string"
+        ? {
+            ...live,
+            data: {
+              ...live.data,
+              user: {
+                ...live.data.user,
+                name: decryptField(live.data.user.name),
+              },
+            },
+          }
+        : live;
+    // Cache positive sessions only: caching a null (pre-login) response
+    // poisons post-signup state and shows logged-out UI to new users.
+    if (session?.data) {
+      try {
+        sessionStorage.setItem("session", encrypt(JSON.stringify(session)));
+        sessionStorage.setItem("session_at", String(Date.now()));
+      } catch {
+        // Storage full/blocked: session still returned live.
+      }
     }
     return { ...session, updated: new Date().toISOString() }; // Add updated timestamp
   },
   actions: {
     async logOut() {
-      sessionStorage.removeItem("session"); // Clear session data from storage
+      sessionStorage.clear();
+      localStorage.clear();
       const authClient = await getAuthClient();
       return authClient.signOut();
     },

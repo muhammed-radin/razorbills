@@ -51,6 +51,7 @@ export const Footer = () => {
       title: t("footer.customerSupport"),
       links: [
         { title: t("footer.orderTracking"), href: "/order" },
+        { title: "Customer Care", href: "/support" },
         { title: t("footer.returnRefunds"), href: "/return" },
         { title: t("footer.shippingInfo"), href: "/shipping" },
         { title: t("footer.contactUs"), href: "/contact" },

@@ -9,6 +9,8 @@ import {
   Tags,
   FileText,
   ChevronRight,
+  LifeBuoy,
+  CreditCard,
 } from "lucide-react";
 
 import {
@@ -26,6 +28,8 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { useEffect } from "react";
+import { useUserSession } from "@/contexts/user-session-context";
+import { decrypt } from "@/utils/crypt";
 
 const navItems = {
   main: {
@@ -50,6 +54,26 @@ const navItems = {
         title: "Customers",
         url: "/auth/admin/customers",
         icon: Users,
+      },
+      {
+        title: "Categories",
+        url: "/auth/admin/categories",
+        icon: Tags,
+      },
+      {
+        title: "Analytics",
+        url: "/auth/admin/analytics",
+        icon: BarChart3,
+      },
+      {
+        title: "Payments",
+        url: "/auth/admin/payments",
+        icon: CreditCard,
+      },
+      {
+        title: "Support",
+        url: "/auth/admin/support",
+        icon: LifeBuoy,
       },
     ],
   },
@@ -83,6 +107,9 @@ export function AdminSidebar({
 }) {
   const location = useLocation();
   const navItemsKeys = Object.keys(navItems);
+  const { data: session } = useUserSession();
+  const adminName = session?.user?.name ?? "Admin User";
+  const adminEmail = session?.user?.email ?? "admin@razorbills.com";
 
   // Update page info when location changes
   useEffect(() => {
@@ -145,9 +172,9 @@ export function AdminSidebar({
               <Users className="h-4 w-4 text-primary" />
             </div>
             <div className="flex flex-col">
-              <span className="font-medium">Admin User</span>
+              <span className="font-medium">{decrypt(adminName)}</span>
               <span className="text-xs text-muted-foreground">
-                admin@razorbills.com
+                {adminEmail}
               </span>
             </div>
           </div>

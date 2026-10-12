@@ -43,11 +43,19 @@ const normalizeCart = (doc) => {
   }));
 };
 
+/* Delayed server sync for quantity edits: rapid +/- clicks apply
+ * instantly (optimistic) and flush ONE request per product after the
+ * user pauses. Aborts superseded flights, rolls back on failure. */
+const qtyTimers = new Map();
+const qtyControllers = new Map();
+const QTY_SYNC_DELAY_MS = 600;
+
 export const useCartStore = create((set, get) => ({
   items: [],
   loading: false,
   error: null,
   serverBacked: true,
+  syncing: {},
 
   fetch: async () => {
     const isSignedIn = await validateSignInModalRequired();
@@ -121,21 +129,66 @@ export const useCartStore = create((set, get) => ({
       throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
     }
 
-    if (get().serverBacked) {
-      try {
-        const cart = await cartApi.setQuantity(productId, quantity);
-        set({ items: normalizeCart(cart), error: null });
-        return;
-      } catch (err) {
-        set({ error: err });
-        throw err;
-      }
+    const nextQty = Math.max(1, Math.floor(Number(quantity) || 1));
+
+    if (!get().serverBacked) {
+      const items = get().items.map((i) =>
+        i.productId === productId ? { ...i, quantity: nextQty } : i,
+      );
+      writeLocal("guest-cart", items);
+      set({ items });
+      return;
     }
-    const items = get().items.map((i) =>
-      i.productId === productId ? { ...i, quantity } : i,
+
+    // Optimistic: reflect instantly, sync with the server after a pause.
+    const snapshot = get().items.map((i) => ({ ...i }));
+    set({
+      items: snapshot.map((i) =>
+        i.productId === productId ? { ...i, quantity: nextQty } : i,
+      ),
+      syncing: { ...get().syncing, [productId]: true },
+    });
+
+    clearTimeout(qtyTimers.get(productId));
+    qtyControllers.get(productId)?.abort();
+    const controller = new AbortController();
+    qtyControllers.set(productId, controller);
+    qtyTimers.set(
+      productId,
+      setTimeout(async () => {
+        try {
+          const latest =
+            get().items.find((i) => i.productId === productId)?.quantity ??
+            nextQty;
+          const cart = await cartApi.setQuantity(
+            productId,
+            latest,
+            controller.signal,
+          );
+          if (controller.signal.aborted) return;
+          set({
+            items: normalizeCart(cart),
+            error: null,
+            syncing: { ...get().syncing, [productId]: false },
+          });
+        } catch (err) {
+          if (controller.signal.aborted) return;
+          // Roll back to the last server-confirmed snapshot.
+          set({
+            items: snapshot,
+            error: err,
+            syncing: { ...get().syncing, [productId]: false },
+          });
+          const { toast } = await import("sonner");
+          toast.error("Couldn't sync quantity — restored previous value.");
+        } finally {
+          qtyTimers.delete(productId);
+          if (qtyControllers.get(productId) === controller) {
+            qtyControllers.delete(productId);
+          }
+        }
+      }, QTY_SYNC_DELAY_MS),
     );
-    writeLocal("guest-cart", items);
-    set({ items });
   },
 
   remove: async (productId) => {
@@ -426,13 +479,13 @@ export const useOrderStore = create((set) => ({
     return order;
   },
 
-  cancel: async (id, reason) => {
-    await ordersApi.cancel(id, reason);
+  cancel: async (id, reason, detail) => {
+    await ordersApi.cancel(id, reason, detail);
     await useOrderStore.getState().fetchUserOrders();
   },
 
-  requestReturn: async (id, reason) => {
-    await ordersApi.requestReturn(id, reason);
+  requestReturn: async (id, reason, detail) => {
+    await ordersApi.requestReturn(id, reason, detail);
     await useOrderStore.getState().fetchUserOrders();
   },
 }));

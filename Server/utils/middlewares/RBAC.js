@@ -49,6 +49,8 @@ export const requirePermission = (requiredCapability) => {
       });
     }
 
+    console.log(session.user);
+
     if (session.user.role === "owner") {
       req.user = session.user;
       return next();
@@ -62,10 +64,19 @@ export const requirePermission = (requiredCapability) => {
 
     // 🎯 CODE SIMPLIFICATION: Directly check the array passed by Better Auth
     // session.user.adminPermissions looks like: ["read", "write"]
+    // "write" and "update" are treated as aliases (legacy drift across routes).
     const permissions = session.user.adminPermissions || [];
+    const aliases = {
+      write: ["write", "update"],
+      update: ["update", "write"],
+      create: ["create"],
+      read: ["read"],
+      delete: ["delete"],
+    };
+    const accepted = aliases[requiredCapability] ?? [requiredCapability];
 
     if (
-      !permissions.includes(requiredCapability) ||
+      !accepted.some((c) => permissions.includes(c)) &&
       !permissions.includes("super-admin")
     ) {
       return res.status(403).json({

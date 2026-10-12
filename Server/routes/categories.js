@@ -13,7 +13,10 @@ const router = express.Router();
 
 /* GET users listing. */
 router.get("/", function (req, res) {
-  if (globalMemory?.getLocalMemory("categories")) {
+  if (
+    globalMemory?.getLocalMemory("categories") &&
+    req.query?.realtime !== "true"
+  ) {
     return res.json(globalMemory.getLocalMemory("categories"));
   }
 
@@ -59,10 +62,17 @@ router.post(
             category,
           ),
         );
+        // Writes must invalidate the list cache or new categories stay invisible.
+        globalMemory?.clearLocalMemory?.("categories");
         res.status(201).json(category);
       })
       .catch((err) => {
         console.error("Error creating category:", err);
+        if (err?.code === 11000) {
+          return res
+            .status(409)
+            .json({ error: "A category with this ID or name already exists" });
+        }
         res.status(500).json({ error: "Failed to create category" });
       });
   },
@@ -110,6 +120,7 @@ router.put(
             updatedCategory,
           ),
         );
+        globalMemory?.clearLocalMemory?.("categories");
         res.json(updatedCategory);
       })
       .catch((err) => {
@@ -140,6 +151,7 @@ router.delete(
             deletedCategory,
           ),
         );
+        globalMemory?.clearLocalMemory?.("categories");
         res.json({ message: "Category deleted successfully" });
       })
       .catch((err) => {

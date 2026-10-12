@@ -13,7 +13,6 @@ import {
   SessionEvent,
   UserEvent,
 } from "./events.manage.js";
-import { id } from "zod/v4/locales";
 
 let authInstance = null;
 
@@ -180,11 +179,7 @@ export default function createAuth(db) {
       }),
       after: createAuthMiddleware(async (ctx) => {
         const session = await getSessionFromCtx(ctx);
-        console.log(
-          "Session after auth action:",
-          session,
-          ctx.context?.session,
-        );
+
         const isSessionFound = !!session; // TODO: Fix this session null error, currently session is null after sign-in, sign-up, and sign-out actions. Need to investigate why.
         if (isSessionFound && ctx.path === "/sign-out") {
           evt.fire(
@@ -258,6 +253,7 @@ export default function createAuth(db) {
         prompt: "select_account consent",
 
         mapProfileToUser: async (profile) => {
+          console.log("mapProfileToUser", profile);
           // Guarantee a non-empty name string to satisfy DB validation
           const nameFallback =
             profile.name ||
@@ -274,6 +270,7 @@ export default function createAuth(db) {
             emailVerified: profile.email_verified,
             name: nameFallback,
             image: profilePicture,
+            adminPermissions: [],
             role: "user",
           };
         },
@@ -291,8 +288,11 @@ export default function createAuth(db) {
         },
         adminPermissions: {
           type: [String],
+          // Must NOT be required: the client never sends it (input: false)
+          // and better-auth rejects sign-up when a required additional
+          // field is missing. Server always defaults/sets it ([] for users).
           default: [],
-          required: true,
+          required: false,
           input: false,
           returned: true,
         },
@@ -308,10 +308,21 @@ export default function createAuth(db) {
           return new mongoose.Types.ObjectId().toString();
         }, // Set "false" to use MongoDB's default ObjectId, or "uuid" to use UUIDs
       },
-      defaultCookieAttributes: {
-        sameSite: "none",
-        secure: true,
-      },
+      /* Secure cross-site cookies in production only. On plain-http
+       * dev origins (http://localhost) browsers drop Secure cookies,
+       * which silently breaks sessions and locks guests in an
+       * auth-modal loop. SameSite=lax + non-secure is correct for
+       * same-site http dev; production keeps strict cross-site cookies. */
+      defaultCookieAttributes:
+        process.env.NODE_ENV === "production"
+          ? {
+              sameSite: "none",
+              secure: true,
+            }
+          : {
+              sameSite: "lax",
+              secure: false,
+            },
     },
     trustedOrigins: [process.env.FRONTEND_URL],
     baseURL: process.env.BETTER_AUTH_URL,

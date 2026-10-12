@@ -2,6 +2,7 @@ import React from "react";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 
 import { LoaderScreen } from "@/components/LoaderScreen";
+import { RouteErrorScreen } from "./ErrorBoundary";
 
 const lazyRoute = (importer) => ({
   lazy: async () => ({ Component: (await importer()).default }),
@@ -10,10 +11,12 @@ const lazyRoute = (importer) => ({
 const router = createHashRouter([
   {
     ...lazyRoute(() => import("./SessionLayout")),
+    errorElement: <RouteErrorScreen />,
     children: [
       {
         path: "/",
         ...lazyRoute(() => import("../App")),
+        errorElement: <RouteErrorScreen />,
         children: [
           { index: true, ...lazyRoute(() => import("../pages/home/page")) },
           { path: "search", ...lazyRoute(() => import("@/pages/search/page")) },
@@ -22,6 +25,14 @@ const router = createHashRouter([
             ...lazyRoute(() => import("@/pages/product/page")),
           },
           { path: "cart", ...lazyRoute(() => import("@/pages/cart/page")) },
+          {
+            path: "checkout",
+            ...lazyRoute(() => import("@/pages/checkout/page")),
+          },
+          {
+            path: "support",
+            ...lazyRoute(() => import("@/pages/support/page")),
+          },
           { path: "login", ...lazyRoute(() => import("@/pages/login/page")) },
           { path: "signup", ...lazyRoute(() => import("@/pages/signup/page")) },
           {
@@ -95,6 +106,7 @@ const router = createHashRouter([
       {
         path: "auth",
         ...lazyRoute(() => import("@/pages/Admin/auth/page.index")),
+        errorElement: <RouteErrorScreen />,
         children: [
           {
             path: "admin",
@@ -131,6 +143,22 @@ const router = createHashRouter([
               {
                 path: "customers",
                 ...lazyRoute(() => import("@/pages/Admin/customers")),
+              },
+              {
+                path: "categories",
+                ...lazyRoute(() => import("@/pages/Admin/categories")),
+              },
+              {
+                path: "analytics",
+                ...lazyRoute(() => import("@/pages/Admin/analytics")),
+              },
+              {
+                path: "payments",
+                ...lazyRoute(() => import("@/pages/Admin/payments")),
+              },
+              {
+                path: "support",
+                ...lazyRoute(() => import("@/pages/Admin/support")),
               },
               {
                 path: "settings",

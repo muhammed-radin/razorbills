@@ -10,6 +10,9 @@ import AddressRouter from "./address.js";
 import OrderRouter from "./orders.js";
 import commentsRouter from "./comments.js";
 import jobsRouter from "./jobs.js";
+import paymentsRouter from "./payments.js";
+import shipmentsRouter from "./shipments.js";
+import supportRouter from "./support.js";
 import { devMiddleware } from "../utils/middlewares/dev.js";
 import { evt } from "../utils/events.manage.js";
 import logsRouter from "./logs.js";
@@ -40,6 +43,17 @@ router.use("/address", requireAuth, AddressRouter);
 
 /* Order routes */
 router.use("/orders", requireAuth, OrderRouter);
+
+/* Payment routes: /payments/* public webhook handled inside router.
+ * NOTE: Razorpay webhook HMAC requires the RAW body. app.js preserves
+ * req.rawBody via express.json({verify}) — see app.js. */
+router.use("/payments", paymentsRouter);
+
+/* Shipment routes (courier ops; customer track scoped per order) */
+router.use("/shipments", shipmentsRouter);
+
+/* Customer care tickets (auth + ownership enforced per route) */
+router.use("/support", supportRouter);
 
 /* Comment routes */
 router.use("/comments", requireAuth, commentsRouter);

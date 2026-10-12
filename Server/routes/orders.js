@@ -6,10 +6,18 @@ import {
 } from "../utils/middlewares/reqiuredAuth.js";
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import { useMemory } from "../utils/memory.js";
+import { priceOrderItems } from "../utils/orderPricing.js";
+import {
+  createOrderRecord,
+  releaseOrderStock,
+} from "../utils/orderFactory.js";
+import { evt, Evts } from "../utils/events.manage.js";
 import {
   OrderModel,
   OrderStatus,
+  PaymentMethod,
   PaymentStatus,
+  CODStatus,
   FulfillmentStatus,
   CancellationStatus,
   ReturnStatus,
@@ -264,7 +272,9 @@ router.get(
         100,
       );
 
-      const sortBy = getRequestValue(req, "sortBy", "createdAt");
+      const allowedSort = ["createdAt", "updatedAt", "totalAmount", "status"];
+      const rawSortBy = getRequestValue(req, "sortBy", "createdAt");
+      const sortBy = allowedSort.includes(rawSortBy) ? rawSortBy : "createdAt";
 
       const sortOrder = getRequestValue(req, "sortOrder") === "asc" ? 1 : -1;
 
@@ -444,6 +454,14 @@ router.get("/:id", requireAuth, passUserAuth, async (req, res) => {
       });
     }
 
+    const isAdmin = req.user?.role === "admin" || req.user?.role === "owner";
+    if (!isAdmin && order.userId !== req.user?.id) {
+      return res.status(403).json({
+        code: 403,
+        error: "Access denied",
+      });
+    }
+
     return res.json(order);
   } catch (err) {
     console.error("Error fetching order:", err);
@@ -461,308 +479,145 @@ router.get("/:id", requireAuth, passUserAuth, async (req, res) => {
  * Create order from user
  * ========================================================= */
 
+/* =========================================================
+ * POST /orders — Cash on Delivery ONLY.
+ *
+ * Order-creation rule: no placed order exists before payment.
+ * - COD: explicit opt-in + eligibility (₹450–₹3,000) -> order is
+ *   created CONFIRMED with payment pending_collection (never paid).
+ * - Razorpay: rejected here (422). Prepaid MUST use the
+ *   payment-attempt flow (POST /payments/razorpay/create ->
+ *   verify), which creates the order only after verification.
+ * ========================================================= */
+
 router.post("/", requireAuth, passUserAuth, async (req, res) => {
-  try {
-    const body = req.body ?? {};
+  const body = req.body ?? {};
+  const userId = req.user?.id ?? body.userId;
 
-    /*
-     * Never trust userId from request body.
-     *
-     * Your passUserAuth middleware should provide
-     * the authenticated user ID.
-     *
-     * Adjust this line to the actual property used
-     * by your middleware.
-     */
-    const userId = req.user?.id ?? body.userId;
-
-    if (!userId) {
-      return res.status(401).json({
-        code: 401,
-        error: "Authenticated user ID is required",
-      });
-    }
-
-    /* ---------------------------------------------
-     * BASIC VALIDATION
-     * --------------------------------------------- */
-
-    if (!Array.isArray(body.products) || body.products.length === 0) {
-      return res.status(400).json({
-        code: 400,
-        error: "Order must contain at least one product",
-      });
-    }
-
-    if (!body.shippingAddress || !body.billingAddress) {
-      return res.status(400).json({
-        code: 400,
-        error: "shippingAddress and billingAddress are required",
-      });
-    }
-
-    if (!body.payment?.method) {
-      return res.status(400).json({
-        code: 400,
-        error: "payment.method is required",
-      });
-    }
-
-    /* ---------------------------------------------
-     * PRODUCT VALIDATION
-     * --------------------------------------------- */
-
-    const invalidProducts = body.products.filter((product) => {
-      return (
-        !product?.productId ||
-        !product?.title ||
-        !product?.thumbnail ||
-        !product?.sku ||
-        !product?.category ||
-        !product?.brand ||
-        !Number.isFinite(Number(product?.originalPrice)) ||
-        !Number.isFinite(Number(product?.price)) ||
-        !Number.isInteger(Number(product?.quantity)) ||
-        Number(product.quantity) <= 0 ||
-        Number(product.price) < 0 ||
-        Number(product.originalPrice) < 0
-      );
+  if (!userId) {
+    return res.status(401).json({
+      code: 401,
+      error: "Authenticated user ID is required",
     });
+  }
 
-    if (invalidProducts.length > 0) {
-      return res.status(400).json({
-        code: 8002,
-        error: "Invalid product data in order",
-        invalidProducts,
-      });
-    }
+  /* Idempotency: same key + same user returns the original order
+   * instead of creating a duplicate (double-submit / retry safe). */
+  const idempotencyKey =
+    req.headers["x-idempotency-key"] ?? body.idempotencyKey ?? null;
 
-    /* ---------------------------------------------
-     * NORMALIZE ITEMS
-     * --------------------------------------------- */
-
-    const products = body.products.map((product) => ({
-      productId: String(product.productId),
-
-      title: String(product.title),
-
-      thumbnail: String(product.thumbnail),
-
-      originalPrice: Number(product.originalPrice),
-
-      price: Number(product.price),
-
-      sku: String(product.sku),
-
-      category: String(product.category),
-
-      brand: String(product.brand),
-
-      quantity: Number(product.quantity),
-
-      specialInfo: product.specialInfo ?? {},
-
-      returnedQuantity: 0,
-
-      refundedQuantity: 0,
-    }));
-
-    /* ---------------------------------------------
-     * CALCULATE SUBTOTAL
-     * --------------------------------------------- */
-
-    const subtotal = products.reduce(
-      (total, product) => total + product.price * product.quantity,
-      0,
-    );
-
-    /* ---------------------------------------------
-     * DISCOUNT
-     *
-     * Temporary validation until coupon service
-     * is connected.
-     * --------------------------------------------- */
-
-    const discountAmount = Math.max(0, Number(body.discount?.amount ?? 0));
-
-    if (discountAmount > subtotal) {
-      return res.status(400).json({
-        code: 8003,
-        error: "Discount cannot exceed subtotal",
-      });
-    }
-
-    const discount = {
-      codes: Array.isArray(body.discount?.codes) ? body.discount.codes : [],
-
-      amount: discountAmount,
-    };
-
-    /* ---------------------------------------------
-     * TAX
-     *
-     * tax = percentage
-     * taxAmount = actual money
-     * --------------------------------------------- */
-
-    const tax = Math.max(0, Number(body.tax ?? 0));
-
-    const taxableAmount = subtotal - discount.amount;
-
-    const calculatedTaxAmount = Number(
-      (taxableAmount * (tax / 100)).toFixed(2),
-    );
-
-    /* ---------------------------------------------
-     * SHIPPING
-     * --------------------------------------------- */
-
-    const shippingAmount = Math.max(0, Number(body.shippingAmount ?? 0));
-
-    /* ---------------------------------------------
-     * TOTAL
-     * --------------------------------------------- */
-
-    const calculatedTotalAmount = Number(
-      (taxableAmount + calculatedTaxAmount + shippingAmount).toFixed(2),
-    );
-
-    /* ---------------------------------------------
-     * OPTIONAL CLIENT TOTAL VALIDATION
-     *
-     * If the frontend sends totalAmount, verify it.
-     * Server calculation remains authoritative.
-     * --------------------------------------------- */
-
-    if (
-      body.totalAmount !== undefined &&
-      Number(body.totalAmount) !== calculatedTotalAmount
-    ) {
-      return res.status(400).json({
-        code: 8001,
-        error:
-          "Invalid order data, totalAmount does not match server calculation",
-
-        expected: calculatedTotalAmount,
-
-        received: Number(body.totalAmount),
-      });
-    }
-
-    /* ---------------------------------------------
-     * CREATE ORDER DATA
-     * --------------------------------------------- */
-
-    const orderData = {
-      id:
-        body.id ??
-        `ORD-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 8)
-          .toUpperCase()}`,
-
-      userId,
-
-      products,
-
-      subtotal,
-
-      discount,
-
-      tax,
-
-      taxAmount: calculatedTaxAmount,
-
-      shippingAmount,
-
-      totalAmount: calculatedTotalAmount,
-
-      currency: body.currency ?? "INR",
-
-      status: OrderStatus.PENDING,
-
-      payment: {
-        method: body.payment.method,
-
-        status: PaymentStatus.PENDING,
-
-        transactionId: body.payment?.transactionId ?? null,
-
-        amountPaid: 0,
-
-        refundedAmount: 0,
-      },
-
-      fulfillment: {
-        status: FulfillmentStatus.UNFULFILLED,
-      },
-
-      cancellation: {
-        status: CancellationStatus.NONE,
-      },
-
-      return: {
-        status: ReturnStatus.NONE,
-      },
-
-      refund: {
-        status: RefundStatus.NONE,
-      },
-
-      /*
-       * Copy addresses as order snapshots.
-       */
-      shippingAddress: body.shippingAddress,
-
-      billingAddress: body.billingAddress,
-    };
-
-    /* ---------------------------------------------
-     * CREATE
-     * --------------------------------------------- */
-
-    const order = await OrderModel.create(orderData);
-
-    /* ---------------------------------------------
-     * USER STATISTICS
-     * --------------------------------------------- */
-
-    /*
-     * This should ideally be handled together with
-     * your order creation workflow / event system.
-     */
+  if (idempotencyKey) {
     try {
-      await db.collection("users").updateOne(
-        { id: userId },
-        {
-          $inc: {
-            totalOrders: 1,
-          },
-        },
-      );
-    } catch (userErr) {
-      /*
-       * Don't destroy the successful order response
-       * merely because a secondary statistic update
-       * failed.
-       */
-      console.error("Failed to update user order statistics:", userErr);
+      const existing = await OrderModel.findOne({ idempotencyKey, userId });
+      if (existing) {
+        return res.status(200).json({ ...existing.toObject(), deduplicated: true });
+      }
+    } catch {
+      // fall through to creation
     }
+  }
 
+  evt.fire(Evts.ORDER_CREATE_ATTEMPT, { userId });
+
+  if (!Array.isArray(body.products) || body.products.length === 0) {
+    evt.fire(Evts.ORDER_CREATE_FAILED, { userId, reason: "empty products" });
+    return res.status(400).json({
+      code: 400,
+      error: "Order must contain at least one product",
+    });
+  }
+
+  if (!body.shippingAddress || !body.billingAddress) {
+    evt.fire(Evts.ORDER_CREATE_FAILED, { userId, reason: "missing address" });
+    return res.status(400).json({
+      code: 400,
+      error: "shippingAddress and billingAddress are required",
+    });
+  }
+
+  const rawMethod = String(body.payment?.method ?? "").toLowerCase().trim();
+  if (rawMethod !== PaymentMethod.COD) {
+    evt.fire(Evts.ORDER_CREATE_FAILED, { userId, reason: "non-cod method" });
+    return res.status(422).json({
+      code: 422,
+      error:
+        "Prepaid orders must use the verified payment flow: POST /api/payments/razorpay/create, then verify. " +
+        "Direct order creation is Cash on Delivery only.",
+    });
+  }
+
+  /* Server-authoritative pricing + COD eligibility (₹450–₹3,000).
+   * Client prices/totals are ignored; manipulated requests fail here. */
+  let priced;
+  try {
+    priced = await priceOrderItems(body.products, { method: PaymentMethod.COD });
+  } catch (err) {
+    evt.fire(Evts.ORDER_CREATE_FAILED, {
+      userId,
+      reason: err?.message ?? "pricing failed",
+    });
+    return res.status(err?.code ?? 400).json({
+      code: err?.code ?? 400,
+      error: err?.message ?? "Invalid order items",
+      productId: err?.productId,
+    });
+  }
+
+  if (
+    body.totalAmount !== undefined &&
+    Number(body.totalAmount) !== priced.totalAmount
+  ) {
+    evt.fire(Evts.ORDER_CREATE_FAILED, {
+      userId,
+      reason: "total mismatch",
+      expected: priced.totalAmount,
+      received: Number(body.totalAmount),
+    });
+    return res.status(400).json({
+      code: 8001,
+      error:
+        "Invalid order data, totalAmount does not match server calculation",
+      expected: priced.totalAmount,
+      received: Number(body.totalAmount),
+    });
+  }
+
+  try {
+    const order = await createOrderRecord({
+      userId,
+      priced,
+      shippingAddress: body.shippingAddress,
+      billingAddress: body.billingAddress,
+      method: PaymentMethod.COD,
+      idempotencyKey,
+      confirm: true,
+      confirmNote: "COD order confirmed",
+    });
     return res.status(201).json(order);
   } catch (err) {
     console.error("Error creating order:", err);
 
     if (err?.code === 11000) {
+      if (idempotencyKey) {
+        const existing = await OrderModel.findOne({
+          idempotencyKey,
+          userId,
+        }).catch(() => null);
+        if (existing) {
+          return res
+            .status(200)
+            .json({ ...existing.toObject(), deduplicated: true });
+        }
+      }
       return res.status(409).json({
         code: 11000,
         error: "Order ID already exists",
       });
     }
 
-    return res.status(500).json({
-      code: 500,
-      error: "Failed to create order",
+    return res.status(err?.code === 422 ? 422 : 500).json({
+      code: err?.code ?? 500,
+      error: err?.message ?? "Failed to create order",
     });
   }
 });
@@ -860,14 +715,44 @@ router.post("/:id/cancel", requireAuth, passUserAuth, async (req, res) => {
     if (!order.canCancel()) {
       return res.status(400).json({
         code: 400,
-        error: `Order cannot be cancelled from status: ${order.status}`,
+        error: `Order cannot be cancelled from status: ${order.status}. Only pending, confirmed, or processing orders can be cancelled.`,
       });
     }
 
-    const updatedOrder = await order.requestCancellation({
-      reason: req.body?.reason ?? null,
+    const reason = String(req.body?.reason ?? "").trim();
+    const detail = String(req.body?.detail ?? "").trim();
+    if (!reason) {
+      return res.status(400).json({
+        code: 400,
+        error: "A cancellation reason is required.",
+      });
+    }
+    if (reason === "Other" && !detail) {
+      return res.status(400).json({
+        code: 400,
+        error: "Please explain the reason when selecting Other.",
+      });
+    }
 
-      actorId: req.user?.id ?? null,
+    let updatedOrder;
+    try {
+      updatedOrder = await order.requestCancellation({
+        reason,
+        detail: detail || null,
+        actorId: req.user?.id ?? null,
+      });
+    } catch (err) {
+      return res.status(400).json({
+        code: 400,
+        error: err?.message ?? "Cancellation request failed.",
+      });
+    }
+
+    evt.fire(Evts.ORDER_CANCELLED, {
+      orderId: order.id,
+      userId: order.userId,
+      requested: true,
+      reason,
     });
 
     return res.json({
@@ -911,6 +796,23 @@ router.post(
       const updatedOrder = await order.approveCancellation({
         actorId: req.user?.id ?? null,
       });
+
+      // Terminal cancellation restores reserved inventory (best-effort).
+      await releaseOrderStock(updatedOrder);
+
+      evt.fire(Evts.ORDER_CANCELLED, {
+        orderId: order.id,
+        approved: true,
+        actorId: req.user?.id ?? null,
+      });
+      if (updatedOrder.payment.status === PaymentStatus.PAID) {
+        // Prepaid cancellation only REQUESTS review — a refund is a
+        // separate verified step (POST /:id/refund). Never implied.
+        evt.fire(Evts.ORDER_STATUS_CHANGED, {
+          orderId: order.id,
+          note: "cancelled while paid — refund pending admin action",
+        });
+      }
 
       return res.json({
         success: true,
@@ -1321,8 +1223,50 @@ router.post("/:id/return", requireAuth, passUserAuth, async (req, res) => {
       });
     }
 
-    const updatedOrder = await order.requestReturn({
-      reason: req.body?.reason ?? null,
+    // Returns are accepted for delivered orders within 7 days.
+    if (order.status === OrderStatus.DELIVERED && order.fulfillment?.deliveredAt) {
+      const days =
+        (Date.now() - new Date(order.fulfillment.deliveredAt).getTime()) /
+        86400000;
+      if (days > Number(process.env.RETURN_WINDOW_DAYS ?? 7)) {
+        return res.status(400).json({
+          code: 400,
+          error: `Return window closed (${process.env.RETURN_WINDOW_DAYS ?? 7} days after delivery). Contact support for help.`,
+        });
+      }
+    }
+
+    const reason = String(req.body?.reason ?? "").trim();
+    const detail = String(req.body?.detail ?? "").trim();
+    if (!reason) {
+      return res.status(400).json({
+        code: 400,
+        error: "A return reason is required.",
+      });
+    }
+    if (reason === "Other" && !detail) {
+      return res.status(400).json({
+        code: 400,
+        error: "Please explain the reason when selecting Other.",
+      });
+    }
+
+    let updatedOrder;
+    try {
+      updatedOrder = await order.requestReturn({ reason, detail: detail || null });
+    } catch (err) {
+      return res.status(400).json({
+        code: 400,
+        error: err?.message ?? "Return request failed.",
+      });
+    }
+
+    // A request never marks items returned, refunds payment, or
+    // triggers courier pickup — admin review is required first.
+    evt.fire(Evts.ORDER_RETURN_REQUESTED, {
+      orderId: order.id,
+      userId: order.userId,
+      reason,
     });
 
     return res.json({
@@ -1705,6 +1649,40 @@ router.patch(
 /* =========================================================
  * ADMIN SHORTCUTS
  * ========================================================= */
+
+/* Legacy reconciliation: Razorpay orders stuck in pending/failed
+ * payment (e.g. created by the old pre-verification flow or stubs).
+ * These are NOT placed orders: no revenue, no shipment, no stock
+ * move is assumed. Never auto-mark paid; use the retry flow or
+ * cancel them explicitly. */
+router.get(
+  "/admin/unverified",
+  requireAuth,
+  requireAdmin,
+  requirePermission("read"),
+  async (req, res) => {
+    try {
+      const limit = Math.min(
+        Number.parseInt(req.query?.limit ?? "50", 10) || 50,
+        100,
+      );
+      const orders = await OrderModel.find({
+        "payment.method": PaymentMethod.RAZORPAY,
+        "payment.status": { $in: [PaymentStatus.PENDING, PaymentStatus.FAILED] },
+      })
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+      return res.json({ count: orders.length, orders });
+    } catch (err) {
+      console.error("Error fetching unverified orders:", err);
+      return res.status(500).json({
+        code: 500,
+        error: "Failed to fetch unverified orders",
+      });
+    }
+  },
+);
 
 router.get(
   "/admin/pending",

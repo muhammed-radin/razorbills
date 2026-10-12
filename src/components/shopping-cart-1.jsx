@@ -12,6 +12,7 @@ import {
   CreditCard,
   Store,
   MoveRight,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -35,6 +36,7 @@ export function ShoppingCart1() {
   const deferredStoreItems = useDeferredValue(storeItems);
   const setQuantity = useCartStore((s) => s.setQuantity);
   const removeFromCart = useCartStore((s) => s.remove);
+  const syncing = useCartStore((s) => s.syncing);
   const [isRemoving, setIsRemoving] = useState(null);
 
   // Normalize server items to the card's display shape
@@ -164,8 +166,12 @@ export function ShoppingCart1() {
                         >
                           <Minus />
                         </Button>
-                        <span className="w-8 text-center text-sm font-medium">
-                          {item.quantity}
+                        <span className="flex w-8 items-center justify-center text-center text-sm font-medium">
+                          {syncing[item.id] ? (
+                            <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                          ) : (
+                            item.quantity
+                          )}
                         </span>
                         <Button
                           variant="outline"
@@ -251,7 +257,7 @@ export function ShoppingCart1() {
                 size="lg"
                 className="h-10 px-8 mt-4 w-full cursor-pointer text-base font-medium"
                 disabled={items.length === 0}
-                onClick={() => navigate("/shipping-info")}
+                onClick={() => navigate("/checkout")}
               >
                 <ShoppingBag data-icon="inline-start" />
                 Proceed to Checkout

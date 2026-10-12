@@ -124,8 +124,6 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
       id: productFromBody?.productId || productFromBody?.id,
     });
     product.productId = product.id; // Ensure productId is set for consistency
-    console.log(product, "wishlist product to be added");
-    console.log(req.body, "wishlist request body");
     const folder = req.body?.folder || req.query?.folder || "/";
 
     if (!product) {
@@ -190,8 +188,6 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
         returnDocument: "after",
       },
     );
-
-    console.log("Wishlist updated/created:", newWishList);
 
     evt.fire(
       Evts.WISHLIST_ADDED,
@@ -359,9 +355,6 @@ router.delete("/", requireAuth, passUserAuth, async (req, res) => {
     if (!userId) {
       return res.status(400).json({ error: "User ID not found in request" });
     }
-
-    console.log("wishlist delete request body:", req.body);
-
     const { folder, productId } = req.body;
 
     const wishlist = await WishlistModel.findOne({ userId, folder });

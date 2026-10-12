@@ -1,5 +1,13 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
+import { toast } from "sonner"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     Users,
     Search,
@@ -62,6 +70,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { usersApi } from "@/services/shop"
+import { decryptField } from "@/utils/crypt"
 import { cn } from "@/lib/utils"
 
 const customerTierConfig = {
@@ -98,121 +107,41 @@ export default function CustomersPage() {
     const [tierFilter, setTierFilter] = useState("all")
     const [sortBy, setSortBy] = useState("recent")
     const [currentTab, setCurrentTab] = useState("all")
-
-    // Mock data - Replace with actual API calls
-    const mockCustomers = [
-        {
-            id: "CUST-001",
-            name: "John Doe",
-            email: "john.doe@example.com",
-            phone: "+1 234 567 8900",
-            avatar: "JD",
-            image: "",
-            tier: "vip",
-            totalOrders: 24,
-            totalSpent: 12450.00,
-            averageOrderValue: 518.75,
-            joinDate: "2025-03-15",
-            lastOrder: "2026-01-02",
-            location: "New York, USA",
-            status: "active",
-        },
-        {
-            id: "CUST-002",
-            name: "Jane Smith",
-            email: "jane.smith@example.com",
-            phone: "+1 234 567 8901",
-            avatar: "JS",
-            image: "",
-            tier: "premium",
-            totalOrders: 15,
-            totalSpent: 7890.50,
-            averageOrderValue: 526.03,
-            joinDate: "2025-05-20",
-            lastOrder: "2026-01-03",
-            location: "Los Angeles, USA",
-            status: "active",
-        },
-        {
-            id: "CUST-003",
-            name: "Bob Wilson",
-            email: "bob.wilson@example.com",
-            phone: "+1 234 567 8902",
-            avatar: "BW",
-            image: "",
-            tier: "regular",
-            totalOrders: 8,
-            totalSpent: 3200.00,
-            averageOrderValue: 400.00,
-            joinDate: "2025-08-10",
-            lastOrder: "2026-01-04",
-            location: "Chicago, USA",
-            status: "active",
-        },
-        {
-            id: "CUST-004",
-            name: "Alice Johnson",
-            email: "alice.j@example.com",
-            phone: "+1 234 567 8903",
-            avatar: "AJ",
-            image: "",
-            tier: "regular",
-            totalOrders: 5,
-            totalSpent: 1890.00,
-            averageOrderValue: 378.00,
-            joinDate: "2025-10-05",
-            lastOrder: "2026-01-04",
-            location: "Houston, USA",
-            status: "active",
-        },
-        {
-            id: "CUST-005",
-            name: "Charlie Brown",
-            email: "charlie.b@example.com",
-            phone: "+1 234 567 8904",
-            avatar: "CB",
-            image: "",
-            tier: "new",
-            totalOrders: 2,
-            totalSpent: 450.00,
-            averageOrderValue: 225.00,
-            joinDate: "2025-12-20",
-            lastOrder: "2026-01-03",
-            location: "Phoenix, USA",
-            status: "active",
-        },
-        {
-            id: "CUST-006",
-            name: "Diana Prince",
-            email: "diana.p@example.com",
-            phone: "+1 234 567 8905",
-            avatar: "DP",
-            image: "",
-            tier: "premium",
-            totalOrders: 18,
-            totalSpent: 9100.00,
-            averageOrderValue: 505.56,
-            joinDate: "2025-04-12",
-            lastOrder: "2025-12-28",
-            location: "Seattle, USA",
-            status: "inactive",
-        },
-    ]
+    const [selectedCustomer, setSelectedCustomer] = useState(null)
+    const [profileOpen, setProfileOpen] = useState(false)
+    const [profileDetail, setProfileDetail] = useState(null)
+    const [profileOrders, setProfileOrders] = useState([])
+    const [profileLoading, setProfileLoading] = useState(false)
+    const [togglingId, setTogglingId] = useState(null)
+    const searchTimer = useRef(null)
 
     useEffect(() => {
         fetchCustomers()
     }, [])
 
-    const fetchCustomers = async () => {
+    // Debounced server-side search (backend ?search= over name/email/id).
+    useEffect(() => {
+        if (searchTimer.current) clearTimeout(searchTimer.current)
+        searchTimer.current = setTimeout(() => {
+            fetchCustomers(searchQuery)
+        }, 400)
+        return () => {
+            if (searchTimer.current) clearTimeout(searchTimer.current)
+        }
+    }, [searchQuery])
+
+    const [loadError, setLoadError] = useState(null)
+
+    const fetchCustomers = async (search = "") => {
         try {
             setIsLoading(true)
-            const data = await usersApi.list({ limit: 50 })
+            setLoadError(null)
+            const data = await usersApi.list({ limit: 50, ...(search?.trim() ? { search: search.trim() } : {}) })
             const users = Array.isArray(data) ? data : (data.users ?? [])
-            if (users.length === 0) throw new Error("empty")
             setCustomers(
                 users.map((u, i) => ({
                     id: u.id ?? u._id ?? `user-${i}`,
-                    name: u.name ?? "Unknown",
+                    name: decryptField(u.name) ?? "Unknown",
                     email: u.email ?? "",
                     phone: u.phoneNumber ?? "",
                     avatar: (u.name ?? "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
@@ -229,12 +158,15 @@ export default function CustomersPage() {
             )
             setIsLoading(false)
         } catch (error) {
-            console.error("Error fetching customers, using showcase data:", error)
-            // Non-admin sessions get 403 — keep showcase data so the page stays usable
-            setTimeout(() => {
-                setCustomers(mockCustomers)
-                setIsLoading(false)
-            }, 500)
+            console.error("Error fetching customers:", error)
+            // Never render fake rows as if they were real customers.
+            setCustomers([])
+            setLoadError(
+                error?.response?.status === 403
+                    ? "Admin access required to view customers."
+                    : "Could not load customers. Check the connection and retry.",
+            )
+            setIsLoading(false)
         }
     }
 
@@ -253,6 +185,80 @@ export default function CustomersPage() {
                 : 0,
         }
         return stats
+    }
+
+    const openProfile = async (customer) => {
+        setSelectedCustomer(customer)
+        setProfileOpen(true)
+        setProfileLoading(true)
+        setProfileDetail(null)
+        setProfileOrders([])
+        try {
+            const { usersApi: uApi, ordersApi } = await import("@/services/shop")
+            const [detail, ordersData] = await Promise.allSettled([
+                uApi.get(customer.id),
+                ordersApi.list({ userId: customer.id, limit: 20 }),
+            ])
+            if (detail.status === "fulfilled") setProfileDetail(detail.value)
+            const list = ordersData.status === "fulfilled"
+                ? (ordersData.value?.orders ?? (Array.isArray(ordersData.value) ? ordersData.value : []))
+                : []
+            setProfileOrders(Array.isArray(list) ? list : [])
+            if (detail.status === "rejected") toast.error("Could not load full profile")
+        } catch (error) {
+            console.error("Error loading customer profile:", error)
+            toast.error("Could not load customer profile")
+        } finally {
+            setProfileLoading(false)
+        }
+    }
+
+    const toggleCustomerStatus = async (customer) => {
+        if (togglingId) return
+        const toBanned = customer.status === "active"
+        if (!window.confirm(`${toBanned ? "Deactivate" : "Reactivate"} ${customer.name}?`)) return
+        try {
+            setTogglingId(customer.id)
+            const { usersApi: uApi } = await import("@/services/shop")
+            await uApi.setStatus(customer.id, toBanned, toBanned ? "Disabled by admin" : undefined)
+            setCustomers((prev) =>
+                prev.map((c) => (c.id === customer.id ? { ...c, status: toBanned ? "inactive" : "active" } : c)),
+            )
+            toast.success(`Customer ${toBanned ? "deactivated" : "reactivated"}`)
+        } catch (error) {
+            console.error("Error toggling customer status:", error)
+            toast.error(error?.response?.data?.error ?? "Failed to update customer status")
+        } finally {
+            setTogglingId(null)
+        }
+    }
+
+    const exportCustomersCsv = () => {
+        try {
+            const rows = [
+                ["id", "name", "email", "phone", "tier", "status", "totalOrders", "totalSpent", "joinDate"],
+                ...filteredCustomers.map((c) => [
+                    c.id, c.name, c.email, c.phone, c.tier, c.status,
+                    c.totalOrders, Number(c.totalSpent ?? 0).toFixed(2), c.joinDate,
+                ]),
+            ]
+            const csv = rows
+                .map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(","))
+                .join("\n")
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `razorbills-customers-${new Date().toISOString().split("T")[0]}.csv`
+            document.body.appendChild(a)
+            a.click()
+            a.remove()
+            URL.revokeObjectURL(url)
+            toast.success(`Exported ${filteredCustomers.length} customer(s) to CSV`)
+        } catch (error) {
+            console.error("CSV export failed:", error)
+            toast.error("Failed to export customers")
+        }
     }
 
     const filteredCustomers = customers
@@ -309,6 +315,17 @@ export default function CustomersPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
             <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8">
+                {loadError && (
+                    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                        <span className="flex-1 text-destructive">{loadError}</span>
+                        <button
+                            onClick={fetchCustomers}
+                            className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
                 {/* Beautiful Hero Header */}
                 <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
                     <div className="absolute -top-32 -right-32 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -369,7 +386,7 @@ export default function CustomersPage() {
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-xs sm:text-sm text-white/70 truncate">Avg. LTV</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">${stats.averageLifetimeValue.toFixed(0)}</p>
+                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">₹{stats.averageLifetimeValue.toFixed(0)}</p>
                                     </div>
                                 </div>
                             </div>
@@ -415,7 +432,7 @@ export default function CustomersPage() {
                                         <SelectItem value="orders-desc">Most Orders</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Button className="h-10 sm:h-11 px-4 sm:px-6 shadow-lg col-span-2 sm:col-span-1 text-xs sm:text-sm">
+                                <Button onClick={exportCustomersCsv} className="h-10 sm:h-11 px-4 sm:px-6 shadow-lg col-span-2 sm:col-span-1 text-xs sm:text-sm">
                                     <Download className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     Export
                                 </Button>
@@ -483,22 +500,27 @@ export default function CustomersPage() {
                                                             <DropdownMenuContent align="end" className="w-48">
                                                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                                                 <DropdownMenuSeparator />
-                                                                <DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => openProfile(customer)}>
                                                                     <Eye className="mr-2 h-4 w-4" />
                                                                     View Profile
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={() => openProfile(customer)}>
                                                                     <Edit className="mr-2 h-4 w-4" />
-                                                                    Edit Customer
+                                                                    Order History
                                                                 </DropdownMenuItem>
-                                                                <DropdownMenuItem>
-                                                                    <Mail className="mr-2 h-4 w-4" />
-                                                                    Send Email
+                                                                <DropdownMenuItem asChild>
+                                                                    <a href={`mailto:${customer.email}`}>
+                                                                        <Mail className="mr-2 h-4 w-4" />
+                                                                        Send Email
+                                                                    </a>
                                                                 </DropdownMenuItem>
                                                                 <DropdownMenuSeparator />
-                                                                <DropdownMenuItem className="text-red-600">
+                                                                <DropdownMenuItem
+                                                                    className={customer.status === "active" ? "text-red-600" : "text-green-600"}
+                                                                    onClick={() => toggleCustomerStatus(customer)}
+                                                                >
                                                                     <Ban className="mr-2 h-4 w-4" />
-                                                                    Deactivate
+                                                                    {customer.status === "active" ? "Deactivate" : "Reactivate"}
                                                                 </DropdownMenuItem>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
@@ -547,14 +569,14 @@ export default function CustomersPage() {
                                                                 <DollarSign className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-green-600" />
                                                                 <p className="text-[10px] sm:text-xs text-muted-foreground">Spent</p>
                                                             </div>
-                                                            <p className="text-base sm:text-lg font-bold text-green-600">${customer.totalSpent.toFixed(0)}</p>
+                                                            <p className="text-base sm:text-lg font-bold text-green-600">₹{customer.totalSpent.toFixed(0)}</p>
                                                         </div>
                                                         <div className="text-center">
                                                             <div className="flex items-center justify-center gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
                                                                 <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-600" />
                                                                 <p className="text-[10px] sm:text-xs text-muted-foreground">AOV</p>
                                                             </div>
-                                                            <p className="text-base sm:text-lg font-bold text-blue-600">${customer.averageOrderValue.toFixed(0)}</p>
+                                                            <p className="text-base sm:text-lg font-bold text-blue-600">₹{customer.averageOrderValue.toFixed(0)}</p>
                                                         </div>
                                                     </div>
 
@@ -578,13 +600,15 @@ export default function CustomersPage() {
 
                                                     {/* Action Buttons */}
                                                     <div className="flex gap-2 pt-2 sm:pt-3 border-t">
-                                                        <Button variant="outline" size="sm" className="flex-1 h-8 sm:h-9 text-xs">
+                                                        <Button variant="outline" size="sm" className="flex-1 h-8 sm:h-9 text-xs" onClick={() => openProfile(customer)}>
                                                             <Eye className="mr-1 sm:mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                                             View
                                                         </Button>
-                                                        <Button size="sm" className="flex-1 h-8 sm:h-9 text-xs">
-                                                            <Mail className="mr-1 sm:mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                                                            Contact
+                                                        <Button size="sm" className="flex-1 h-8 sm:h-9 text-xs" asChild>
+                                                            <a href={`mailto:${customer.email}`}>
+                                                                <Mail className="mr-1 sm:mr-2 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                                                Contact
+                                                            </a>
                                                         </Button>
                                                     </div>
                                                 </CardContent>
@@ -596,6 +620,56 @@ export default function CustomersPage() {
                         </div>
                     </TabsContent>
                 </Tabs>
+
+                {/* Customer profile + order history dialog (live backend data) */}
+                <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+                    <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>{selectedCustomer?.name ?? "Customer"}</DialogTitle>
+                            <DialogDescription>
+                                {selectedCustomer?.email} · {selectedCustomer?.id}
+                            </DialogDescription>
+                        </DialogHeader>
+                        {profileLoading ? (
+                            <p className="text-sm text-muted-foreground py-6 text-center">Loading profile…</p>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-3 gap-2 text-center">
+                                    <div className="rounded-lg bg-muted/50 p-3">
+                                        <p className="text-xs text-muted-foreground">Orders</p>
+                                        <p className="text-lg font-bold">{profileDetail?.totalOrders ?? selectedCustomer?.totalOrders ?? 0}</p>
+                                    </div>
+                                    <div className="rounded-lg bg-muted/50 p-3">
+                                        <p className="text-xs text-muted-foreground">Spent</p>
+                                        <p className="text-lg font-bold">₹{Number(profileDetail?.totalSpent ?? selectedCustomer?.totalSpent ?? 0).toFixed(0)}</p>
+                                    </div>
+                                    <div className="rounded-lg bg-muted/50 p-3">
+                                        <p className="text-xs text-muted-foreground">Status</p>
+                                        <p className="text-lg font-bold capitalize">{selectedCustomer?.status}</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold mb-2">Order history</p>
+                                    {profileOrders.length === 0 ? (
+                                        <p className="text-sm text-muted-foreground">No orders found for this customer.</p>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {profileOrders.map((o) => (
+                                                <div key={o.id ?? o._id} className="flex items-center justify-between rounded-lg border p-3 text-sm">
+                                                    <div>
+                                                        <p className="font-mono font-semibold">{o.id ?? o._id}</p>
+                                                        <p className="text-xs text-muted-foreground capitalize">{o.status} · {o.payment?.method} ({o.payment?.status})</p>
+                                                    </div>
+                                                    <p className="font-bold">₹{Number(o.totalAmount ?? 0).toFixed(2)}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     )

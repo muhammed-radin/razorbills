@@ -20,6 +20,11 @@ import {
 import { UAParser } from "ua-parser-js";
 import dayjs from "dayjs";
 import { calculateAnalyticsFrom } from "../utils/calc_analytics.js";
+import {
+  passUserAuth,
+  requireAuth,
+} from "../utils/middlewares/reqiuredAuth.js";
+import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 
 const router = express.Router();
 
@@ -306,7 +311,7 @@ evt.on(Evts.USER_DELETED, async function (evtData) {
   await db.collection("sessions").findOneAndDelete({ userId: evtData.userId });
 });
 
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, passUserAuth, requireAdmin, requirePermission("read"), async (req, res) => {
   res.json({ recordsBuffer, analyticsRecordsBuffer, debugEvents });
 });
 

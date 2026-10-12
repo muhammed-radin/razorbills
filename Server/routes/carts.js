@@ -41,8 +41,6 @@ async function syncCartProducts(req, res, next) {
     .find({ id: { $in: productIds } })
     .toArray();
 
-  console.log(productsFinded, "products found in the cart");
-
   if (
     !productsFinded ||
     !Array.isArray(productsFinded) ||
@@ -126,7 +124,6 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
     );
     minimalProduct.quantity = Number(quantity);
     minimalProduct.productId = minimalProduct.id; // Ensure productId is set for consistency
-    console.log(minimalProduct, "minimal product to be added to cart");
 
     const cart = await CartModel.findOne({ userId });
     const products = cart?.products || [];
@@ -254,7 +251,7 @@ router.delete("/", requireAuth, passUserAuth, async (req, res) => {
 router.delete("/clear", requireAuth, passUserAuth, async function (req, res) {
   const userId = req.user?.id;
 
-  const cart = await CartModel.findOne({ userId });
+  let cart = await CartModel.findOne({ userId });
   if (!cart) {
     cart = await CartModel.create({ userId, products: [] });
   }

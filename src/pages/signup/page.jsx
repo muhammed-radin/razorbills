@@ -78,6 +78,10 @@ const SignUpPage = () => {
                 const { response, data: response_data, user } = payload;
                 if (response.status == 200) {
                   resolveui(t("auth.signupSuccess"));
+                  // Drop any cached null-session so the new login takes
+                  // effect immediately (mirrors the login flow).
+                  sessionStorage.removeItem("session");
+                  sessionStorage.removeItem("session_at");
 
                   authClient
                     .getSession()
