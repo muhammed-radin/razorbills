@@ -20,7 +20,7 @@ export const UserSchema = new Schema(
     address: { type: AddressSchema, default: null },
     phoneNumber: { type: String, default: "" },
     preferences: { type: Schema.Types.Mixed, default: {} },
-    provider: { type: String, default: "local" },
+    providedBy: { type: String, default: "local" },
 
     adminPermissions: { type: [String], default: [] },
     role: { type: String, default: "user", enum: ["user", "admin", "owner"] },

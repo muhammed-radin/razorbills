@@ -81,14 +81,24 @@ function App() {
               navigate("/login");
             } else {
               // Continue as guest
-              const { error } = await authClient.signIn.anonymous();
-              if (error) {
+              try {
+                const result = await authClient.signIn.anonymous();
+
+                console.log("Guest sign-in result:", result);
+                let error = result.error;
+                if (error) {
+                  toast.error(
+                    "Failed to sign in as guest. Please try again. Error: " +
+                      error.message,
+                  );
+                } else {
+                  toast.success("Signed in as guest.");
+                }
+              } catch (error) {
+                console.error("Error during guest sign-in:", error);
                 toast.error(
-                  "Failed to sign in as guest. Please try again. Error: " +
-                    error.message,
+                  "An unexpected error occurred during guest sign-in. Please try again.",
                 );
-              } else {
-                toast.success("Signed in as guest.");
               }
               setTimeout(() => {
                 setIsLoading(false);

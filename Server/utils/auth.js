@@ -13,7 +13,7 @@ import {
   SessionEvent,
   UserEvent,
 } from "./events.manage.js";
-import axios from "axios";
+import { migrateOldUserToNewUser } from "./auth.migrate.js";
 
 let authInstance = null;
 
@@ -154,6 +154,9 @@ export default function createAuth(db) {
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        // const isSignIn = ctx.path.startsWith("/sign-in");
+        // const currentSession = ctx.context.session;
+
         // 1. Target email sign-in and sign-up endpoints
         if (ctx.path === "/sign-in/email" || ctx.path === "/sign-up/email") {
           if (ctx.body && typeof ctx.body.password === "string") {
@@ -181,32 +184,21 @@ export default function createAuth(db) {
       after: createAuthMiddleware(async (ctx) => {
         const session = await getSessionFromCtx(ctx);
 
+        let evtType = null;
+        if (ctx.path === "/sign-out") {
+          evtType = Evts.USER_LOGGED_OUT_REQUEST;
+        } else if (ctx.path === "/reset-password") {
+          evtType = Evts.USER_PASSWORD_CHANGED;
+        } else if (ctx.path === "/update-password") {
+          evtType = Evts.USER_PASSWORD_CHANGED;
+        }
+
         const isSessionFound = !!session; // TODO: Fix this session null error, currently session is null after sign-in, sign-up, and sign-out actions. Need to investigate why.
-        if (isSessionFound && ctx.path === "/sign-out") {
+        if (isSessionFound && evtType) {
           evt.fire(
-            Evts.USER_LOGGED_OUT_REQUEST,
+            evtType,
             new UserEvent({
-              type: Evts.USER_LOGGED_OUT_REQUEST,
-              user: session?.user || null,
-              isGuest: session?.user?.isAnonymous || false,
-              userId: session?.user?.id || null,
-            }),
-          );
-        } else if (isSessionFound && ctx.path === "/reset-password") {
-          evt.fire(
-            Evts.USER_PASSWORD_CHANGED,
-            new UserEvent({
-              type: Evts.USER_PASSWORD_CHANGED,
-              user: session?.user || null,
-              isGuest: session?.user?.isAnonymous || false,
-              userId: session?.user?.id || null,
-            }),
-          );
-        } else if (isSessionFound && ctx.path === "/update-password") {
-          evt.fire(
-            Evts.USER_PASSWORD_CHANGED,
-            new UserEvent({
-              type: Evts.USER_PASSWORD_CHANGED,
+              type: evtType,
               user: session?.user || null,
               isGuest: session?.user?.isAnonymous || false,
               userId: session?.user?.id || null,
@@ -237,30 +229,37 @@ export default function createAuth(db) {
         generateName: () =>
           decrypt(`Guest-${Math.floor(Math.random() * 100000)}`),
         onLinkAccount: async ({ anonymousUser, newUser }) => {
-          console.log("onLinkAccount", { anonymousUser, newUser });
+          // Convert createdAt to a timestamp (handle potential string/Date types)
+          const userCreatedTime = new Date(newUser.user.createdAt).getTime();
+          const now = Date.now();
 
-          //           const authInstance = getAuthInstance();
-          //
-          //           // delete the anonymous user
-          //           await authInstance.internalAdapter.deleteUser({
-          //             userId: anonymousUser.user.id,
-          //           });
-          //
-          // update: assign new user id with anonymous user id
-          // await authInstance.internalAdapter.updateUser({
-          //   userId: newUser.user.id,
-          //   data: { id: anonymousUser.user.id },
-          // });
-          //
-          //           await authInstance.
+          // Check that the user was created within the last 20 seconds
+          const userAge = now - userCreatedTime;
+          const isNewUser =
+            Number.isFinite(userCreatedTime) && userAge >= 0 && userAge < 20000;
 
-          // return {
-          //   data: {
-          //     ...newUser,
-          //     adminPermissions: [],
-          //     // id: anonymousUser.user.id,
-          //   },
-          // };
+          if (isNewUser) {
+            console.log(
+              "This is a NEW user signing up. Migrating data from guest to new user...",
+            );
+            await migrateOldUserToNewUser(
+              anonymousUser?.user,
+              newUser?.user,
+              true,
+            );
+            // Safe to fully overwrite or set initial state
+          } else {
+            console.log(
+              "This is an EXISTING user returning. Merging data carefully...",
+            );
+            await migrateOldUserToNewUser(
+              anonymousUser?.user,
+              newUser?.user,
+              false,
+            );
+            // Be careful not to overwrite existing user data (e.g., don't overwrite their existing cart)
+            // You might want to append items instead of replacing them
+          }
         },
       }),
       admin({
@@ -304,7 +303,7 @@ export default function createAuth(db) {
             image: profilePicture,
             adminPermissions: [],
             role: "user",
-            provider: "google",
+            providedBy: "google",
           };
         },
       },
@@ -325,6 +324,20 @@ export default function createAuth(db) {
           // and better-auth rejects sign-up when a required additional
           // field is missing. Server always defaults/sets it ([] for users).
           default: [],
+          required: false,
+          input: false,
+          returned: true,
+        },
+        providedBy: {
+          type: String,
+          default: "local",
+          required: false,
+          input: true,
+          returned: true,
+        },
+        preservedOldUserId: {
+          type: String,
+          default: null,
           required: false,
           input: false,
           returned: true,
