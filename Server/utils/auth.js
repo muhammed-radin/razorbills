@@ -154,8 +154,7 @@ export default function createAuth(db) {
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
-        // const isSignIn = ctx.path.startsWith("/sign-in");
-        // const currentSession = ctx.context.session;
+        const currentSession = ctx.context.session;
 
         // 1. Target email sign-in and sign-up endpoints
         if (ctx.path === "/sign-in/email" || ctx.path === "/sign-up/email") {
@@ -180,20 +179,20 @@ export default function createAuth(db) {
             }
           }
         }
-      }),
-      after: createAuthMiddleware(async (ctx) => {
-        const session = await getSessionFromCtx(ctx);
+
+        let session = await getSessionFromCtx(ctx);
 
         let evtType = null;
         if (ctx.path === "/sign-out") {
           evtType = Evts.USER_LOGGED_OUT_REQUEST;
+          console.log("Session from ctx:", session);
         } else if (ctx.path === "/reset-password") {
           evtType = Evts.USER_PASSWORD_CHANGED;
         } else if (ctx.path === "/update-password") {
           evtType = Evts.USER_PASSWORD_CHANGED;
         }
 
-        const isSessionFound = !!session; // TODO: Fix this session null error, currently session is null after sign-in, sign-up, and sign-out actions. Need to investigate why.
+        const isSessionFound = !!session;
         if (isSessionFound && evtType) {
           evt.fire(
             evtType,
@@ -205,6 +204,9 @@ export default function createAuth(db) {
             }),
           );
         }
+      }),
+      after: createAuthMiddleware(async (ctx) => {
+        // null
       }),
     },
     emailAndPassword: {
