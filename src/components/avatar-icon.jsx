@@ -2,16 +2,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { decrypt } from "@/utils/crypt";
 import React, { useMemo } from "react";
 
-const AvatarIcon = ({ name, decrypted, img, size = 40 }) => {
+const AvatarIcon = ({ name, img, size = 40 }) => {
   const decryptedName = useMemo(() => {
-    if (!decrypted) return name;
-    try {
-      return decrypt(name) ? decrypt(name) : name; // fallback to original name if decryption fails
-    } catch (e) {
-      console.error("Failed to decrypt name:", e);
-      return name; // fallback to original name on decrypt error
-    }
-  }, [name, decrypted]);
+    return decrypt(name);
+  }, [name]);
 
   const initials = useMemo(() => {
     return decryptedName
@@ -22,17 +16,8 @@ const AvatarIcon = ({ name, decrypted, img, size = 40 }) => {
   }, [decryptedName]);
 
   const decryptedImg = useMemo(() => {
-    if (!decrypted || img === null || typeof img !== "string") return img;
-    if (img.startsWith("http://") || img.startsWith("https://")) {
-      return img; // Already a URL, no need to decrypt
-    }
-    try {
-      return decrypt(img);
-    } catch (e) {
-      console.error("Failed to decrypt image:", e);
-      return img; // fallback to original img on decrypt error
-    }
-  }, [img, decrypted]);
+    return decrypt(img);
+  }, [img]);
 
   const image = useMemo(() => {
     return decryptedImg !== null
@@ -40,9 +25,22 @@ const AvatarIcon = ({ name, decrypted, img, size = 40 }) => {
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=${size * 2}&background=random&rounded=true&bold=true&format=png`;
   }, [decryptedImg, initials, size]);
 
+  console.log(
+    "AvatarIcon Rendered with name:",
+    decryptedName,
+    "and image:",
+    image,
+  );
+  console.log("AvatarIcon Rendered with initials:", initials);
+  console.log("Decypted image:", decryptedImg);
+
   return (
     <Avatar>
-      <AvatarImage src={image} alt={decryptedName} />
+      <AvatarImage
+        src={image}
+        alt={decryptedName}
+        referrerPolicy="no-referrer"
+      />
       <AvatarFallback>{initials}</AvatarFallback>
     </Avatar>
   );

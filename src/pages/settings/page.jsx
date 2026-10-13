@@ -62,6 +62,8 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
 
+window.decrypt = decrypt; // Expose decrypt function to the global window object for debugging
+
 const phoneErrorMessage =
   "Enter a valid international number, for example +91 1234567890";
 const nameErrorMessage = "Name must be between 4 and 20 characters";
@@ -333,8 +335,9 @@ const SettingsPage = () => {
                         <Avatar className="w-24 h-24 border-4 border-primary/20 transition-all duration-300 group-hover:border-primary/40">
                           {userData.avatar ? (
                             <AvatarImage
-                              src={userData.avatar}
-                              alt={userData.name}
+                              src={decrypt(userData.avatar)}
+                              alt={decrypt(userData.name)}
+                              referrerPolicy="no-referrer"
                             />
                           ) : null}
                           <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
