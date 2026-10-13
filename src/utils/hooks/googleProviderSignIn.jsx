@@ -22,6 +22,9 @@ export default function onUserGoogleSignIn(setIsInputDisabled) {
             .social({
               provider: "google",
               callbackURL: generateHashLink("/?auth=google&success=true"),
+              errorCallbackURL: generateHashLink(
+                "/login/?auth=google&success=false",
+              ),
               scopes: ["profile", "email", "openid"],
             })
             .then((response) => {

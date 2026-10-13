@@ -36,6 +36,8 @@ const GUEST_ACCESS_PATHS = [
   "/contact",
   "/return",
   "/shipping",
+  "/privacy",
+  "/terms",
 ]; // Add paths that allow guest access
 
 function App() {
@@ -106,6 +108,13 @@ function App() {
           sessionStorage.removeItem("session"); // Clear any existing session data
           hasRun.current = true;
           navigate("/"); // Navigate to the home page after successful Google sign-in
+        } else if (
+          searchParams.get("auth") === "google" &&
+          searchParams.get("success") === "false"
+        ) {
+          toast.error("Google Sign-In failed. Please try again.");
+          hasRun.current = true;
+          navigate("/login"); // Navigate to the login page after failed Google sign-in
         }
       }
 

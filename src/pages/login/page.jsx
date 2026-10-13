@@ -17,7 +17,7 @@ import { set, z } from "zod";
 import { encryptStrict } from "@/utils/crypt";
 import { api } from "@/utils/api";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
 import { authClient } from "@/lib/auth-client";
@@ -121,6 +121,7 @@ const LoginPage = () => {
   };
 
   const [urlParams, setUrlParams] = useSearchParams();
+  const hasRun = useRef(false);
 
   useEffect(() => {
     (async function () {
@@ -134,6 +135,26 @@ const LoginPage = () => {
     const email = urlParams.get("email");
     const pw = urlParams.get("pw");
     const signup = urlParams.get("signup");
+    const authParam = urlParams.get("auth");
+    const successParam = urlParams.get("success");
+
+    if (!hasRun.current) {
+      hasRun.current = true;
+      if (authParam === "google" && successParam === "true") {
+        toast.success(
+          t("auth.googleSignInSuccess", {
+            default: "Google Sign-In successful!",
+          }),
+        );
+        navigate("/");
+      } else if (authParam === "google" && successParam === "false") {
+        toast.error(
+          t("auth.googleSignInFailed", {
+            default: "Google Sign-In failed. Please try again.",
+          }),
+        );
+      }
+    }
 
     console.log("URL Params:", { email, pw, signup });
 

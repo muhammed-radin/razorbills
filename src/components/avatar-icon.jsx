@@ -25,15 +25,6 @@ const AvatarIcon = ({ name, img, size = 40 }) => {
       : `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=${size * 2}&background=random&rounded=true&bold=true&format=png`;
   }, [decryptedImg, initials, size]);
 
-  console.log(
-    "AvatarIcon Rendered with name:",
-    decryptedName,
-    "and image:",
-    image,
-  );
-  console.log("AvatarIcon Rendered with initials:", initials);
-  console.log("Decypted image:", decryptedImg);
-
   return (
     <Avatar>
       <AvatarImage
