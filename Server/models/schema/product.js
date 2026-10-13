@@ -51,6 +51,8 @@ export const ProductSchema = new Schema(
 
     metrics: {
       allViews: { type: Number, default: 0 },
+      guestViews: { type: Number, default: 0 },
+      authenticatedViews: { type: Number, default: 0 },
       debouncedViews: { type: Number, default: 0 },
       stars: {
         n1: { type: Number, default: 0 },

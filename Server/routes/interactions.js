@@ -386,11 +386,13 @@ function flushBuffer(buffer, property, bufferName, collection = "products") {
         if (userInteractions && userInteractions.toRawBuffer) {
           const userRawBuffer = userInteractions.toRawBuffer();
           flushBuffer(userRawBuffer, "metrics.debouncedViews", "userView");
+          flushBuffer(userRawBuffer, "metrics.authenticatedViews", "userView");
         }
 
         if (guestInteractions && guestInteractions.toRawBuffer) {
           const guestRawBuffer = guestInteractions.toRawBuffer();
           flushBuffer(guestRawBuffer, "metrics.debouncedViews", "guestView");
+          flushBuffer(guestRawBuffer, "metrics.guestViews", "guestView");
         }
       }
     }

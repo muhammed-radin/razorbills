@@ -1,18 +1,29 @@
 import CryptoJS from "crypto-js";
 
+function validateEncrypted(ciphertext) {
+  if (typeof ciphertext !== "string" || !ciphertext.startsWith("U2FsdGVkX1")) {
+    return false;
+  }
+  return true;
+}
 
-function decrypt(ciphertext, strict = false) {
+function decryptCipher(ciphertext, strict = false) {
+  if (!validateEncrypted(ciphertext)) {
+    return ciphertext; // Return the original value if it's not encrypted
+  }
   const key = strict ? process.env.CRYPTED_STRICT : process.env.CRYPTED;
   const bytes = CryptoJS.AES.decrypt(ciphertext, key);
   return bytes.toString(CryptoJS.enc.Utf8);
 }
 
 function encrypt(plaintext, strict = false) {
+  // to avoid re-encrypting
+  if (validateEncrypted(plaintext)) {
+    return plaintext;
+  }
+
   const key = strict ? process.env.CRYPTED_STRICT : process.env.CRYPTED;
-  return CryptoJS.AES.encrypt(
-    plaintext,
-    key,
-  ).toString();
+  return CryptoJS.AES.encrypt(plaintext, key).toString();
 }
 
 /**
@@ -26,12 +37,11 @@ function decryptField(value, strict = false) {
     return value;
   }
   try {
-    return decrypt(value, strict) || value;
+    return decryptCipher(value, strict) || value;
   } catch {
     return value;
   }
 }
-
 
 function decryptStrict(ciphertext) {
   return decryptField(ciphertext, true);
@@ -40,8 +50,6 @@ function decryptStrict(ciphertext) {
 function encryptStrict(plaintext) {
   return encrypt(plaintext, true);
 }
-
-
 
 function encryptAddress(address) {
   return Object.fromEntries(
@@ -52,7 +60,8 @@ function encryptAddress(address) {
   );
 }
 
-function decryptAddress(address) {  return Object.fromEntries(
+function decryptAddress(address) {
+  return Object.fromEntries(
     Object.entries(address).map(([key, value]) => {
       if (key === "id" || typeof value !== "string") return [key, value];
 
@@ -90,7 +99,7 @@ function decryptObj(obj, strict = false, excludeKeys = []) {
         }
       } else {
         if (!excludeKeys.includes(key)) {
-          decryptedObj[key] = decrypt(obj[key]);
+          decryptedObj[key] = decryptCipher(obj[key]);
         } else {
           decryptedObj[key] = obj[key];
         }
@@ -109,4 +118,5 @@ export {
   encryptAddress,
   decryptAddress,
   decryptObj,
+  validateEncrypted,
 };

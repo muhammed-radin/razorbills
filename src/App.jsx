@@ -1,14 +1,21 @@
-import { Outlet, useLocation, useNavigate, useNavigation } from "react-router-dom";
+import {
+  Outlet,
+  useLocation,
+  useNavigate,
+  useNavigation,
+  useSearchParams,
+} from "react-router-dom";
 import NavbarBlock from "@/components/navbar/navbar";
 import MobileBottomNav from "@/components/mobile-bottom-nav/MobileBottomNav";
 import { Footer } from "./components/footer/footer";
 import { ThemeProvider } from "./utils/theme-provider";
 import ScrollToTop from "./utils/ScrollToTop"; // Import the ScrollToTop component
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { alert } from "./components/dialog-alert-provider";
 import { toast } from "sonner";
 import { LoaderScreen } from "./components/LoaderScreen";
 import { api } from "./utils/api";
+import { authClient } from "./lib/auth-client";
 
 const HIDE_CHROME_PATHS = ["/login", "/signup", "/forgot-password"];
 const GUEST_ACCESS_PATHS = [
@@ -38,10 +45,13 @@ function App() {
   const navigation = useNavigation();
   const isNavigating = navigation.state === "loading";
 
+  const [searchParams] = useSearchParams();
+
   const isGuestAccess =
     GUEST_ACCESS_PATHS.includes(location.pathname) ||
     location.pathname.startsWith("/product/");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const hasRun = useRef(false);
 
   useEffect(() => {
     async function validateIt() {
@@ -68,7 +78,6 @@ function App() {
               // Redirect to login page
               navigate("/login");
             } else {
-              const { authClient } = await import("./lib/auth-client");
               // Continue as guest
               const { error } = await authClient.signIn.anonymous();
               if (error) {
@@ -88,6 +97,18 @@ function App() {
           });
       }
 
+      if (!hasRun.current) {
+        if (
+          searchParams.get("auth") === "google" &&
+          searchParams.get("success") === "true"
+        ) {
+          toast.success("Google Sign-In successful");
+          sessionStorage.removeItem("session"); // Clear any existing session data
+          hasRun.current = true;
+          navigate("/"); // Navigate to the home page after successful Google sign-in
+        }
+      }
+
       if (
         isSessionFound &&
         isGuestAccess === false &&
@@ -96,6 +117,7 @@ function App() {
         navigate("/"); // Navigate to the current path if authenticated and not on a guest access page
       }
     }
+
     validateIt();
   }, [isGuestAccess, location.pathname, navigate]);
 

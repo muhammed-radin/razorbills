@@ -28,15 +28,15 @@ const SignUpPage = () => {
   const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   const formSchema = z.object({
-    email: z.string().email(t("auth.invalidEmail")),
-    name: z.string().min(2, t("auth.nameMinLength")),
+    email: z.string().email(t("auth.validationEmail")),
+    name: z.string().min(2, t("auth.validationName")),
     password: z
       .string()
-      .min(8, t("auth.passwordMinLength"))
-      .regex(/[A-Z]/, t("auth.passwordUppercase"))
-      .regex(/[a-z]/, t("auth.passwordLowercase"))
-      .regex(/[0-9]/, t("auth.passwordNumber"))
-      .regex(/[@$!%*?&#]/, t("auth.passwordSpecial")),
+      .min(8, t("auth.validationPassword"))
+      .regex(/[A-Z]/, t("auth.validationPasswordUppercase"))
+      .regex(/[a-z]/, t("auth.validationPasswordLowercase"))
+      .regex(/[0-9]/, t("auth.validationPasswordNumber"))
+      .regex(/[@$!%*?&#]/, t("auth.validationPasswordSpecial")),
   });
 
   const form = useForm({
@@ -63,51 +63,74 @@ const SignUpPage = () => {
     toast.promise(
       () =>
         new Promise((resolveui, rejectui) => {
-          authClient.signUp.email(
-            {
-              email: data.email,
-              password: data.password,
-              name: data.name,
-              provider: "local",
-              image:
-                "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
-                encodeURIComponent(data.name),
-            },
-            {
-              onSuccess: (payload) => {
-                const { response, data: response_data, user } = payload;
-                if (response.status == 200) {
-                  resolveui(t("auth.signupSuccess"));
-                  // Drop any cached null-session so the new login takes
-                  // effect immediately (mirrors the login flow).
-                  sessionStorage.removeItem("session");
-                  sessionStorage.removeItem("session_at");
+          try {
+            authClient.signUp
+              .email(
+                {
+                  email: data.email,
+                  password: data.password,
+                  name: data.name,
+                  provider: "local",
+                  image:
+                    "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
+                    encodeURIComponent(data.name),
+                },
+                {
+                  onSuccess: (payload) => {
+                    const { response, data: response_data, user } = payload;
+                    console.log(response, response_data, user);
+                    if (response.status == 200) {
+                      resolveui(
+                        t("auth.signupSuccess", {
+                          default: "Successfully signed up!",
+                        }),
+                      );
+                      // Drop any cached null-session so the new login takes
+                      // effect immediately (mirrors the login flow).
+                      sessionStorage.removeItem("session");
 
-                  authClient
-                    .getSession()
-                    .then(({ data: session, error }) => {
-                      if (session && session.user) {
-                        navigate("/");
-                      } else {
-                        navigate("/login");
-                      }
+                      // Verify the session and redirect accordingly. ( Helpful for Google login )
+                      authClient
+                        .getSession()
+                        .then(({ data: session, error }) => {
+                          if (session && session.user) {
+                            navigate("/");
+                          } else {
+                            navigate("/login");
+                          }
 
-                      if (error) {
-                        navigate("/login");
-                      }
-                    })
-                    .catch((error) => {
-                      navigate("/login");
-                    });
-                } else {
-                  rejectui("Sign-up Failed");
+                          if (error) {
+                            navigate("/login");
+                          }
+                        })
+                        .catch(() => {
+                          navigate("/login");
+                        });
+                    } else {
+                      rejectui(
+                        t("auth.signupFailed", {
+                          default: "Sign-up Failed",
+                        }),
+                      );
+                    }
+                  },
+                  onError: (error) => {
+                    console.error(error);
+                    rejectui(error);
+                  },
+                },
+              )
+              .then(({ error }) => {
+                if (error) {
+                  rejectui(error);
                 }
-              },
-              onError: (error) => {
+              })
+              .catch((error) => {
                 rejectui(error);
-              },
-            },
-          );
+              });
+          } catch (error) {
+            rejectui(error);
+          }
         }),
       {
         loading: t("auth.signingUp"),
@@ -117,7 +140,16 @@ const SignUpPage = () => {
         },
         error: (err) => {
           setIsInputDisabled(false);
-          return `${t("auth.signupFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`;
+          const ErrMessage =
+            err?.message ||
+            (err.error && err.error.message) ||
+            (typeof err === "string" && err) ||
+            err?.error?.statusText ||
+            (typeof err?.error === "string" && err?.error) ||
+            "Unknown error";
+          return `${t("auth.signupFailed", {
+            error: ErrMessage,
+          })}`;
         },
       },
     );

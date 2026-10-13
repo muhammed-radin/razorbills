@@ -28,8 +28,17 @@ const LoginPage = () => {
   const [isInputDisabled, setIsInputDisabled] = useState(false);
 
   const formSchema = z.object({
-    email: z.string().email(t("auth.invalidEmail")),
-    password: z.string().min(8, t("auth.passwordMinLength")),
+    email: z.string().email(
+      t("auth.validationEmail", {
+        default: "Invalid email",
+      }),
+    ),
+    password: z.string().min(
+      8,
+      t("auth.validationPassword", {
+        default: "Password must be at least 8 characters",
+      }),
+    ),
   });
 
   const form = useForm({
@@ -55,27 +64,38 @@ const LoginPage = () => {
     toast.promise(
       () =>
         new Promise((resolveui, rejectui) => {
-          authClient.signIn.email(data, {
-            onSuccess: (payload) => {
-              const { response, data, user } = payload;
-              if (response.status == 200) {
-                resolveui(t("auth.loginSuccess"));
-                sessionStorage.removeItem("session"); // Clear any existing session data
-                sessionStorage.removeItem("session_at");
-                navigate("/");
-              } else {
-                rejectui(response.statusText || "Login failed");
-              }
-            },
-            onError: (error) => {
-              rejectui(error);
-              console.error("There was an error!", error);
+          try {
+            authClient.signIn
+              .email(data, {
+                onSuccess: (payload) => {
+                  const { response, data, user } = payload;
+                  if (response.status == 200) {
+                    resolveui(t("auth.loginSuccess"));
+                    sessionStorage.removeItem("session"); // Clear any existing session data
+                    navigate("/");
+                  } else {
+                    rejectui(response.statusText || "Login failed");
+                  }
+                },
+                onError: (error) => {
+                  rejectui(error);
 
-              setTimeout(() => {
-                form.setValue("password", "");
-              }, 1000);
-            },
-          });
+                  setTimeout(() => {
+                    form.setValue("password", "");
+                  }, 1000);
+                },
+              })
+              .then(({ error }) => {
+                if (error) {
+                  rejectui(error);
+                }
+              })
+              .catch((error) => {
+                rejectui(error);
+              });
+          } catch (error) {
+            rejectui(error);
+          }
         }),
       {
         loading: t("auth.loggingIn"),
@@ -85,7 +105,16 @@ const LoginPage = () => {
         },
         error: (err) => {
           setIsInputDisabled(false); // Re-enable inputs after submission
-          return `${t("auth.loginFailed")}: ${(err.error && err.error.message) || (typeof err === "string" && err) || "Unknown error"}`;
+          const ErrMessage =
+            err?.message ||
+            (err.error && err.error.message) ||
+            (typeof err === "string" && err) ||
+            err?.error?.statusText ||
+            (typeof err?.error === "string" && err?.error) ||
+            "Unknown error";
+          return `${t("auth.loginFailed", {
+            error: ErrMessage,
+          })}`;
         },
       },
     );
@@ -124,7 +153,9 @@ const LoginPage = () => {
       <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />
         <p className="mt-4 text-xl font-semibold tracking-tight">
-          {t("auth.loginTitle")}
+          {t("auth.loginTitle", {
+            default: "Login",
+          })}
         </p>
 
         <Button
@@ -136,7 +167,9 @@ const LoginPage = () => {
           }}
         >
           <GoogleLogo />
-          {t("auth.continueWithGoogle")}
+          {t("auth.continueWithGoogle", {
+            default: "Continue with Google",
+          })}
         </Button>
 
         <div className="my-7 w-full flex items-center justify-center overflow-hidden">
@@ -155,11 +188,17 @@ const LoginPage = () => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("auth.email")}</FormLabel>
+                  <FormLabel>
+                    {t("auth.email", {
+                      default: "Email",
+                    })}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder={t("auth.emailPlaceholder")}
+                      placeholder={t("auth.emailPlaceholder", {
+                        default: "Email Address",
+                      })}
                       className="w-full"
                       disabled={isInputDisabled} // Disable input when isInputDisabled is true
                       {...field}
@@ -174,11 +213,17 @@ const LoginPage = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("auth.password")}</FormLabel>
+                  <FormLabel>
+                    {t("auth.password", {
+                      default: "Password",
+                    })}
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder={t("auth.passwordPlaceholder")}
+                      placeholder={t("auth.passwordPlaceholder", {
+                        default: "Password",
+                      })}
                       className="w-full"
                       disabled={isInputDisabled} // Disable input when isInputDisabled is true
                       {...field}
@@ -195,7 +240,9 @@ const LoginPage = () => {
             >
               {" "}
               {/* Disable button when isInputDisabled is true */}
-              {t("auth.continueWithEmail")}
+              {t("auth.continueWithEmail", {
+                default: "Continue with Email",
+              })}
             </Button>
           </form>
         </Form>
@@ -205,12 +252,18 @@ const LoginPage = () => {
             to="/forgot-password"
             className="text-sm block underline text-muted-foreground text-center"
           >
-            {t("auth.forgotPassword")}
+            {t("auth.forgotPassword", {
+              default: "Forgot Password",
+            })}
           </Link>
           <p className="text-sm text-center">
-            {t("auth.dontHaveAccount")}
+            {t("auth.dontHaveAccount", {
+              default: "Don't have an account?",
+            })}
             <Link to="/signup" className="ml-1 underline text-muted-foreground">
-              {t("auth.createAccount")}
+              {t("auth.createAccount", {
+                default: "Create Account",
+              })}
             </Link>
           </p>
         </div>

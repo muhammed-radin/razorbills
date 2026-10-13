@@ -4,7 +4,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { admin, anonymous } from "better-auth/plugins";
 import { UserModel } from "../models/schema/user.js";
 import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
-import { decryptStrict } from "./crypt.js";
+import { decrypt, decryptStrict, encrypt } from "./crypt.js";
 import mongoose, { Mongoose } from "mongoose";
 import {
   ErrorEvent,
@@ -13,6 +13,7 @@ import {
   SessionEvent,
   UserEvent,
 } from "./events.manage.js";
+import axios from "axios";
 
 let authInstance = null;
 
@@ -76,7 +77,7 @@ export default function createAuth(db) {
               }),
             );
 
-            return { data: userData };
+            return { data: { ...userData, adminPermissions: [] } };
           },
         },
         delete: {
@@ -233,7 +234,34 @@ export default function createAuth(db) {
     plugins: [
       anonymous({
         emailDomainName: "guest.razorbills.app",
-        generateName: (user) => `Guest-${Math.floor(Math.random() * 100000)}`,
+        generateName: () =>
+          decrypt(`Guest-${Math.floor(Math.random() * 100000)}`),
+        onLinkAccount: async ({ anonymousUser, newUser }) => {
+          console.log("onLinkAccount", { anonymousUser, newUser });
+
+          //           const authInstance = getAuthInstance();
+          //
+          //           // delete the anonymous user
+          //           await authInstance.internalAdapter.deleteUser({
+          //             userId: anonymousUser.user.id,
+          //           });
+          //
+          // update: assign new user id with anonymous user id
+          // await authInstance.internalAdapter.updateUser({
+          //   userId: newUser.user.id,
+          //   data: { id: anonymousUser.user.id },
+          // });
+          //
+          //           await authInstance.
+
+          // return {
+          //   data: {
+          //     ...newUser,
+          //     adminPermissions: [],
+          //     // id: anonymousUser.user.id,
+          //   },
+          // };
+        },
       }),
       admin({
         adminRoles: ["admin"],
@@ -252,18 +280,22 @@ export default function createAuth(db) {
         scope: ["openid", "email", "profile"],
         prompt: "select_account consent",
 
-        mapProfileToUser: async (profile) => {
+        mapProfileToUser: async (profile, ...other) => {
           console.log("mapProfileToUser", profile);
-          // Guarantee a non-empty name string to satisfy DB validation
-          const nameFallback =
-            profile.name ||
-            `${profile.given_name || ""} ${profile.family_name || ""}`.trim() ||
-            profile.email.split("@")[0];
+          console.log("mapProfileToUser OTHER", ...other);
 
-          const profilePicture =
+          // Guarantee a non-empty name string to satisfy DB validation
+          const nameFallback = encrypt(
+            profile.name ||
+              `${profile.given_name || ""} ${profile.family_name || ""}`.trim() ||
+              profile.email.split("@")[0],
+          );
+
+          const profilePicture = encrypt(
             profile.picture ||
-            "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
-              encodeURIComponent(nameFallback);
+              "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
+                encodeURIComponent(nameFallback),
+          );
 
           return {
             email: profile.email,
@@ -272,6 +304,7 @@ export default function createAuth(db) {
             image: profilePicture,
             adminPermissions: [],
             role: "user",
+            provider: "google",
           };
         },
       },

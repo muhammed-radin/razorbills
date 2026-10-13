@@ -1,8 +1,6 @@
 import axios from "axios";
 import { decrypt, decryptObj, encrypt, decryptField } from "./crypt";
-
-const getAuthClient = async () =>
-  (await import("@/lib/auth-client")).authClient;
+import { authClient } from "@/lib/auth-client";
 
 const apiBase = import.meta.env.VITE_API_ENDPOINT;
 const ACTION_HEADER = {
@@ -77,7 +75,6 @@ const api = {
     return api.base("/api/users/settings");
   },
   async getUser(decryptData = true, fullData = false) {
-    const authClient = await getAuthClient();
     const { data: session } = await authClient.getSession();
     if (!session || !session.user) {
       return null;
@@ -97,56 +94,107 @@ const api = {
     userData.session = session;
     return userData;
   },
+  alreadyTryingToGetSession: false,
+  async waitForSession(
+    retryIntervalMs = 300,
+    timeoutEnabled = false,
+    timeoutMs = 5000,
+  ) {
+    let self = this;
+    return new Promise((resolve) => {
+      // If already trying to get session, wait for a short period and retry
+      let MAX_WAIT_TIME_MS = timeoutMs; // Maximum wait time of 5 seconds
+      let elapsedTime = 0;
+      let interval = retryIntervalMs; // Check every 100ms
+      let TIMEOUT_ENABLED = timeoutEnabled; // Set to true to disable timeout
+      let checkInterval = setInterval(() => {
+        if (sessionStorage.getItem("session")) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+        elapsedTime += interval;
+        if (elapsedTime >= MAX_WAIT_TIME_MS && TIMEOUT_ENABLED) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, interval);
+    });
+  },
   async getSession() {
-    // Session cache with TTL: reuse for 5 minutes so route changes
-    // don't hammer /api/auth/get-session (and the auth rate limiter).
-    const SESSION_TTL_MS = 5 * 60 * 1000;
+    let self = this;
+
+    // 1. If already trying to get session, wait for it to be available
+    if (self.alreadyTryingToGetSession === true) {
+      await self.waitForSession();
+    }
+
+    // 2. Try to get session from cache first
     try {
       const raw = sessionStorage.getItem("session");
-      const at = Number(sessionStorage.getItem("session_at") || 0);
-      if (raw && at && Date.now() - at < SESSION_TTL_MS) {
-        const session = JSON.parse(decrypt(raw));
-        return { ...session, updated: null };
+      if (!raw) {
+        throw new Error("No cached session found");
+      }
+      const session = JSON.parse(decrypt(raw));
+      if (!session) {
+        throw new Error("Invalid cached session");
+      }
+      return { ...session };
+    } catch (error) {
+      // Corrupt cache: fall through to a live fetch.
+      // continue to fetch session from server
+    }
+
+    // 3. Fetch session from server if not found in cache
+    try {
+      self.alreadyTryingToGetSession = true;
+      let live = await authClient.getSession();
+      self.alreadyTryingToGetSession = false;
+
+      // Names are end-to-end encrypted at rest: present them decrypted to
+      // every consumer (navbar, sidebar, greetings). Build a fresh wrapper
+      // (never mutate the auth client's internal state) and cache that, so
+      // cached and live sessions share one decrypted shape.
+      const session = live;
+
+      if (session && session.data && session.data.user) {
+        if (session.data.user.name) {
+          session.data.user.name = decryptField(session.data.user.name);
+        }
+        if (session.data.user.profilePicture) {
+          session.data.user.profilePicture = decryptField(
+            session.data.user.profilePicture,
+          );
+        }
+        if (session.data.user.image) {
+          session.data.user.image = decryptField(session.data.user.image);
+        }
+      }
+
+      // 4. Cache the session in sessionStorage for future use
+      try {
+        sessionStorage.setItem(
+          "session",
+          encrypt(JSON.stringify({ ...session, fromCache: true })),
+        );
+        return { ...session, fromCache: false }; // Add fromCache property to indicate it's a live fetch
+      } catch {
+        // Storage full/blocked: session still returned live.
+        return { ...session, fromCache: false };
       }
     } catch {
       // Corrupt cache: fall through to a live fetch.
+      return {
+        data: null,
+        fromCache: false,
+        error: new Error("Failed to retrieve session from server"),
+      };
     }
-    const authClient = await getAuthClient();
-    const live = await authClient.getSession();
-    // Names are end-to-end encrypted at rest: present them decrypted to
-    // every consumer (navbar, sidebar, greetings). Build a fresh wrapper
-    // (never mutate the auth client's internal state) and cache that, so
-    // cached and live sessions share one decrypted shape.
-    const session =
-      live?.data?.user && typeof live.data.user.name === "string"
-        ? {
-            ...live,
-            data: {
-              ...live.data,
-              user: {
-                ...live.data.user,
-                name: decryptField(live.data.user.name),
-              },
-            },
-          }
-        : live;
-    // Cache positive sessions only: caching a null (pre-login) response
-    // poisons post-signup state and shows logged-out UI to new users.
-    if (session?.data) {
-      try {
-        sessionStorage.setItem("session", encrypt(JSON.stringify(session)));
-        sessionStorage.setItem("session_at", String(Date.now()));
-      } catch {
-        // Storage full/blocked: session still returned live.
-      }
-    }
-    return { ...session, updated: new Date().toISOString() }; // Add updated timestamp
   },
   actions: {
     async logOut() {
       sessionStorage.clear();
       localStorage.clear();
-      const authClient = await getAuthClient();
+      this.alreadyTryingToGetSession = false;
       return authClient.signOut();
     },
   },
