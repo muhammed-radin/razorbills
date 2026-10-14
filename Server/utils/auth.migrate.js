@@ -7,11 +7,52 @@ async function deleteUserById(userId) {
   await db.collection("users").deleteOne({ id: userId });
 }
 
+async function applyBasicBetterAuthDataToUser(
+  userId,
+  basicBetterAuthData,
+  debbug = false,
+) {
+  await db
+    .collection("users_validation")
+    .updateOne(
+      { id: userId },
+      { $set: basicBetterAuthData },
+      { upsert: false },
+    );
+  if (debbug)
+    console.log(
+      "migrateOldUserToNewUser: basicBetterAuthData",
+      basicBetterAuthData,
+    );
+  if (debbug) console.log("users_validation updated for newUserId:", userId);
+
+  await db
+    .collection("users")
+    .updateOne(
+      { id: userId },
+      { $set: basicBetterAuthData },
+      { upsert: false },
+    );
+  if (debbug) console.log("users updated for newUserId:", userId);
+}
+
+function generateBasicBetterAuthData(user, oldUserId) {
+  return {
+    adminPermissions: user.adminPermissions || [],
+    emailVerified: user.emailVerified || false,
+    banned: user.banned || false,
+    profilePicture: user.profilePicture || null,
+    providedBy: user.providedBy || "local",
+    updatedAt: user.updatedAt || new Date(),
+    preservedOldUserId: oldUserId, // preserve the old user ID for historical purposes
+  };
+}
+
 async function migrateOldUserToNewUser(
   oldUser,
   newUser,
   isSignupMigration = true, // this means if true guest user -> new registered user ( signup migration ), else guest user -> already registered user ( login migration )
-  debbug = true,
+  debbug = false,
 ) {
   // In the migration we want to do these things:
   // 1. Update the new user with the old user's data. if isSignupMigration is false
@@ -31,15 +72,7 @@ async function migrateOldUserToNewUser(
 
   // migrate basic user data
   let setData = {};
-  let basicBetterAuthData = {
-    adminPermissions: newUser.adminPermissions || [],
-    emailVerified: newUser.emailVerified || false,
-    banned: newUser.banned || false,
-    profilePicture: newUser.profilePicture || null,
-    providedBy: newUser.providedBy || "local",
-    updatedAt: newUser.updatedAt || new Date(),
-    preservedOldUserId: oldUserId, // preserve the old user ID for historical purposes
-  };
+  let basicBetterAuthData = generateBasicBetterAuthData(newUser, oldUserId);
   if (isSignupMigration) {
     // if it's a signup migration
     setData = {
@@ -52,16 +85,7 @@ async function migrateOldUserToNewUser(
     };
   }
 
-  await db
-    .collection("users_validation")
-    .updateOne({ id: newUserId }, { $set: setData }, { upsert: false });
-  if (debbug) console.log("migrateOldUserToNewUser: setData", setData);
-  if (debbug) console.log("users_validation updated for newUserId:", newUserId);
-
-  await db
-    .collection("users")
-    .updateOne({ id: newUserId }, { $set: setData }, { upsert: false });
-  if (debbug) console.log("users updated for newUserId:", newUserId);
+  await applyBasicBetterAuthDataToUser(newUserId, setData, debbug);
 
   // delete the old user ( Safe Level )
   await deleteUserById(oldUserId);
@@ -129,4 +153,9 @@ async function migrateOldUserToNewUser(
   }
 }
 
-export { deleteUserById, migrateOldUserToNewUser };
+export {
+  deleteUserById,
+  migrateOldUserToNewUser,
+  applyBasicBetterAuthDataToUser,
+  generateBasicBetterAuthData,
+};

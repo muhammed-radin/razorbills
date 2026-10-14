@@ -8,6 +8,8 @@ import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import createAuth, { getAuthInstance } from "../utils/auth.js";
 import { globalMemory } from "../utils/cache-utils/global-cache.js";
 import settingsRouter from "./settings.js";
+import { encrypt } from "../utils/crypt.js";
+import { isAPIError } from "better-auth/api";
 
 const router = express.Router();
 
@@ -43,27 +45,44 @@ router.post("/profile", requireAuth, passUserAuth, async (req, res) => {
       return res.status(400).json({ error: "User ID not found in request" });
     }
 
-    const { name, email, phone } = req.body;
+    const { name, avatar, phone } = req.body;
 
     const updateFields = {};
-    if (name) updateFields.name = name;
-    if (email) updateFields.email = email;
+    if (name) updateFields.name = encrypt(name);
+    if (avatar) updateFields.image = encrypt(avatar);
+    if (avatar) updateFields.profilePicture = encrypt(avatar);
     if (phone) updateFields.phoneNumber = phone;
 
-    const result = await db
-      .collection("users")
-      .updateOne({ id: userId }, { $set: updateFields });
+    const result = await getAuthInstance().api.updateUser({
+      query: { id: userId },
+      body: updateFields,
+      headers: req.headers,
+    });
 
-    if (result.modifiedCount === 0) {
-      return res
-        .status(404)
-        .json({ error: "User not found or no changes made" });
+    res.json({ message: "Profile updated successfully", user: result });
+  } catch (error) {
+    // FAILURE: An error was thrown
+
+    // 1. Check if it's a Better Auth specific API error
+    if (isAPIError(error)) {
+      console.error(`Auth Error [${error.status}]: ${error.message}`);
+
+      // Example: User not found / Session expired usually returns a 401 or 404 status
+      return res.status(error.status).json({
+        success: false,
+        message: error.message, // e.g., "Unauthorized" or validation errors
+        errorCode: error.code, // e.g., "USER_NOT_FOUND" or "SESSION_EXPIRED"
+        error: error, // Include the full error object for debugging purposes
+      });
     }
 
-    res.json({ message: "Profile updated successfully" });
-  } catch (err) {
-    console.error("Error updating user profile:", err);
-    res.status(500).json({ error: "Failed to update user profile" });
+    // 2. Fallback for generic database or network crashes
+    console.error("System error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An internal server error occurred.",
+      error: error.message || "Unknown error",
+    });
   }
 });
 
@@ -170,7 +189,8 @@ router.get(
   requireAuth,
   requireAdmin,
   requirePermission("read"),
-  (req, res) => {    const userId = req.params.id;
+  (req, res) => {
+    const userId = req.params.id;
 
     getAuthInstance()
       .api.getUser({
@@ -208,12 +228,20 @@ router.patch(
         return res.status(400).json({ error: "banned (boolean) is required" });
       }
       if (req.user?.id === userId) {
-        return res.status(400).json({ error: "You cannot change your own status" });
+        return res
+          .status(400)
+          .json({ error: "You cannot change your own status" });
       }
       const update = banned
-        ? { banned: true, banReason: String(banReason ?? "Disabled by admin").slice(0, 500), isActive: false }
+        ? {
+            banned: true,
+            banReason: String(banReason ?? "Disabled by admin").slice(0, 500),
+            isActive: false,
+          }
         : { banned: false, banReason: "", isActive: true };
-      const result = await db.collection("users").updateOne({ id: userId }, { $set: update });
+      const result = await db
+        .collection("users")
+        .updateOne({ id: userId }, { $set: update });
       if (result.matchedCount === 0) {
         return res.status(404).json({ error: "User not found" });
       }

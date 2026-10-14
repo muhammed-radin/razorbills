@@ -204,6 +204,8 @@
     "signupTitle": "Sign up for RazorBills",
     "or": "OR",
     "continueWithGoogle": "Continue with Google",
+    "googleSignInFailed": "Google sign-in failed, Try again.",
+    "googleSignInSuccess": "Google sign-in successful",
     "fullName": "Full Name",
     "fullNamePlaceholder": "Your Full Name",
     "email": "Email",

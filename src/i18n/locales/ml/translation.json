@@ -204,6 +204,8 @@
     "signupTitle": "റൈസർബിൽസിൽ അക്കൗണ്ട് തുടങ്ങുക",
     "or": "അല്ലെങ്കിൽ",
     "continueWithGoogle": "ഗൂഗിൾ വഴി തുടരുക",
+    "googleSignInFailed": "ഗൂഗിൾ സൈൻ ഇൻ പരാജയപ്പെട്ടു, വീണ്ടും ശ്രമിക്കുക.",
+    "googleSignInSuccess": "ഗൂഗിൾ സൈൻ ഇൻ വിജയകരം",
     "fullName": "പൂർണ്ണമായ പേര്",
     "fullNamePlaceholder": "നിങ്ങളുടെ പേര്",
     "email": "ഇമെയിൽ",

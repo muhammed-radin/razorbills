@@ -13,7 +13,11 @@ import {
   SessionEvent,
   UserEvent,
 } from "./events.manage.js";
-import { migrateOldUserToNewUser } from "./auth.migrate.js";
+import {
+  applyBasicBetterAuthDataToUser,
+  generateBasicBetterAuthData,
+  migrateOldUserToNewUser,
+} from "./auth.migrate.js";
 
 let authInstance = null;
 
@@ -55,16 +59,31 @@ export default function createAuth(db) {
               id: resolvedUserId,
             };
 
-            const createdUser = await UserModel.create({
-              id: resolvedUserId,
-              email: userData.email,
-              emailVerified: userData.emailVerified,
-              name: userData.name,
-              image: userData.image,
-              role: "user",
-              adminPermissions: [],
-              isActive: true,
-            });
+            // Create a new user in the UserModel if the user is not anonymous,
+            // guest to permanent user migration will be handled in the onLinkAccount hook of the anonymous plugin
+            if (userData?.isAnonymous === false) {
+              const createdUser = await UserModel.create({
+                id: resolvedUserId,
+                email: userData.email,
+                emailVerified: userData.emailVerified,
+                name: userData.name,
+                image: userData.image,
+                role: "user",
+                adminPermissions: [],
+                isActive: true,
+                providedBy: userData.providedBy || "local",
+                preservedOldUserId: userData.preservedOldUserId || null,
+              });
+
+              await applyBasicBetterAuthDataToUser(
+                resolvedUserId,
+                generateBasicBetterAuthData(
+                  normalizedUserData,
+                  userData.preservedOldUserId || null,
+                ),
+                false,
+              );
+            }
 
             // Trigger event after user creation
             evt.fire(
@@ -96,7 +115,7 @@ export default function createAuth(db) {
         },
         update: {
           after: async (userData, context) => {
-            await UserModel.updateOne({ id: userData.id }, userData);
+            await UserModel.updateOne({ id: userData.id }, { $set: userData });
             evt.fire(
               Evts.USER_PROFILE_UPDATED,
               new UserEvent({
@@ -154,8 +173,6 @@ export default function createAuth(db) {
     },
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
-        const currentSession = ctx.context.session;
-
         // 1. Target email sign-in and sign-up endpoints
         if (ctx.path === "/sign-in/email" || ctx.path === "/sign-up/email") {
           if (ctx.body && typeof ctx.body.password === "string") {
@@ -185,7 +202,6 @@ export default function createAuth(db) {
         let evtType = null;
         if (ctx.path === "/sign-out") {
           evtType = Evts.USER_LOGGED_OUT_REQUEST;
-          console.log("Session from ctx:", session);
         } else if (ctx.path === "/reset-password") {
           evtType = Evts.USER_PASSWORD_CHANGED;
         } else if (ctx.path === "/update-password") {
@@ -206,7 +222,7 @@ export default function createAuth(db) {
         }
       }),
       after: createAuthMiddleware(async (ctx) => {
-        // null
+        // Null
       }),
     },
     emailAndPassword: {
@@ -240,10 +256,9 @@ export default function createAuth(db) {
           const isNewUser =
             Number.isFinite(userCreatedTime) && userAge >= 0 && userAge < 20000;
 
+          // Sign-Up guest means their user flow be like:
+          // USer first chooses as Guest -> Sign-Up (new user) - migrate guest data to new user
           if (isNewUser) {
-            console.log(
-              "This is a NEW user signing up. Migrating data from guest to new user...",
-            );
             await migrateOldUserToNewUser(
               anonymousUser?.user,
               newUser?.user,
@@ -251,9 +266,8 @@ export default function createAuth(db) {
             );
             // Safe to fully overwrite or set initial state
           } else {
-            console.log(
-              "This is an EXISTING user returning. Merging data carefully...",
-            );
+            // This is Log-In guest means their user flow be like:
+            // Guest -> Log-In (existing user) - migrate guest data to existing user
             await migrateOldUserToNewUser(
               anonymousUser?.user,
               newUser?.user,
@@ -281,10 +295,7 @@ export default function createAuth(db) {
         scope: ["openid", "email", "profile"],
         prompt: "select_account consent",
 
-        mapProfileToUser: async (profile, ...other) => {
-          console.log("mapProfileToUser", profile);
-          console.log("mapProfileToUser OTHER", ...other);
-
+        mapProfileToUser: async (profile) => {
           // Guarantee a non-empty name string to satisfy DB validation
           const nameFallback = encrypt(
             profile.name ||

@@ -11,4 +11,6 @@ const generateHashLink = (hash) => {
   return `${window.location.origin}/${formattedHash}`;
 };
 
+window.generateHashLink = generateHashLink; // Expose the function globally for debugging or other uses
+
 export { generateHashLink };

@@ -71,9 +71,10 @@ const SignUpPage = () => {
                   password: data.password,
                   name: data.name,
                   provider: "local",
-                  image:
+                  image: encrypt(
                     "https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=" +
-                    encodeURIComponent(data.name),
+                      encodeURIComponent(data.name),
+                  ),
                 },
                 {
                   onSuccess: (payload) => {

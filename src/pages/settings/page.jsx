@@ -189,11 +189,11 @@ const SettingsPage = () => {
       });
       await api.client.post("/api/users/profile", {
         name: encrypt(normalizedName),
-        email: userData.email,
         phone: (userData.phone || "").trim() ? encrypt(userData.phone) : "",
         avatar: userData.avatar,
       });
       i18n.changeLanguage(userData.language).catch(() => {});
+      sessionStorage.removeItem("session"); // Clear any existing session data
       toast.success(t("settings.saved", { defaultValue: "Settings saved" }));
     } catch {
       toast.error(

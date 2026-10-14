@@ -19,14 +19,25 @@ export default function onUserGoogleSignIn(setIsInputDisabled) {
       new Promise((resolveui, rejectui) => {
         try {
           authClient.signIn
-            .social({
-              provider: "google",
-              callbackURL: generateHashLink("/?auth=google&success=true"),
-              errorCallbackURL: generateHashLink(
-                "/login/?auth=google&success=false",
-              ),
-              scopes: ["profile", "email", "openid"],
-            })
+            .social(
+              {
+                provider: "google",
+                callbackURL: generateHashLink("/?auth=google&success=true"),
+                errorCallbackURL: generateHashLink(
+                  "/login?auth=google&success=false",
+                ),
+                scopes: ["profile", "email", "openid"],
+              },
+              {
+                onError: (ctx) => {
+                  const error = ctx.error || ctx;
+                  const errorMessage = error.message || error.statusText;
+                  rejectui(
+                    `${errorMessage || ctx.response?.statusText || "Unknown error"}`,
+                  );
+                },
+              },
+            )
             .then((response) => {
               sessionStorage.removeItem("session");
             })

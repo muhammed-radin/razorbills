@@ -1,0 +1,188 @@
+Agenda started successfully.
+GET /api/products/feed 401 4.926 ms - 60
+GET /api/categories?limit=12 304 52.349 ms - -
+User created: {
+  name: 'Guest-48667',
+  email: 'temp-l7urnhkbw7dsok7yc9eg8h4jz00n7adf@guest.razorbills.app',
+  emailVerified: false,
+  image: undefined,
+  createdAt: 2026-10-14T05:50:43.680Z,
+  updatedAt: 2026-10-14T05:50:43.680Z,
+  isAnonymous: true,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: undefined,
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1833aa009c632e1861b8'
+}
+User created (raw): {
+  name: 'Guest-48667',
+  email: 'temp-l7urnhkbw7dsok7yc9eg8h4jz00n7adf@guest.razorbills.app',
+  emailVerified: false,
+  image: undefined,
+  createdAt: 2026-10-14T05:50:43.680Z,
+  updatedAt: 2026-10-14T05:50:43.680Z,
+  isAnonymous: true,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: undefined,
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1833aa009c632e1861b8'
+}
+GET /api/categories?limit=12 304 0.991 ms - -
+GET /api/products/feed 304 578.387 ms - -
+User created: {
+  name: 'U2FsdGVkX19jSwZ69IigCBZd+rwyGEGFFh1PThgNXG0=',
+  email: 'accmetee@met.io',
+  emailVerified: false,
+  image: 'https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=U2FsdGVkX19jSwZ69IigCBZd%2BrwyGEGFFh1PThgNXG0%3D',
+  createdAt: 2026-10-14T05:51:37.165Z,
+  updatedAt: 2026-10-14T05:51:37.165Z,
+  isAnonymous: false,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: 'https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=U2FsdGVkX19jSwZ69IigCBZd%2BrwyGEGFFh1PThgNXG0%3D',
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1869aa009c632e1861ba'
+}
+User created (raw): {
+  name: 'U2FsdGVkX19jSwZ69IigCBZd+rwyGEGFFh1PThgNXG0=',
+  email: 'accmetee@met.io',
+  emailVerified: false,
+  image: 'https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=U2FsdGVkX19jSwZ69IigCBZd%2BrwyGEGFFh1PThgNXG0%3D',
+  createdAt: 2026-10-14T05:51:37.165Z,
+  updatedAt: 2026-10-14T05:51:37.165Z,
+  isAnonymous: false,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: 'https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=U2FsdGVkX19jSwZ69IigCBZd%2BrwyGEGFFh1PThgNXG0%3D',
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1869aa009c632e1861ba'
+}
+This is a NEW user signing up. Migrating data from guest to new user...
+User deleted: {
+  name: 'Guest-48667',
+  email: 'temp-l7urnhkbw7dsok7yc9eg8h4jz00n7adf@guest.razorbills.app',
+  emailVerified: false,
+  image: undefined,
+  createdAt: 2026-10-14T05:50:43.680Z,
+  updatedAt: 2026-10-14T05:50:43.680Z,
+  isAnonymous: true,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: undefined,
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1833aa009c632e1861b8'
+}
+GET /api/categories?limit=12 304 0.557 ms - -
+GET /api/products/feed 304 193.281 ms - -
+GET /api/wishlists?folder=%2F 404 381.774 ms - 30
+GET /api/cart 404 417.801 ms - 26
+Session from ctx: {
+  session: {
+    expiresAt: 2026-10-21T05:51:37.261Z,
+    token: 'tYB5j8cTMOFRfCr3CZfIK1GSF1RHUhoF',
+    createdAt: 2026-10-14T05:51:37.262Z,
+    updatedAt: 2026-10-14T05:51:37.262Z,
+    ipAddress: '127.0.0.1',
+    userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36',
+    userId: '6acf1869aa009c632e1861ba',
+    impersonatedBy: undefined,
+    id: '6acf1869aa009c632e1861bc'
+  },
+  user: {
+    name: 'U2FsdGVkX19jSwZ69IigCBZd+rwyGEGFFh1PThgNXG0=',
+    email: 'accmetee@met.io',
+    emailVerified: false,
+    image: 'https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=U2FsdGVkX19jSwZ69IigCBZd%2BrwyGEGFFh1PThgNXG0%3D',
+    createdAt: 2026-10-14T05:51:37.165Z,
+    updatedAt: 2026-10-14T05:51:37.165Z,
+    isAnonymous: false,
+    role: 'user',
+    banned: false,
+    banReason: undefined,
+    banExpires: undefined,
+    profilePicture: 'https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=U2FsdGVkX19jSwZ69IigCBZd%2BrwyGEGFFh1PThgNXG0%3D',
+    adminPermissions: undefined,
+    providedBy: undefined,
+    preservedOldUserId: undefined,
+    id: '6acf1869aa009c632e1861ba'
+  }
+}
+User created: {
+  name: 'Guest-80323',
+  email: 'temp-e6zjmodw5ptbitn1drihche4nkrzza2r@guest.razorbills.app',
+  emailVerified: false,
+  image: undefined,
+  createdAt: 2026-10-14T05:54:15.755Z,
+  updatedAt: 2026-10-14T05:54:15.755Z,
+  isAnonymous: true,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: undefined,
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1907aa009c632e1861be'
+}
+User created (raw): {
+  name: 'Guest-80323',
+  email: 'temp-e6zjmodw5ptbitn1drihche4nkrzza2r@guest.razorbills.app',
+  emailVerified: false,
+  image: undefined,
+  createdAt: 2026-10-14T05:54:15.755Z,
+  updatedAt: 2026-10-14T05:54:15.755Z,
+  isAnonymous: true,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: undefined,
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1907aa009c632e1861be'
+}
+GET /api/categories?limit=12 304 0.867 ms - -
+GET /api/products/feed 304 200.323 ms - -
+This is an EXISTING user returning. Merging data carefully...
+User deleted: {
+  name: 'Guest-80323',
+  email: 'temp-e6zjmodw5ptbitn1drihche4nkrzza2r@guest.razorbills.app',
+  emailVerified: false,
+  image: undefined,
+  createdAt: 2026-10-14T05:54:15.755Z,
+  updatedAt: 2026-10-14T05:54:15.755Z,
+  isAnonymous: true,
+  role: 'user',
+  banned: false,
+  banReason: undefined,
+  banExpires: undefined,
+  profilePicture: undefined,
+  adminPermissions: undefined,
+  providedBy: undefined,
+  preservedOldUserId: undefined,
+  id: '6acf1907aa009c632e1861be'
+}

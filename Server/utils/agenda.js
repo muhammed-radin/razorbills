@@ -30,6 +30,7 @@ const initAgenda = () => {
     processEvery: "15 minutes", // How often to scan the DB for due jobs
     maxConcurrency: 20, // Max total jobs running at once per server instance
     defaultConcurrency: 5, // Default max concurrent jobs of a single type
+    logging: false, // Disable internal logging; handle errors in your own code
   });
 
   // Handle Agenda internal errors safely
