@@ -262,8 +262,19 @@ router.post(
     }
 
     const newProduct = req.body;
-    newProduct.owner.id = adminId;
-    newProduct.owner.name = adminName;
+    console.log("<-- :New product data:", newProduct);
+    if (!newProduct.owner)
+      newProduct.owner = {
+        id: adminId,
+        name: adminName,
+      };
+    console.log(
+      "Creating new product with ID:",
+      productId,
+      "by admin:",
+      adminId,
+    );
+    console.log("--> :New product data:", newProduct);
 
     const created = await ProductModel.create(newProduct);
     evt.fire(

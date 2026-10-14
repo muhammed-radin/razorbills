@@ -18,7 +18,9 @@ export const authClient = createAuthClient({
         );
         return;
       } else if (ctx.response.status === 401) {
-        toast.error("Unauthorized access! Please log in again to continue.");
+        if (!ctx.request.url.includes("/sign-in")) {
+          toast.error("Unauthorized access! Please log in again to continue.");
+        }
         return;
       } else if (ctx.response.status === 403) {
         toast.error(

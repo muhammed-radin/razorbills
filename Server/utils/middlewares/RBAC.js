@@ -49,8 +49,6 @@ export const requirePermission = (requiredCapability) => {
       });
     }
 
-    console.log(session.user);
-
     if (session.user.role === "owner") {
       req.user = session.user;
       return next();

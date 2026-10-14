@@ -47,6 +47,12 @@ export default function createAuth(db) {
     databaseHooks: {
       user: {
         create: {
+          before: async (userData, context) => {
+            return {
+              ...userData,
+              ...generateBasicBetterAuthData(userData, null),
+            };
+          },
           after: async (userData, context) => {
             const resolvedUserId = userData.id || userData._id?.toString();
 
@@ -81,7 +87,7 @@ export default function createAuth(db) {
                   normalizedUserData,
                   userData.preservedOldUserId || null,
                 ),
-                false,
+                true,
               );
             }
 
@@ -316,6 +322,7 @@ export default function createAuth(db) {
             image: profilePicture,
             adminPermissions: [],
             role: "user",
+            ...generateBasicBetterAuthData(profile, null),
             providedBy: "google",
           };
         },
@@ -330,30 +337,34 @@ export default function createAuth(db) {
           required: false,
           input: true,
           returned: true,
+          fieldName: "profilePicture", // Ensure this matches the field name in your Mongoose model
         },
         adminPermissions: {
           type: [String],
           // Must NOT be required: the client never sends it (input: false)
           // and better-auth rejects sign-up when a required additional
           // field is missing. Server always defaults/sets it ([] for users).
-          default: [],
+          defaultValue: [],
           required: false,
           input: false,
           returned: true,
+          fieldName: "adminPermissions", // Ensure this matches the field name in your Mongoose model
         },
         providedBy: {
           type: String,
-          default: "local",
+          defaultValue: "local",
           required: false,
           input: true,
           returned: true,
+          fieldName: "providedBy", // Ensure this matches the field name in your Mongoose model
         },
         preservedOldUserId: {
           type: String,
-          default: null,
+          defaultValue: null,
           required: false,
           input: false,
           returned: true,
+          fieldName: "preservedOldUserId", // Ensure this matches the field name in your Mongoose model
         },
       },
       fields: {

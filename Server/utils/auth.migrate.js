@@ -21,7 +21,7 @@ async function applyBasicBetterAuthDataToUser(
     );
   if (debbug)
     console.log(
-      "migrateOldUserToNewUser: basicBetterAuthData",
+      "applyBasicBetterAuthData: basicBetterAuthData",
       basicBetterAuthData,
     );
   if (debbug) console.log("users_validation updated for newUserId:", userId);
