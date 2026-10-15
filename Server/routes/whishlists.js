@@ -6,7 +6,7 @@ import {
 } from "../utils/middlewares/reqiuredAuth.js";
 import { WishlistModel } from "../models/schema/whishlist.js";
 import { ErrorEvent, evt, Evts } from "../utils/events.manage.js";
-import { ClassicEvent } from "../models/event.js";
+import { ClassicEvent } from "../shared/models/event.js";
 import { MinimalProduct } from "../models/schema/product.js";
 
 const router = express.Router();

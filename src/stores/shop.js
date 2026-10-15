@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { cartApi, wishlistApi, addressApi, ordersApi } from "@/services/shop";
-import { MinimalProduct } from "@/models/product";
+import { MinimalProduct } from "@shared/models/product";
 import { api } from "@/utils/api";
 import {
   openAuthenticationModal,

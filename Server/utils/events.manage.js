@@ -1,4 +1,4 @@
-import EventEmitter, { ClassicEvent } from "../models/event.js";
+import EventEmitter, { ClassicEvent } from "../shared/models/event.js";
 
 const globalEvents = new EventEmitter();
 const dbEvents = new EventEmitter();

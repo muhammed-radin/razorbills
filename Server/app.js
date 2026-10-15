@@ -23,6 +23,8 @@ import {
   apiNotFound,
   errorHandler,
 } from "./utils/middlewares/errorHandler.js";
+import { evt } from "./utils/events.manage.js";
+import tallyDebug from "./utils/debug.js";
 
 validateStartupConfig();
 
@@ -90,6 +92,22 @@ app.use(
     credentials: true,
   }),
 );
+
+// ------------- Record all events & requests for debugging --------------
+const DEBUG = process.env.DEBUG === "true" || true; // Always true for now, but can be toggled via env
+if (DEBUG === true) {
+  app.use((req, _res, next) => {
+    evt.fire("request", {
+      method: req.method,
+      path: req.path,
+    });
+    next();
+  });
+
+  app.use("/tally", async (req, res) => {
+    res.json(tallyDebug(true));
+  });
+}
 
 app.use(startDB);
 app.use("/api/auth/*splat", authLimiter);

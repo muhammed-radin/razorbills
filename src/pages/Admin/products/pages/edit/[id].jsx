@@ -22,7 +22,7 @@ import FeaturesSection from "./sections/features";
 import DimensionsWeightSection from "./sections/dimensions-weight";
 import TagsKeywordsSection from "./sections/tags-keywords";
 import AdditionalInformationSection from "./sections/additional-information";
-import { productSchema } from "@/utils/product_zod";
+import { productSchema } from "@shared/utils/product_zod";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const defaultCategories = [];

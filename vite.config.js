@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
-        "@shared": path.resolve(__dirname, "./shared"), // this can be accessed from anywhere in the project, helpful for sharing utils function between server and client
+        "@shared": path.resolve(__dirname, "./Server/shared"), // this can be accessed from anywhere in the project, helpful for sharing utils function between server and client
       },
     },
     server: {

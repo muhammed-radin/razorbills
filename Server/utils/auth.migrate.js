@@ -10,7 +10,7 @@ async function deleteUserById(userId) {
 async function applyBasicBetterAuthDataToUser(
   userId,
   basicBetterAuthData,
-  debbug = false,
+  debug = false,
 ) {
   await db
     .collection("users_validation")
@@ -19,12 +19,12 @@ async function applyBasicBetterAuthDataToUser(
       { $set: basicBetterAuthData },
       { upsert: false },
     );
-  if (debbug)
+  if (debug)
     console.log(
       "applyBasicBetterAuthData: basicBetterAuthData",
       basicBetterAuthData,
     );
-  if (debbug) console.log("users_validation updated for newUserId:", userId);
+  if (debug) console.log("users_validation updated for newUserId:", userId);
 
   await db
     .collection("users")
@@ -33,7 +33,7 @@ async function applyBasicBetterAuthDataToUser(
       { $set: basicBetterAuthData },
       { upsert: false },
     );
-  if (debbug) console.log("users updated for newUserId:", userId);
+  if (debug) console.log("users updated for newUserId:", userId);
 }
 
 function generateBasicBetterAuthData(user, oldUserId) {
@@ -52,7 +52,7 @@ async function migrateOldUserToNewUser(
   oldUser,
   newUser,
   isSignupMigration = true, // this means if true guest user -> new registered user ( signup migration ), else guest user -> already registered user ( login migration )
-  debbug = false,
+  debug = false,
 ) {
   // In the migration we want to do these things:
   // 1. Update the new user with the old user's data. if isSignupMigration is false
@@ -85,11 +85,11 @@ async function migrateOldUserToNewUser(
     };
   }
 
-  await applyBasicBetterAuthDataToUser(newUserId, setData, debbug);
+  await applyBasicBetterAuthDataToUser(newUserId, setData, debug);
 
   // delete the old user ( Safe Level )
   await deleteUserById(oldUserId);
-  if (debbug) console.log("Old user deleted:", oldUserId);
+  if (debug) console.log("Old user deleted:", oldUserId);
 
   // Update all CounterModel's old user id to new user id
   await db.collection("counters").updateMany(
@@ -109,7 +109,7 @@ async function migrateOldUserToNewUser(
       },
     },
   );
-  if (debbug) console.log("counters updated for newUserId:", newUserId);
+  if (debug) console.log("counters updated for newUserId:", newUserId);
 
   // Update all InteractionModel's old user id to new user id
   if (isSignupMigration) {
@@ -119,7 +119,7 @@ async function migrateOldUserToNewUser(
         { userId: oldUserId },
         { $set: { userId: newUserId, isGuest: false } },
       );
-    if (debbug)
+    if (debug)
       console.log("--SIGNUP: interactions updated for newUserId:", newUserId);
   } else {
     // clone content of old user to already exiting user
@@ -148,7 +148,7 @@ async function migrateOldUserToNewUser(
         },
       },
     );
-    if (debbug)
+    if (debug)
       console.log("--LOGIN: interactions updated for newUserId:", newUserId);
   }
 }
