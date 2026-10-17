@@ -150,6 +150,25 @@ function userAgentParser(event) {
   };
 }
 
+function normalizeBrowser(browser) {
+  const normalizedBrowser = browser?.toLowerCase() || "";
+
+  if (normalizedBrowser.includes("chrome")) {
+    return "chrome";
+  }
+  if (normalizedBrowser.includes("firefox")) {
+    return "firefox";
+  }
+  if (normalizedBrowser.includes("safari")) {
+    return "safari";
+  }
+  if (normalizedBrowser.includes("edge")) {
+    return "edge";
+  }
+
+  return "other";
+}
+
 evt.onListen(function (eventInfo) {
   let { data: eventData, event: name, timestamp } = eventInfo;
   let event = eventData[0];
@@ -241,7 +260,7 @@ evt.onListen(function (eventInfo) {
           actorId: event.order?.actorId || null,
           revenue: (event.order?.revenue && event.order?.revenue) || 0,
         },
-        browser: (userAgentParser(event).browser || "").toLowerCase(),
+        browser: normalizeBrowser(userAgentParser(event).browser),
         device: (userAgentParser(event).screen || "").toLowerCase(),
         os: (userAgentParser(event).os || "").toLowerCase(),
         sector: event.sector || null,
