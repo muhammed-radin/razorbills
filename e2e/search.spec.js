@@ -1,4 +1,5 @@
 import { test, expect } from "./helpers.js";
+import { ensureGuest } from "./flow.js";
 
 test.describe("search: request deduplication", () => {
   test.slow();
@@ -12,21 +13,18 @@ test.describe("search: request deduplication", () => {
     await page.goto("/#/search", { waitUntil: "domcontentloaded" });
     // Dismiss the guest gate FIRST: while the modal is open the page
     // behind it is inert (and Playwright treats it as hidden).
+    // ensureGuest retries: a first click can be swallowed by the
+    // StrictMode double-mounted dialog, and sign-in reloads the page.
     const guestBtn = page.locator('[role="alertdialog"] button', {
       hasText: /continue as guest/i,
     });
-    if (await guestBtn.first().isVisible({ timeout: 20000 }).catch(() => false)) {
-      await guestBtn.first().click();
-      await expect(page.locator('[role="alertdialog"]')).toBeHidden({
-        timeout: 45000,
-      });
-    }
+    await ensureGuest(page);
     // Page shell renders regardless of auth state; wait for it to settle.
     await expect(
       page.locator("h2", { hasText: /products found/i }),
     ).toBeVisible({ timeout: 60000 });
     // Late-arriving gate (slow session check under load): dismiss again.
-    if (await guestBtn.first().isVisible({ timeout: 5000 }).catch(() => false)) {
+    if (await guestBtn.first().isVisible().catch(() => false)) {
       await guestBtn.first().click();
       await expect(page.locator('[role="alertdialog"]')).toBeHidden({
         timeout: 45000,

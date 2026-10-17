@@ -68,6 +68,56 @@ test.describe("admin redesign: shadcn orders + customers", () => {
     expect(errors).toEqual([]);
   });
 
+  test("analytics page uses shadcn KPI cards, no gradients", async ({ page }) => {
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await loginAs(page, ADMIN_EMAIL, ADMIN_PW);
+    await page.goto("/#/auth/admin/analytics", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("h1", { hasText: /^analytics$/i })).toBeVisible({
+      timeout: 20000,
+    });
+    await page.waitForTimeout(4000);
+    for (const label of ["Orders", "Paid orders", "Revenue", "Avg. order value"]) {
+      await expect(page.locator(`text=${label}`).first()).toBeVisible({
+        timeout: 15000,
+      });
+    }
+    // Granularity switcher re-queries the backend without breaking the page.
+    await page.locator("button", { hasText: /month/i }).first().click();
+    await expect(page.locator("h1", { hasText: /^analytics$/i })).toBeVisible();
+    const gradients = await page.evaluate(
+      () => document.querySelectorAll('[class*="bg-gradient-"]').length,
+    );
+    expect(gradients, "gradient elements remaining").toBe(0);
+    expect(errors).toEqual([]);
+  });
+
+  test("payments page uses shadcn KPI cards that switch queues", async ({ page }) => {
+    const errors = [];
+    page.on("pageerror", (e) => errors.push(e.message));
+    await loginAs(page, ADMIN_EMAIL, ADMIN_PW);
+    await page.goto("/#/auth/admin/payments", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.locator("h1", { hasText: /^payments & shipping$/i }),
+    ).toBeVisible({ timeout: 20000 });
+    await page.waitForTimeout(4000);
+    for (const label of ["Pending payment", "Processing", "Returns", "Refunds"]) {
+      await expect(page.locator(`text=${label}`).first()).toBeVisible({
+        timeout: 15000,
+      });
+    }
+    const gradients = await page.evaluate(
+      () => document.querySelectorAll('[class*="bg-gradient-"]').length,
+    );
+    expect(gradients, "gradient elements remaining").toBe(0);
+    // Clicking a KPI card switches the visible queue tab.
+    await page.locator("button", { hasText: /refunds/i }).first().click();
+    await expect(
+      page.locator("text=/refunds queue/i").first(),
+    ).toBeVisible({ timeout: 15000 });
+    expect(errors).toEqual([]);
+  });
+
   test("both pages stay responsive on mobile", async ({ browser }) => {
     const ctx = await browser.newContext({
       viewport: { width: 375, height: 812 },

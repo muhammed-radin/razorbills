@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { CreditCard, Truck, RefreshCw, DollarSign, PackageX, PackageCheck, Undo2, Wallet } from "lucide-react";
+import { Truck, RefreshCw, DollarSign, PackageX, PackageCheck, Undo2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,35 +35,49 @@ function OrderRow({ order, actions }) {
 
 export default function AdminPaymentsPage() {
   const [tab, setTab] = useState("pending");
-  const [orders, setOrders] = useState([]);
+  const [queues, setQueues] = useState({ pending: [], processing: [], returns: [], refunds: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [busyId, setBusyId] = useState(null);
 
   useEffect(() => {
-    load(tab);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]);
+    load();
+  }, []);
 
-  const load = async (which = tab) => {
+  const load = async () => {
     try {
       setIsLoading(true);
       setLoadError(null);
-      let data;
-      if (which === "pending") data = await ordersApi.pending();
-      else if (which === "processing") data = await ordersApi.processing();
-      else if (which === "returns") data = await ordersApi.returns();
-      else if (which === "refunds") data = await ordersApi.refunds();
-      const list = data?.orders ?? (Array.isArray(data) ? data : []);
-      setOrders(Array.isArray(list) ? list : []);
+      // Load every queue in one pass so the KPI counts are always real.
+      const results = await Promise.allSettled([
+        ordersApi.pending(),
+        ordersApi.processing(),
+        ordersApi.returns(),
+        ordersApi.refunds(),
+      ]);
+      const pick = (r) => {
+        if (r.status !== "fulfilled") return [];
+        const data = r.value;
+        const list = data?.orders ?? (Array.isArray(data) ? data : []);
+        return Array.isArray(list) ? list : [];
+      };
+      setQueues({
+        pending: pick(results[0]),
+        processing: pick(results[1]),
+        returns: pick(results[2]),
+        refunds: pick(results[3]),
+      });
+      if (results.every((r) => r.status === "rejected")) {
+        const err = results[0].reason;
+        setLoadError(
+          err?.response?.status === 403
+            ? "Admin access required to view payments."
+            : "Could not load payment queues. Check the connection and retry.",
+        );
+      }
     } catch (error) {
       console.error("Error loading payment queues:", error);
-      setOrders([]);
-      setLoadError(
-        error?.response?.status === 403
-          ? "Admin access required to view payments."
-          : "Could not load payment queues. Check the connection and retry.",
-      );
+      setLoadError("Could not load payment queues. Check the connection and retry.");
     } finally {
       setIsLoading(false);
     }
@@ -105,43 +119,97 @@ export default function AdminPaymentsPage() {
       ordersApi.completeRefund(o.id, `ADMIN-${Date.now()}`),
     );
 
-  const counts = { pending: 0, processing: 0, returns: 0, refunds: 0 };
+  const orders = queues[tab] ?? [];
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 animate-spin rounded-full border-4 border-muted border-t-primary" />
-          <p className="font-semibold">Loading Payments & Shipping</p>
+      <div className="flex items-center justify-center p-4 sm:p-8">
+        <div className="flex flex-col items-center gap-4 py-10">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 animate-spin rounded-full border-4 border-muted border-t-primary" />
+          <p className="text-base sm:text-lg font-semibold text-foreground">Loading Payments &amp; Shipping</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Please wait while we fetch the data...</p>
         </div>
       </div>
     );
   }
 
+  const kpis = [
+    {
+      key: "pending",
+      title: "Pending payment",
+      icon: PackageX,
+      tile: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    },
+    {
+      key: "processing",
+      title: "Processing",
+      icon: PackageCheck,
+      tile: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    },
+    {
+      key: "returns",
+      title: "Returns",
+      icon: Undo2,
+      tile: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    },
+    {
+      key: "refunds",
+      title: "Refunds",
+      icon: Wallet,
+      tile: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="container mx-auto p-0 space-y-4 sm:space-y-6 max-w-6xl">
         {loadError && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
             <span className="flex-1 text-destructive">{loadError}</span>
             <Button onClick={() => load()} variant="outline" size="sm">Retry</Button>
           </div>
         )}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                <CreditCard className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Payments & Shipping</h1>
-                <p className="text-white/80 text-sm mt-1">COD collection, refunds, returns & shipments</p>
-              </div>
-            </div>
-            <Button variant="secondary" onClick={() => load()} className="bg-white/20 text-white hover:bg-white/30 border-0">
-              <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-            </Button>
+        {/* Page header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Payments &amp; Shipping</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              COD collection, refunds, returns &amp; shipments
+            </p>
           </div>
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => load()}>
+            <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
+          </Button>
+        </div>
+
+        {/* KPI cards — click to jump into a queue */}
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+          {kpis.map((k) => {
+            const Icon = k.icon;
+            return (
+              <button key={k.key} type="button" onClick={() => setTab(k.key)} className="text-left">
+                <Card
+                  className={
+                    tab === k.key
+                      ? "cursor-pointer ring-1 ring-primary/40 hover:shadow-md transition-shadow"
+                      : "cursor-pointer hover:shadow-md transition-shadow"
+                  }
+                >
+                  <CardContent className="p-4 sm:p-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${k.tile}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs sm:text-sm text-muted-foreground truncate">{k.title}</p>
+                        <p className="text-lg sm:text-2xl font-bold tabular-nums">{queues[k.key].length}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </button>
+            );
+          })}
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
@@ -161,12 +229,10 @@ export default function AdminPaymentsPage() {
           </TabsList>
 
           <TabsContent value={tab} className="mt-4">
-            <Card className="border-2 shadow-xl">
+            <Card>
               <CardHeader>
                 <CardTitle className="capitalize">{tab} queue</CardTitle>
-                <CardDescription>
-                  {orders.length} order(s) · {counts[tab] ?? ""}
-                </CardDescription>
+                <CardDescription>{orders.length} order(s) awaiting action</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {orders.length === 0 ? (

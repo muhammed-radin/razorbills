@@ -1,15 +1,35 @@
 import { expect } from "./helpers.js";
 
-/** Dismiss the guest gate if present (fresh browser profile). */
+/** Dismiss the guest gate if present (fresh browser profile).
+ * Uses waitFor (NOT isVisible — its timeout option is ignored) because the
+ * gate only appears after the session check resolves, which can be several
+ * seconds behind the navigation. Retries cover dev quirks: StrictMode
+ * double-mounting can swallow the first click, and successful guest
+ * sign-in reloads the page, after which the gate may briefly flash again. */
 export async function ensureGuest(page) {
   const guestBtn = page.locator('[role="alertdialog"] button', {
     hasText: /continue as guest/i,
   });
-  if (await guestBtn.first().isVisible({ timeout: 8000 }).catch(() => false)) {
-    await guestBtn.first().click();
-    await expect(page.locator('[role="alertdialog"]')).toBeHidden({
-      timeout: 30000,
-    });
+  const gate = page.locator('[role="alertdialog"]');
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      // First attempt waits generously (cold dev-server loads are slow);
+      // later attempts only need to catch a re-flashed gate.
+      await gate.waitFor({
+        state: "visible",
+        timeout: attempt === 0 ? 25000 : 5000,
+      });
+    } catch {
+      return; // Gate never (re)appeared — guest path is ready.
+    }
+    await guestBtn.first().click().catch(() => {});
+    try {
+      await gate.waitFor({ state: "hidden", timeout: 30000 });
+    } catch {
+      // Click may have been swallowed — loop and retry.
+    }
+    // Give a successful sign-in + reload room to settle outside the poll.
+    await page.waitForTimeout(1500);
   }
 }
 
