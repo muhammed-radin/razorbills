@@ -52,7 +52,7 @@ function App() {
   const isGuestAccess =
     GUEST_ACCESS_PATHS.includes(location.pathname) ||
     location.pathname.startsWith("/product/");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Defualt to true to show the loader until session validation is complete
   const hasRun = useRef(false);
 
   useEffect(() => {
@@ -93,6 +93,9 @@ function App() {
                   );
                 } else {
                   toast.success("Signed in as guest.");
+                  // Drop any cached null-session so the new guest session
+                  // takes effect on the next fetch without a reload.
+                  sessionStorage.removeItem("session");
                 }
               } catch (error) {
                 console.error("Error during guest sign-in:", error);
