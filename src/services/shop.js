@@ -116,8 +116,23 @@ export const commentsApi = {
   remove: (productId) => del(`/api/comments/${productId}`),
 };
 
+const visitedProducts = new Map();
+const VISIT_THROTTLE_MS = 10 * 60 * 1000; // 10 minutes
+
 export const interactionsApi = {
-  visit: (productId) => post("/api/interactions/product/visit", { productId }),
+  visit: (productId) => {
+    if (!productId) return Promise.resolve(null);
+    const now = Date.now();
+    const last = visitedProducts.get(productId);
+    if (last && now - last < VISIT_THROTTLE_MS) {
+      return Promise.resolve({ suppressed: true, cached: true });
+    }
+    visitedProducts.set(productId, now);
+    return post("/api/interactions/product/visit", { productId }).catch((err) => {
+      visitedProducts.delete(productId);
+      throw err;
+    });
+  },
   share: (productId) => post("/api/interactions/product/share", { productId }),
   rate: (productId, rating) =>
     post("/api/interactions/product/rate", { productId, rating }),
