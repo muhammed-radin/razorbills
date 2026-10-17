@@ -238,7 +238,7 @@ const toWishlistSnapshot = (product) =>
   });
 
 export const useWishlistStore = create((set, get) => ({
-  items: [],
+  items: readLocal("guest-wishlist", []),
   loading: false,
   error: null,
   serverBacked: true,
@@ -246,8 +246,8 @@ export const useWishlistStore = create((set, get) => ({
   fetch: async (folder = "/") => {
     const isSignedIn = await validateSignInModalRequired();
     if (!isSignedIn) {
-      set({ items: [], serverBacked: false });
-      throw new Error({ message: "User is not signed in", errorCode: 403 }); // User is not signed in, exit the function
+      set({ items: readLocal("guest-wishlist", []), serverBacked: false });
+      return;
     }
 
     set({ loading: true, error: null });
@@ -271,7 +271,9 @@ export const useWishlistStore = create((set, get) => ({
   },
 
   has: (productId) =>
-    get().items.some((p) => (p.productId ?? p.id) === productId),
+    get().items.some(
+      (p) => String(p.productId ?? p.id) === String(productId)
+    ),
 
   toggle: async (product, folder = "/") => {
     const isSignedIn = await openAuthenticationModal();

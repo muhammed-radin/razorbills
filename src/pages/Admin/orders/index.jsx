@@ -15,6 +15,7 @@ import {
     Clock,
     AlertCircle,
     Undo2,
+    Inbox,
     DollarSign,
     TrendingUp,
     Calendar,
@@ -33,6 +34,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -86,6 +88,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { ordersApi, paymentsApi, shipmentsApi } from "@/services/shop"
+import { decryptAddress, decryptField } from "@/utils/crypt"
 import { cn } from "@/lib/utils"
 import {
     Form,
@@ -96,6 +99,14 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 
 const statusConfig = {
     pending: {
@@ -158,6 +169,115 @@ const getStatus = (status) =>
         dotColor: "bg-gray-500",
     };
 
+/* Customer cancel / return requests awaiting an admin decision.
+ * Fully responsive: stacked cards on mobile, comfortable grid on desktop. */
+function RequestGroup({ title, icon, tone, orders, kind, onDecide }) {
+    if (!orders.length) return null
+    return (
+        <section aria-label={title} className="space-y-3">
+            <div className="flex items-center gap-2 px-1">
+                {React.createElement(icon, { className: "h-4 w-4 text-muted-foreground" })}
+                <h3 className="text-sm font-semibold">{title}</h3>
+                <Badge variant="secondary" className="text-[10px]">{orders.length}</Badge>
+            </div>
+            <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                {orders.map((order) => {
+                    const req = kind === "cancel" ? order.raw?.cancellation ?? {} : order.raw?.return ?? {}
+                    return (
+                        <Card key={`${kind}-${order.id}`} className="overflow-hidden">
+                            <CardContent className="p-3 sm:p-4 space-y-3">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                        <p className="font-mono font-semibold text-primary text-xs sm:text-sm break-all">
+                                            {order.id}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {order.customer.name} · {order.customer.email}
+                                        </p>
+                                    </div>
+                                    <Badge variant="outline" className={cn("shrink-0", tone)}>
+                                        ₹{Number(order.total ?? 0).toFixed(2)}
+                                    </Badge>
+                                </div>
+                                <div className="rounded-lg bg-muted/60 p-3 text-sm space-y-1">
+                                    <p className="font-medium">{req.reason || "No reason given"}</p>
+                                    {req.detail && (
+                                        <p className="text-muted-foreground text-xs sm:text-sm break-words">{req.detail}</p>
+                                    )}
+                                    {req.requestedAt && (
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Requested {new Date(req.requestedAt).toLocaleString()}
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex flex-col-reverse sm:flex-row gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 text-destructive hover:text-destructive"
+                                        onClick={() => onDecide(order, kind, "reject")}
+                                    >
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        Deny
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={() => onDecide(order, kind, "approve")}
+                                    >
+                                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                                        Approve
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
+        </section>
+    )
+}
+
+function RequestsView({ cancelRequests, returnRequests, onDecide }) {
+    if (!cancelRequests.length && !returnRequests.length) {
+        return (
+            <Card>
+                <CardContent className="py-10 sm:py-14">
+                    <div className="flex flex-col items-center gap-3 text-center px-4">
+                        <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                            <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-emerald-600" />
+                        </div>
+                        <p className="font-semibold text-base sm:text-lg">All caught up</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
+                            No pending cancellation or return requests. New customer requests will appear here for approval.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+    return (
+        <div className="space-y-6 sm:space-y-8">
+            <RequestGroup
+                title="Cancellation requests"
+                icon={XCircle}
+                tone="border-red-500/30 text-red-700 dark:text-red-400"
+                orders={cancelRequests}
+                kind="cancel"
+                onDecide={onDecide}
+            />
+            <RequestGroup
+                title="Return requests"
+                icon={Undo2}
+                tone="border-amber-500/30 text-amber-700 dark:text-amber-400"
+                orders={returnRequests}
+                kind="return"
+                onDecide={onDecide}
+            />
+        </div>
+    )
+}
+
 // Form Schema for Edit Order
 const editOrderFormSchema = z.object({
     orderId: z.string(),
@@ -167,6 +287,57 @@ const editOrderFormSchema = z.object({
     shippingAddress: z.string().min(10, "Address must be at least 10 characters"),
     paymentMethod: z.string().min(2, "Payment method is required"),
 })
+
+/* Normalize one backend order for the admin UI. Customer PII and address
+ * snapshots may be end-to-end encrypted — always present decrypted. */
+const mapOrder = (o) => {
+    const ship =
+        o.shippingAddress && typeof o.shippingAddress === "object"
+            ? decryptAddress(o.shippingAddress)
+            : {}
+    const name =
+        decryptField(o.userName) ||
+        decryptField(o.customer?.name) ||
+        decryptField(ship.name) ||
+        ""
+    const nm = name.trim()
+    return {
+        id: o.id ?? o._id,
+        customer: {
+            name,
+            email:
+                decryptField(o.userEmail) ||
+                decryptField(o.customer?.email) ||
+                decryptField(ship.email) ||
+                "",
+            phone:
+                decryptField(o.userPhone) ||
+                decryptField(o.customer?.phone) ||
+                decryptField(ship.phone ?? ship.phoneNumber) ||
+                "",
+            avatar: nm
+                ? nm.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase()
+                : "•",
+        },
+        items: (o.products ?? []).length,
+        total: o.totalAmount ?? 0,
+        status: o.status ?? "pending",
+        date: o.createdAt
+            ? new Date(o.createdAt).toISOString().split("T")[0]
+            : "",
+        shippingAddress:
+            typeof o.shippingAddress === "string"
+                ? o.shippingAddress
+                : [ship.street ?? ship.address, ship.city].filter(Boolean).join(", "),
+        paymentMethod: o.payment?.method ?? "",
+        paymentStatus: o.payment?.status ?? "pending",
+        codStatus: o.payment?.codStatus ?? null,
+        fulfillmentStatus: o.fulfillment?.status ?? "unfulfilled",
+        awb: o.fulfillment?.awb ?? o.fulfillment?.trackingNumber ?? null,
+        courier: o.fulfillment?.courierName ?? null,
+        raw: o,
+    }
+}
 
 export default function OrdersPage() {
     const [orders, setOrders] = useState([])
@@ -183,6 +354,10 @@ export default function OrdersPage() {
     const [selectedOrder, setSelectedOrder] = useState(null)
     const [newStatus, setNewStatus] = useState("")
     const [cancelReason, setCancelReason] = useState("")
+    // Approve/deny decision dialog for customer cancel & return requests
+    const [decisionDialog, setDecisionDialog] = useState(null)
+    const [decisionReason, setDecisionReason] = useState("")
+    const [deciding, setDeciding] = useState(false)
 
     // Live orders from GET /api/orders/list (admin, read permission).
     useEffect(() => {
@@ -197,34 +372,7 @@ export default function OrdersPage() {
             setLoadError(null)
             const data = await ordersApi.list({ limit: 50 })
             const list = Array.isArray(data) ? data : (data.orders ?? data ?? [])
-            setOrders(
-                (Array.isArray(list) ? list : []).map((o) => ({
-                    id: o.id ?? o._id,
-                    customer: {
-                        name: o.userName ?? o.customer?.name ?? "",
-                        email: o.userEmail ?? o.customer?.email ?? "",
-                        phone: o.userPhone ?? o.customer?.phone ?? "",
-                        avatar: "",
-                    },
-                    items: (o.products ?? []).length,
-                    total: o.totalAmount ?? 0,
-                    status: o.status ?? "pending",
-                    date: o.createdAt
-                        ? new Date(o.createdAt).toISOString().split("T")[0]
-                        : "",
-                    shippingAddress:
-                        typeof o.shippingAddress === "string"
-                            ? o.shippingAddress
-                            : [o.shippingAddress?.address, o.shippingAddress?.city].filter(Boolean).join(", "),
-                    paymentMethod: o.payment?.method ?? "",
-                    paymentStatus: o.payment?.status ?? "pending",
-                    codStatus: o.payment?.codStatus ?? null,
-                    fulfillmentStatus: o.fulfillment?.status ?? "unfulfilled",
-                    awb: o.fulfillment?.awb ?? o.fulfillment?.trackingNumber ?? null,
-                    courier: o.fulfillment?.courierName ?? null,
-                    raw: o,
-                })),
-            )
+            setOrders((Array.isArray(list) ? list : []).map(mapOrder))
             setIsLoading(false)
         } catch (error) {
             console.error("Error fetching orders:", error)
@@ -432,19 +580,75 @@ export default function OrdersPage() {
                 return
             }
 
-            // Admin rejects the order's cancel request path: use cancel/reject
-            // (or approve when the customer requested cancellation)
-            await ordersApi.rejectCancel(selectedOrder.id, cancelReason).catch(() =>
-                ordersApi.cancel(selectedOrder.id, cancelReason),
-            )
+            const requested =
+                selectedOrder?.raw?.cancellation?.status === "requested"
+            if (requested) {
+                // A customer request is pending: approving resolves it.
+                await ordersApi.approveCancel(selectedOrder.id)
+                toast.success("Cancellation request approved")
+            } else {
+                // No pending request: record an admin-side status change
+                // with the reason as the audit note.
+                await ordersApi.updateStatus(
+                    selectedOrder.id,
+                    "cancelled",
+                    cancelReason.trim(),
+                )
+                toast.success("Order cancelled successfully")
+            }
 
             // Update local state
             setOrders(orders.map(o => o.id === selectedOrder.id ? { ...o, status: "cancelled" } : o))
-            toast.success("Order cancelled successfully")
             setCancelSheetOpen(false)
+            await refreshOrders()
         } catch (error) {
             console.error("Error cancelling order:", error)
-            toast.error("Failed to cancel order")
+            toast.error(error?.response?.data?.error ?? "Failed to cancel order")
+        }
+    }
+
+    /* Customer cancel / return requests awaiting an admin decision. */
+    const cancelRequests = orders.filter(
+        (o) => o.raw?.cancellation?.status === "requested",
+    )
+    const returnRequests = orders.filter(
+        (o) => o.raw?.return?.status === "requested",
+    )
+    const requestCount = cancelRequests.length + returnRequests.length
+
+    const openDecision = (order, kind, action) => {
+        setDecisionDialog({ kind, action, order })
+        setDecisionReason("")
+    }
+
+    const confirmDecision = async () => {
+        if (!decisionDialog || deciding) return
+        const { kind, action, order } = decisionDialog
+        if (action === "reject" && !decisionReason.trim()) {
+            toast.error("A reason is required to deny this request")
+            return
+        }
+        try {
+            setDeciding(true)
+            if (kind === "cancel") {
+                if (action === "approve") await ordersApi.approveCancel(order.id)
+                else await ordersApi.rejectCancel(order.id, decisionReason.trim())
+            } else {
+                if (action === "approve") await ordersApi.approveReturn(order.id)
+                else await ordersApi.rejectReturn(order.id, decisionReason.trim())
+            }
+            toast.success(
+                action === "approve"
+                    ? `${kind === "cancel" ? "Cancellation" : "Return"} request approved`
+                    : `${kind === "cancel" ? "Cancellation" : "Return"} request denied`,
+            )
+            setDecisionDialog(null)
+            await refreshOrders()
+        } catch (error) {
+            console.error("Error deciding request:", error)
+            toast.error(error?.response?.data?.error ?? "Failed to process request")
+        } finally {
+            setDeciding(false)
         }
     }
 
@@ -464,36 +668,13 @@ export default function OrdersPage() {
         return stats
     }
 
-    const refreshOrders = async () => {
+    const refreshOrders = async (opts = {}) => {
         try {
-            const data = await ordersApi.list({ limit: 50 })
+            const params = { limit: 50 }
+            if (opts.realtime) params.realtime = "true"
+            const data = await ordersApi.list(params)
             const list = Array.isArray(data) ? data : (data.orders ?? [])
-            setOrders(
-                list.map((o) => ({
-                    id: o.id ?? o._id,
-                    customer: {
-                        name: o.userName ?? o.customer?.name ?? o.shippingAddress?.name ?? "",
-                        email: o.userEmail ?? o.customer?.email ?? o.shippingAddress?.email ?? "",
-                        phone: o.userPhone ?? o.customer?.phone ?? "",
-                        avatar: "",
-                    },
-                    items: (o.products ?? []).length,
-                    total: o.totalAmount ?? 0,
-                    status: o.status ?? "pending",
-                    date: o.createdAt ? new Date(o.createdAt).toISOString().split("T")[0] : "",
-                    shippingAddress:
-                        typeof o.shippingAddress === "string"
-                            ? o.shippingAddress
-                            : [o.shippingAddress?.street, o.shippingAddress?.city].filter(Boolean).join(", "),
-                    paymentMethod: o.payment?.method ?? "",
-                    paymentStatus: o.payment?.status ?? "pending",
-                    codStatus: o.payment?.codStatus ?? null,
-                    fulfillmentStatus: o.fulfillment?.status ?? "unfulfilled",
-                    awb: o.fulfillment?.awb ?? o.fulfillment?.trackingNumber ?? null,
-                    courier: o.fulfillment?.courierName ?? null,
-                    raw: o,
-                })),
-            )
+            setOrders(list.map(mapOrder))
         } catch (error) {
             console.error("Error refreshing orders:", error)
         }
@@ -573,14 +754,14 @@ export default function OrdersPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-                <div className="flex flex-col items-center gap-6">
+            <div className="flex items-center justify-center p-4 sm:p-8">
+                <div className="flex flex-col items-center gap-4 sm:gap-5 py-10">
                     <div className="relative">
-                        <div className="h-16 w-16 sm:h-20 sm:w-20 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
-                        <ShoppingBag className="h-6 w-6 sm:h-8 sm:w-8 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                        <div className="h-14 w-14 sm:h-16 sm:w-16 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
+                        <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                     </div>
                     <div className="text-center">
-                        <p className="text-lg sm:text-xl font-semibold text-foreground mb-1">Loading Orders</p>
+                        <p className="text-base sm:text-lg font-semibold text-foreground mb-1">Loading Orders</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">Please wait while we fetch the data...</p>
                     </div>
                 </div>
@@ -588,9 +769,39 @@ export default function OrdersPage() {
         )
     }
 
+    const kpis = [
+        {
+            title: "Total orders",
+            value: stats.total,
+            icon: ShoppingBag,
+            tile: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+        },
+        {
+            title: "Pending",
+            value: stats.pending,
+            icon: Clock,
+            tile: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        },
+        {
+            title: "Requests",
+            value: requestCount,
+            hint: "awaiting decision",
+            icon: Inbox,
+            tile: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+            onClick: () => setCurrentTab("requests"),
+        },
+        {
+            title: "Revenue",
+            value: `₹${stats.revenue.toFixed(2)}`,
+            hint: "verified paid only",
+            icon: DollarSign,
+            tile: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        },
+    ]
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-            <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="container mx-auto p-0 space-y-4 sm:space-y-6 max-w-6xl">
                 {loadError && (
                     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
                         <span className="flex-1 text-destructive">{loadError}</span>
@@ -599,76 +810,48 @@ export default function OrdersPage() {
                         </Button>
                     </div>
                 )}
-                {/* Beautiful Hero Header */}
-                <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-blue-600 via-blue-500 to-purple-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
-                    <div className="absolute -top-32 -right-32 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute -bottom-32 -left-32 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+                {/* Page header */}
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Orders</h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                        Track and manage all customer orders
+                    </p>
+                </div>
 
-                    <div className="relative z-10">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4 sm:mb-6">
-                            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                                <ShoppingBag className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Orders Management</h1>
-                                <p className="text-white/80 text-sm sm:text-base md:text-lg mt-1">
-                                    Track and manage all customer orders
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6">
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <Package className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                {/* KPI cards */}
+                <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+                    {kpis.map((k) => {
+                        const Icon = k.icon
+                        const card = (
+                            <Card className={k.onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""}>
+                                <CardContent className="p-4 sm:p-5">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${k.tile}`}>
+                                            <Icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs sm:text-sm text-muted-foreground truncate">{k.title}</p>
+                                            <p className="text-lg sm:text-2xl font-bold tabular-nums truncate">{k.value}</p>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">Total Orders</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.total}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">Pending</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.pending}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">Shipped</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.shipped}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">Revenue</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">₹{stats.revenue.toFixed(2)}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                    {k.hint && (
+                                        <p className="text-[11px] text-muted-foreground mt-2">{k.hint}</p>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )
+                        return k.onClick ? (
+                            <button key={k.title} type="button" onClick={k.onClick} className="text-left">
+                                {card}
+                            </button>
+                        ) : (
+                            <div key={k.title}>{card}</div>
+                        )
+                    })}
                 </div>
 
                 {/* Filters and Actions */}
-                <Card className="border-2 shadow-lg">
+                <Card>
                     <CardContent className="p-3 sm:p-4 md:p-6">
                         <div className="flex flex-col gap-3 sm:gap-4">
                             <div className="flex-1 relative">
@@ -677,12 +860,12 @@ export default function OrdersPage() {
                                     placeholder="Search orders..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10 h-10 sm:h-11 border-2 focus-visible:border-primary text-sm sm:text-base"
+                                    className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
                                 />
                             </div>
                             <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="h-10 sm:h-11 border-2 text-xs sm:text-sm">
+                                    <SelectTrigger className="h-10 sm:h-11 text-xs sm:text-sm">
                                         <SelectValue placeholder="Status" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -695,7 +878,7 @@ export default function OrdersPage() {
                                     </SelectContent>
                                 </Select>
                                 <Select value={sortBy} onValueChange={setSortBy}>
-                                    <SelectTrigger className="h-10 sm:h-11 border-2 text-xs sm:text-sm">
+                                    <SelectTrigger className="h-10 sm:h-11 text-xs sm:text-sm">
                                         <SelectValue placeholder="Sort" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -705,7 +888,7 @@ export default function OrdersPage() {
                                         <SelectItem value="amount-asc">Lowest Amount</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Button onClick={exportOrdersCsv} className="h-10 sm:h-11 px-4 sm:px-6 shadow-lg col-span-2 sm:col-span-1 text-xs sm:text-sm">
+                                <Button onClick={exportOrdersCsv} className="h-10 sm:h-11 px-4 sm:px-6 col-span-2 sm:col-span-1 text-xs sm:text-sm">
                                     <Download className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     Export
                                 </Button>
@@ -715,11 +898,23 @@ export default function OrdersPage() {
                 </Card>
 
                 {/* Orders Tabs */}
-                <Tabs value={currentTab} onValueChange={setCurrentTab}>
-                    <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 h-auto p-1 bg-muted/50 gap-1">
+                <Tabs
+                    value={currentTab}
+                    onValueChange={(v) => {
+                        setCurrentTab(v)
+                        // The decision queue must always be live when opened.
+                        if (v === "requests") refreshOrders({ realtime: true })
+                    }}
+                >
+                    <TabsList className="grid w-full grid-cols-4 sm:grid-cols-7 h-auto p-1 bg-muted/50 gap-1">
                         <TabsTrigger value="all" className="flex flex-col items-center gap-1 py-2 sm:py-3 text-xs sm:text-sm">
                             <span className="font-semibold">All</span>
                             <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 sm:px-2">{stats.total}</Badge>
+                        </TabsTrigger>
+                        <TabsTrigger value="requests" className="flex flex-col items-center gap-1 py-2 sm:py-3 text-xs sm:text-sm">
+                            <span className="font-semibold hidden sm:inline">Requests</span>
+                            <span className="font-semibold sm:hidden">Req</span>
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 sm:px-2 bg-amber-500/20 text-amber-700">{requestCount}</Badge>
                         </TabsTrigger>
                         <TabsTrigger value="pending" className="flex flex-col items-center gap-1 py-2 sm:py-3 text-xs sm:text-sm">
                             <span className="font-semibold hidden sm:inline">Pending</span>
@@ -749,10 +944,18 @@ export default function OrdersPage() {
                     </TabsList>
 
                     <TabsContent value={currentTab} className="mt-4 sm:mt-6">
+                        {currentTab === "requests" ? (
+                            <RequestsView
+                                cancelRequests={cancelRequests}
+                                returnRequests={returnRequests}
+                                onDecide={openDecision}
+                            />
+                        ) : (
+                        <>
                         {/* Mobile Card View */}
                         <div className="block lg:hidden space-y-3 sm:space-y-4">
                             {filteredOrders.length === 0 ? (
-                                <Card className="border-2 shadow-xl">
+                                <Card>
                                     <CardContent className="py-8 sm:py-12">
                                         <div className="flex flex-col items-center gap-3 sm:gap-4">
                                             <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-muted flex items-center justify-center">
@@ -769,7 +972,7 @@ export default function OrdersPage() {
                                 filteredOrders.map((order) => {
                                     const StatusIcon = getStatus(order.status).icon
                                     return (
-                                        <Card key={order.id} className="border-2 shadow-lg hover:shadow-xl transition-shadow">
+                                        <Card key={order.id} className="hover:shadow-md transition-shadow">
                                             <CardContent className="p-3 sm:p-4">
                                                 <div className="space-y-3">
                                                     {/* Header */}
@@ -785,7 +988,7 @@ export default function OrdersPage() {
                                                         </div>
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Order actions">
                                                                     <MoreVertical className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
@@ -845,9 +1048,11 @@ export default function OrdersPage() {
 
                                                     {/* Customer Info */}
                                                     <div className="flex items-center gap-2 sm:gap-3 py-2 border-y">
-                                                        <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0">
-                                                            {order.customer.avatar}
-                                                        </div>
+                                                        <Avatar className="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
+                                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs sm:text-sm">
+                                                                {order.customer.avatar}
+                                                            </AvatarFallback>
+                                                        </Avatar>
                                                         <div className="min-w-0 flex-1">
                                                             <p className="font-semibold text-sm sm:text-base truncate">{order.customer.name}</p>
                                                             <p className="text-xs text-muted-foreground truncate">{order.customer.email}</p>
@@ -885,7 +1090,7 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Desktop Table View */}
-                        <Card className="border-2 shadow-xl overflow-hidden hidden lg:block">
+                        <Card className="overflow-hidden hidden lg:block">
                             <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
@@ -926,9 +1131,11 @@ export default function OrdersPage() {
                                                         </TableCell>
                                                         <TableCell>
                                                             <div className="flex items-center gap-3">
-                                                                <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-semibold">
-                                                                    {order.customer.avatar}
-                                                                </div>
+                                                                <Avatar className="h-10 w-10 shrink-0">
+                                                                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                                                        {order.customer.avatar}
+                                                                    </AvatarFallback>
+                                                                </Avatar>
                                                                 <div>
                                                                     <p className="font-semibold">{order.customer.name}</p>
                                                                     <p className="text-sm text-muted-foreground">{order.customer.email}</p>
@@ -961,7 +1168,7 @@ export default function OrdersPage() {
                                                         <TableCell className="text-right">
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Order actions">
                                                                         <MoreVertical className="h-4 w-4" />
                                                                     </Button>
                                                                 </DropdownMenuTrigger>
@@ -1026,21 +1233,23 @@ export default function OrdersPage() {
                                 </Table>
                             </div>
                         </Card>
+                        </>
+                        )}
                     </TabsContent>
                 </Tabs>
             </div>
 
             {/* Edit Order Sheet */}
             <Sheet open={editSheetOpen} onOpenChange={setEditSheetOpen}>
-                <SheetContent className="">
-                    <SheetHeader>
-                        <SheetTitle className="text-xl font-bold">Edit Order</SheetTitle>
+                <SheetContent className="w-full sm:max-w-lg flex flex-col max-h-[100dvh] gap-0 p-0 overflow-hidden">
+                    <SheetHeader className="shrink-0 px-4 sm:px-6 pt-5 sm:pt-6 pr-12">
+                        <SheetTitle className="text-lg sm:text-xl font-bold">Edit Order</SheetTitle>
                         <SheetDescription>
                             Make changes to the order details here. Click save when you're done.
                         </SheetDescription>
                     </SheetHeader>
 
-                    <div className="flex-1 px-6 justify-center overflow-y-auto py-6">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
                         <Form {...editOrderForm}>
                             <form onSubmit={editOrderForm.handleSubmit(saveOrderEdit)} className="space-y-6">
                                 {/* Order ID */}
@@ -1147,17 +1356,17 @@ export default function OrdersPage() {
                                     )}
                                 />
 
-                                <SheetFooter className="gap-2 pt-4 border-t">
+                                <SheetFooter className="gap-2 pt-4 border-t px-4 sm:px-6 pb-5 sm:pb-6 shrink-0 flex-col-reverse sm:flex-row">
                                     <Button
                                         variant="outline"
                                         onClick={() => setEditSheetOpen(false)}
-                                        className="flex-1"
+                                        className="w-full sm:flex-1"
                                     >
                                         Cancel
                                     </Button>
                                     <Button
                                         type="submit"
-                                        className="flex-1"
+                                        className="w-full sm:flex-1"
                                         disabled={savingEdit}
                                     >
                                         <Edit className="mr-2 h-4 w-4" />
@@ -1172,15 +1381,15 @@ export default function OrdersPage() {
 
             {/* Update Status Sheet */}
             <Sheet open={statusSheetOpen} onOpenChange={setStatusSheetOpen}>
-                <SheetContent className="w-full sm:max-w-lg">
-                    <SheetHeader>
-                        <SheetTitle className="text-xl font-bold">Update Order Status</SheetTitle>
+                <SheetContent className="w-full sm:max-w-lg flex flex-col max-h-[100dvh] gap-0 p-0 overflow-hidden">
+                    <SheetHeader className="shrink-0 px-4 sm:px-6 pt-5 sm:pt-6 pr-12">
+                        <SheetTitle className="text-lg sm:text-xl font-bold">Update Order Status</SheetTitle>
                         <SheetDescription>
                             Change the status of the order. The customer will be notified of this change.
                         </SheetDescription>
                     </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto py-6">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
                         <div className="space-y-6">
                             {/* Order ID */}
                             <div className="space-y-2">
@@ -1292,17 +1501,17 @@ export default function OrdersPage() {
                         </div>
                     </div>
 
-                    <SheetFooter className="gap-2 pt-4 border-t">
+                    <SheetFooter className="gap-2 pt-4 border-t px-4 sm:px-6 pb-5 sm:pb-6 shrink-0 flex-col-reverse sm:flex-row">
                         <Button
                             variant="outline"
                             onClick={() => setStatusSheetOpen(false)}
-                            className="flex-1"
+                            className="w-full sm:flex-1"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={saveStatusUpdate}
-                            className="flex-1"
+                            className="w-full sm:flex-1"
                         >
                             <Truck className="mr-2 h-4 w-4" />
                             Update Status
@@ -1313,15 +1522,15 @@ export default function OrdersPage() {
 
             {/* Cancel Order Sheet */}
             <Sheet open={cancelSheetOpen} onOpenChange={setCancelSheetOpen}>
-                <SheetContent className="w-full sm:max-w-lg">
-                    <SheetHeader>
-                        <SheetTitle className="text-xl font-bold text-destructive">Cancel Order</SheetTitle>
+                <SheetContent className="w-full sm:max-w-lg flex flex-col max-h-[100dvh] gap-0 p-0 overflow-hidden">
+                    <SheetHeader className="shrink-0 px-4 sm:px-6 pt-5 sm:pt-6 pr-12">
+                        <SheetTitle className="text-lg sm:text-xl font-bold text-destructive">Cancel Order</SheetTitle>
                         <SheetDescription>
                             This action cannot be undone. Please provide a reason for cancelling this order.
                         </SheetDescription>
                     </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto py-6">
+                    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4 sm:py-6">
                         <div className="space-y-6">
                             {/* Order ID */}
                             <div className="space-y-2">
@@ -1341,17 +1550,17 @@ export default function OrdersPage() {
                             <div className="rounded-lg border bg-muted/50 p-4">
                                 <h4 className="text-sm font-medium mb-3">Order Details</h4>
                                 <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
+                                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2">
                                         <span className="text-muted-foreground">Customer:</span>
-                                        <span className="font-medium">{selectedOrder?.customer?.name}</span>
+                                        <span className="font-medium break-words">{selectedOrder?.customer?.name}</span>
                                     </div>
-                                    <div className="flex justify-between">
+                                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2">
                                         <span className="text-muted-foreground">Items:</span>
                                         <span className="font-medium">{selectedOrder?.items} items</span>
                                     </div>
-                                    <div className="flex justify-between">
+                                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2">
                                         <span className="text-muted-foreground">Total Amount:</span>
-                                        <span className="font-bold text-lg">${selectedOrder?.total?.toFixed(2)}</span>
+                                        <span className="font-bold text-base sm:text-lg">₹{selectedOrder?.total?.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Current Status:</span>
@@ -1406,18 +1615,18 @@ export default function OrdersPage() {
                         </div>
                     </div>
 
-                    <SheetFooter className="gap-2 pt-4 border-t">
+                    <SheetFooter className="gap-2 pt-4 border-t px-4 sm:px-6 pb-5 sm:pb-6 shrink-0 flex-col-reverse sm:flex-row">
                         <Button
                             variant="outline"
                             onClick={() => setCancelSheetOpen(false)}
-                            className="flex-1"
+                            className="w-full sm:flex-1"
                         >
                             Go Back
                         </Button>
                         <Button
                             variant="destructive"
                             onClick={confirmCancelOrder}
-                            className="flex-1"
+                            className="w-full sm:flex-1"
                         >
                             <XCircle className="mr-2 h-4 w-4" />
                             Cancel Order
@@ -1425,6 +1634,85 @@ export default function OrdersPage() {
                     </SheetFooter>
                 </SheetContent>
             </Sheet>
+
+            {/* Approve / Deny decision dialog for customer requests */}
+            <Dialog
+                open={Boolean(decisionDialog)}
+                onOpenChange={(v) => !v && !deciding && setDecisionDialog(null)}
+            >
+                <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg">
+                            {decisionDialog?.action === "approve" ? "Approve" : "Deny"}{" "}
+                            {decisionDialog?.kind === "cancel" ? "cancellation" : "return"} request
+                        </DialogTitle>
+                        <DialogDescription className="break-all">
+                            {decisionDialog?.order?.id} · {decisionDialog?.order?.customer?.name}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="rounded-lg bg-muted/60 p-3 text-sm space-y-1">
+                            <p className="font-medium">
+                                {decisionDialog?.kind === "cancel"
+                                    ? decisionDialog?.order?.raw?.cancellation?.reason || "No reason given"
+                                    : decisionDialog?.order?.raw?.return?.reason || "No reason given"}
+                            </p>
+                            {(decisionDialog?.kind === "cancel"
+                                ? decisionDialog?.order?.raw?.cancellation?.detail
+                                : decisionDialog?.order?.raw?.return?.detail) && (
+                                <p className="text-muted-foreground text-xs sm:text-sm break-words">
+                                    {decisionDialog?.kind === "cancel"
+                                        ? decisionDialog?.order?.raw?.cancellation?.detail
+                                        : decisionDialog?.order?.raw?.return?.detail}
+                                </p>
+                            )}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="decision-reason" className="text-sm font-medium">
+                                {decisionDialog?.action === "reject" ? (
+                                    <>Reason for denial <span className="text-destructive">*</span></>
+                                ) : (
+                                    <>Note for the customer <span className="text-muted-foreground">(optional)</span></>
+                                )}
+                            </Label>
+                            <Textarea
+                                id="decision-reason"
+                                placeholder={
+                                    decisionDialog?.action === "reject"
+                                        ? "Explain why this request cannot be approved..."
+                                        : "Optional message shown to the customer..."
+                                }
+                                value={decisionReason}
+                                onChange={(e) => setDecisionReason(e.target.value)}
+                                className="min-h-[100px] resize-none"
+                                rows={4}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setDecisionDialog(null)}
+                            disabled={deciding}
+                            className="w-full sm:w-auto"
+                        >
+                            Back
+                        </Button>
+                        <Button
+                            variant={decisionDialog?.action === "reject" ? "destructive" : "default"}
+                            onClick={confirmDecision}
+                            disabled={deciding}
+                            className="w-full sm:w-auto"
+                        >
+                            {deciding
+                                ? "Processing…"
+                                : decisionDialog?.action === "approve"
+                                    ? "Approve request"
+                                    : "Deny request"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

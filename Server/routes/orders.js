@@ -212,6 +212,22 @@ const router = express.Router();
 
 const globalMemory = typeof useMemory === "function" ? useMemory() : null;
 
+/* Any non-GET order mutation can change what /list returns (statuses,
+ * cancellation/return subdocs, totals). Invalidate cached list responses
+ * after the response is sent so admin queues never go stale. */
+router.use((req, res, next) => {
+  if (req.method !== "GET" && typeof res.on === "function") {
+    res.on("finish", () => {
+      try {
+        globalMemory?.clearByPrefix?.("/list?");
+      } catch {
+        // Cache invalidation is best-effort; never break the response.
+      }
+    });
+  }
+  next();
+});
+
 /* =========================================================
  * HELPERS
  * ========================================================= */

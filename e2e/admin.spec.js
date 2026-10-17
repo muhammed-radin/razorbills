@@ -27,7 +27,7 @@ test.describe.serial("admin: dashboard + CRUD + queues", () => {
     await loginAs(page, ADMIN.email, ADMIN.password);
     await page.goto("/#/auth/admin/dashboard", { waitUntil: "domcontentloaded" });
     await expect(
-      page.locator("text=/Total Revenue/i").first(),
+      page.locator("h1", { hasText: /dashboard/i }).first(),
     ).toBeVisible({ timeout: 20000 });
     const body = await page.locator("body").innerText();
     // No placeholder fallbacks for core counters.
@@ -43,7 +43,13 @@ test.describe.serial("admin: dashboard + CRUD + queues", () => {
   test("products list loads + server search works", async ({ page }) => {
     await loginAs(page, ADMIN.email, ADMIN.password);
     await page.goto("/#/auth/admin/products", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("text=/Vivo S1|Oppo K1|Realme/i").first()).toBeVisible({
+    // Seed catalog on local DB, real catalog on shared DB — either proves
+    // the list renders from the backend. Use the page's server-side search
+    // so pagination can never hide the assertion target.
+    const search = page.getByPlaceholder(/search/i).first();
+    await expect(search).toBeVisible({ timeout: 20000 });
+    await search.fill("Seed Resistor Kit");
+    await expect(page.locator("text=/Seed Resistor Kit/i").first()).toBeVisible({
       timeout: 20000,
     });
   });

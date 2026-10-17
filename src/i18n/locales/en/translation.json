@@ -167,6 +167,8 @@
     "writeReview": "Write a Review",
     "noCommentsTitle": "No Comments Yet",
     "noCommentsDesc": "Be the first to share your thoughts on this product.",
+    "noSimilarTitle": "No Similar Products Found",
+    "noSimilarDesc": "We couldn't find any other products from {{brand}} at the moment.",
     "reviewDrawerTitle": "Write a Product Review",
     "reviewDrawerDesc": "Share your experience with this component.",
     "submitReview": "Submit Review"

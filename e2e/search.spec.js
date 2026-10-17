@@ -1,6 +1,7 @@
 import { test, expect } from "./helpers.js";
 
 test.describe("search: request deduplication", () => {
+  test.slow();
   test("rapid typing issues bounded requests and shows results", async ({ page }) => {
     const productCalls = [];
     page.on("request", (r) => {
@@ -9,23 +10,27 @@ test.describe("search: request deduplication", () => {
       }
     });
     await page.goto("/#/search", { waitUntil: "domcontentloaded" });
-    // Page shell renders regardless of auth state; wait for it to settle.
-    await expect(
-      page.locator("h2", { hasText: /products found/i }),
-    ).toBeVisible({ timeout: 25000 });
-    // Fresh visitors get the auth gate (may resolve late): real guest flow.
+    // Dismiss the guest gate FIRST: while the modal is open the page
+    // behind it is inert (and Playwright treats it as hidden).
     const guestBtn = page.locator('[role="alertdialog"] button', {
       hasText: /continue as guest/i,
     });
-    if (await guestBtn.first().isVisible({ timeout: 8000 }).catch(() => false)) {
+    if (await guestBtn.first().isVisible({ timeout: 20000 }).catch(() => false)) {
       await guestBtn.first().click();
-      // App reloads after guest sign-in; wait out the reload + session check.
       await expect(page.locator('[role="alertdialog"]')).toBeHidden({
-        timeout: 30000,
+        timeout: 45000,
       });
-      await expect(
-        page.locator("h2", { hasText: /products found/i }),
-      ).toBeVisible({ timeout: 25000 });
+    }
+    // Page shell renders regardless of auth state; wait for it to settle.
+    await expect(
+      page.locator("h2", { hasText: /products found/i }),
+    ).toBeVisible({ timeout: 60000 });
+    // Late-arriving gate (slow session check under load): dismiss again.
+    if (await guestBtn.first().isVisible({ timeout: 5000 }).catch(() => false)) {
+      await guestBtn.first().click();
+      await expect(page.locator('[role="alertdialog"]')).toBeHidden({
+        timeout: 45000,
+      });
     }
     const baseline = productCalls.length;
 

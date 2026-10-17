@@ -36,16 +36,41 @@ function encrypt(plaintext, strict = false) {
  * Values are stored as `U2FsdGVkX1…` ciphertext; anything else (plain text,
  * numbers, null) passes through untouched. Never blanks a value: if
  * decryption yields nothing, the original is returned.
+ *
+ * Decrypts recursively (some records were double-encrypted by older save
+ * flows) and unquotes JSON-stringified scalars, so `"Malappuram"` and
+ * `Malappuram` both display correctly.
  */
-function decryptField(value, strict = false) {
-  if (typeof value !== "string" || !value.startsWith("U2FsdGVkX1")) {
-    return value;
+function decryptField(value, strict = false, maxRounds = 3) {
+  const unquote = (v) => {
+    if (typeof v !== "string") return v;
+    try {
+      const parsed = JSON.parse(v);
+      return typeof parsed === "string" ? parsed : v;
+    } catch {
+      return v;
+    }
+  };
+  let cur = unquote(value);
+  let i = 0;
+  while (
+    typeof cur === "string" &&
+    cur.startsWith("U2FsdGVkX1") &&
+    i < maxRounds
+  ) {
+    let next = null;
+    try {
+      next = decryptCipher(cur, strict);
+    } catch {
+      break;
+    }
+    if (!next || next === cur) break;
+    cur = next;
+    i += 1;
+    // decryptCipher may itself return a JSON-quoted (double-encrypted) layer.
+    cur = unquote(cur);
   }
-  try {
-    return decryptCipher(value, strict) || value;
-  } catch {
-    return value;
-  }
+  return cur;
 }
 
 function decryptStrict(ciphertext) {
@@ -71,8 +96,8 @@ function decryptAddress(address) {
       if (key === "id" || typeof value !== "string") return [key, value];
 
       try {
-        const decrypted = decryptField(value);
-        return [key, JSON.parse(decrypted)];
+        // decryptField handles multi-round ciphertext and JSON quoting.
+        return [key, decryptField(value)];
       } catch {
         return [key, value];
       }

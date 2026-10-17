@@ -70,7 +70,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { usersApi } from "@/services/shop"
-import { decryptField } from "@/utils/crypt"
+import { decryptAddress, decryptField } from "@/utils/crypt"
 import { cn } from "@/lib/utils"
 
 const customerTierConfig = {
@@ -139,22 +139,33 @@ export default function CustomersPage() {
             const data = await usersApi.list({ limit: 50, ...(search?.trim() ? { search: search.trim() } : {}) })
             const users = Array.isArray(data) ? data : (data.users ?? [])
             setCustomers(
-                users.map((u, i) => ({
-                    id: u.id ?? u._id ?? `user-${i}`,
-                    name: decryptField(u.name) ?? "Unknown",
-                    email: u.email ?? "",
-                    phone: u.phoneNumber ?? "",
-                    avatar: (u.name ?? "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
-                    image: u.image ?? "",
-                    tier: u.role === "admin" || u.role === "owner" ? "vip" : "regular",
-                    totalOrders: u.totalOrders ?? 0,
-                    totalSpent: u.totalSpent ?? 0,
-                    averageOrderValue: u.totalOrders ? (u.totalSpent ?? 0) / u.totalOrders : 0,
-                    joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split("T")[0] : "",
-                    lastOrder: u.lastLogin ? new Date(u.lastLogin).toISOString().split("T")[0] : "",
-                    location: u.address?.city ?? "",
-                    status: u.banned ? "inactive" : "active",
-                })),
+                users.map((u, i) => {
+                    // Names and address books are end-to-end encrypted at rest.
+                    const name = decryptField(u.name) ?? "Unknown"
+                    const address =
+                        u.address && typeof u.address === "object"
+                            ? decryptAddress(u.address)
+                            : {}
+                    return {
+                        id: u.id ?? u._id ?? `user-${i}`,
+                        name,
+                        // Email is stored plain, but decrypt defensively —
+                        // decryptField passes non-ciphertext through untouched.
+                        email: decryptField(u.email) || "",
+                        // Phone numbers may be stored encrypted (address-book flow).
+                        phone: decryptField(u.phoneNumber) ?? "",
+                        avatar: (name ?? "U").split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase(),
+                        image: u.image ?? "",
+                        tier: u.role === "admin" || u.role === "owner" ? "vip" : "regular",
+                        totalOrders: u.totalOrders ?? 0,
+                        totalSpent: u.totalSpent ?? 0,
+                        averageOrderValue: u.totalOrders ? (u.totalSpent ?? 0) / u.totalOrders : 0,
+                        joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split("T")[0] : "",
+                        lastOrder: u.lastLogin ? new Date(u.lastLogin).toISOString().split("T")[0] : "",
+                        location: address.city ?? "",
+                        status: u.banned ? "inactive" : "active",
+                    }
+                }),
             )
             setIsLoading(false)
         } catch (error) {
@@ -297,14 +308,14 @@ export default function CustomersPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 flex items-center justify-center p-4">
-                <div className="flex flex-col items-center gap-6">
+            <div className="flex items-center justify-center p-4 sm:p-8">
+                <div className="flex flex-col items-center gap-4 sm:gap-5 py-10">
                     <div className="relative">
-                        <div className="h-16 w-16 sm:h-20 sm:w-20 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
-                        <Users className="h-6 w-6 sm:h-8 sm:w-8 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                        <div className="h-14 w-14 sm:h-16 sm:w-16 animate-spin rounded-full border-4 border-muted border-t-primary"></div>
+                        <Users className="h-5 w-5 sm:h-6 sm:w-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                     </div>
                     <div className="text-center">
-                        <p className="text-lg sm:text-xl font-semibold text-foreground mb-1">Loading Customers</p>
+                        <p className="text-base sm:text-lg font-semibold text-foreground mb-1">Loading Customers</p>
                         <p className="text-xs sm:text-sm text-muted-foreground">Please wait while we fetch the data...</p>
                     </div>
                 </div>
@@ -312,9 +323,36 @@ export default function CustomersPage() {
         )
     }
 
+    const kpis = [
+        {
+            title: "Total customers",
+            value: stats.total,
+            icon: Users,
+            tile: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+        },
+        {
+            title: "Active",
+            value: stats.active,
+            icon: CheckCircle,
+            tile: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        },
+        {
+            title: "VIP members",
+            value: stats.vip,
+            icon: Crown,
+            tile: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        },
+        {
+            title: "Avg. lifetime value",
+            value: `₹${stats.averageLifetimeValue.toFixed(0)}`,
+            icon: TrendingUp,
+            tile: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+        },
+    ]
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-            <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+            <div className="container mx-auto p-0 space-y-4 sm:space-y-6 max-w-6xl">
                 {loadError && (
                     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
                         <span className="flex-1 text-destructive">{loadError}</span>
@@ -326,90 +364,52 @@ export default function CustomersPage() {
                         </button>
                     </div>
                 )}
-                {/* Beautiful Hero Header */}
-                <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
-                    <div className="absolute -top-32 -right-32 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute -bottom-32 -left-32 w-64 h-64 sm:w-96 sm:h-96 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+                {/* Page header */}
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Customers</h1>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                        Manage and engage with your customers
+                    </p>
+                </div>
 
-                    <div className="relative z-10">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4 sm:mb-6">
-                            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                                <Users className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Customer Management</h1>
-                                <p className="text-white/80 text-sm sm:text-base md:text-lg mt-1">
-                                    Manage and engage with your customers
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6">
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <Users className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                {/* KPI cards */}
+                <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+                    {kpis.map((k) => {
+                        const Icon = k.icon
+                        return (
+                            <Card key={k.title}>
+                                <CardContent className="p-4 sm:p-5">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${k.tile}`}>
+                                            <Icon className="h-5 w-5" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs sm:text-sm text-muted-foreground truncate">{k.title}</p>
+                                            <p className="text-lg sm:text-2xl font-bold tabular-nums truncate">{k.value}</p>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">Total Customers</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.total}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">Active</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.active}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <Crown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">VIP Members</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.vip}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/20">
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                                        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="text-xs sm:text-sm text-white/70 truncate">Avg. LTV</p>
-                                        <p className="text-lg sm:text-xl md:text-2xl font-bold">₹{stats.averageLifetimeValue.toFixed(0)}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                                </CardContent>
+                            </Card>
+                        )
+                    })}
                 </div>
 
                 {/* Filters and Actions */}
-                <Card className="border-2 shadow-lg">
-                    <CardContent className="p-3 sm:p-4 md:p-6">
-                        <div className="flex flex-col gap-3 sm:gap-4">
+                <Card>
+                    <CardContent className="p-3 sm:p-4">
+                        <div className="flex flex-col gap-3">
                             <div className="flex-1 relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Search customers..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-10 h-10 sm:h-11 border-2 focus-visible:border-primary text-sm sm:text-base"
+                                    className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
                                 />
                             </div>
                             <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
                                 <Select value={tierFilter} onValueChange={setTierFilter}>
-                                    <SelectTrigger className="h-10 sm:h-11 border-2 text-xs sm:text-sm">
+                                    <SelectTrigger className="h-10 sm:h-11 text-xs sm:text-sm">
                                         <SelectValue placeholder="Tier" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -421,7 +421,7 @@ export default function CustomersPage() {
                                     </SelectContent>
                                 </Select>
                                 <Select value={sortBy} onValueChange={setSortBy}>
-                                    <SelectTrigger className="h-10 sm:h-11 border-2 text-xs sm:text-sm">
+                                    <SelectTrigger className="h-10 sm:h-11 text-xs sm:text-sm">
                                         <SelectValue placeholder="Sort" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -432,7 +432,7 @@ export default function CustomersPage() {
                                         <SelectItem value="orders-desc">Most Orders</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <Button onClick={exportCustomersCsv} className="h-10 sm:h-11 px-4 sm:px-6 shadow-lg col-span-2 sm:col-span-1 text-xs sm:text-sm">
+                                <Button onClick={exportCustomersCsv} className="h-10 sm:h-11 px-4 sm:px-6 col-span-2 sm:col-span-1 text-xs sm:text-sm">
                                     <Download className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                     Export
                                 </Button>
@@ -461,7 +461,7 @@ export default function CustomersPage() {
                     <TabsContent value={currentTab} className="mt-4 sm:mt-6">
                         <div className="grid gap-3 sm:gap-4 md:gap-6">
                             {filteredCustomers.length === 0 ? (
-                                <Card className="border-2 shadow-xl">
+                                <Card>
                                     <CardContent className="py-8 sm:py-12">
                                         <div className="flex flex-col items-center gap-3 sm:gap-4">
                                             <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-muted flex items-center justify-center">
@@ -479,13 +479,18 @@ export default function CustomersPage() {
                                     {filteredCustomers.map((customer) => {
                                         const TierIcon = customerTierConfig[customer.tier].icon
                                         return (
-                                            <Card key={customer.id} className="border-2 hover:border-primary/50 transition-all duration-300 shadow-lg hover:shadow-xl overflow-hidden group">
-                                                <CardHeader className="pb-3 sm:pb-4 bg-gradient-to-r from-primary/5 to-primary/10 border-b p-3 sm:p-6">
+                                            <Card key={customer.id} className="hover:shadow-md transition-shadow overflow-hidden">
+                                                <CardHeader className="pb-3 sm:pb-4 bg-muted/40 border-b p-3 sm:p-4">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                                                            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-bold text-base sm:text-lg shadow-lg group-hover:scale-110 transition-transform flex-shrink-0">
-                                                                {customer.avatar}
-                                                            </div>
+                                                            <Avatar className="h-11 w-11 sm:h-12 sm:w-12 shrink-0 border">
+                                                                {customer.image ? (
+                                                                    <AvatarImage src={customer.image} alt={customer.name} />
+                                                                ) : null}
+                                                                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                                                                    {customer.avatar}
+                                                                </AvatarFallback>
+                                                            </Avatar>
                                                             <div className="min-w-0 flex-1">
                                                                 <CardTitle className="text-base sm:text-lg truncate">{customer.name}</CardTitle>
                                                                 <p className="text-xs sm:text-sm text-muted-foreground font-mono truncate">{customer.id}</p>
@@ -493,7 +498,7 @@ export default function CustomersPage() {
                                                         </div>
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" aria-label="Customer actions">
                                                                     <MoreVertical className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
@@ -526,7 +531,7 @@ export default function CustomersPage() {
                                                         </DropdownMenu>
                                                     </div>
                                                 </CardHeader>
-                                                <CardContent className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 p-3 sm:p-6">
+                                                <CardContent className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 p-3 sm:p-4">
                                                     {/* Tier Badge */}
                                                     <div className="flex items-center justify-between gap-2">
                                                         <Badge className={cn("gap-1.5 sm:gap-2 border text-xs", customerTierConfig[customer.tier].color)}>
@@ -586,14 +591,14 @@ export default function CustomersPage() {
                                                             <p className="text-muted-foreground mb-0.5 sm:mb-1">Joined</p>
                                                             <div className="flex items-center gap-0.5 sm:gap-1 font-semibold">
                                                                 <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                                                <span className="truncate">{new Date(customer.joinDate).toLocaleDateString()}</span>
+                                                                <span className="truncate">{customer.joinDate ? new Date(customer.joinDate).toLocaleDateString() : "—"}</span>
                                                             </div>
                                                         </div>
                                                         <div>
                                                             <p className="text-muted-foreground mb-0.5 sm:mb-1">Last Order</p>
                                                             <div className="flex items-center gap-0.5 sm:gap-1 font-semibold">
                                                                 <Package className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                                                <span className="truncate">{new Date(customer.lastOrder).toLocaleDateString()}</span>
+                                                                <span className="truncate">{customer.lastOrder ? new Date(customer.lastOrder).toLocaleDateString() : "—"}</span>
                                                             </div>
                                                         </div>
                                                     </div>

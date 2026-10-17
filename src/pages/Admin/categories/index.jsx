@@ -157,51 +157,89 @@ export default function AdminCategoriesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-16 w-16 animate-spin rounded-full border-4 border-muted border-t-primary" />
-          <p className="font-semibold">Loading Categories</p>
+      <div className="flex items-center justify-center p-4 sm:p-8">
+        <div className="flex flex-col items-center gap-4 py-10">
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-muted border-t-primary" />
+          <p className="text-sm sm:text-base font-semibold">Loading Categories</p>
         </div>
       </div>
     );
   }
 
+  const totalProducts = Object.values(productCounts).reduce(
+    (n, c) => n + Number(c ?? 0),
+    0,
+  );
+
+  const kpis = [
+    {
+      title: "Categories",
+      value: categories.length,
+      icon: Tags,
+      tile: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+    },
+    {
+      title: "Categorized products",
+      value: totalProducts,
+      icon: Plus,
+      tile: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <div className="container mx-auto p-0 space-y-4 sm:space-y-6 max-w-6xl">
         {loadError && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
             <span className="flex-1 text-destructive">{loadError}</span>
             <Button onClick={fetchAll} variant="outline" size="sm">Retry</Button>
           </div>
         )}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 via-purple-500 to-indigo-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center">
-                <Tags className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">Categories</h1>
-                <p className="text-white/80 text-sm mt-1">{categories.length} categories · live from database</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={fetchAll} className="bg-white/20 text-white hover:bg-white/30 border-0">
-                <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-              </Button>
-              <Button onClick={openCreate} className="bg-white text-purple-700 hover:bg-white/90">
-                <Plus className="h-4 w-4 mr-2" /> New Category
-              </Button>
-            </div>
+        {/* Page header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Categories</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+              {categories.length} categories · live from database
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={fetchAll}>
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
+            </Button>
+            <Button size="sm" className="h-8 text-xs" onClick={openCreate}>
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> New category
+            </Button>
           </div>
         </div>
 
-        <Card className="border-2 shadow-xl overflow-hidden">
+        {/* KPI cards */}
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 max-w-xl">
+          {kpis.map((k) => {
+            const Icon = k.icon;
+            return (
+              <Card key={k.title}>
+                <CardContent className="p-4 sm:p-5">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${k.tile}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">{k.title}</p>
+                      <p className="text-lg sm:text-2xl font-bold tabular-nums">{k.value}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        <Card className="overflow-hidden">
           <div className="overflow-x-auto">
-            <Table>
+            <Table className="min-w-[640px]">
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow>
                   <TableHead className="font-semibold">ID</TableHead>
                   <TableHead className="font-semibold">Name</TableHead>
                   <TableHead className="font-semibold">Products</TableHead>
@@ -212,32 +250,34 @@ export default function AdminCategoriesPage() {
               <TableBody>
                 {categories.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-12">
-                      <p className="font-semibold text-lg">No categories found</p>
-                      <p className="text-muted-foreground text-sm">Create your first category to organize products.</p>
+                    <TableCell colSpan={5} className="text-center py-10 sm:py-12">
+                      <p className="font-semibold text-base sm:text-lg">No categories found</p>
+                      <p className="text-muted-foreground text-xs sm:text-sm mt-1">Create your first category to organize products.</p>
                     </TableCell>
                   </TableRow>
                 ) : (
                   categories.map((cat) => (
-                    <TableRow key={cat.id ?? cat._id} className="hover:bg-muted/30">
-                      <TableCell className="font-mono text-primary font-semibold">{cat.id}</TableCell>
-                      <TableCell className="font-semibold">{cat.name}</TableCell>
-                      <TableCell>{productCounts[cat.id] ?? productCounts[cat.name] ?? 0}</TableCell>
+                    <TableRow key={cat.id ?? cat._id}>
+                      <TableCell className="font-mono text-primary font-semibold whitespace-nowrap">{cat.id}</TableCell>
+                      <TableCell className="font-semibold whitespace-nowrap">{cat.name}</TableCell>
+                      <TableCell className="tabular-nums">{productCounts[cat.id] ?? productCounts[cat.name] ?? 0}</TableCell>
                       <TableCell className="max-w-xs truncate text-muted-foreground">{cat.description || "—"}</TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => openEdit(cat)}>
-                          <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          disabled={deletingId === cat.id}
-                          onClick={() => remove(cat)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 mr-1" />
-                          {deletingId === cat.id ? "Deleting…" : "Delete"}
-                        </Button>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end flex-wrap gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openEdit(cat)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            disabled={deletingId === cat.id}
+                            onClick={() => remove(cat)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            {deletingId === cat.id ? "Deleting…" : "Delete"}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -248,14 +288,14 @@ export default function AdminCategoriesPage() {
         </Card>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing ? "Edit Category" : "New Category"}</DialogTitle>
               <DialogDescription>
                 {editing ? "Update the category details below." : "Create a new product category."}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-4 py-2">
               <div className="space-y-1.5">
                 <Label>ID {editing && "(locked)"}</Label>
                 <Input
@@ -273,7 +313,7 @@ export default function AdminCategoriesPage() {
                   placeholder="e.g. Microcontrollers"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label>Icon</Label>
                   <Input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} placeholder="icon name/url" />
@@ -288,9 +328,9 @@ export default function AdminCategoriesPage() {
                 <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What belongs in this category?" />
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={save} disabled={saving}>{saving ? "Saving…" : editing ? "Save Changes" : "Create"}</Button>
+            <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+              <Button onClick={save} disabled={saving} className="w-full sm:w-auto">{saving ? "Saving…" : editing ? "Save Changes" : "Create"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
