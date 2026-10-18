@@ -463,7 +463,13 @@ export const useOrderStore = create((set) => ({
     set({ loading: true, error: null });
     try {
       const orders = await ordersApi.userOrders();
-      set({ orders: Array.isArray(orders) ? orders : [], loading: false });
+      set({
+        orders: Array.isArray(orders)
+          ? orders.sort((a, b) => b.updatedAt - a.updatedAt)
+          : [],
+        loading: false,
+      });
+      console.log("Fetched user orders:", orders);
     } catch (err) {
       set({ loading: false, error: err });
     }
