@@ -87,42 +87,50 @@ const STATUS_META = {
   pending: {
     label: "Pending Payment",
     icon: AlertCircle,
-    className: "border-transparent bg-amber-500/10 text-amber-600",
+    className:
+      "border-transparent bg-amber-500/10 text-amber-600 border-amber-500/50 border-solid",
   },
   confirmed: {
     label: "Confirmed",
     icon: CheckCircle2,
-    className: "border-transparent bg-emerald-500/10 text-emerald-600",
+    className:
+      "border-transparent bg-emerald-500/10 text-emerald-600 border-emerald-500/50 border-solid",
   },
   processing: {
     label: "Processing",
     icon: PackageOpen,
-    className: "border-transparent bg-amber-500/10 text-amber-600",
+    className:
+      "border-transparent bg-amber-500/10 text-amber-600 border-amber-500/50 border-solid",
   },
   shipped: {
     label: "Shipped",
     icon: Truck,
-    className: "border-transparent bg-blue-500/10 text-blue-600",
+    className:
+      "border-transparent bg-blue-500/10 text-blue-600 border-blue-500/50 border-solid",
   },
   delivered: {
     label: "Delivered",
     icon: PackageCheck,
-    className: "border-transparent bg-emerald-500/10 text-emerald-600",
+    className:
+      "border-transparent bg-emerald-500/10 text-emerald-600 border-emerald-500/50 border-dotted",
   },
   cancelled: {
     label: "Cancelled",
     icon: XCircle,
-    className: "border-transparent bg-red-500/10 text-red-600",
+    className:
+      "border-transparent bg-red-500/10 text-red-600 border-red-500/50 border-dashed",
   },
   return_requested: {
     label: "Return Requested",
     icon: RotateCcw,
-    className: "border-transparent bg-orange-500/10 text-orange-600",
+    className:
+      "border-transparent bg-orange-500/10 text-orange-600 border-orange-500/50 border-dashed",
   },
   returned: {
     label: "Returned",
     icon: Undo2,
-    className: "border-transparent bg-purple-500/10 text-purple-600",
+    className:
+      "border-transparent bg-purple-500/10 text-purple-600 border-purple-500/50 border-dashed",
   },
 };
 
@@ -621,25 +629,25 @@ export default function Orderhistory() {
               icon={ShoppingBag}
               label="Total orders"
               value={stats.total}
-              tone="bg-primary/10 text-primary"
+              tone="bg-background text-primary"
             />
             <StatCard
               icon={Wallet}
               label="Total spent"
               value={formatMoney(stats.spent)}
-              tone="bg-emerald-500/10 text-emerald-600"
+              tone="bg-background text-emerald-600"
             />
             <StatCard
               icon={Truck}
               label="In progress"
               value={stats.active}
-              tone="bg-amber-500/10 text-amber-600"
+              tone="bg-background text-amber-600"
             />
             <StatCard
               icon={PackageCheck}
               label="Delivered"
               value={stats.delivered}
-              tone="bg-blue-500/10 text-blue-600"
+              tone="bg-background text-blue-600"
             />
           </div>
         )}
