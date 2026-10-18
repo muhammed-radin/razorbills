@@ -21,10 +21,19 @@ import { Badge } from "@/components/ui/badge";
 import { Logo } from "../logo";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { useStoreInfo } from "@/utils/store";
 
 export const Footer = () => {
   const { t } = useTranslation();
+  const store = useStoreInfo();
   const [email, setEmail] = useState("");
+
+  const socialLinks = [
+    { icon: AtSign, label: "Instagram", href: store.social.instagram },
+    { icon: Play, label: "YouTube", href: store.social.youtube },
+    { icon: Globe, label: "Website", href: store.social.website },
+    { icon: Share2, label: "WhatsApp", href: store.social.whatsapp },
+  ].filter((s) => s.href);
 
   const columns = [
     {
@@ -89,7 +98,7 @@ export const Footer = () => {
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!email.includes("@")) return toast.error(t("footer.invalidEmail"));
-                toast.success(t("footer.subscribed"));
+                toast.success(t("footer.subscribed", { brand: store.name }));
                 setEmail("");
               }}
             >
@@ -114,25 +123,39 @@ export const Footer = () => {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-muted-foreground leading-relaxed">
-            {t("footer.tagline")}
+            {store.tagline}
           </p>
           <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <p className="inline-flex items-center gap-2"><MapPin className="size-4" /> {t("footer.location")}</p>
-            <p className="flex items-center gap-2"><Phone className="size-4" /> +91 98470 00000</p>
-            <p className="flex items-center gap-2"><Mail className="size-4" /> care@razorbills.in</p>
+            <p className="inline-flex items-center gap-2">
+              <MapPin className="size-4" /> {store.address.cityState}
+            </p>
+            <p className="flex items-center gap-2">
+              <Phone className="size-4" />
+              <a
+                href={`tel:${store.phone.replace(/[^+\d]/g, "")}`}
+                className="hover:text-foreground"
+              >
+                {store.phone}
+              </a>
+            </p>
+            <p className="flex items-center gap-2">
+              <Mail className="size-4" />
+              <a
+                href={`mailto:${store.emailCare}`}
+                className="hover:text-foreground"
+              >
+                {store.emailCare}
+              </a>
+            </p>
           </div>
           <div className="mt-4 flex gap-2">
-            {[
-              { icon: AtSign, label: "Instagram" },
-              { icon: Play, label: "YouTube" },
-              { icon: Globe, label: "Website" },
-              { icon: Share2, label: "Share" },
-            ].map((s) => (
+            {socialLinks.map((s) => (
               <a
                 key={s.label}
                 aria-label={s.label}
-                href="#"
-                onClick={(e) => e.preventDefault()}
+                href={s.href}
+                target={s.href.startsWith("http") ? "_blank" : undefined}
+                rel="noreferrer"
                 className="grid size-10 place-items-center rounded-2xl border bg-background transition hover:-translate-y-0.5 hover:shadow-md"
               >
                 <s.icon className="size-4" />
@@ -181,7 +204,7 @@ export const Footer = () => {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Separator className="mt-6" />
         <div className="py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} RazorBills. {t("footer.allRightsReserved")}</span>
+          <span>&copy; {new Date().getFullYear()} {store.legalName}. {t("footer.allRightsReserved")}</span>
           <span className="inline-flex items-center gap-3">
             <Link to="/privacy" className="hover:text-foreground">{t("footer.privacy")}</Link>
             <Link to="/terms" className="hover:text-foreground">{t("footer.terms")}</Link>

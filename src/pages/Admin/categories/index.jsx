@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Tags, Plus, Pencil, Trash2, RefreshCw } from "lucide-react";
+import {
+  Tags,
+  Plus,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  ImagePlus,
+  Link2,
+  X,
+  Loader2,
+} from "lucide-react";
+import { DynamicIcon } from "lucide-react/dynamic";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +39,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { IconPicker } from "@/components/ui/icon-picker";
+import { convertToWebp, uploadToCloudinary } from "@/utils/image-upload";
 import { categoriesApi, productsApi } from "@/services/shop";
 
 const emptyForm = { id: "", name: "", icon: "", Logo: "", description: "" };
@@ -42,6 +56,40 @@ export default function AdminCategoriesPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+
+  /* Logo upload: the file is converted to .webp (≤524px, compressed)
+   * immediately for preview, but ONLY uploaded to Cloudinary after the
+   * admin confirms with Save. */
+  const [logoPending, setLogoPending] = useState(null); // {file, preview, originalName}
+  const [logoProgress, setLogoProgress] = useState(0);
+  const [logoMode, setLogoMode] = useState("upload"); // "upload" | "url"
+
+  const resetLogo = () => {
+    if (logoPending?.preview) URL.revokeObjectURL(logoPending.preview);
+    setLogoPending(null);
+    setLogoProgress(0);
+  };
+
+  const handleLogoFile = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file");
+      return;
+    }
+    try {
+      const webp = await convertToWebp(file, { maxSize: 524, quality: 0.8 });
+      if (logoPending?.preview) URL.revokeObjectURL(logoPending.preview);
+      setLogoPending({
+        file: webp,
+        preview: URL.createObjectURL(webp),
+        originalName: file.name,
+      });
+      setLogoMode("upload");
+    } catch (error) {
+      console.error("WebP conversion failed:", error);
+      toast.error("Could not process the image. Use PNG/JPG/WebP.");
+    }
+  };
 
   useEffect(() => {
     fetchAll();
@@ -87,6 +135,8 @@ export default function AdminCategoriesPage() {
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    resetLogo();
+    setLogoMode("upload");
     setDialogOpen(true);
   };
 
@@ -99,6 +149,8 @@ export default function AdminCategoriesPage() {
       Logo: cat.Logo ?? "",
       description: cat.description ?? "",
     });
+    resetLogo();
+    setLogoMode("upload");
     setDialogOpen(true);
   };
 
@@ -110,11 +162,26 @@ export default function AdminCategoriesPage() {
     if (saving) return;
     try {
       setSaving(true);
+      // Upload happens here — the admin has confirmed the converted .webp
+      // preview by pressing Save.
+      let logoValue = form.Logo;
+      if (logoMode === "upload" && logoPending) {
+        try {
+          logoValue = await uploadToCloudinary(logoPending.file, {
+            onProgress: (p) => setLogoProgress(p),
+          });
+        } catch (uploadError) {
+          console.error("Logo upload failed:", uploadError);
+          toast.error("Logo upload failed: " + uploadError.message);
+          return; // keep the dialog + form so nothing is lost
+        }
+        setForm((f) => ({ ...f, Logo: logoValue }));
+      }
       if (editing) {
         await categoriesApi.update(editing.id, {
           name: form.name.trim(),
           icon: form.icon,
-          Logo: form.Logo,
+          Logo: logoValue,
           description: form.description,
         });
         toast.success("Category updated");
@@ -123,11 +190,12 @@ export default function AdminCategoriesPage() {
           id: form.id.trim().toLowerCase().replace(/\s+/g, "-"),
           name: form.name.trim(),
           icon: form.icon,
-          Logo: form.Logo,
+          Logo: logoValue,
           description: form.description,
         });
         toast.success("Category created");
       }
+      resetLogo();
       setDialogOpen(false);
       await fetchAll();
     } catch (error) {
@@ -259,7 +327,32 @@ export default function AdminCategoriesPage() {
                   categories.map((cat) => (
                     <TableRow key={cat.id ?? cat._id}>
                       <TableCell className="font-mono text-primary font-semibold whitespace-nowrap">{cat.id}</TableCell>
-                      <TableCell className="font-semibold whitespace-nowrap">{cat.name}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        <div className="flex items-center gap-2.5">
+                          {cat.Logo ? (
+                            <img
+                              src={cat.Logo}
+                              alt={`${cat.name} logo`}
+                              className="h-8 w-8 rounded-md border object-cover shrink-0"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                            />
+                          ) : cat.icon ? (
+                            <span className="h-8 w-8 rounded-md border bg-muted/40 flex items-center justify-center shrink-0">
+                              <DynamicIcon name={cat.icon} className="h-4 w-4 text-primary" />
+                            </span>
+                          ) : (
+                            <span className="h-8 w-8 rounded-md border bg-muted/40 flex items-center justify-center shrink-0 text-muted-foreground text-xs">
+                              {cat.name?.charAt(0)?.toUpperCase() ?? "?"}
+                            </span>
+                          )}
+                          <span className="font-semibold">{cat.name}</span>
+                          {cat.icon && (
+                            <Badge variant="outline" className="hidden lg:inline-flex font-normal text-muted-foreground max-w-24 truncate">
+                              {cat.icon}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                       <TableCell className="tabular-nums">{productCounts[cat.id] ?? productCounts[cat.name] ?? 0}</TableCell>
                       <TableCell className="max-w-xs truncate text-muted-foreground">{cat.description || "—"}</TableCell>
                       <TableCell className="text-right">
@@ -296,31 +389,130 @@ export default function AdminCategoriesPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
-              <div className="space-y-1.5">
-                <Label>ID {editing && "(locked)"}</Label>
-                <Input
-                  value={form.id}
-                  disabled={!!editing}
-                  onChange={(e) => setForm({ ...form, id: e.target.value })}
-                  placeholder="e.g. microcontrollers"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Name</Label>
-                <Input
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Microcontrollers"
-                />
-              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label>Icon</Label>
-                  <Input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} placeholder="icon name/url" />
+                  <Label>ID {editing && "(locked)"}</Label>
+                  <Input
+                    value={form.id}
+                    disabled={!!editing}
+                    onChange={(e) => setForm({ ...form, id: e.target.value })}
+                    placeholder="e.g. microcontrollers"
+                  />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Logo</Label>
-                  <Input value={form.Logo} onChange={(e) => setForm({ ...form, Logo: e.target.value })} placeholder="logo url" />
+                  <Label>Name</Label>
+                  <Input
+                    value={form.name}
+                    onChange={(e) => {
+                      const name = e.target.value;
+                      setForm((f) => ({
+                        ...f,
+                        name,
+                        id: editing ? f.id : name.toLowerCase().replace(/\s+/g, "-"),
+                      }));
+                    }}
+                    placeholder="e.g. Microcontrollers"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+                {/* Icon — optimized picker: fuzzy search, virtualized grid,
+                    category jump buttons. Stores the lucide icon name. */}
+                <div className="space-y-1.5">
+                  <Label>Icon</Label>
+                  <IconPicker
+                    className="z-[400]"
+                    zIndex={400}
+                    value={form.icon}
+                    onValueChange={(value) => setForm((f) => ({ ...f, icon: value }))}
+                    triggerPlaceholder="Pick an icon…"
+                  />
+                  {form.icon && (
+                    <p className="text-[11px] text-muted-foreground">
+                      lucide: <span className="font-mono">{form.icon}</span>
+                    </p>
+                  )}
+                </div>
+
+                {/* Logo image — .webp conversion + Cloudinary upload on save */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label>Logo image</Label>
+                    <button
+                      type="button"
+                      className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                      onClick={() => setLogoMode((m) => (m === "upload" ? "url" : "upload"))}
+                    >
+                      {logoMode === "upload" ? "Use URL instead" : "Upload file instead"}
+                    </button>
+                  </div>
+                  {logoMode === "upload" ? (
+                    <div className="rounded-lg border-2 border-dashed p-3 text-center">
+                      {logoPending ? (
+                        <div className="flex items-center gap-3 text-left">
+                          <img
+                            src={logoPending.preview}
+                            alt="Logo preview"
+                            className="h-12 w-12 rounded-md border object-cover"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium truncate">
+                              {logoPending.originalName}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              converted .webp · uploads on save
+                              {logoProgress > 0 && logoProgress < 100
+                                ? ` · ${logoProgress}%`
+                                : ""}
+                            </p>
+                          </div>
+                          {saving ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                          ) : (
+                            <button
+                              type="button"
+                              aria-label="Remove logo file"
+                              onClick={resetLogo}
+                              className="rounded-md p-1 hover:bg-muted"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <label className="flex cursor-pointer flex-col items-center gap-1 py-2">
+                          <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">
+                            Click to choose an image — converted to .webp,
+                            max 524px
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              handleLogoFile(e.target.files?.[0]);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      )}
+                      {form.Logo && !logoPending && (
+                        <p className="mt-1 text-[11px] text-muted-foreground truncate">
+                          current: {form.Logo}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <Input
+                        value={form.Logo}
+                        onChange={(e) => setForm({ ...form, Logo: e.target.value })}
+                        placeholder="https://… logo url"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="space-y-1.5">

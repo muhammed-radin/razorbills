@@ -1,4 +1,4 @@
-import { test, expect, API } from "./helpers.js";
+import { test, expect, API, encryptAddressForTest } from "./helpers.js";
 import { loginAs, signupAs } from "./flow.js";
 
 const ADMIN_EMAIL = "pw-admin@example.com";
@@ -76,28 +76,26 @@ test.describe.serial("customer: COD checkout journey", () => {
   }) => {
     customer = await signupAs(page, "cod");
     // Save an address via the real API (same encryption + validation as UI).
-    const addrStatus = await page.evaluate(async ({ API }) => {
-      const { encryptAddress } = await import("/src/utils/crypt.js");
-      const address = {
-        id: `addr-${Date.now()}`,
-        name: "PW Customer",
-        phoneNumber: "+919847000000",
-        email: "pw-cod@example.com",
-        street: "12 Test Street, Kottakkal",
-        city: "Malappuram",
-        state: "Kerala",
-        postalCode: "676505",
-        country: "India",
-        type: "home",
-      };
+    const addrStatus = await page.evaluate(async ({ API, encAddr }) => {
       const res = await fetch(`${API}/api/address`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: encryptAddress(address) }),
+        body: JSON.stringify({ address: encAddr }),
       });
       return res.status;
-    }, { API });
+    }, { API, encAddr: encryptAddressForTest({
+      id: `addr-${Date.now()}`,
+      name: "PW Customer",
+      phoneNumber: "+919847000000",
+      email: "pw-cod@example.com",
+      street: "12 Test Street, Kottakkal",
+      city: "Malappuram",
+      state: "Kerala",
+      postalCode: "676505",
+      country: "India",
+      type: "home",
+    }) });
     expect(addrStatus, "address save").toBe(200);
 
     // Browse -> product page -> add to cart (real UI).

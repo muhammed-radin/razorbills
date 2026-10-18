@@ -28,6 +28,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { useEffect } from "react";
+import { useStoreInfo } from "@/utils/store";
 import { useUserSession } from "@/contexts/user-session-context";
 import { decrypt } from "@/utils/crypt";
 
@@ -106,10 +107,11 @@ export function AdminSidebar({
   ...props
 }) {
   const location = useLocation();
+  const store = useStoreInfo();
   const navItemsKeys = Object.keys(navItems);
   const { data: session } = useUserSession();
   const adminName = session?.user?.name ?? "Admin User";
-  const adminEmail = session?.user?.email ?? "admin@razorbills.com";
+  const adminEmail = session?.user?.email ?? store.emailSupport;
 
   // Update page info when location changes
   useEffect(() => {
@@ -130,7 +132,7 @@ export function AdminSidebar({
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold">Admin Panel</span>
-            <span className="text-xs text-muted-foreground">Razorbills</span>
+            <span className="text-xs text-muted-foreground">{store.name}</span>
           </div>
         </div>
       </SidebarHeader>

@@ -1,9 +1,29 @@
 import { test as base, expect, request as pwRequest } from "@playwright/test";
+import CryptoJS from "crypto-js";
+import { readFileSync } from "node:fs";
 
 export const test = base;
 export { expect };
 
 export const API = "http://localhost:3000";
+
+/* Address encryption in Node — identical scheme to src/utils/crypt.js
+ * (CryptoJS AES with the VITE_CRYPTED key, JSON.stringify per field).
+ * Used instead of in-page `import("/src/utils/crypt.js")`, which only works
+ * when the app is served by vite dev (vite preview serves a static build). */
+const CRYPT_KEY =
+  (readFileSync(new URL("../Server/.env", import.meta.url), "utf8").match(
+    /VITE_CRYPTED(?:_STRICT)?="([^"]+)"/,
+  ) || [])[1] ?? "12345678";
+
+export function encryptAddressForTest(address) {
+  return Object.fromEntries(
+    Object.entries(address).map(([key, value]) => [
+      key,
+      key === "id" ? value : CryptoJS.AES.encrypt(JSON.stringify(value), CRYPT_KEY).toString(),
+    ]),
+  );
+}
 
 /** Fresh API context (no cookies) for negative/security tests. */
 export async function apiContext() {
@@ -18,7 +38,10 @@ export function rand(suffix = "") {
 export async function dbHelper(action, email) {
   const { execFile } = await import("node:child_process");
   const { readFileSync } = await import("node:fs");
-  // Load Server/.env (MONGODB_URI lives there, not in the test env).
+  // DB resolution order: explicit process env (the documented test convention
+  // `MONGODB_URI=mongodb://127.0.0.1:27017/razorbills …`), then Server/.env.
+  // Never assume .env alone — it may point at a different environment than
+  // the server under test.
   const env = { ...process.env };
   try {
     for (const line of readFileSync("Server/.env", "utf8").split("\n")) {

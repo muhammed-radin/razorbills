@@ -188,9 +188,25 @@ test.describe.serial("admin: cancel/return request decisions", () => {
     await loginAs(m, ADMIN_EMAIL, ADMIN_PW);
     await m.goto("/#/auth/admin/orders", { waitUntil: "domcontentloaded" });
     await m.waitForTimeout(4000);
-    // Open the first order's cancel sheet via its row menu.
-    await m.getByRole("button", { name: /order actions/i }).first().click();
-    await m.getByRole("menuitem", { name: /cancel order/i }).click();
+    // Newest rows may already be cancelled/delivered by other suites —
+    // iterate through the page's order menus until one offers "Cancel Order".
+    const triggers = m.getByRole("button", { name: /order actions/i });
+    const triggerCount = Math.min(await triggers.count(), 10);
+    let opened = false;
+    for (let i = 0; i < triggerCount; i++) {
+      await triggers.nth(i).click();
+      const item = m.getByRole("menuitem", { name: /cancel order/i }).first();
+      try {
+        await item.waitFor({ state: "visible", timeout: 3500 });
+        opened = true;
+        break;
+      } catch {
+        await m.keyboard.press("Escape");
+        await m.waitForTimeout(600);
+      }
+    }
+    expect(opened, "no cancelable order among the newest orders").toBe(true);
+    await m.getByRole("menuitem", { name: /cancel order/i }).first().click();
     const sheet = m.locator('[role="dialog"]');
     await expect(sheet.first()).toBeVisible({ timeout: 15000 });
     // Let the slide-in animation finish before measuring geometry.

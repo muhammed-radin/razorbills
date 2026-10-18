@@ -25,6 +25,7 @@ import {
 } from "./utils/middlewares/errorHandler.js";
 import { evt } from "./utils/events.manage.js";
 import tallyDebug from "./utils/debug.js";
+import { storeConfig } from "./shared/store.config.js";
 
 validateStartupConfig();
 
@@ -134,7 +135,9 @@ if (
   (process.argv[1].endsWith("/app.js") || process.argv[1].endsWith("\\app.js"))
 ) {
   app.listen(process.env.PORT, () => {
-    console.log("Server is running on http://localhost:" + process.env.PORT);
+    console.log(
+      `${storeConfig.brand.shortName} server is running on http://localhost:${process.env.PORT}`,
+    );
   });
 }
 

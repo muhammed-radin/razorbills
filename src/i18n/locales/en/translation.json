@@ -95,7 +95,7 @@
     "terms": "Terms",
     "shipping": "Shipping",
     "invalidEmail": "Enter a valid email",
-    "subscribed": "Subscribed! Welcome to Razorbills."
+    "subscribed": "Subscribed! Welcome to {{brand}}."
   },
   "home": {
     "helmetTitle": "RazorBills - High-Quality Electronic Components",
@@ -516,7 +516,7 @@
     "nonReturnable3": "Clearance or discounted products (if mentioned at purchase)",
     "nonReturnable4": "Products returned without prior approval",
     "howToRequest": "How to Request a Return",
-    "step1": "Contact us at support@razorbills.com",
+    "step1": "Contact us at {{email}}",
     "step2": "Share your order ID, product details, and clear images or videos of the issue",
     "step3": "Our team will review the request and respond within 2 business days",
     "approvalNote": "Returns must be approved before shipping the product back.",
@@ -672,7 +672,7 @@
     "contactTitle": "Contact Us",
     "contactDesc": "If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:",
     "team": "RazorBills Privacy Team",
-    "email": "Email: privacy@razorbills.com",
+    "email": "Email: {{email}}",
     "commitment": "We are committed to resolving any privacy-related concerns promptly and transparently.",
     "footerNote": "© {{year}} RazorBills. Your privacy is our priority."
   },

@@ -169,6 +169,44 @@ const getStatus = (status) =>
         dotColor: "bg-gray-500",
     };
 
+/* One kebab-menu component for both the desktop table and mobile cards.
+ * Content comes from getOrderActionMenu(order) — only operations valid for
+ * the order's CURRENT state are listed, so e.g. a cancelled order has no
+ * Cancel button and unaired orders have no Track button. */
+function OrderActionMenu({ items, statusLabel }) {
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Order actions">
+                    <MoreVertical className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Actions · {statusLabel}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {items.length === 0 ? (
+                    <p className="px-2 py-3 text-xs text-muted-foreground">
+                        No actions available for this order state.
+                    </p>
+                ) : (
+                    items.map((item) => (
+                        <React.Fragment key={item.key}>
+                            {item.sepBefore ? <DropdownMenuSeparator /> : null}
+                            <DropdownMenuItem
+                                className={cn(item.danger && "text-red-600 focus:text-red-600 focus:bg-red-500/10")}
+                                onClick={item.onClick}
+                            >
+                                <item.icon className="mr-2 h-4 w-4" />
+                                {item.label}
+                            </DropdownMenuItem>
+                        </React.Fragment>
+                    ))
+                )}
+            </DropdownMenuContent>
+        </DropdownMenu>
+    )
+}
+
 /* Customer cancel / return requests awaiting an admin decision.
  * Fully responsive: stacked cards on mobile, comfortable grid on desktop. */
 function RequestGroup({ title, icon, tone, orders, kind, onDecide }) {
@@ -723,6 +761,64 @@ export default function OrdersPage() {
     const opCollectCod = (order) =>
         runAdminOp("COD collected", () => paymentsApi.collectCod(order.id, order.total))
 
+    /* Dynamic per-status action list. Rules mirror the backend state
+     * machine: order.status moves pending→confirmed→processing→shipped→
+     * delivered while packing lives on fulfillment.status (packed), so both
+     * are consulted — e.g. "Mark Shipped" only appears once an AWB exists.
+     * Customer cancel/return requests surface as approve/deny entries. */
+    const getOrderActionMenu = (order) => {
+        const status = order.status
+        const fulfillment = order.fulfillmentStatus ?? "unfulfilled"
+        const cancelRequested = order.raw?.cancellation?.status === "requested"
+        const returnRequested = order.raw?.return?.status === "requested"
+        const cancelable = ["pending", "confirmed", "processing"].includes(status)
+        const items = [
+            { key: "edit", label: "Edit Order", icon: Eye, onClick: () => handleEditOrder(order) },
+            { key: "status", label: "Update Status", icon: Truck, onClick: () => handleUpdateStatus(order) },
+        ]
+
+        if (cancelRequested) {
+            items.push(
+                { key: "cancel-approve", label: "Approve Cancel Request", icon: CheckCircle2, danger: false, sepBefore: true, onClick: () => openDecision(order, "cancel", "approve") },
+                { key: "cancel-deny", label: "Deny Cancel Request…", icon: XCircle, danger: true, onClick: () => openDecision(order, "cancel", "reject") },
+            )
+        } else if (cancelable) {
+            items.push({ key: "cancel", label: "Cancel Order", icon: XCircle, danger: true, sepBefore: true, onClick: () => handleCancelOrder(order) })
+        }
+
+        if (returnRequested) {
+            items.push(
+                { key: "return-approve", label: "Approve Return Request", icon: Undo2, sepBefore: true, onClick: () => openDecision(order, "return", "approve") },
+                { key: "return-deny", label: "Deny Return Request…", icon: XCircle, danger: true, onClick: () => openDecision(order, "return", "reject") },
+            )
+        }
+
+        if (status === "pending" || status === "confirmed") {
+            items.push({ key: "process", label: "Move to Processing", icon: RefreshCw, sepBefore: true, onClick: () => opProcess(order) })
+        }
+        if (status === "processing" && ["unfulfilled", "processing"].includes(fulfillment)) {
+            items.push({ key: "packed", label: "Mark Packed", icon: Package, sepBefore: true, onClick: () => opPacked(order) })
+        }
+        if (status === "processing" && fulfillment === "packed") {
+            items.push(
+                order.awb
+                    ? { key: "ship", label: "Mark Shipped", icon: Truck, sepBefore: true, onClick: () => opShip(order) }
+                    : { key: "shipment", label: "Create Shipmozo Shipment", icon: Truck, sepBefore: true, onClick: () => opCreateShipment(order) },
+            )
+        }
+        if (status === "shipped") {
+            items.push({ key: "deliver", label: "Mark Delivered", icon: CheckCircle2, sepBefore: true, onClick: () => opDeliver(order) })
+        }
+        if (order.awb) {
+            items.push({ key: "track", label: "Track Shipment", icon: Eye, onClick: () => opTrackShipment(order) })
+        }
+        if (order.paymentMethod === "cod" && order.codStatus === "pending_collection" && !["cancelled", "returned"].includes(status)) {
+            items.push({ key: "cod", label: "Collect COD", icon: DollarSign, onClick: () => opCollectCod(order) })
+        }
+        items.push({ key: "invoice", label: "Generate Invoice", icon: FileText, sepBefore: true, onClick: () => downloadInvoice(order) })
+        return items
+    }
+
     const filteredOrders = orders
         .filter(order => {
             const matchesSearch =
@@ -986,64 +1082,10 @@ export default function OrdersPage() {
                                                                 {new Date(order.date).toLocaleDateString()}
                                                             </div>
                                                         </div>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Order actions">
-                                                                    <MoreVertical className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" className="w-48">
-                                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem onClick={() => handleEditOrder(order)}>
-                                                                    <Eye className="mr-2 h-4 w-4" />
-                                                                    Edit Order
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => handleUpdateStatus(order)}>
-                                                                    <Truck className="mr-2 h-4 w-4" />
-                                                                    Update Status
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => opProcess(order)}>
-                                                                    <RefreshCw className="mr-2 h-4 w-4" />
-                                                                    Move to Processing
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => opPacked(order)}>
-                                                                    <Package className="mr-2 h-4 w-4" />
-                                                                    Mark Packed
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => opCreateShipment(order)}>
-                                                                    <Truck className="mr-2 h-4 w-4" />
-                                                                    Create Shipmozo Shipment
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => opShip(order)}>
-                                                                    <Truck className="mr-2 h-4 w-4" />
-                                                                    Mark Shipped
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => opTrackShipment(order)}>
-                                                                    <Eye className="mr-2 h-4 w-4" />
-                                                                    Track Shipment
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem onClick={() => opDeliver(order)}>
-                                                                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                                                                    Mark Delivered
-                                                                </DropdownMenuItem>
-                                                                {order.paymentMethod === "cod" && (
-                                                                    <DropdownMenuItem onClick={() => opCollectCod(order)}>
-                                                                        <DollarSign className="mr-2 h-4 w-4" />
-                                                                        Collect COD
-                                                                    </DropdownMenuItem>
-                                                                )}
-                                                                <DropdownMenuItem onClick={() => downloadInvoice(order)}>
-                                                                    <FileText className="mr-2 h-4 w-4" />
-                                                                    Generate Invoice
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuSeparator />
-                                                                <DropdownMenuItem className="text-red-600" onClick={() => handleCancelOrder(order)}>
-                                                                    <XCircle className="mr-2 h-4 w-4" />
-                                                                    Cancel Order
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
+                                                        <OrderActionMenu
+                                                            items={getOrderActionMenu(order)}
+                                                            statusLabel={getStatus(order.status).label}
+                                                        />
                                                     </div>
 
                                                     {/* Customer Info */}
@@ -1166,64 +1208,10 @@ export default function OrdersPage() {
                                                             </div>
                                                         </TableCell>
                                                         <TableCell className="text-right">
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Order actions">
-                                                                        <MoreVertical className="h-4 w-4" />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end" className="w-48">
-                                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem onClick={() => handleEditOrder(order)}>
-                                                                        <Eye className="mr-2 h-4 w-4" />
-                                                                        Edit Order
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={() => handleUpdateStatus(order)}>
-                                                                        <Truck className="mr-2 h-4 w-4" />
-                                                                        Update Status
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={() => opProcess(order)}>
-                                                                        <RefreshCw className="mr-2 h-4 w-4" />
-                                                                        Move to Processing
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={() => opPacked(order)}>
-                                                                        <Package className="mr-2 h-4 w-4" />
-                                                                        Mark Packed
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={() => opCreateShipment(order)}>
-                                                                        <Truck className="mr-2 h-4 w-4" />
-                                                                        Create Shipmozo Shipment
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={() => opShip(order)}>
-                                                                        <Truck className="mr-2 h-4 w-4" />
-                                                                        Mark Shipped
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={() => opTrackShipment(order)}>
-                                                                        <Eye className="mr-2 h-4 w-4" />
-                                                                        Track Shipment
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem onClick={() => opDeliver(order)}>
-                                                                        <CheckCircle2 className="mr-2 h-4 w-4" />
-                                                                        Mark Delivered
-                                                                    </DropdownMenuItem>
-                                                                    {order.paymentMethod === "cod" && (
-                                                                        <DropdownMenuItem onClick={() => opCollectCod(order)}>
-                                                                            <DollarSign className="mr-2 h-4 w-4" />
-                                                                            Collect COD
-                                                                        </DropdownMenuItem>
-                                                                    )}
-                                                                    <DropdownMenuItem onClick={() => downloadInvoice(order)}>
-                                                                        <FileText className="mr-2 h-4 w-4" />
-                                                                        Generate Invoice
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuSeparator />
-                                                                    <DropdownMenuItem className="text-red-600" onClick={() => handleCancelOrder(order)}>
-                                                                        <XCircle className="mr-2 h-4 w-4" />
-                                                                        Cancel Order
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
+                                                            <OrderActionMenu
+                                                                items={getOrderActionMenu(order)}
+                                                                statusLabel={getStatus(order.status).label}
+                                                            />
                                                         </TableCell>
                                                     </TableRow>
                                                 )

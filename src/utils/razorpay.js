@@ -1,5 +1,6 @@
 // Razorpay Checkout.js loader + helpers (frontend only).
 // Never expose secrets here — only the public Key ID (VITE_RAZORPAY_KEY_ID).
+import { storeConfig } from "@shared/store.config";
 
 const CHECKOUT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 
@@ -39,11 +40,12 @@ export function openRazorpayCheckout({
     key: keyId,
     order_id: razorpayOrderId,
     amount: Math.round(Number(amountInr) * 100),
-    currency: "INR",
-    name: "Razorbills",
+    currency: storeConfig.site.currency,
+    name: storeConfig.brand.shortName,
     description: `Order ${orderId}`,
+    image: storeConfig.assets.ogImage,
     prefill,
-    theme: { color: "#111827" },
+    theme: { color: storeConfig.assets.themeColor },
     handler: (resp) => onSuccess?.(resp),
     modal: {
       ondismiss: () => onDismiss?.(),

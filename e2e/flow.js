@@ -43,9 +43,22 @@ export async function signupAs(page, tag) {
   const email = `pw-${Date.now().toString(36)}-${tag}@example.com`;
   const user = { name: `PW ${tag}`, email, password: "Test1234!" };
   await page.goto("/#/signup", { waitUntil: "domcontentloaded" });
-  await page.getByPlaceholder(/full name|name/i).first().fill(user.name);
-  await page.getByPlaceholder(/email/i).first().fill(user.email);
-  await page.getByPlaceholder(/password/i).first().fill(user.password);
+  // The signup form re-renders on mount (locale hydration) and can detach
+  // inputs mid-fill — retry each fill a few times.
+  const fillRetry = async (target, value) => {
+    for (let i = 0; i < 4; i++) {
+      try {
+        await target.fill(value, { timeout: 8000 });
+        return;
+      } catch (e) {
+        if (i === 3) throw e;
+        await page.waitForTimeout(1200);
+      }
+    }
+  };
+  await fillRetry(page.getByPlaceholder(/full name|name/i).first(), user.name);
+  await fillRetry(page.getByPlaceholder(/email/i).first(), user.email);
+  await fillRetry(page.getByPlaceholder(/password/i).first(), user.password);
   await page.getByRole("button", { name: /continue with email/i }).click();
   // Success lands on / (auto-login) or /login.
   await page.waitForURL(/.*#\/$|.*#\/login.*/, { timeout: 25000 });

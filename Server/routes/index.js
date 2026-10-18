@@ -17,8 +17,12 @@ import { devMiddleware } from "../utils/middlewares/dev.js";
 import { evt } from "../utils/events.manage.js";
 import logsRouter from "./logs.js";
 import analyticsRouter from "./analytics.js";
+import storeRouter from "./store.js";
 
 const router = express.Router();
+
+/* Store / brand config (public) */
+router.use("/store", storeRouter);
 
 /* Product routes */
 router.use("/products", productsRouter);

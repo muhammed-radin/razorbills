@@ -1,4 +1,4 @@
-import { test, expect, API } from "./helpers.js";
+import { test, expect, API, encryptAddressForTest } from "./helpers.js";
 import { loginAs, signupAs } from "./flow.js";
 
 const ADMIN_EMAIL = "pw-admin@example.com";
@@ -60,14 +60,13 @@ test.describe.serial("orders: cancel + return lifecycle", () => {
   }) => {
     customer = await signupAs(page, "ret");
     const created = await page.evaluate(
-      async ({ API, FX_PID, ADDR }) => {
-        const { encryptAddress } = await import("/src/utils/crypt.js");
+      async ({ API, FX_PID, ADDR, encAddr }) => {
         await fetch(`${API}/api/address`, {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            address: encryptAddress({ ...ADDR, id: `addr-${Date.now()}` }),
+            address: encAddr,
           }),
         });
         const idem = `PWTEST-${Date.now()}`;
@@ -173,7 +172,7 @@ test.describe.serial("orders: cancel + return lifecycle", () => {
         });
         return { status: r.status, body: await r.json().catch(() => ({})) };
       },
-      { API, FX_PID, ADDR },
+      { API, FX_PID, ADDR, encAddr: encryptAddressForTest({ ...ADDR, id: `addr-${Date.now()}` }) },
     );
     expect(second.status).toBe(201);
     const order2 = second.body.id;
