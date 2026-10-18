@@ -105,13 +105,17 @@ export default function AdminCategoriesPage() {
         productsApi.list({ limit: 500, realtime: "true" }),
       ]);
       if (cats.status === "fulfilled") {
-        const list = Array.isArray(cats.value) ? cats.value : (cats.value?.categories ?? []);
+        const list = Array.isArray(cats.value)
+          ? cats.value
+          : (cats.value?.categories ?? []);
         setCategories(Array.isArray(list) ? list : []);
       } else {
         throw cats.reason;
       }
       if (prods.status === "fulfilled") {
-        const list = prods.value?.products ?? (Array.isArray(prods.value) ? prods.value : []);
+        const list =
+          prods.value?.products ??
+          (Array.isArray(prods.value) ? prods.value : []);
         const counts = {};
         for (const p of list) {
           const c = p?.category ?? "uncategorized";
@@ -208,7 +212,13 @@ export default function AdminCategoriesPage() {
 
   const remove = async (cat) => {
     const refs = productCounts[cat.id] ?? productCounts[cat.name] ?? 0;
-    if (refs > 0 && !window.confirm(`"${cat.name}" is referenced by ${refs} product(s). Delete anyway?`)) return;
+    if (
+      refs > 0 &&
+      !window.confirm(
+        `"${cat.name}" is referenced by ${refs} product(s). Delete anyway?`,
+      )
+    )
+      return;
     if (refs === 0 && !window.confirm(`Delete category "${cat.name}"?`)) return;
     try {
       setDeletingId(cat.id);
@@ -228,7 +238,9 @@ export default function AdminCategoriesPage() {
       <div className="flex items-center justify-center p-4 sm:p-8">
         <div className="flex flex-col items-center gap-4 py-10">
           <div className="h-14 w-14 animate-spin rounded-full border-4 border-muted border-t-primary" />
-          <p className="text-sm sm:text-base font-semibold">Loading Categories</p>
+          <p className="text-sm sm:text-base font-semibold">
+            Loading Categories
+          </p>
         </div>
       </div>
     );
@@ -260,19 +272,28 @@ export default function AdminCategoriesPage() {
         {loadError && (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
             <span className="flex-1 text-destructive">{loadError}</span>
-            <Button onClick={fetchAll} variant="outline" size="sm">Retry</Button>
+            <Button onClick={fetchAll} variant="outline" size="sm">
+              Retry
+            </Button>
           </div>
         )}
         {/* Page header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Categories</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+              Categories
+            </h1>
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
               {categories.length} categories · live from database
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={fetchAll}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs"
+              onClick={fetchAll}
+            >
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
             </Button>
             <Button size="sm" className="h-8 text-xs" onClick={openCreate}>
@@ -289,12 +310,18 @@ export default function AdminCategoriesPage() {
               <Card key={k.title}>
                 <CardContent className="p-4 sm:p-5">
                   <div className="flex items-center gap-3">
-                    <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${k.tile}`}>
+                    <div
+                      className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 ${k.tile}`}
+                    >
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs sm:text-sm text-muted-foreground truncate">{k.title}</p>
-                      <p className="text-lg sm:text-2xl font-bold tabular-nums">{k.value}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                        {k.title}
+                      </p>
+                      <p className="text-lg sm:text-2xl font-bold tabular-nums">
+                        {k.value}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -312,21 +339,32 @@ export default function AdminCategoriesPage() {
                   <TableHead className="font-semibold">Name</TableHead>
                   <TableHead className="font-semibold">Products</TableHead>
                   <TableHead className="font-semibold">Description</TableHead>
-                  <TableHead className="font-semibold text-right">Actions</TableHead>
+                  <TableHead className="font-semibold text-right">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {categories.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-10 sm:py-12">
-                      <p className="font-semibold text-base sm:text-lg">No categories found</p>
-                      <p className="text-muted-foreground text-xs sm:text-sm mt-1">Create your first category to organize products.</p>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-10 sm:py-12"
+                    >
+                      <p className="font-semibold text-base sm:text-lg">
+                        No categories found
+                      </p>
+                      <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+                        Create your first category to organize products.
+                      </p>
                     </TableCell>
                   </TableRow>
                 ) : (
                   categories.map((cat) => (
                     <TableRow key={cat.id ?? cat._id}>
-                      <TableCell className="font-mono text-primary font-semibold whitespace-nowrap">{cat.id}</TableCell>
+                      <TableCell className="font-mono text-primary font-semibold whitespace-nowrap">
+                        {cat.id}
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <div className="flex items-center gap-2.5">
                           {cat.Logo ? (
@@ -334,11 +372,16 @@ export default function AdminCategoriesPage() {
                               src={cat.Logo}
                               alt={`${cat.name} logo`}
                               className="h-8 w-8 rounded-md border object-cover shrink-0"
-                              onError={(e) => { e.currentTarget.style.display = "none"; }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
                             />
                           ) : cat.icon ? (
                             <span className="h-8 w-8 rounded-md border bg-muted/40 flex items-center justify-center shrink-0">
-                              <DynamicIcon name={cat.icon} className="h-4 w-4 text-primary" />
+                              <DynamicIcon
+                                name={cat.icon}
+                                className="h-4 w-4 text-primary"
+                              />
                             </span>
                           ) : (
                             <span className="h-8 w-8 rounded-md border bg-muted/40 flex items-center justify-center shrink-0 text-muted-foreground text-xs">
@@ -347,17 +390,28 @@ export default function AdminCategoriesPage() {
                           )}
                           <span className="font-semibold">{cat.name}</span>
                           {cat.icon && (
-                            <Badge variant="outline" className="hidden lg:inline-flex font-normal text-muted-foreground max-w-24 truncate">
+                            <Badge
+                              variant="outline"
+                              className="hidden lg:inline-flex font-normal text-muted-foreground max-w-24 truncate"
+                            >
                               {cat.icon}
                             </Badge>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="tabular-nums">{productCounts[cat.id] ?? productCounts[cat.name] ?? 0}</TableCell>
-                      <TableCell className="max-w-xs truncate text-muted-foreground">{cat.description || "—"}</TableCell>
+                      <TableCell className="tabular-nums">
+                        {productCounts[cat.id] ?? productCounts[cat.name] ?? 0}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate text-muted-foreground">
+                        {cat.description || "—"}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end flex-wrap gap-2">
-                          <Button variant="outline" size="sm" onClick={() => openEdit(cat)}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEdit(cat)}
+                          >
                             <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
                           </Button>
                           <Button
@@ -383,9 +437,13 @@ export default function AdminCategoriesPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90dvh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editing ? "Edit Category" : "New Category"}</DialogTitle>
+              <DialogTitle>
+                {editing ? "Edit Category" : "New Category"}
+              </DialogTitle>
               <DialogDescription>
-                {editing ? "Update the category details below." : "Create a new product category."}
+                {editing
+                  ? "Update the category details below."
+                  : "Create a new product category."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
@@ -408,7 +466,9 @@ export default function AdminCategoriesPage() {
                       setForm((f) => ({
                         ...f,
                         name,
-                        id: editing ? f.id : name.toLowerCase().replace(/\s+/g, "-"),
+                        id: editing
+                          ? f.id
+                          : name.toLowerCase().replace(/\s+/g, "-"),
                       }));
                     }}
                     placeholder="e.g. Microcontrollers"
@@ -418,13 +478,15 @@ export default function AdminCategoriesPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
                 {/* Icon — optimized picker: fuzzy search, virtualized grid,
                     category jump buttons. Stores the lucide icon name. */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 flex flex-col">
                   <Label>Icon</Label>
                   <IconPicker
                     className="z-[400]"
                     zIndex={400}
                     value={form.icon}
-                    onValueChange={(value) => setForm((f) => ({ ...f, icon: value }))}
+                    onValueChange={(value) =>
+                      setForm((f) => ({ ...f, icon: value }))
+                    }
                     triggerPlaceholder="Pick an icon…"
                   />
                   {form.icon && (
@@ -441,9 +503,13 @@ export default function AdminCategoriesPage() {
                     <button
                       type="button"
                       className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
-                      onClick={() => setLogoMode((m) => (m === "upload" ? "url" : "upload"))}
+                      onClick={() =>
+                        setLogoMode((m) => (m === "upload" ? "url" : "upload"))
+                      }
                     >
-                      {logoMode === "upload" ? "Use URL instead" : "Upload file instead"}
+                      {logoMode === "upload"
+                        ? "Use URL instead"
+                        : "Upload file instead"}
                     </button>
                   </div>
                   {logoMode === "upload" ? (
@@ -483,8 +549,8 @@ export default function AdminCategoriesPage() {
                         <label className="flex cursor-pointer flex-col items-center gap-1 py-2">
                           <ImagePlus className="h-5 w-5 text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">
-                            Click to choose an image — converted to .webp,
-                            max 524px
+                            Click to choose an image — converted to .webp, max
+                            524px
                           </span>
                           <input
                             type="file"
@@ -508,7 +574,9 @@ export default function AdminCategoriesPage() {
                       <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
                       <Input
                         value={form.Logo}
-                        onChange={(e) => setForm({ ...form, Logo: e.target.value })}
+                        onChange={(e) =>
+                          setForm({ ...form, Logo: e.target.value })
+                        }
                         placeholder="https://… logo url"
                       />
                     </div>
@@ -517,12 +585,30 @@ export default function AdminCategoriesPage() {
               </div>
               <div className="space-y-1.5">
                 <Label>Description</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What belongs in this category?" />
+                <Textarea
+                  value={form.description}
+                  onChange={(e) =>
+                    setForm({ ...form, description: e.target.value })
+                  }
+                  placeholder="What belongs in this category?"
+                />
               </div>
             </div>
             <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto">Cancel</Button>
-              <Button onClick={save} disabled={saving} className="w-full sm:w-auto">{saving ? "Saving…" : editing ? "Save Changes" : "Create"}</Button>
+              <Button
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={save}
+                disabled={saving}
+                className="w-full sm:w-auto"
+              >
+                {saving ? "Saving…" : editing ? "Save Changes" : "Create"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
