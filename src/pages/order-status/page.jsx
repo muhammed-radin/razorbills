@@ -641,27 +641,29 @@ export default function OrderStatusPage() {
     <TooltipProvider delayDuration={200}>
       <StoreMeta title={t("orderStatus.title")} noIndex />
 
-      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-10">
+      <div className={"mx-auto w-full max-w-6xl px-4 py-6 sm:py-10"}>
         {/* Breadcrumb */}
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/">{t("nav.home", "Home")}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/order">{t("orderStatus.backToOrders")}</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>{t("orderStatus.title")}</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
+        {state === "ready" && (
+          <Breadcrumb className="mb-4">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">{t("nav.home", "Home")}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/order">{t("orderStatus.backToOrders")}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{t("orderStatus.title")}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        )}
 
         {state === "no-order" && (
           <StateCard
@@ -800,7 +802,9 @@ function OrderView({
                 onClick={() => window.print()}
               >
                 <Printer className="size-4" />
-                <span className="hidden sm:inline">{t("orderStatus.print")}</span>
+                <span className="hidden sm:inline">
+                  {t("orderStatus.print")}
+                </span>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <Link to="/support">
@@ -1324,17 +1328,24 @@ function RequestBlock({ icon, label, data }) {
 function StateCard({ icon, title, description, children }) {
   const Icon = icon;
   return (
-    <Card className="mx-auto max-w-lg shadow-none">
+    <Card className="mx-auto max-w-lg overflow-hidden border-border/60 bg-gradient-to-br from-background via-background to-muted/40 shadow-sm shadow-primary/5">
       <CardContent className="p-0">
-        <Empty className="border-0">
+        <Empty className="border-0 px-6 py-8 sm:px-10 sm:py-10">
           <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Icon className="size-5" />
+            <EmptyMedia
+              variant="icon"
+              className="size-14 rounded-2xl border border-primary/15 bg-primary/10 text-primary shadow-sm"
+            >
+              <Icon className="size-6" />
             </EmptyMedia>
-            <EmptyTitle>{title}</EmptyTitle>
-            <EmptyDescription>{description}</EmptyDescription>
+            <EmptyTitle className="mt-2 text-xl font-semibold tracking-tight">
+              {title}
+            </EmptyTitle>
+            <EmptyDescription className="max-w-sm text-sm leading-6">
+              {description}
+            </EmptyDescription>
           </EmptyHeader>
-          <EmptyContent className="flex-row justify-center gap-2">
+          <EmptyContent className="mt-2 flex-row justify-center gap-3">
             {children}
           </EmptyContent>
         </Empty>
