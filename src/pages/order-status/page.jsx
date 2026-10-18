@@ -206,42 +206,42 @@ const prettify = (value) =>
 
 const STATUS_META = {
   pending: {
-    label: "Pending Payment",
+    labelKey: "orderStatus.statuses.pending",
     icon: AlertCircle,
     className: "border-transparent bg-amber-500/10 text-amber-600",
   },
   confirmed: {
-    label: "Confirmed",
+    labelKey: "orderStatus.statuses.confirmed",
     icon: CheckCircle2,
     className: "border-transparent bg-emerald-500/10 text-emerald-600",
   },
   processing: {
-    label: "Processing",
+    labelKey: "orderStatus.statuses.processing",
     icon: PackageOpen,
     className: "border-transparent bg-amber-500/10 text-amber-600",
   },
   shipped: {
-    label: "Shipped",
+    labelKey: "orderStatus.statuses.shipped",
     icon: Truck,
     className: "border-transparent bg-blue-500/10 text-blue-600",
   },
   delivered: {
-    label: "Delivered",
+    labelKey: "orderStatus.statuses.delivered",
     icon: PackageCheck,
     className: "border-transparent bg-emerald-500/10 text-emerald-600",
   },
   cancelled: {
-    label: "Cancelled",
+    labelKey: "orderStatus.statuses.cancelled",
     icon: XCircle,
     className: "border-transparent bg-red-500/10 text-red-600",
   },
   return_requested: {
-    label: "Return Requested",
+    labelKey: "orderStatus.statuses.return_requested",
     icon: RotateCcw,
     className: "border-transparent bg-orange-500/10 text-orange-600",
   },
   returned: {
-    label: "Returned",
+    labelKey: "orderStatus.statuses.returned",
     icon: Undo2,
     className: "border-transparent bg-purple-500/10 text-purple-600",
   },
@@ -249,54 +249,64 @@ const STATUS_META = {
 
 const PAYMENT_META = {
   pending: {
-    label: "Pending",
+    labelKey: "orderStatus.paymentStatuses.pending",
     className: "border-transparent bg-amber-500/10 text-amber-600",
   },
   paid: {
-    label: "Paid",
+    labelKey: "orderStatus.paymentStatuses.paid",
     className: "border-transparent bg-emerald-500/10 text-emerald-600",
   },
   failed: {
-    label: "Failed",
+    labelKey: "orderStatus.paymentStatuses.failed",
     className: "border-transparent bg-red-500/10 text-red-600",
   },
   refund_pending: {
-    label: "Refund Pending",
+    labelKey: "orderStatus.paymentStatuses.refund_pending",
     className: "border-transparent bg-amber-500/10 text-amber-600",
   },
   partially_refunded: {
-    label: "Partially Refunded",
+    labelKey: "orderStatus.paymentStatuses.partially_refunded",
     className: "border-transparent bg-blue-500/10 text-blue-600",
   },
   refunded: {
-    label: "Refunded",
+    labelKey: "orderStatus.paymentStatuses.refunded",
     className: "border-transparent bg-purple-500/10 text-purple-600",
   },
 };
 
 function StatusBadge({ status, className }) {
-  const meta = STATUS_META[status] ?? {
-    label: prettify(status) || "Order Placed",
-    icon: Package,
-    className: "border-transparent bg-muted text-muted-foreground",
-  };
-  const Icon = meta.icon;
+  const { t } = useTranslation();
+  const meta = STATUS_META[status];
+  const Icon = meta?.icon ?? Package;
+  const label = meta
+    ? t(meta.labelKey)
+    : prettify(status) || t("orderStatus.orderPlaced");
   return (
-    <Badge variant="outline" className={cn(meta.className, className)}>
+    <Badge
+      variant="outline"
+      className={cn(
+        meta?.className ?? "border-transparent bg-muted text-muted-foreground",
+        className,
+      )}
+    >
       <Icon className="size-3.5" />
-      {meta.label}
+      {label}
     </Badge>
   );
 }
 
 function PaymentBadge({ status }) {
-  const meta = PAYMENT_META[status] ?? {
-    label: prettify(status),
-    className: "border-transparent bg-muted text-muted-foreground",
-  };
+  const { t } = useTranslation();
+  const meta = PAYMENT_META[status];
+  const label = meta ? t(meta.labelKey) : prettify(status);
   return (
-    <Badge variant="outline" className={meta.className}>
-      {meta.label}
+    <Badge
+      variant="outline"
+      className={
+        meta?.className ?? "border-transparent bg-muted text-muted-foreground"
+      }
+    >
+      {label}
     </Badge>
   );
 }
@@ -307,26 +317,26 @@ const STEPS = [
   {
     key: "placed",
     icon: BadgeCheck,
-    label: "Order Placed",
-    desc: "Your order has been received",
+    labelKey: "orderStatus.orderPlaced",
+    descKey: "orderStatus.orderPlacedDesc",
   },
   {
     key: "processing",
     icon: PackageOpen,
-    label: "Processing",
-    desc: "Items are being packed",
+    labelKey: "orderStatus.processing",
+    descKey: "orderStatus.processingDesc",
   },
   {
     key: "shipped",
     icon: Truck,
-    label: "Shipped",
-    desc: "Handed to the courier partner",
+    labelKey: "orderStatus.shipped",
+    descKey: "orderStatus.shippedDesc",
   },
   {
     key: "delivered",
     icon: PackageCheck,
-    label: "Delivered",
-    desc: "Delivered to your address",
+    labelKey: "orderStatus.delivered",
+    descKey: "orderStatus.deliveredDesc",
   },
 ];
 
@@ -341,6 +351,7 @@ const STATUS_STEP_INDEX = {
 };
 
 function OrderProgress({ status }) {
+  const { t } = useTranslation();
   const current = STATUS_STEP_INDEX[status] ?? 0;
   const isClosed = status === "cancelled";
 
@@ -382,9 +393,9 @@ function OrderProgress({ status }) {
                   !done && !active && "text-muted-foreground",
                 )}
               >
-                {step.label}
+                {t(step.labelKey)}
               </p>
-              <p className="text-xs text-muted-foreground">{step.desc}</p>
+              <p className="text-xs text-muted-foreground">{t(step.descKey)}</p>
             </div>
           </li>
         );
@@ -395,8 +406,10 @@ function OrderProgress({ status }) {
 
 /* Small building blocks ---------------------------------------------------- */
 
-function CopyButton({ value, label = "Copy" }) {
+function CopyButton({ value, label }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const resolvedLabel = label ?? t("orderStatus.copy");
 
   const copy = async () => {
     if (!value) return;
@@ -405,7 +418,7 @@ function CopyButton({ value, label = "Copy" }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error("Couldn't copy to clipboard");
+      toast.error(t("orderStatus.copyFailed"));
     }
   };
 
@@ -419,7 +432,7 @@ function CopyButton({ value, label = "Copy" }) {
           className="size-7 text-muted-foreground hover:text-foreground"
           onClick={copy}
           disabled={!value}
-          aria-label={label}
+          aria-label={resolvedLabel}
         >
           {copied ? (
             <Check className="size-3.5 text-emerald-600" />
@@ -428,7 +441,9 @@ function CopyButton({ value, label = "Copy" }) {
           )}
         </Button>
       </TooltipTrigger>
-      <TooltipContent>{copied ? "Copied!" : label}</TooltipContent>
+      <TooltipContent>
+        {copied ? t("orderStatus.copied") : resolvedLabel}
+      </TooltipContent>
     </Tooltip>
   );
 }
@@ -473,9 +488,14 @@ function SectionCard({ icon: Icon, title, description, action, children }) {
   );
 }
 
-function Timeline({ entries, emptyLabel = "No updates yet" }) {
+function Timeline({ entries, emptyLabel }) {
+  const { t } = useTranslation();
   if (!entries?.length) {
-    return <p className="text-sm text-muted-foreground">{emptyLabel}</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {emptyLabel ?? t("orderStatus.noUpdates")}
+      </p>
+    );
   }
   return (
     <ol className="relative space-y-4 border-l-0 border-border pl-6">
@@ -493,7 +513,9 @@ function Timeline({ entries, emptyLabel = "No updates yet" }) {
               <Icon className="size-3" />
             </span>
             <p className="text-sm font-medium">
-              {meta?.label ?? (prettify(entry.status) || "Update")}
+              {meta
+                ? t(meta.labelKey)
+                : prettify(entry.status) || t("orderStatus.update")}
             </p>
             {(entry.note || entry.message) && (
               <p className="text-xs text-muted-foreground">
@@ -558,10 +580,10 @@ export default function OrderStatusPage() {
               razorpay_payment_id: resp.razorpay_payment_id,
               razorpay_signature: resp.razorpay_signature,
             });
-            toast.success("Payment verified.");
+            toast.success(t("orderStatus.paymentVerified"));
             fetchDetail(orderId).catch(() => {});
           } catch {
-            toast.error("Verification failed.");
+            toast.error(t("orderStatus.verificationFailed"));
           } finally {
             setRetrying(false);
           }
@@ -576,7 +598,7 @@ export default function OrderStatusPage() {
             /* intentional no-op */
           }
           fetchDetail(orderId).catch(() => {});
-          toast.info("Payment window closed. Order saved — retry anytime.");
+          toast.info(t("orderStatus.paymentWindowClosed"));
           setRetrying(false);
         },
       });
@@ -584,7 +606,7 @@ export default function OrderStatusPage() {
       toast.error(
         err?.response?.data?.error?.message ??
           err?.response?.data?.error ??
-          "Could not start payment retry.",
+          t("orderStatus.retryStartFailed"),
       );
       setRetrying(false);
     }
@@ -597,7 +619,9 @@ export default function OrderStatusPage() {
       const resp = await shipmentsApi.track(orderId);
       setTracking(deepDecrypt(resp));
     } catch (err) {
-      toast.error(err?.response?.data?.error ?? "Tracking sync failed");
+      toast.error(
+        err?.response?.data?.error ?? t("orderStatus.trackingSyncFailed"),
+      );
     } finally {
       setTrackingLoading(false);
     }
@@ -642,8 +666,8 @@ export default function OrderStatusPage() {
         {state === "no-order" && (
           <StateCard
             icon={Package}
-            title="No order selected"
-            description="Open an order from your order history to track its status."
+            title={t("orderStatus.noOrderTitle")}
+            description={t("orderStatus.noOrderDesc")}
           >
             <Button asChild>
               <Link to="/order">
@@ -657,8 +681,8 @@ export default function OrderStatusPage() {
         {state === "invalid" && (
           <StateCard
             icon={FileQuestion}
-            title="That order link looks invalid"
-            description="The order reference in this link isn't in the expected format. Open an order from your history instead."
+            title={t("orderStatus.invalidTitle")}
+            description={t("orderStatus.invalidDesc")}
           >
             <Button asChild>
               <Link to="/order">
@@ -676,13 +700,13 @@ export default function OrderStatusPage() {
             icon={AlertCircle}
             title={
               storeError?.response?.status === 403
-                ? "This order belongs to another account"
-                : "Order not found"
+                ? t("orderStatus.forbiddenTitle")
+                : t("orderStatus.notFoundTitle")
             }
             description={
               storeError?.response?.status === 403
-                ? "You don't have permission to view this order."
-                : "We couldn't find this order, or you don't have access to it."
+                ? t("orderStatus.forbiddenDesc")
+                : t("orderStatus.notFoundDesc")
             }
           >
             <Button
@@ -690,10 +714,10 @@ export default function OrderStatusPage() {
               onClick={() => orderId && fetchDetail(orderId).catch(() => {})}
             >
               <RefreshCw className="size-4" />
-              Retry
+              {t("orderStatus.retry")}
             </Button>
             <Button asChild variant="ghost">
-              <Link to="/order">My orders</Link>
+              <Link to="/order">{t("orderStatus.myOrders")}</Link>
             </Button>
           </StateCard>
         )}
@@ -776,7 +800,7 @@ function OrderView({
                 onClick={() => window.print()}
               >
                 <Printer className="size-4" />
-                <span className="hidden sm:inline">Print</span>
+                <span className="hidden sm:inline">{t("orderStatus.print")}</span>
               </Button>
               <Button asChild variant="outline" size="sm">
                 <Link to="/support">
@@ -815,8 +839,8 @@ function OrderView({
             />
             <MetaTile
               icon={isCod ? Banknote : CreditCard}
-              label="Payment"
-              value={isCod ? "Cash on Delivery" : "Razorpay (prepaid)"}
+              label={t("orderStatus.payment")}
+              value={isCod ? t("orderStatus.cod") : t("orderStatus.prepaid")}
             />
           </div>
 
@@ -825,7 +849,7 @@ function OrderView({
           {order.status === "cancelled" ? (
             <div className="flex items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
               <XCircle className="size-4 shrink-0" />
-              This order was cancelled. No further action is required.
+              {t("orderStatus.cancelledNotice")}
             </div>
           ) : (
             <OrderProgress status={order.status} />
@@ -839,7 +863,9 @@ function OrderView({
           <SectionCard
             icon={Package}
             title={t("orderStatus.items")}
-            description={`${order.items.length} item(s)`}
+            description={t("orderStatus.itemCount", {
+              count: order.items.length,
+            })}
           >
             <div className="space-y-4">
               {order.items.map((item, index) => (
@@ -921,7 +947,11 @@ function OrderView({
               />
               {order.discount > 0 && (
                 <InfoRow
-                  label={`Discount${order.discountCodes.length ? ` (${order.discountCodes.join(", ")})` : ""}`}
+                  label={
+                    order.discountCodes.length
+                      ? `${t("orderStatus.discount")} (${order.discountCodes.join(", ")})`
+                      : t("orderStatus.discount")
+                  }
                 >
                   <span className="text-emerald-600">
                     −{formatMoney(order.discount, order.currency)}
@@ -929,7 +959,7 @@ function OrderView({
                 </InfoRow>
               )}
               <InfoRow
-                label="Tax"
+                label={t("orderStatus.tax")}
                 value={formatMoney(order.tax, order.currency)}
               />
               <InfoRow
@@ -942,7 +972,7 @@ function OrderView({
               />
               {order.codFee > 0 && (
                 <InfoRow
-                  label="COD fee"
+                  label={t("orderStatus.codFee")}
                   value={formatMoney(order.codFee, order.currency)}
                 />
               )}
@@ -957,11 +987,11 @@ function OrderView({
           <SectionCard
             icon={BadgeCheck}
             title={t("orderStatus.orderProgress")}
-            description="Most recent updates first"
+            description={t("orderStatus.recentFirst")}
           >
             <Timeline
               entries={visibleTimeline}
-              emptyLabel="No status updates recorded yet."
+              emptyLabel={t("orderStatus.noUpdates")}
             />
             {timeline.length > 4 && (
               <Button
@@ -971,8 +1001,8 @@ function OrderView({
                 onClick={() => setExpandedTimeline((v) => !v)}
               >
                 {expandedTimeline
-                  ? "Show less"
-                  : `Show all ${timeline.length} updates`}
+                  ? t("orderStatus.showLess")
+                  : t("orderStatus.showAllUpdates", { total: timeline.length })}
               </Button>
             )}
           </SectionCard>
@@ -1023,29 +1053,31 @@ function OrderView({
 
           <SectionCard
             icon={isCod ? Banknote : CreditCard}
-            title="Payment"
+            title={t("orderStatus.payment")}
             action={<PaymentBadge status={order.payment.status} />}
           >
             <div className="space-y-3 text-sm">
               <InfoRow
-                label="Method"
-                value={isCod ? "Cash on Delivery" : "Razorpay (prepaid)"}
+                label={t("orderStatus.method")}
+                value={isCod ? t("orderStatus.cod") : t("orderStatus.prepaid")}
               />
               {isCod && order.payment.codStatus && (
                 <InfoRow
-                  label="Collection"
+                  label={t("orderStatus.collection")}
                   value={prettify(order.payment.codStatus)}
                 />
               )}
               {order.payment.amountPaid > 0 && (
                 <InfoRow
-                  label="Amount paid"
+                  label={t("orderStatus.amountPaid")}
                   value={formatMoney(order.payment.amountPaid, order.currency)}
                 />
               )}
               {order.payment.razorpayPaymentId && (
                 <div className="flex items-start justify-between gap-3">
-                  <span className="text-muted-foreground">Payment ID</span>
+                  <span className="text-muted-foreground">
+                    {t("orderStatus.paymentId")}
+                  </span>
                   <span className="flex items-center gap-1">
                     <span className="max-w-[150px] truncate font-mono text-xs">
                       {order.payment.razorpayPaymentId}
@@ -1070,12 +1102,12 @@ function OrderView({
                   {retrying ? (
                     <>
                       <Loader2 className="size-4 animate-spin" />
-                      Opening Razorpay…
+                      {t("orderStatus.openingRazorpay")}
                     </>
                   ) : (
                     <>
                       <RefreshCw className="size-4" />
-                      Retry payment
+                      {t("orderStatus.retryPayment")}
                     </>
                   )}
                 </Button>
@@ -1101,7 +1133,7 @@ function OrderView({
               />
               {order.fulfillment.serviceName && (
                 <InfoRow
-                  label="Service"
+                  label={t("orderStatus.service")}
                   value={order.fulfillment.serviceName}
                 />
               )}
@@ -1111,7 +1143,7 @@ function OrderView({
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="font-mono text-xs">
-                    {awb ?? "Not assigned"}
+                    {awb ?? t("orderStatus.notAssigned")}
                   </span>
                   {awb && <CopyButton value={awb} />}
                 </span>
@@ -1139,7 +1171,9 @@ function OrderView({
                   <RefreshCw
                     className={cn("size-4", trackingLoading && "animate-spin")}
                   />
-                  {trackingLoading ? "Syncing…" : "Refresh"}
+                  {trackingLoading
+                    ? t("orderStatus.syncing")
+                    : t("orderStatus.refresh")}
                 </Button>
                 <Button
                   size="sm"
@@ -1158,17 +1192,17 @@ function OrderView({
                       rel="noreferrer"
                     >
                       <ExternalLink className="size-4" />
-                      Track
+                      {t("orderStatus.track")}
                     </a>
                   ) : (
-                    <span>No tracking yet</span>
+                    <span>{t("orderStatus.noTracking")}</span>
                   )}
                 </Button>
               </div>
 
               {tracking?.stub && (
                 <p className="text-xs text-muted-foreground">
-                  Live tracking unavailable — courier not configured.
+                  {t("orderStatus.trackingUnavailable")}
                 </p>
               )}
 
@@ -1181,27 +1215,27 @@ function OrderView({
           </SectionCard>
 
           {hasRequests && (
-            <SectionCard icon={RotateCcw} title="Requests">
+            <SectionCard icon={RotateCcw} title={t("orderStatus.requests")}>
               <div className="space-y-3 text-sm">
                 {order.cancellation.status &&
                   order.cancellation.status !== "none" && (
                     <RequestBlock
                       icon={XCircle}
-                      label="Cancellation"
+                      label={t("orderStatus.cancellation")}
                       data={order.cancellation}
                     />
                   )}
                 {order.return.status && order.return.status !== "none" && (
                   <RequestBlock
                     icon={Undo2}
-                    label="Return"
+                    label={t("orderStatus.return")}
                     data={order.return}
                   />
                 )}
                 {order.refund.status && order.refund.status !== "none" && (
                   <RequestBlock
                     icon={Wallet}
-                    label="Refund"
+                    label={t("orderStatus.refund")}
                     data={order.refund}
                   />
                 )}
@@ -1212,8 +1246,7 @@ function OrderView({
           <Card className="shadow-none">
             <CardContent className="flex items-center gap-3 p-4 text-xs text-muted-foreground">
               <ShieldCheck className="size-4 shrink-0 text-emerald-600" />
-              Payments are processed securely. Server-validated totals on every
-              order.
+              {t("orderStatus.secureNote")}
             </CardContent>
           </Card>
         </div>
@@ -1246,6 +1279,7 @@ function MetaTile({ icon, label, value, mono, copyable }) {
 }
 
 function RequestBlock({ icon, label, data }) {
+  const { t } = useTranslation();
   const Icon = icon;
   return (
     <div className="rounded-lg border p-3">
@@ -1259,7 +1293,9 @@ function RequestBlock({ icon, label, data }) {
         </Badge>
       </div>
       {data.reason && (
-        <p className="mt-1.5 text-muted-foreground">Reason: {data.reason}</p>
+        <p className="mt-1.5 text-muted-foreground">
+          {t("orderStatus.reason", { reason: data.reason })}
+        </p>
       )}
       {data.detail && (
         <p className="mt-0.5 text-xs text-muted-foreground">{data.detail}</p>
@@ -1271,12 +1307,14 @@ function RequestBlock({ icon, label, data }) {
       )}
       {data.amount > 0 && (
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Amount: {formatMoney(data.amount)}
+          {t("orderStatus.amount", { amount: formatMoney(data.amount) })}
         </p>
       )}
       {data.requestedAt && (
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Requested {formatDateTime(data.requestedAt)}
+          {t("orderStatus.requestedAt", {
+            date: formatDateTime(data.requestedAt),
+          })}
         </p>
       )}
     </div>
