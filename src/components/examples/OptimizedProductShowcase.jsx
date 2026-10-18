@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Heart, ShoppingCart, RefreshCw, Filter } from "lucide-react";
+import { currency } from "@/utils/currency";
 
 /**
  * ============================================================================
@@ -59,7 +60,7 @@ export const OptimizedProductCard = React.memo(
           </h4>
           <div className="flex items-center justify-between pt-1">
             <span className="font-bold text-base text-primary">
-              ${Number(product.price).toFixed(2)}
+              {currency(Number(product.price).toFixed(2))}
             </span>
             <Button
               size="sm"

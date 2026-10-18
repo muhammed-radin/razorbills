@@ -88,7 +88,7 @@ export function ShoppingCart1() {
         <p className="text-muted-foreground">
           {items.length} {items.length === 1 ? "item" : "items"} in your cart •{" "}
           <span className="text-foreground font-semibold">
-            ${subtotal.toFixed(2)}
+            {currency(subtotal.toFixed(2))}
           </span>
         </p>
       </div>
@@ -224,7 +224,7 @@ export function ShoppingCart1() {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
                   <span className={shipping === 0 ? "text-success" : ""}>
-                    {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? "Free" : currency(shipping.toFixed(2))}
                   </span>
                 </div>
                 {savings > 0 && (
