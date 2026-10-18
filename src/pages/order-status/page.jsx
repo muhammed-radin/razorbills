@@ -130,7 +130,9 @@ export default function OrderStatusPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => orderId && fetchDetail(orderId).catch(() => {})}
+                  onClick={() =>
+                    orderId && fetchDetail(orderId).catch(() => {})
+                  }
                 >
                   Retry
                 </Button>
@@ -175,8 +177,7 @@ function PaymentShipmentPanel({
   const pay = detail?.payment ?? {};
   const ful = detail?.fulfillment ?? {};
   const isCod = pay.method === "cod";
-  const canRetry =
-    !isCod && ["pending", "failed"].includes(pay.status);
+  const canRetry = !isCod && ["pending", "failed"].includes(pay.status);
 
   const retryPayment = async () => {
     setRetrying(true);
@@ -210,7 +211,9 @@ function PaymentShipmentPanel({
               cancelled: !gatewayError,
               reason: gatewayError?.description,
             });
-          } catch { /* intentional no-op */ }
+          } catch {
+            /* intentional no-op */
+          }
           fetchDetail(orderId).catch(() => {});
           toast.info("Payment window closed. Order saved — retry anytime.");
           setRetrying(false);
@@ -314,21 +317,26 @@ function PaymentShipmentPanel({
           </div>
           <div className="flex justify-between gap-2">
             <span className="text-muted-foreground">AWB / Tracking</span>
-            <span className="font-mono text-xs">{awb ?? "Not assigned yet"}</span>
+            <span className="font-mono text-xs">
+              {awb ?? "Not assigned yet"}
+            </span>
           </div>
           {history.length > 0 && (
             <ul className="pt-1 space-y-1 max-h-32 overflow-auto text-xs text-muted-foreground">
-              {[...history].reverse().slice(0, 10).map((h, i) => (
-                <li key={i} className="border-l-2 border-muted pl-2">
-                  <span className="font-medium text-foreground">
-                    {h.status ?? "update"}
-                  </span>
-                  {h.message ? ` — ${h.message}` : ""}
-                  {h.timestamp
-                    ? ` (${new Date(h.timestamp).toLocaleString()})`
-                    : ""}
-                </li>
-              ))}
+              {[...history]
+                .reverse()
+                .slice(0, 10)
+                .map((h, i) => (
+                  <li key={i} className="border-l-2 border-muted pl-2">
+                    <span className="font-medium text-foreground">
+                      {h.status ?? "update"}
+                    </span>
+                    {h.message ? ` — ${h.message}` : ""}
+                    {h.timestamp
+                      ? ` (${new Date(h.timestamp).toLocaleString()})`
+                      : ""}
+                  </li>
+                ))}
             </ul>
           )}
           <div className="flex gap-2 pt-1">
@@ -350,7 +358,9 @@ function PaymentShipmentPanel({
             >
               {awb || ful.trackingUrl ? (
                 <a
-                  href={ful.trackingUrl ?? "https://panel.shipmozo.com/track-order"}
+                  href={
+                    ful.trackingUrl ?? "https://panel.shipmozo.com/track-order"
+                  }
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -393,7 +403,8 @@ function PaymentShipmentPanel({
                 )}
                 {cancellation.requestedAt && (
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    Requested {new Date(cancellation.requestedAt).toLocaleString()}
+                    Requested{" "}
+                    {new Date(cancellation.requestedAt).toLocaleString()}
                   </p>
                 )}
               </div>

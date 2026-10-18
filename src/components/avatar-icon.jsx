@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { decrypt } from "@/utils/crypt";
 import React, { useMemo } from "react";
 
-const AvatarIcon = ({ name, img, size = 40 }) => {
+const AvatarIcon = ({ name, img, size = 40, className, imageClass }) => {
   const decryptedName = useMemo(() => {
     return decrypt(name);
   }, [name]);
@@ -26,8 +26,9 @@ const AvatarIcon = ({ name, img, size = 40 }) => {
   }, [decryptedImg, initials, size]);
 
   return (
-    <Avatar>
+    <Avatar className={className}>
       <AvatarImage
+        className={imageClass}
         src={image}
         alt={decryptedName}
         referrerPolicy="no-referrer"

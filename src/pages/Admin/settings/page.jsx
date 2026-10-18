@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { api } from "@/utils/api";
 import { decryptField } from "@/utils/crypt";
 import { useUserSession } from "@/contexts/user-session-context";
+import AvatarIcon from "@/components/avatar-icon";
 
 export default function AdminSettingsPage() {
   const { t } = useTranslation();
@@ -115,7 +116,9 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <Helmet>
-        <title>{t("adminSettings.title")} - {t("store.name")}</title>
+        <title>
+          {t("adminSettings.title")} - {t("store.name")}
+        </title>
       </Helmet>
 
       <div>
@@ -129,7 +132,7 @@ export default function AdminSettingsPage() {
 
       <div className="space-y-6">
         {/* 1. Admin Profile (live session) */}
-        <Card>
+        <Card className="bg-background">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <User className="w-5 h-5 text-primary" />
@@ -141,12 +144,11 @@ export default function AdminSettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-4 rounded-lg bg-muted/30 border">
-              <Avatar className="h-16 w-16 border-2 border-primary/20">
-                <AvatarImage src={current?.image ?? ""} alt={displayName} />
-                <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">
-                  {getInitials(displayName)}
-                </AvatarFallback>
-              </Avatar>
+              <AvatarIcon
+                name={current?.name}
+                img={current?.image}
+                className="h-16 w-16 border-2 border-primary/20"
+              />
 
               <div className="space-y-1 flex-1">
                 <div className="flex items-center gap-2">
@@ -168,15 +170,13 @@ export default function AdminSettingsPage() {
         </Card>
 
         {/* 2. Admin List (live, max 10) */}
-        <Card>
+        <Card className="bg-background">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Users className="w-5 h-5 text-primary" />
               {t("adminSettings.admins")}
             </CardTitle>
-            <CardDescription>
-              {t("adminSettings.adminsDesc")}
-            </CardDescription>
+            <CardDescription>{t("adminSettings.adminsDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingAdmins ? (
@@ -206,15 +206,11 @@ export default function AdminSettingsPage() {
                     className="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors"
                   >
                     <div className="flex items-center gap-3.5">
-                      <Avatar className="h-10 w-10 border">
-                        <AvatarImage
-                          src={admin.image ?? ""}
-                          alt={admin.name ?? "Admin"}
-                        />
-                        <AvatarFallback className="font-semibold text-xs bg-muted">
-                          {getInitials(admin.name ?? "?")}
-                        </AvatarFallback>
-                      </Avatar>
+                      <AvatarIcon
+                        name={admin.name}
+                        img={admin.image}
+                        className="h-10 w-10 border"
+                      />
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold text-foreground">
