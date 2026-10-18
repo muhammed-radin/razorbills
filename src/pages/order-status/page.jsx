@@ -141,7 +141,8 @@ function buildOrder(raw) {
       street: address.street ?? address.address ?? "",
       city: address.city ?? "",
       state: address.state ?? "",
-      postalCode: address.postalCode ?? address.pincode ?? address.zipCode ?? "",
+      postalCode:
+        address.postalCode ?? address.pincode ?? address.zipCode ?? "",
       country: address.country ?? "India",
       phoneNumber: address.phoneNumber ?? address.phone ?? "",
       email: address.email ?? "",
@@ -195,7 +196,11 @@ function formatDateTime(value) {
 }
 
 const prettify = (value) =>
-  value ? String(value).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "—";
+  value
+    ? String(value)
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+    : "—";
 
 /* Status presentation ------------------------------------------------------ */
 
@@ -243,12 +248,30 @@ const STATUS_META = {
 };
 
 const PAYMENT_META = {
-  pending: { label: "Pending", className: "border-transparent bg-amber-500/10 text-amber-600" },
-  paid: { label: "Paid", className: "border-transparent bg-emerald-500/10 text-emerald-600" },
-  failed: { label: "Failed", className: "border-transparent bg-red-500/10 text-red-600" },
-  refund_pending: { label: "Refund Pending", className: "border-transparent bg-amber-500/10 text-amber-600" },
-  partially_refunded: { label: "Partially Refunded", className: "border-transparent bg-blue-500/10 text-blue-600" },
-  refunded: { label: "Refunded", className: "border-transparent bg-purple-500/10 text-purple-600" },
+  pending: {
+    label: "Pending",
+    className: "border-transparent bg-amber-500/10 text-amber-600",
+  },
+  paid: {
+    label: "Paid",
+    className: "border-transparent bg-emerald-500/10 text-emerald-600",
+  },
+  failed: {
+    label: "Failed",
+    className: "border-transparent bg-red-500/10 text-red-600",
+  },
+  refund_pending: {
+    label: "Refund Pending",
+    className: "border-transparent bg-amber-500/10 text-amber-600",
+  },
+  partially_refunded: {
+    label: "Partially Refunded",
+    className: "border-transparent bg-blue-500/10 text-blue-600",
+  },
+  refunded: {
+    label: "Refunded",
+    className: "border-transparent bg-purple-500/10 text-purple-600",
+  },
 };
 
 function StatusBadge({ status, className }) {
@@ -281,10 +304,30 @@ function PaymentBadge({ status }) {
 /* Progress stepper --------------------------------------------------------- */
 
 const STEPS = [
-  { key: "placed", icon: BadgeCheck, label: "Order Placed", desc: "Your order has been received" },
-  { key: "processing", icon: PackageOpen, label: "Processing", desc: "Items are being packed" },
-  { key: "shipped", icon: Truck, label: "Shipped", desc: "Handed to the courier partner" },
-  { key: "delivered", icon: PackageCheck, label: "Delivered", desc: "Delivered to your address" },
+  {
+    key: "placed",
+    icon: BadgeCheck,
+    label: "Order Placed",
+    desc: "Your order has been received",
+  },
+  {
+    key: "processing",
+    icon: PackageOpen,
+    label: "Processing",
+    desc: "Items are being packed",
+  },
+  {
+    key: "shipped",
+    icon: Truck,
+    label: "Shipped",
+    desc: "Handed to the courier partner",
+  },
+  {
+    key: "delivered",
+    icon: PackageCheck,
+    label: "Delivered",
+    desc: "Delivered to your address",
+  },
 ];
 
 const STATUS_STEP_INDEX = {
@@ -313,8 +356,7 @@ function OrderProgress({ status }) {
               <span
                 className={cn(
                   "flex size-9 shrink-0 items-center justify-center rounded-full border transition-colors",
-                  done &&
-                    "border-emerald-500 bg-emerald-500 text-white",
+                  done && "border-emerald-500 bg-emerald-500 text-white",
                   active &&
                     "border-primary bg-primary text-primary-foreground ring-4 ring-primary/15",
                   !done &&
@@ -436,7 +478,7 @@ function Timeline({ entries, emptyLabel = "No updates yet" }) {
     return <p className="text-sm text-muted-foreground">{emptyLabel}</p>;
   }
   return (
-    <ol className="relative space-y-4 border-l border-border pl-5">
+    <ol className="relative space-y-4 border-l-0 border-border pl-6">
       {entries.map((entry, index) => {
         const meta = STATUS_META[entry.status];
         const Icon = meta?.icon ?? Package;
@@ -728,7 +770,11 @@ function OrderView({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => window.print()}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.print()}
+              >
                 <Printer className="size-4" />
                 <span className="hidden sm:inline">Print</span>
               </Button>
@@ -827,7 +873,10 @@ function OrderView({
                           </Badge>
                         )}
                         {item.category && (
-                          <Badge variant="outline" className="font-normal text-muted-foreground">
+                          <Badge
+                            variant="outline"
+                            className="font-normal text-muted-foreground"
+                          >
                             {item.category}
                           </Badge>
                         )}
@@ -843,7 +892,10 @@ function OrderView({
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">
-                        {formatMoney(item.price * item.quantity, order.currency)}
+                        {formatMoney(
+                          item.price * item.quantity,
+                          order.currency,
+                        )}
                       </p>
                       {item.quantity > 1 && (
                         <p className="text-xs text-muted-foreground">
@@ -1207,9 +1259,7 @@ function RequestBlock({ icon, label, data }) {
         </Badge>
       </div>
       {data.reason && (
-        <p className="mt-1.5 text-muted-foreground">
-          Reason: {data.reason}
-        </p>
+        <p className="mt-1.5 text-muted-foreground">Reason: {data.reason}</p>
       )}
       {data.detail && (
         <p className="mt-0.5 text-xs text-muted-foreground">{data.detail}</p>

@@ -271,9 +271,7 @@ export const useWishlistStore = create((set, get) => ({
   },
 
   has: (productId) =>
-    get().items.some(
-      (p) => String(p.productId ?? p.id) === String(productId)
-    ),
+    get().items.some((p) => String(p.productId ?? p.id) === String(productId)),
 
   toggle: async (product, folder = "/") => {
     const isSignedIn = await openAuthenticationModal();
@@ -322,7 +320,12 @@ export const useWishlistStore = create((set, get) => ({
     if (get().serverBacked && isSignedIn) {
       try {
         const doc = await wishlistApi.remove(productId, folder);
-        set({ items: doc.products ?? [], error: null });
+        set({
+          items:
+            doc.products ??
+            get().items.filter((p) => (p.productId ?? p.id) !== productId),
+          error: null,
+        });
         return;
       } catch (err) {
         set({ error: err });
