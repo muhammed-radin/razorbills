@@ -465,7 +465,7 @@ export const useOrderStore = create((set) => ({
       const orders = await ordersApi.userOrders();
       set({
         orders: Array.isArray(orders)
-          ? orders.sort((a, b) => b.updatedAt - a.updatedAt)
+          ? orders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
           : [],
         loading: false,
       });
