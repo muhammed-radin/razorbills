@@ -141,7 +141,7 @@ export default function ProductCard({ product, index = 0 }) {
 
       <CardContent className="p-3 sm:p-4">
         <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
-          {product.brand || product.category || "Razorbills"}
+          {product.brand || product.category || t("store.name")}
         </p>
         <h3 className="mt-1 line-clamp-2 min-h-9 sm:min-h-10 text-[13px] sm:text-sm font-semibold leading-snug">
           <Link to={`/product/${pid}`} onClick={(e) => e.stopPropagation()}>

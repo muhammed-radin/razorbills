@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +24,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StoreMeta } from "@/components/store-meta";
+import { useStoreInfo } from "@/utils/store";
 import {
   LifeBuoy,
   Plus,
@@ -61,6 +62,7 @@ const STATUS_STYLE = {
 };
 
 export default function SupportPage() {
+  const store = useStoreInfo();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
@@ -162,13 +164,10 @@ export default function SupportPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
-      <Helmet>
-        <title>Customer Care | RazorBills</title>
-        <meta
-          name="description"
-          content="Get help with orders, payments, delivery, returns and refunds. Raise a support ticket and track responses from the RazorBills care team."
-        />
-      </Helmet>
+      <StoreMeta
+        title="Customer Care"
+        description={`Get help with orders, payments, delivery, returns and refunds. Raise a support ticket and track responses from the ${store.name} care team.`}
+      />
 
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -372,7 +371,7 @@ export default function SupportPage() {
                       )}
                     >
                       <p className="mb-1 text-[11px] font-semibold text-muted-foreground">
-                        {m.sender === "admin" ? "RazorBills Care" : "You"} ·{" "}
+                        {m.sender === "admin" ? `${store.name} Care` : "You"} ·{" "}
                         {m.createdAt
                           ? new Date(m.createdAt).toLocaleString()
                           : ""}

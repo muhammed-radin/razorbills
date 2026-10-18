@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { StoreMeta } from "@/components/store-meta";
 import { FolderOpen, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -131,10 +131,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen w-full bg-background text-foreground pb-[env(safe-area-inset-bottom)]">
-      <Helmet>
-        <title>{t("home.helmetTitle")}</title>
-        <meta name="description" content={t("home.helmetDescription")} />
-      </Helmet>
+      <StoreMeta description={t("home.helmetDescription")} />
 
       <HeroSection featured={trending} loading={loading} />
 

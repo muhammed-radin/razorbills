@@ -115,7 +115,7 @@ export default function PaymentSuccessPage() {
   return (
     <div className="min-h-screen bg-background py-12 px-4 flex items-center justify-center">
       <Helmet>
-        <title>{t("paymentSuccess.title")} - RazorBills</title>
+        <title>{t("paymentSuccess.title")} - {t("store.name")}</title>
       </Helmet>
 
       <div className="max-w-xl w-full">

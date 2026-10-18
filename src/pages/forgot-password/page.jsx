@@ -65,7 +65,7 @@ const ForgotPasswordPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center sm:bg-muted py-12 px-4">
       <Helmet>
-        <title>{t("auth.forgotPasswordTitle")} - RazorBills</title>
+        <title>{t("auth.forgotPasswordTitle")} - {t("store.name")}</title>
       </Helmet>
       <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
         <Logo className="h-9 w-9" />

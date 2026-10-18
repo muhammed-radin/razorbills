@@ -305,7 +305,7 @@ const ProductDetailsPage = () => {
   return (
     <div className="min-h-screen max-w-7xl flex flex-col p-4 lg:p-8 mx-auto">
       <Helmet>
-        <title>{`${product.title} - RazorBills`}</title>
+        <title>{`${product.title} - ${t("store.name")}`}</title>
         <meta name="description" content={product.description} />
         <meta
           name="keywords"

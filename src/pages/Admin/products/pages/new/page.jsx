@@ -23,6 +23,7 @@ import DimensionsWeightSection from "./sections/dimensions-weight";
 import TagsKeywordsSection from "./sections/tags-keywords";
 import AdditionalInformationSection from "./sections/additional-information";
 import { productSchema } from "@shared/utils/product_zod";
+import ProductImportDialog from "@/pages/Admin/products/components/product-import-dialog";
 
 const defaultCategories = [];
 
@@ -247,6 +248,10 @@ export default function NewProductPage() {
       setKeywords(savedValues.keywords);
       isLoadedFromLocalStorageRef.current = true;
     }
+    // Close the hydration gate after the first pass: otherwise a draft saved
+    // by this very effect (e.g. the initial blank rows) would be re-read and
+    // clobber the first real import/edits made by the user.
+    isLoadedFromLocalStorageRef.current = true;
 
     if (
       specifications.length > 0 ||
@@ -486,6 +491,47 @@ export default function NewProductPage() {
     return validatedData.success;
   };
 
+  /* --- Document import (full-product .md/.json) ---------------------- */
+  /* see docs/PRODUCT_MD_FORMAT.md — validated by the shared zod schema   */
+  const applyProductImport = ({ formValues, specifications: importedSpecs, features: importedFeatures, tags: importedTags, keywords: importedKeywords, images: importedImages, thumbnail: importedThumbnail }) => {
+    form.reset({
+      ...form.getValues(),
+      ...formValues,
+    });
+    setSpecifications(importedSpecs.length ? [...importedSpecs, { label: "", value: "" }] : [{ label: "", value: "" }]);
+    setFeatures(importedFeatures.length ? [...importedFeatures, ""] : [""]);
+    setTags(importedTags);
+    setKeywords(importedKeywords);
+    if (importedThumbnail) {
+      handleThumbnailUrlChange(importedThumbnail);
+    }
+    if (importedImages.length) {
+      setAdditionalImages(
+        importedImages.map((url) => ({
+          url,
+          file: null,
+          preview: url,
+          meta: { name: "Imported", size: 0, type: "" },
+        })),
+      );
+    }
+  };
+
+  const importHandler = {
+    specifications: (items, mode) =>
+      setSpecifications(
+        mode === "append"
+          ? [...specifications.filter((s) => s.label || s.value), ...items]
+          : [...items, { label: "", value: "" }],
+      ),
+    features: (items, mode) =>
+      setFeatures(
+        mode === "append"
+          ? [...features.filter((f) => f.trim() !== ""), ...items]
+          : [...items, ""],
+      ),
+  };
+
   const onSubmit = async (data) => {
     setIsSubmitting(true);
 
@@ -605,6 +651,9 @@ export default function NewProductPage() {
             Add a new product to your inventory
           </p>
         </div>
+        <div className="ml-auto">
+          <ProductImportDialog onApply={applyProductImport} />
+        </div>
       </div>
 
       <Form {...form}>
@@ -672,6 +721,7 @@ export default function NewProductPage() {
                   updateSpecification={updateSpecification}
                   removeSpecification={removeSpecification}
                   addSpecification={addSpecification}
+                  onImport={importHandler.specifications}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -685,6 +735,7 @@ export default function NewProductPage() {
                   updateFeature={updateFeature}
                   removeFeature={removeFeature}
                   addFeature={addFeature}
+                  onImport={importHandler.features}
                 />
               </AccordionContent>
             </AccordionItem>

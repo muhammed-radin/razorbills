@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import { StoreMeta } from "@/components/store-meta";
+import { useStoreInfo } from "@/utils/store";
 import {
   Card,
   CardContent,
@@ -77,6 +78,7 @@ function addressTypeIcon(type) {
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const store = useStoreInfo();
   const items = useCartStore((s) => s.items);
   const cartLoading = useCartStore((s) => s.loading);
   const fetchCart = useCartStore((s) => s.fetch);
@@ -431,20 +433,11 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-muted/40 to-background">
-      <Helmet>
-        <title>Secure Checkout — Address & Payment | RazorBills</title>
-        <meta
-          name="description"
-          content="Complete your RazorBills electronics order securely. Choose a verified delivery address and pay via Razorpay (UPI, cards) or Cash on Delivery across Kerala, India."
-        />
-        <meta name="robots" content="noindex, nofollow" />
-        <meta property="og:title" content="Secure Checkout | RazorBills" />
-        <meta
-          property="og:description"
-          content="Verified addresses, Razorpay test-mode payments and COD. Server-validated totals on every order."
-        />
-        <meta property="og:type" content="website" />
-      </Helmet>
+      <StoreMeta
+        title="Secure Checkout — Address & Payment"
+        description={`Complete your ${store.name} electronics order securely. Choose a verified delivery address and pay via Razorpay (UPI, cards) or Cash on Delivery across Kerala, India.`}
+        noIndex
+      />
 
       <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
         {/* Brand + secure header */}

@@ -68,11 +68,11 @@ function CategoriesPage() {
   return (
     <div className="min-h-screen p-3 sm:p-7 max-sm:p-4 max-sm:mt-3">
       <Helmet>
-        <title>{t("categories.title")} - RazorBills</title>
+        <title>{t("categories.title")} - {t("store.name")}</title>
         <meta name="description" content={t("categories.subtitle")} />
         <meta
           name="keywords"
-          content="categories, razorbills, products, shopping, electronics, home, fashion"
+          content={`categories, ${t("store.name")}, products, shopping, electronics, home, fashion`}
         />
       </Helmet>
 

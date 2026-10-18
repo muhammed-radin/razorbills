@@ -115,7 +115,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <Helmet>
-        <title>{t("adminSettings.title")} - RazorBills</title>
+        <title>{t("adminSettings.title")} - {t("store.name")}</title>
       </Helmet>
 
       <div>
