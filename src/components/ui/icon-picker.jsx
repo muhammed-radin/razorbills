@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Popover,
   PopoverContent,
@@ -57,7 +57,10 @@ const IconPicker = React.forwardRef(
     const [isOpen, setIsOpen] = useState(defaultOpen || false);
     const [search, setSearch] = useDebounceValue("", 100);
 
-    const iconsToUse = useMemo(() => iconsList || ICON_SEARCH_DATA, [iconsList]);
+    const iconsToUse = useMemo(
+      () => iconsList || ICON_SEARCH_DATA,
+      [iconsList],
+    );
 
     const fuseInstance = useMemo(() => {
       return new Fuse(iconsToUse, {
@@ -143,6 +146,19 @@ const IconPicker = React.forwardRef(
       gap: 10,
       overscan: 5,
     });
+
+    // Popover content is mounted while hidden, so the virtualizer can measure
+    // a zero-height container on the first open. Re-measure after it becomes
+    // visible so the initial icon list is populated.
+    useEffect(() => {
+      if (!(open ?? isOpen)) return undefined;
+
+      const frame = requestAnimationFrame(() => {
+        virtualizer.measure();
+      });
+
+      return () => cancelAnimationFrame(frame);
+    }, [open, isOpen, virtualItems.length, virtualizer]);
 
     const handleValueChange = useCallback(
       (icon) => {
@@ -283,7 +299,7 @@ const IconPicker = React.forwardRef(
             className="max-h-60 overflow-auto"
             style={{ scrollbarWidth: "thin" }}
           >
-            {filteredIcons.length === 0 ? (
+            {filteredIcons.length === 0 || virtualItems.length === 0 ? (
               <div className="text-center text-gray-500 py-4">
                 No icon found
               </div>
