@@ -232,9 +232,9 @@ export default function HeroSection({ featured, loading }) {
                     <span className="grid size-14 place-items-center rounded-3xl bg-muted">
                       <Store className="size-7 text-muted-foreground" />
                     </span>
-                    <h3 className="mt-5 text-xl font-extrabold tracking-tight">
+                    <h2 className="mt-5 text-xl font-extrabold tracking-tight">
                       {t("homepage.hero.emptyTitle")}
-                    </h3>
+                    </h2>
                     <p className="mt-2 max-w-xs text-sm text-muted-foreground">
                       {t("homepage.hero.emptyDesc")}
                     </p>

@@ -11,7 +11,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { DynamicIcon } from "lucide-react/dynamic";
+import { AppIcon } from "@/lib/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -378,7 +378,7 @@ export default function AdminCategoriesPage() {
                             />
                           ) : cat.icon ? (
                             <span className="h-8 w-8 rounded-md border bg-muted/40 flex items-center justify-center shrink-0">
-                              <DynamicIcon
+                              <AppIcon
                                 name={cat.icon}
                                 className="h-4 w-4 text-primary"
                               />

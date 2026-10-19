@@ -44,5 +44,23 @@ export default defineConfig(({ mode }) => {
       },
     },
     base: "./",
+    build: {
+      rollupOptions: {
+        output: {
+          /* lucide ships one module per icon. Because several lazy routes
+           * (categories, admin, icon picker) share icons with the storefront,
+           * Rollup otherwise emitted a ~250 byte chunk per icon — dozens of
+           * requests on a cold load. Grouping them into one cached chunk is
+           * markedly cheaper than the request waterfall. */
+          manualChunks(id) {
+            if (id.includes("node_modules/lucide-react")) return "lucide";
+          },
+          /* Icons and small UI helpers are pulled in from several lazy chunks
+           * at once; without this Rollup emits a separate ~300 byte chunk per
+           * shared module, which floods a cold load with dozens of requests. */
+          experimentalMinChunkSize: 20_000,
+        },
+      },
+    },
   };
 });

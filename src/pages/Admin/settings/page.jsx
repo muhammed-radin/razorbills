@@ -116,9 +116,9 @@ export default function AdminSettingsPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <Helmet>
-        <title>
-          {t("adminSettings.title")} - {t("store.name")}
-        </title>
+        {/* Single expression: react-helmet-async renders nothing for a <title>
+         * assembled from multiple JSX children. */}
+        <title>{`${t("adminSettings.title")} - ${t("store.name")}`}</title>
       </Helmet>
 
       <div>

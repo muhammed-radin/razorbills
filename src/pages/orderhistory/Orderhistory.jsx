@@ -667,12 +667,14 @@ export default function Orderhistory() {
             </div>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Tabs value={tab} onValueChange={setTab}>
+                {/* Filter-only control: no tab panels exist, so suppress the
+                 * dangling `aria-controls` Radix emits. */}
                 <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="delivered">Delivered</TabsTrigger>
-                  <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-                  <TabsTrigger value="returns">Returns</TabsTrigger>
+                  <TabsTrigger value="all" aria-controls={undefined}>All</TabsTrigger>
+                  <TabsTrigger value="active" aria-controls={undefined}>Active</TabsTrigger>
+                  <TabsTrigger value="delivered" aria-controls={undefined}>Delivered</TabsTrigger>
+                  <TabsTrigger value="cancelled" aria-controls={undefined}>Cancelled</TabsTrigger>
+                  <TabsTrigger value="returns" aria-controls={undefined}>Returns</TabsTrigger>
                 </TabsList>
               </Tabs>
               <Select value={sort} onValueChange={setSort}>

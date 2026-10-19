@@ -6,20 +6,14 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  lazy,
+  Suspense,
 } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertTriangle, XCircle, Info } from "lucide-react";
+
+/* The alert-dialog primitives (and @base-ui/react with them) are only needed
+ * once an alert is opened, so they load on demand instead of riding along in
+ * the entry bundle. */
+const DialogAlertView = lazy(() => import("./dialog-alert-view"));
 
 export const DialogAlertContext = createContext(null);
 
@@ -122,29 +116,6 @@ export function DialogAlertProvider({ children }) {
     [triggerAlert],
   );
 
-  const styles = {
-    success: {
-      icon: <CheckCircle2 className="h-5 w-5 text-green-500" />,
-      btnClass: "bg-green-600 hover:bg-green-700",
-    },
-    error: {
-      icon: <XCircle className="h-5 w-5 text-destructive" />,
-      btnClass: "bg-destructive hover:bg-destructive/90",
-    },
-    warning: {
-      icon: <AlertTriangle className="h-5 w-5 text-amber-500" />,
-      btnClass: "bg-amber-600 hover:bg-amber-700",
-    },
-    info: {
-      icon: <Info className="h-5 w-5 text-blue-500" />,
-      btnClass: "bg-blue-600 hover:bg-blue-700",
-    },
-    confirm: {
-      icon: <Info className="h-5 w-5 text-blue-500" />,
-      btnClass: "bg-blue-600 hover:bg-blue-700",
-    },
-  };
-
   useEffect(() => {
     alert.success = success;
     alert.error = error;
@@ -159,92 +130,17 @@ export function DialogAlertProvider({ children }) {
       value={{ success, error, warning, info, close, confirm }}
     >
       {children}
-      {/* <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-md flex flex-col items-center p-6 text-center">
-          <DialogHeader className="flex flex-col items-center gap-2">
-            <div className="mb-2">{styles[type].icon}</div>
-            <DialogTitle className="text-xl font-semibold tracking-tight">
-              {config.title}
-            </DialogTitle>
-            {config.description && (
-              <DialogDescription className="text-sm text-muted-foreground max-w-xs">
-                {config.description}
-              </DialogDescription>
-            )}
-          </DialogHeader>
-          <DialogFooter className="w-full mt-4 sm:justify-center">
-            {config.secondaryButtonText && (
-              <Button
-                className={`w-full sm:w-28`}
-                variant="outline"
-                onClick={() => {
-                  close({
-                    confirmed: false,
-                    ...config,
-                  });
-                }}
-              >
-                {config.secondaryButtonText || "Cancel"}
-              </Button>
-            )}
-            <Button
-              className={`w-full sm:w-28 text-white ${styles[type].btnClass}`}
-              onClick={() => {
-                close({
-                  confirmed: true,
-                  ...config,
-                });
-              }}
-            >
-              {config.buttonText || config.secondaryButtonText ? "OK" : "Close"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> */}
-      <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              <div className="mx-auto mb-4 flex h-9 w-9 items-center justify-center rounded-full bg-background/10 sm:mx-0">
-                {styles[type].icon}
-              </div>
-              {config.title}
-            </AlertDialogTitle>
-            {config.description && (
-              <AlertDialogDescription className="text-[15px]">
-                {config.description}
-              </AlertDialogDescription>
-            )}
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            {config.secondaryButtonText && (
-              <AlertDialogCancel
-                onClick={() => {
-                  close({
-                    confirmed: false,
-                    ...config,
-                  });
-                }}
-              >
-                {config.secondaryButtonText || "Cancel"}
-              </AlertDialogCancel>
-            )}
-            <AlertDialogAction
-              // className={styles[type].btnClass}
-              onClick={() => {
-                close({
-                  confirmed: true,
-                  ...config,
-                });
-              }}
-            >
-              {config.buttonText
-                ? config.buttonText
-                : config.secondaryButtonText || "Continue"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {isOpen && (
+        <Suspense fallback={null}>
+          <DialogAlertView
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            type={type}
+            config={config}
+            onClose={close}
+          />
+        </Suspense>
+      )}
     </DialogAlertContext.Provider>
   );
 }

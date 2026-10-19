@@ -115,7 +115,9 @@ export default function PaymentSuccessPage() {
   return (
     <div className="min-h-screen bg-background py-12 px-4 flex items-center justify-center">
       <Helmet>
-        <title>{t("paymentSuccess.title")} - {t("store.name")}</title>
+        {/* Single expression: react-helmet-async renders nothing for a <title>
+         * assembled from multiple JSX children. */}
+        <title>{`${t("paymentSuccess.title")} - ${t("store.name")}`}</title>
       </Helmet>
 
       <div className="max-w-xl w-full">

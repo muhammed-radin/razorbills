@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { currency } from "@/utils/currency";
 import {
   ArrowRight,
   Flame,
@@ -129,7 +128,10 @@ const themeColors = {
   },
 };
 
-const GridCard = ({ item, index, ...params }) => {
+const GridCard = ({ item, index, titleAs = "h3", ...params }) => {
+  /* Card titles are h3 by default (they sit inside an <h2> section on the home
+   * page); pages that render the grid straight under an <h1> pass "h2". */
+  const TitleTag = titleAs;
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const theme = themeColors[item.theme] || themeColors.violet;
@@ -250,7 +252,7 @@ const GridCard = ({ item, index, ...params }) => {
 
         {/* Title & Subtitle */}
         <div className={cn(isSmall && "text-center")}>
-          <h3
+          <TitleTag
             className={cn(
               "font-bold mb-1 transition-colors duration-300",
               isLarge ? "text-2xl sm:text-3xl text-white" : "",
@@ -260,7 +262,7 @@ const GridCard = ({ item, index, ...params }) => {
             )}
           >
             {item.title}
-          </h3>
+          </TitleTag>
           <p
             className={cn(
               "font-medium mb-2",

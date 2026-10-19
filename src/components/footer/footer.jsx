@@ -86,9 +86,12 @@ export const Footer = () => {
           <div className="relative grid gap-6 md:grid-cols-[1.2fr_1fr] items-center">
             <div>
               <Badge className="rounded-full">{t("footer.newsletterBadge")}</Badge>
-              <h3 className="mt-3 text-xl sm:text-2xl font-extrabold tracking-tight">
+              {/* h2: the footer is a top-level landmark, and on pages whose
+               * deepest heading is an h1 (404, forgot-password) an h3 here
+               * would skip a level. */}
+              <h2 className="mt-3 text-xl sm:text-2xl font-extrabold tracking-tight">
                 {t("footer.newsletterTitle")}
-              </h3>
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("footer.newsletterDesc")}
               </p>
@@ -109,7 +112,11 @@ export const Footer = () => {
                 type="email"
                 className="border-0 bg-transparent shadow-none focus-visible:ring-0"
               />
-              <Button type="submit" className="rounded-xl shrink-0">
+              <Button
+                type="submit"
+                className="rounded-xl shrink-0"
+                aria-label={t("footer.subscribe")}
+              >
                 <Send className="size-4 sm:mr-1.5" />
                 <span className="hidden sm:inline">{t("footer.subscribe")}</span>
               </Button>
@@ -172,7 +179,7 @@ export const Footer = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
           {columns.map((col) => (
             <div key={col.title}>
-              <h6 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{col.title}</h6>
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{col.title}</h3>
               <ul className="mt-4 space-y-2.5">
                 {col.links.map((l) => (
                   <li key={l.title}>

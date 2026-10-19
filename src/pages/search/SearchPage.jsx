@@ -75,8 +75,10 @@ export default function SearchPage() {
 
   // URL is the source of truth for q/category/page.
   const queryParam = searchParams.get("q") ?? "";
-  const pageParam =
-    Math.max(parseInt(searchParams.get("page") || "1", 10) || 1, 1);
+  const pageParam = Math.max(
+    parseInt(searchParams.get("page") || "1", 10) || 1,
+    1,
+  );
   const categoryParam = searchParams.get("category") ?? "all";
 
   const sortMapping = useMemo(() => {
@@ -134,11 +136,22 @@ export default function SearchPage() {
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set("page", "1");
+        next.set(
+          "category",
+          selectedCategory !== "all" ? selectedCategory : "",
+        );
         return next;
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, sortBy, priceMin, priceMax, minRating, showOnlyInStock]);
+  }, [
+    selectedCategory,
+    sortBy,
+    priceMin,
+    priceMax,
+    minRating,
+    showOnlyInStock,
+  ]);
 
   /* Commit the typed query to the URL and force a fetch. Only called on
    * Enter, the search button, or an explicit retry — never per keystroke. */
@@ -147,6 +160,7 @@ export default function SearchPage() {
       const next = new URLSearchParams(prev);
       if (searchQuery.trim()) next.set("q", searchQuery.trim());
       else next.delete("q");
+      next.set("category", selectedCategory !== "all" ? selectedCategory : "");
       next.set("page", "1");
       return next;
     });
