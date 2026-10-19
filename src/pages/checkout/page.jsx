@@ -264,6 +264,13 @@ export default function CheckoutPage() {
         idempotencyKey,
       });
     } catch (err) {
+      const code = err?.response?.data?.error?.code;
+      if (code === "CART_MISMATCH" || err?.response?.status === 409) {
+        toast.error(
+          "Your cart changed. We refreshed it — please review the quantities and try again.",
+        );
+        fetchCart().catch(() => {});
+      }
       setError(
         err?.response?.data?.error?.message ??
           err?.response?.data?.error ??
@@ -408,6 +415,13 @@ export default function CheckoutPage() {
         toast.success("COD order placed.");
         navigate(`/payment-success?type=cod&id=${order.id}`);
       } catch (err) {
+        const code = err?.response?.data?.code;
+        if (code === "CART_MISMATCH" || err?.response?.status === 409) {
+          toast.error(
+            "Your cart changed. We refreshed it — please review the quantities and try again.",
+          );
+          fetchCart().catch(() => {});
+        }
         setError(
           err?.response?.data?.error ??
             err?.message ??

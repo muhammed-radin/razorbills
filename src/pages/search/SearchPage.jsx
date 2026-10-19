@@ -64,6 +64,9 @@ export default function SearchPage() {
 
   const [preloaderEnabled, setPreloader] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
+  /* Bumped on every explicit search (Enter / button / retry) so the
+   * fetch effect re-runs even when the committed query is unchanged. */
+  const [searchNonce, setSearchNonce] = useState(0);
   const requestSeq = useRef(0);
 
   const [filteredAndSortedProducts, setFilteredAndSortedProducts] = useState(
@@ -118,20 +121,10 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Typing -> URL, debounced. Fetching reacts to the URL, never to keystrokes.
-  useEffect(() => {
-    if (searchQuery === queryParam) return undefined;
-    const timer = setTimeout(() => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        if (searchQuery.trim()) next.set("q", searchQuery.trim());
-        else next.delete("q");
-        next.set("page", "1");
-        return next;
-      });
-    }, 600);
-    return () => clearTimeout(timer);
-  }, [searchQuery, queryParam, setSearchParams]);
+  /* Typing deliberately does NOT search: the input only updates the
+   * local store value. A search is committed to the URL (the fetch
+   * source of truth) only on Enter or the search button — see
+   * `runSearchNow`. This avoids firing a request on every keystroke. */
 
   // Filter changes restart at page 1 (single navigation, no loop).
   const priceMin = priceRange[0];
@@ -147,6 +140,8 @@ export default function SearchPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, sortBy, priceMin, priceMax, minRating, showOnlyInStock]);
 
+  /* Commit the typed query to the URL and force a fetch. Only called on
+   * Enter, the search button, or an explicit retry — never per keystroke. */
   const runSearchNow = useCallback(() => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
@@ -155,6 +150,7 @@ export default function SearchPage() {
       next.set("page", "1");
       return next;
     });
+    setSearchNonce((n) => n + 1);
   }, [searchQuery, setSearchParams]);
 
   // Single fetch effect on PRIMITIVE keys, with cancellation and
@@ -225,6 +221,7 @@ export default function SearchPage() {
     priceMax,
     minRating,
     showOnlyInStock,
+    searchNonce,
   ]);
 
   const handlePageChange = useCallback(
@@ -253,6 +250,15 @@ export default function SearchPage() {
     setPriceRange(fixedPriceRange);
     setMinRating(0);
     setShowOnlyInStock(false);
+    // The committed query/category live in the URL — clear them there too
+    // so removing the auto-search keeps "clear filters" fully working.
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("q");
+      next.delete("category");
+      next.set("page", "1");
+      return next;
+    });
   }, [
     fixedPriceRange,
     setMinRating,
@@ -261,6 +267,7 @@ export default function SearchPage() {
     setSelectedCategory,
     setShowOnlyInStock,
     setSortBy,
+    setSearchParams,
   ]);
 
   const activeFiltersCount = [
@@ -299,7 +306,12 @@ export default function SearchPage() {
               className="pl-10 h-10 text-base"
             />
           </div>
-          <Button onClick={runSearchNow} variant="outline" className="h-10">
+          <Button
+            onClick={runSearchNow}
+            variant="outline"
+            className="h-10"
+            aria-label={t("search.searchButton")}
+          >
             <Search />
           </Button>
         </div>

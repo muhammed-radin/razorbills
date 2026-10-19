@@ -7,6 +7,7 @@ import {
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import { useMemory } from "../utils/memory.js";
 import { priceOrderItems } from "../utils/orderPricing.js";
+import { assertCartMatchesServerCart } from "../utils/cartValidation.js";
 import {
   createOrderRecord,
   releaseOrderStock,
@@ -559,6 +560,21 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
       error:
         "Prepaid orders must use the verified payment flow: POST /api/payments/razorpay/create, then verify. " +
         "Direct order creation is Cash on Delivery only.",
+    });
+  }
+
+  /* Cart integrity: the items being checked out must match the user's
+   * persisted server cart (guards stale/optimistic client carts). */
+  try {
+    await assertCartMatchesServerCart({ userId, items: body.products });
+  } catch (err) {
+    evt.fire(Evts.ORDER_CREATE_FAILED, { userId, reason: "cart mismatch" });
+    return res.status(err?.status ?? 409).json({
+      code: err?.code ?? "CART_MISMATCH",
+      error:
+        err?.message ??
+        "Your cart changed. Please review the cart and try again.",
+      ...(err?.details ? { details: err.details } : {}),
     });
   }
 

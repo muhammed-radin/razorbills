@@ -48,6 +48,9 @@ const normalizeCart = (doc) => {
  * user pauses. Aborts superseded flights, rolls back on failure. */
 const qtyTimers = new Map();
 const qtyControllers = new Map();
+/* Last server-confirmed items per product, captured before the first
+ * optimistic edit, so a failed/superseded sync can roll back safely. */
+const qtySnapshots = new Map();
 const QTY_SYNC_DELAY_MS = 600;
 
 export const useCartStore = create((set, get) => ({
@@ -123,6 +126,46 @@ export const useCartStore = create((set, get) => ({
     set({ items });
   },
 
+  /* Push ONE quantity update for a product using the latest optimistic
+   * value. Rolls back to the last server-confirmed snapshot on failure.
+   * Shared by the debounced setQuantity and the pre-checkout flush. */
+  syncQuantity: async (productId, controller) => {
+    const snapshot =
+      qtySnapshots.get(productId) ?? get().items.map((i) => ({ ...i }));
+    try {
+      const latest =
+        get().items.find((i) => i.productId === productId)?.quantity ?? 1;
+      const cart = await cartApi.setQuantity(
+        productId,
+        latest,
+        controller?.signal,
+      );
+      if (controller?.signal.aborted) return;
+      set({
+        items: normalizeCart(cart),
+        error: null,
+        syncing: { ...get().syncing, [productId]: false },
+      });
+    } catch (err) {
+      if (controller?.signal.aborted) return;
+      // Roll back to the last server-confirmed snapshot.
+      set({
+        items: snapshot,
+        error: err,
+        syncing: { ...get().syncing, [productId]: false },
+      });
+      const { toast } = await import("sonner");
+      toast.error("Couldn't sync quantity — restored previous value.");
+      throw err;
+    } finally {
+      qtyTimers.delete(productId);
+      if (qtyControllers.get(productId) === controller) {
+        qtyControllers.delete(productId);
+        qtySnapshots.delete(productId);
+      }
+    }
+  },
+
   setQuantity: async (productId, quantity) => {
     const isSignedIn = await openAuthenticationModal();
     if (!isSignedIn) {
@@ -140,14 +183,22 @@ export const useCartStore = create((set, get) => ({
       return;
     }
 
+    /* Keep the LAST server-confirmed snapshot (not the optimistic one)
+     * so rapid +/- clicks still roll back to the correct value. */
+    if (!qtySnapshots.has(productId)) {
+      qtySnapshots.set(
+        productId,
+        get().items.map((i) => ({ ...i })),
+      );
+    }
+
     // Optimistic: reflect instantly, sync with the server after a pause.
-    const snapshot = get().items.map((i) => ({ ...i }));
-    set({
-      items: snapshot.map((i) =>
+    set((state) => ({
+      items: state.items.map((i) =>
         i.productId === productId ? { ...i, quantity: nextQty } : i,
       ),
-      syncing: { ...get().syncing, [productId]: true },
-    });
+      syncing: { ...state.syncing, [productId]: true },
+    }));
 
     clearTimeout(qtyTimers.get(productId));
     qtyControllers.get(productId)?.abort();
@@ -155,40 +206,32 @@ export const useCartStore = create((set, get) => ({
     qtyControllers.set(productId, controller);
     qtyTimers.set(
       productId,
-      setTimeout(async () => {
-        try {
-          const latest =
-            get().items.find((i) => i.productId === productId)?.quantity ??
-            nextQty;
-          const cart = await cartApi.setQuantity(
-            productId,
-            latest,
-            controller.signal,
-          );
-          if (controller.signal.aborted) return;
-          set({
-            items: normalizeCart(cart),
-            error: null,
-            syncing: { ...get().syncing, [productId]: false },
-          });
-        } catch (err) {
-          if (controller.signal.aborted) return;
-          // Roll back to the last server-confirmed snapshot.
-          set({
-            items: snapshot,
-            error: err,
-            syncing: { ...get().syncing, [productId]: false },
-          });
-          const { toast } = await import("sonner");
-          toast.error("Couldn't sync quantity — restored previous value.");
-        } finally {
-          qtyTimers.delete(productId);
-          if (qtyControllers.get(productId) === controller) {
-            qtyControllers.delete(productId);
-          }
-        }
+      setTimeout(() => {
+        get()
+          .syncQuantity(productId, controller)
+          .catch(() => {});
       }, QTY_SYNC_DELAY_MS),
     );
+  },
+
+  /* Immediately push every pending optimistic quantity change to the
+   * server and resolve once they all settle. Used before checkout so the
+   * server cart can never lag behind what the user sees. Rejects if any
+   * sync fails (the store has already rolled back + surfaced the error). */
+  flushQuantitySync: async () => {
+    const pendingIds = [...qtyTimers.keys()];
+    if (pendingIds.length === 0) return;
+
+    const flights = pendingIds.map((productId) => {
+      clearTimeout(qtyTimers.get(productId));
+      qtyTimers.delete(productId);
+      qtyControllers.get(productId)?.abort();
+      const controller = new AbortController();
+      qtyControllers.set(productId, controller);
+      return get().syncQuantity(productId, controller);
+    });
+
+    await Promise.all(flights);
   },
 
   remove: async (productId) => {

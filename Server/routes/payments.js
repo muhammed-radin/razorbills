@@ -23,6 +23,7 @@ import {
   refundRazorpayPayment,
 } from "../utils/razorpay.js";
 import { priceOrderItems, PRICING_DEFAULTS } from "../utils/orderPricing.js";
+import { assertCartMatchesServerCart } from "../utils/cartValidation.js";
 import { reserveStock } from "../utils/inventory.js";
 import { createOrderRecord } from "../utils/orderFactory.js";
 import { evt, Evts } from "../utils/events.manage.js";
@@ -147,6 +148,9 @@ router.post(
       if (!shippingAddress || !billingAddress) {
         throw Errors.validation("shippingAddress and billingAddress are required.");
       }
+      /* Cart integrity: the submitted items must match the persisted
+       * server cart before a payment attempt is opened. */
+      await assertCartMatchesServerCart({ userId, items });
       try {
         priced = await priceOrderItems(items, { method: "razorpay" });
       } catch (err) {
