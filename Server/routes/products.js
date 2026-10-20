@@ -244,7 +244,7 @@ router.get("/:productid", requireSession, async function (req, res) {
 router.post(
   "/new/:productId",
   requireAdmin,
-  requirePermission("create"),
+  requirePermission({ products: ["create"] }),
   passUserAuth,
   async function (req, res) {
     const productId = req.params.productId;
@@ -297,7 +297,7 @@ router.post(
 router.put(
   "/:productid",
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ products: ["update"] }),
   passUserAuth,
   async function (req, res) {
     const productid = req.params.productid;
@@ -323,7 +323,7 @@ router.put(
 router.delete(
   "/:productid",
   requireAdmin,
-  requirePermission("delete"),
+  requirePermission({ products: ["delete"] }),
   passUserAuth,
   async function (req, res) {
     const productid = req.params.productid;

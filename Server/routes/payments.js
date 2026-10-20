@@ -628,7 +628,7 @@ router.post(
   "/cod/:id/collect",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ payments: ["manage"] }),
   ah(async (req, res) => {
     const order = await OrderModel.findOne({ id: req.params.id });
     if (!order) throw Errors.notFound("Order not found.");

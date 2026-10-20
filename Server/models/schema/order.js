@@ -262,7 +262,7 @@ export const OrderHistorySchema = new Schema(
 
     actor: {
       type: String,
-      enum: ["system", "user", "admin"],
+      enum: ["system", "user", "admin", "owner"],
       default: "system",
     },
 

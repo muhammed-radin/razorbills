@@ -35,7 +35,9 @@ router.post(
   "/",
   requireAuth,
   requireAdmin,
-  requirePermission("create"),
+  requirePermission({
+    categories: ["create"],
+  }),
   function (req, res) {
     const { id, name, icon, Logo, description } = req.body;
 
@@ -98,7 +100,9 @@ router.put(
   "/:id",
   requireAuth,
   requireAdmin,
-  requirePermission("write"),
+  requirePermission({
+    categories: ["update", "create"],
+  }),
   function (req, res) {
     const categoryId = req.params.id;
     const { name, icon, Logo, description } = req.body;
@@ -134,7 +138,9 @@ router.delete(
   "/:id",
   requireAuth,
   requireAdmin,
-  requirePermission("delete"),
+  requirePermission({
+    categories: ["delete"],
+  }),
   function (req, res) {
     const categoryId = req.params.id;
 

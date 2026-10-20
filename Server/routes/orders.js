@@ -8,10 +8,7 @@ import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
 import { useMemory } from "../utils/memory.js";
 import { priceOrderItems } from "../utils/orderPricing.js";
 import { assertCartMatchesServerCart } from "../utils/cartValidation.js";
-import {
-  createOrderRecord,
-  releaseOrderStock,
-} from "../utils/orderFactory.js";
+import { createOrderRecord, releaseOrderStock } from "../utils/orderFactory.js";
 import { evt, Evts } from "../utils/events.manage.js";
 import {
   OrderModel,
@@ -271,7 +268,7 @@ router.get(
   "/list",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ orders: ["read"] }),
   async (req, res) => {
     try {
       const realtime = req.query?.realtime === "true";
@@ -527,7 +524,9 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
     try {
       const existing = await OrderModel.findOne({ idempotencyKey, userId });
       if (existing) {
-        return res.status(200).json({ ...existing.toObject(), deduplicated: true });
+        return res
+          .status(200)
+          .json({ ...existing.toObject(), deduplicated: true });
       }
     } catch {
       // fall through to creation
@@ -552,7 +551,9 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
     });
   }
 
-  const rawMethod = String(body.payment?.method ?? "").toLowerCase().trim();
+  const rawMethod = String(body.payment?.method ?? "")
+    .toLowerCase()
+    .trim();
   if (rawMethod !== PaymentMethod.COD) {
     evt.fire(Evts.ORDER_CREATE_FAILED, { userId, reason: "non-cod method" });
     return res.status(422).json({
@@ -582,7 +583,9 @@ router.post("/", requireAuth, passUserAuth, async (req, res) => {
    * Client prices/totals are ignored; manipulated requests fail here. */
   let priced;
   try {
-    priced = await priceOrderItems(body.products, { method: PaymentMethod.COD });
+    priced = await priceOrderItems(body.products, {
+      method: PaymentMethod.COD,
+    });
   } catch (err) {
     evt.fire(Evts.ORDER_CREATE_FAILED, {
       userId,
@@ -811,7 +814,7 @@ router.post(
   "/:id/cancel/approve",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -871,7 +874,7 @@ router.post(
   "/:id/cancel/reject",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -914,7 +917,7 @@ router.post(
   "/:id/updateStatus",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const { status, note = null, validate = true } = req.body ?? {};
@@ -974,7 +977,7 @@ router.post(
   "/:id/payment/paid",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1020,7 +1023,7 @@ router.post(
   "/:id/payment/failed",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1061,7 +1064,7 @@ router.post(
   "/:id/process",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1103,7 +1106,7 @@ router.post(
   "/:id/packed",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1142,7 +1145,7 @@ router.post(
   "/:id/ship",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1195,7 +1198,7 @@ router.post(
   "/:id/deliver",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1256,7 +1259,10 @@ router.post("/:id/return", requireAuth, passUserAuth, async (req, res) => {
     }
 
     // Returns are accepted for delivered orders within 7 days.
-    if (order.status === OrderStatus.DELIVERED && order.fulfillment?.deliveredAt) {
+    if (
+      order.status === OrderStatus.DELIVERED &&
+      order.fulfillment?.deliveredAt
+    ) {
       const days =
         (Date.now() - new Date(order.fulfillment.deliveredAt).getTime()) /
         86400000;
@@ -1285,7 +1291,10 @@ router.post("/:id/return", requireAuth, passUserAuth, async (req, res) => {
 
     let updatedOrder;
     try {
-      updatedOrder = await order.requestReturn({ reason, detail: detail || null });
+      updatedOrder = await order.requestReturn({
+        reason,
+        detail: detail || null,
+      });
     } catch (err) {
       return res.status(400).json({
         code: 400,
@@ -1323,7 +1332,7 @@ router.post(
   "/:id/return/approve",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1364,7 +1373,7 @@ router.post(
   "/:id/return/reject",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1405,7 +1414,7 @@ router.post(
   "/:id/return/received",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1444,7 +1453,7 @@ router.post(
   "/:id/return/complete",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1487,7 +1496,7 @@ router.post(
   "/:id/refund",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1541,7 +1550,7 @@ router.post(
   "/:id/refund/complete",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1582,7 +1591,7 @@ router.patch(
   "/:id/shipping",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({
@@ -1629,7 +1638,7 @@ router.patch(
   "/:id/shipping/estimated-delivery",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ orders: ["update"] }),
   async (req, res) => {
     try {
       const { estimatedDate } = req.body ?? {};
@@ -1691,7 +1700,7 @@ router.get(
   "/admin/unverified",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ orders: ["read"] }),
   async (req, res) => {
     try {
       const limit = Math.min(
@@ -1700,7 +1709,9 @@ router.get(
       );
       const orders = await OrderModel.find({
         "payment.method": PaymentMethod.RAZORPAY,
-        "payment.status": { $in: [PaymentStatus.PENDING, PaymentStatus.FAILED] },
+        "payment.status": {
+          $in: [PaymentStatus.PENDING, PaymentStatus.FAILED],
+        },
       })
         .sort({ createdAt: -1 })
         .limit(limit)
@@ -1720,7 +1731,7 @@ router.get(
   "/admin/pending",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ orders: ["read"] }),
   async (req, res) => {
     try {
       const orders = await OrderModel.getPendingOrders();
@@ -1744,7 +1755,7 @@ router.get(
   "/admin/processing",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ orders: ["read"] }),
   async (req, res) => {
     try {
       const orders = await OrderModel.getProcessingOrders();
@@ -1768,7 +1779,7 @@ router.get(
   "/admin/returns",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ orders: ["read"] }),
   async (req, res) => {
     try {
       const orders = await OrderModel.getReturnRequests();
@@ -1792,7 +1803,7 @@ router.get(
   "/admin/refunds",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ orders: ["read"] }),
   async (req, res) => {
     try {
       const orders = await OrderModel.getPendingRefunds();
@@ -1823,7 +1834,7 @@ router.delete(
   "/:id",
   requireAuth,
   requireAdmin,
-  requirePermission("delete"),
+  requirePermission({ orders: ["delete"] }),
   async (req, res) => {
     try {
       const order = await OrderModel.findOne({

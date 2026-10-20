@@ -91,7 +91,7 @@ router.get(
   "/",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ user: ["list"] }),
   async function (req, res) {
     if (
       globalMemory?.getLocalMemory(req.url) &&
@@ -165,7 +165,7 @@ router.get(
   "/:id",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ user: ["get"] }),
   function (req, res, next) {
     const userId = req.params.id;
     // Never expose sensitive internals (hashes, tokens, permissions).
@@ -188,7 +188,7 @@ router.get(
   "/auth/:id/",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ user: ["get"] }),
   (req, res) => {
     const userId = req.params.id;
 
@@ -219,7 +219,7 @@ router.patch(
   "/:id/status",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ user: ["ban"] }),
   async (req, res) => {
     try {
       const userId = req.params.id;

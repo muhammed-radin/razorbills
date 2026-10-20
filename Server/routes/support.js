@@ -221,7 +221,7 @@ router.get(
   "/",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ support: ["view"] }),
   ah(async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 20, 100);
     const skip = Math.max(parseInt(req.query.skip) || 0, 0);
@@ -256,7 +256,7 @@ router.patch(
   "/:id/status",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ support: ["close"] }),
   ah(async (req, res) => {
     const ticket = await loadTicketOrThrow(req.params.id, req);
     const next = req.body?.status;
@@ -294,7 +294,7 @@ router.patch(
   "/:id/assign",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ support: ["assign"] }),
   ah(async (req, res) => {
     const ticket = await loadTicketOrThrow(req.params.id, req);
     ticket.assignedAdmin = req.body?.adminId ? String(req.body.adminId) : null;
@@ -312,7 +312,7 @@ router.patch(
   "/:id/priority",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ support: ["update"] }),
   ah(async (req, res) => {
     const ticket = await loadTicketOrThrow(req.params.id, req);
     if (!Object.values(TicketPriority).includes(req.body?.priority)) {

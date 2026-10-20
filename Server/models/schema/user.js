@@ -22,7 +22,6 @@ export const UserSchema = new Schema(
     preferences: { type: Schema.Types.Mixed, default: {} },
     providedBy: { type: String, default: "local" },
 
-    adminPermissions: { type: [String], default: [] },
     role: { type: String, default: "user", enum: ["user", "admin", "owner"] },
     image: { type: String, default: null },
     banned: { type: Boolean, default: false },

@@ -25,12 +25,7 @@ const SECRET_FIELDS = new Set([
   "providerId",
 ]);
 
-const SERVER_OWNED_FIELDS = new Set([
-  "isActive",
-  "adminPermissions",
-  "totalSpent",
-  "AOV",
-]);
+const SERVER_OWNED_FIELDS = new Set(["isActive", "totalSpent", "AOV"]);
 
 function mapMongooseType(schemaType) {
   if (!schemaType) return null;

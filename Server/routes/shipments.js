@@ -125,7 +125,7 @@ router.post(
   "/rates",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ shipping: ["view"] }),
   async (req, res) => {
     try {
       const { orderId } = req.body ?? {};
@@ -179,7 +179,7 @@ router.post(
   "/:orderId/create",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ shipping: ["update"] }),
   async (req, res) => {
     try {
       const order = await loadOrderForAdmin(req.params.orderId);
@@ -437,7 +437,7 @@ router.get(
   "/:orderId/order-detail",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ shipping: ["view"] }),
   async (req, res) => {
     const resp = await getOrderDetail(req.params.orderId);
     return res.status(200).json(resp);
@@ -450,7 +450,7 @@ router.post(
   "/:orderId/pickup",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ shipping: ["update"] }),
   async (req, res) => {
     const order = await loadOrderForAdmin(req.params.orderId);
     if (!order) {
@@ -479,7 +479,7 @@ router.post(
   "/:orderId/cancel-shipment",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ shipping: ["update"] }),
   async (req, res) => {
     const order = await loadOrderForAdmin(req.params.orderId);
     if (!order) {
@@ -515,7 +515,7 @@ router.get(
   "/warehouses/list",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ shipping: ["view"] }),
   async (_req, res) => {
     return res.status(200).json(await getWarehouses());
   },
@@ -526,7 +526,7 @@ router.get(
   "/ndr/list",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ shipping: ["view"] }),
   async (req, res) => {
     const { from, to, per_page, perPage, page } = req.query ?? {};
     return res
@@ -547,7 +547,7 @@ router.post(
   "/ndr/:awb/action",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ shipping: ["update"] }),
   async (req, res) => {
     try {
       const resp = await ndrAction({
@@ -587,7 +587,7 @@ router.post(
   "/manifest",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ shipping: ["view"] }),
   async (req, res) => {
     try {
       const { awbNumbers } = req.body ?? {};
@@ -604,7 +604,7 @@ router.get(
   "/returns/reasons",
   requireAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({ shipping: ["view"] }),
   async (_req, res) => {
     return res.status(200).json(await getReturnReasons());
   },
@@ -614,7 +614,7 @@ router.post(
   "/:orderId/push-return",
   requireAuth,
   requireAdmin,
-  requirePermission("update"),
+  requirePermission({ shipping: ["update"] }),
   async (req, res) => {
     try {
       const order = await loadOrderForAdmin(req.params.orderId);

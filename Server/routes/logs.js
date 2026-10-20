@@ -25,6 +25,7 @@ import {
   requireAuth,
 } from "../utils/middlewares/reqiuredAuth.js";
 import { requireAdmin, requirePermission } from "../utils/middlewares/RBAC.js";
+import { owner } from "../utils/permissions.js";
 
 const router = express.Router();
 
@@ -330,9 +331,18 @@ evt.on(Evts.USER_DELETED, async function (evtData) {
   await db.collection("sessions").findOneAndDelete({ userId: evtData.userId });
 });
 
-router.get("/", requireAuth, passUserAuth, requireAdmin, requirePermission("read"), async (req, res) => {
-  res.json({ recordsBuffer, analyticsRecordsBuffer, debugEvents });
-});
+router.get(
+  "/",
+  requireAuth,
+  passUserAuth,
+  requireAdmin,
+  requirePermission({
+    ...owner.statements,
+  }),
+  async (req, res) => {
+    res.json({ recordsBuffer, analyticsRecordsBuffer, debugEvents });
+  },
+);
 
 getAgenda().then(({ agenda, startAssiginTasks }) => {
   startAssiginTasks(() => {

@@ -33,7 +33,9 @@ router.get(
   requireAuth,
   passUserAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({
+    analytics: ["view", "export"], // allow export for admins with analytics view permission
+  }),
   async (req, res) => {
     try {
       const analytics = await SiteAnalyticsModel.findOne({
@@ -70,7 +72,10 @@ router.get(
   requireAuth,
   passUserAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({
+    analytics: ["view", "export"],
+    reports: ["view", "export"],
+  }),
   async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 100, 500);
     const skip = Math.max(parseInt(req.query.skip) || 0, 0);
@@ -113,7 +118,10 @@ router.get(
   requireAuth,
   passUserAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({
+    analytics: ["view", "export"],
+    reports: ["view", "export"],
+  }),
   async (req, res) => {
     const start = req.query.start ? new Date(req.query.start) : null;
     const end = req.query.end ? new Date(req.query.end) : null;
@@ -157,95 +165,130 @@ router.get(
   requireAuth,
   passUserAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({
+    analytics: ["view", "export"],
+    reports: ["view", "export"],
+  }),
   async (req, res) => {
     try {
       const { OrderModel } = await import("../models/schema/order.js");
       const start = req.query.start ? new Date(req.query.start) : null;
       const end = req.query.end ? new Date(req.query.end) : null;
-      const granularity = ["day", "week", "month"].includes(req.query.granularity)
+      const granularity = ["day", "week", "month"].includes(
+        req.query.granularity,
+      )
         ? req.query.granularity
         : "day";
       const match = {};
-      if (start && !Number.isNaN(start.getTime())) match.createdAt = { $gte: start };
+      if (start && !Number.isNaN(start.getTime()))
+        match.createdAt = { $gte: start };
       if (end && !Number.isNaN(end.getTime())) {
         match.createdAt = { ...(match.createdAt ?? {}), $lt: end };
       }
       const dateTrunc =
         granularity === "month"
-          ? { $dateTrunc: { date: "$createdAt", unit: "month", timezone: "UTC" } }
+          ? {
+              $dateTrunc: {
+                date: "$createdAt",
+                unit: "month",
+                timezone: "UTC",
+              },
+            }
           : granularity === "week"
-            ? { $dateTrunc: { date: "$createdAt", unit: "week", timezone: "UTC" } }
-            : { $dateTrunc: { date: "$createdAt", unit: "day", timezone: "UTC" } };
+            ? {
+                $dateTrunc: {
+                  date: "$createdAt",
+                  unit: "week",
+                  timezone: "UTC",
+                },
+              }
+            : {
+                $dateTrunc: {
+                  date: "$createdAt",
+                  unit: "day",
+                  timezone: "UTC",
+                },
+              };
 
-      const [totals, byStatus, byPayment, revenueAgg, codAgg, series, shipments] =
-        await Promise.all([
-          OrderModel.aggregate([
-            { $match: match },
-            { $group: { _id: null, count: { $sum: 1 } } },
-          ]),
-          OrderModel.aggregate([
-            { $match: match },
-            { $group: { _id: "$status", count: { $sum: 1 } } },
-          ]),
-          OrderModel.aggregate([
-            { $match: match },
-            {
-              $group: {
-                _id: {
-                  method: "$payment.method",
-                  status: "$payment.status",
+      const [
+        totals,
+        byStatus,
+        byPayment,
+        revenueAgg,
+        codAgg,
+        series,
+        shipments,
+      ] = await Promise.all([
+        OrderModel.aggregate([
+          { $match: match },
+          { $group: { _id: null, count: { $sum: 1 } } },
+        ]),
+        OrderModel.aggregate([
+          { $match: match },
+          { $group: { _id: "$status", count: { $sum: 1 } } },
+        ]),
+        OrderModel.aggregate([
+          { $match: match },
+          {
+            $group: {
+              _id: {
+                method: "$payment.method",
+                status: "$payment.status",
+              },
+              count: { $sum: 1 },
+            },
+          },
+        ]),
+        OrderModel.aggregate([
+          { $match: { ...match, "payment.status": "paid" } },
+          {
+            $group: {
+              _id: null,
+              revenue: { $sum: "$totalAmount" },
+              paidOrders: { $sum: 1 },
+            },
+          },
+        ]),
+        OrderModel.aggregate([
+          { $match: { ...match, "payment.method": "cod" } },
+          {
+            $group: {
+              _id: "$payment.codStatus",
+              count: { $sum: 1 },
+              amount: { $sum: "$totalAmount" },
+              collected: { $sum: "$payment.amountPaid" },
+            },
+          },
+        ]),
+        OrderModel.aggregate([
+          { $match: match },
+          {
+            $group: {
+              _id: dateTrunc,
+              orders: { $sum: 1 },
+              revenue: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$payment.status", "paid"] },
+                    "$totalAmount",
+                    0,
+                  ],
                 },
-                count: { $sum: 1 },
               },
             },
-          ]),
-          OrderModel.aggregate([
-            { $match: { ...match, "payment.status": "paid" } },
-            {
-              $group: {
-                _id: null,
-                revenue: { $sum: "$totalAmount" },
-                paidOrders: { $sum: 1 },
-              },
+          },
+          { $sort: { _id: 1 } },
+        ]),
+        OrderModel.aggregate([
+          { $match: match },
+          {
+            $group: {
+              _id: "$fulfillment.status",
+              count: { $sum: 1 },
             },
-          ]),
-          OrderModel.aggregate([
-            { $match: { ...match, "payment.method": "cod" } },
-            {
-              $group: {
-                _id: "$payment.codStatus",
-                count: { $sum: 1 },
-                amount: { $sum: "$totalAmount" },
-                collected: { $sum: "$payment.amountPaid" },
-              },
-            },
-          ]),
-          OrderModel.aggregate([
-            { $match: match },
-            {
-              $group: {
-                _id: dateTrunc,
-                orders: { $sum: 1 },
-                revenue: {
-                  $sum: {
-                    $cond: [{ $eq: ["$payment.status", "paid"] }, "$totalAmount", 0],
-                  },
-                },
-              },
-            },
-            { $sort: { _id: 1 } },
-          ]),
-          OrderModel.aggregate([
-            { $match: match },
-            {
-              $group: {
-                _id: "$fulfillment.status",
-                count: { $sum: 1 },
-              },
-            },
-          ]),
-        ]);
+          },
+        ]),
+      ]);
 
       const revenue = revenueAgg[0]?.revenue ?? 0;
       const paidOrders = revenueAgg[0]?.paidOrders ?? 0;
@@ -255,7 +298,9 @@ router.get(
       res.json({
         range: { start: start ?? null, end: end ?? null, granularity },
         totals: { orders: totals[0]?.count ?? 0 },
-        byStatus: Object.fromEntries((byStatus ?? []).map((r) => [r._id, r.count])),
+        byStatus: Object.fromEntries(
+          (byStatus ?? []).map((r) => [r._id, r.count]),
+        ),
         byPaymentMethod: (byPayment ?? []).map((r) => ({
           method: r._id?.method,
           status: r._id?.status,
@@ -282,8 +327,10 @@ router.get(
         })),
         definitions: {
           revenue: "sum(totalAmount) where payment.status=paid",
-          codPending: "sum(totalAmount) where method=cod and codStatus=pending_collection",
-          codCollected: "sum(amountPaid) where method=cod and codStatus=collected",
+          codPending:
+            "sum(totalAmount) where method=cod and codStatus=pending_collection",
+          codCollected:
+            "sum(amountPaid) where method=cod and codStatus=collected",
         },
       });
     } catch (error) {
@@ -298,7 +345,10 @@ router.get(
   requireAuth,
   passUserAuth,
   requireAdmin,
-  requirePermission("read"),
+  requirePermission({
+    analytics: ["view", "export"],
+    reports: ["view", "export"],
+  }),
   async (req, res) => {
     try {
       const analytics = await DailyAnalyticsModel.findOne({
