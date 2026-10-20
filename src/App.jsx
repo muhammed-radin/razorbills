@@ -147,7 +147,7 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
         {!hideChrome && <NavbarBlock />}
         {/* Public/guest pages render immediately; only protected routes wait
             for the session round-trip (avoids blocking first paint). */}

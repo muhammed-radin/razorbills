@@ -1,30 +1,37 @@
 import { db } from "./db.js";
+const OWNER_EMAILS = process.env.OWNER_EMAILS
+  ? process.env.OWNER_EMAILS.split(",").map((email) => email.trim())
+  : [];
 
 async function deleteUserById(userId) {
   await db.collection("session").deleteMany({ userId: userId });
   await db.collection("account").deleteMany({ userId: userId });
   await db.collection("users_validation").deleteOne({ id: userId });
   await db.collection("users").deleteOne({ id: userId });
+  return true;
 }
 
 async function applyBasicBetterAuthDataToUser(
   userId,
   basicBetterAuthData,
   debug = false,
+  excludeOurCollections = false,
 ) {
-  await db
-    .collection("users_validation")
-    .updateOne(
-      { id: userId },
-      { $set: basicBetterAuthData },
-      { upsert: false },
-    );
-  if (debug)
-    console.log(
-      "applyBasicBetterAuthData: basicBetterAuthData",
-      basicBetterAuthData,
-    );
-  if (debug) console.log("users_validation updated for newUserId:", userId);
+  if (excludeOurCollections === false) {
+    await db
+      .collection("users_validation")
+      .updateOne(
+        { id: userId },
+        { $set: basicBetterAuthData },
+        { upsert: false },
+      );
+    if (debug)
+      console.log(
+        "applyBasicBetterAuthData: basicBetterAuthData",
+        basicBetterAuthData,
+      );
+    if (debug) console.log("users_validation updated for newUserId:", userId);
+  }
 
   await db
     .collection("users")
@@ -34,15 +41,38 @@ async function applyBasicBetterAuthDataToUser(
       { upsert: false },
     );
   if (debug) console.log("users updated for newUserId:", userId);
+  return true;
 }
 
-function generateBasicBetterAuthData(user, oldUserId) {
+function generateBasicBetterAuthData(
+  user,
+  oldUserId,
+  coreDetailsExculde = false,
+) {
+  let isOwner = false;
+  if (
+    user.email &&
+    typeof user.email === "string" &&
+    OWNER_EMAILS.includes(user.email.trim().toLowerCase())
+  ) {
+    isOwner = true;
+  }
+
+  if (coreDetailsExculde === true) {
+    return {
+      role: isOwner ? "owner" : user.role || "user",
+      preservedOldUserId: oldUserId, // preserve the old user ID for historical purposes
+      updatedAt: user.updatedAt || new Date(),
+    };
+  }
+
   return {
     emailVerified: user.emailVerified || false,
     banned: user.banned || false,
     profilePicture: user.profilePicture || null,
     providedBy: user.providedBy || "local",
     updatedAt: user.updatedAt || new Date(),
+    role: isOwner ? "owner" : user.role || "user",
     preservedOldUserId: oldUserId, // preserve the old user ID for historical purposes
   };
 }
@@ -149,6 +179,7 @@ async function migrateOldUserToNewUser(
     );
     if (debug)
       console.log("--LOGIN: interactions updated for newUserId:", newUserId);
+    return true; // return true to indicate that the migration was successful
   }
 }
 

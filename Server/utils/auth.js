@@ -50,8 +50,10 @@ export default function createAuth(db) {
         create: {
           before: async (userData, context) => {
             return {
-              ...userData,
-              ...generateBasicBetterAuthData(userData, null),
+              data: {
+                ...userData,
+                ...generateBasicBetterAuthData(userData, null, true),
+              },
             };
           },
           after: async (userData, context) => {
@@ -87,7 +89,8 @@ export default function createAuth(db) {
                   normalizedUserData,
                   userData.preservedOldUserId || null,
                 ),
-                true,
+                false,
+                true, // Exclude our collections during this update, becuase we are already creating the user in our collections above
               );
             }
 

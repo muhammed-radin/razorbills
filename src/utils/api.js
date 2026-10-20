@@ -193,7 +193,6 @@ const api = {
   actions: {
     async logOut() {
       sessionStorage.clear();
-      localStorage.clear();
       this.alreadyTryingToGetSession = false;
       return authClient.signOut();
     },

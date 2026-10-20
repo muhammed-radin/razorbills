@@ -58,6 +58,7 @@ import { toast } from "sonner";
 import { api } from "@/utils/api";
 import { settingsApi } from "@/services/shop";
 import { decrypt, encrypt } from "@/utils/crypt";
+import { useTheme } from "@/utils/theme-provider";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { z } from "zod";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -102,6 +103,7 @@ const normalizePhoneNumber = (value) => {
 
 const SettingsPage = () => {
   const { t, i18n } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [showPassword, setShowPassword] = useState(false);
@@ -719,36 +721,30 @@ const SettingsPage = () => {
                     <div className="grid grid-cols-3 gap-4">
                       <ThemeCard
                         value="light"
-                        currentTheme={userData.theme}
+                        currentTheme={theme}
                         icon={<Sun className="w-6 h-6" />}
                         label={t("settings.light", {
                           defaultValue: "Light",
                         })}
-                        onClick={() =>
-                          setUserData({ ...userData, theme: "light" })
-                        }
+                        onClick={() => setTheme("light")}
                       />
                       <ThemeCard
                         value="dark"
-                        currentTheme={userData.theme}
+                        currentTheme={theme}
                         icon={<Moon className="w-6 h-6" />}
                         label={t("settings.dark", {
                           defaultValue: "Dark",
                         })}
-                        onClick={() =>
-                          setUserData({ ...userData, theme: "dark" })
-                        }
+                        onClick={() => setTheme("dark")}
                       />
                       <ThemeCard
                         value="system"
-                        currentTheme={userData.theme}
+                        currentTheme={theme}
                         icon={<Smartphone className="w-6 h-6" />}
                         label={t("settings.system", {
                           defaultValue: "System",
                         })}
-                        onClick={() =>
-                          setUserData({ ...userData, theme: "system" })
-                        }
+                        onClick={() => setTheme("system")}
                       />
                     </div>
                   </div>
