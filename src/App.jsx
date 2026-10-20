@@ -25,6 +25,7 @@ const GUEST_ACCESS_PATHS = [
   "/categories",
   "/order-status",
   "/product/:id",
+  "/404",
 
   // auth
   "/login",

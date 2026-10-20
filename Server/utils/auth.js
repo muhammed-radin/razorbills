@@ -18,13 +18,7 @@ import {
   generateBasicBetterAuthData,
   migrateOldUserToNewUser,
 } from "./auth.migrate.js";
-import {
-  ac,
-  adminRole,
-  ecommerceRoles,
-  managerRole,
-  memberRole,
-} from "./permissions.js";
+import { ac, ecommerceRoles } from "./permissions.js";
 
 let authInstance = null;
 
