@@ -1,4 +1,5 @@
 // server/middleware/rbacMiddleware.js
+import { adminAc } from "better-auth/plugins/admin/access";
 import { getAuthInstance } from "../auth.js";
 
 // Middleware A: Protect Custom User Data Routes (Users access ONLY their own data)
@@ -28,7 +29,7 @@ export const requireAdmin = async (req, res, next) => {
     body: {
       userId: userID,
       permissions: {
-        project: ["read", "create", "update", "delete"],
+        ...adminAc.statements, // Include all admin permissions
       },
     },
   });
