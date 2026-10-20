@@ -38,7 +38,6 @@ async function applyBasicBetterAuthDataToUser(
 
 function generateBasicBetterAuthData(user, oldUserId) {
   return {
-    adminPermissions: user.adminPermissions || [],
     emailVerified: user.emailVerified || false,
     banned: user.banned || false,
     profilePicture: user.profilePicture || null,

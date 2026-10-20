@@ -18,6 +18,13 @@ import {
   generateBasicBetterAuthData,
   migrateOldUserToNewUser,
 } from "./auth.migrate.js";
+import {
+  ac,
+  adminRole,
+  ecommerceRoles,
+  managerRole,
+  memberRole,
+} from "./permissions.js";
 
 let authInstance = null;
 
@@ -75,7 +82,6 @@ export default function createAuth(db) {
                 name: userData.name,
                 image: userData.image,
                 role: "user",
-                adminPermissions: [],
                 isActive: true,
                 providedBy: userData.providedBy || "local",
                 preservedOldUserId: userData.preservedOldUserId || null,
@@ -102,7 +108,7 @@ export default function createAuth(db) {
               }),
             );
 
-            return { data: { ...userData, adminPermissions: [] } };
+            return { data: { ...userData } };
           },
         },
         delete: {
@@ -285,8 +291,10 @@ export default function createAuth(db) {
         },
       }),
       admin({
-        adminRoles: ["admin"],
+        adminRoles: ["admin", "owner"],
         defaultRole: "user",
+        ac: ac,
+        roles: ecommerceRoles,
       }),
     ],
     account: {
@@ -320,7 +328,6 @@ export default function createAuth(db) {
             emailVerified: profile.email_verified,
             name: nameFallback,
             image: profilePicture,
-            adminPermissions: [],
             role: "user",
             ...generateBasicBetterAuthData(profile, null),
             providedBy: "google",
@@ -338,17 +345,6 @@ export default function createAuth(db) {
           input: true,
           returned: true,
           fieldName: "profilePicture", // Ensure this matches the field name in your Mongoose model
-        },
-        adminPermissions: {
-          type: [String],
-          // Must NOT be required: the client never sends it (input: false)
-          // and better-auth rejects sign-up when a required additional
-          // field is missing. Server always defaults/sets it ([] for users).
-          defaultValue: [],
-          required: false,
-          input: false,
-          returned: true,
-          fieldName: "adminPermissions", // Ensure this matches the field name in your Mongoose model
         },
         providedBy: {
           type: String,
