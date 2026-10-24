@@ -132,6 +132,67 @@ export function parseFeatures(text) {
 }
 
 /* ------------------------------------------------------------------ */
+/* Videos                                                              */
+/* ------------------------------------------------------------------ */
+
+/** Coerce a string or partial object into the product video shape. */
+function normalizeVideo(value) {
+  if (typeof value === "string") {
+    const url = value.trim();
+    return url ? { url } : null;
+  }
+  if (!value || typeof value !== "object") return null;
+
+  const url = String(value.url ?? value.src ?? "").trim();
+  if (!url) return null;
+
+  return {
+    url,
+    poster: String(value.poster ?? value.thumbnail ?? "").trim(),
+    duration: Number(value.duration) || 0,
+    width: Number(value.width) || 0,
+    height: Number(value.height) || 0,
+    size: Number(value.size) || 0,
+  };
+}
+
+/**
+ * Parse `## Videos` bullets. Each bullet is either a plain URL or
+ * `URL | poster-url`; a JSON object on its own line is accepted too.
+ */
+function parseVideosSection(content) {
+  if (Array.isArray(content)) {
+    return content.map(normalizeVideo).filter(Boolean);
+  }
+  if (!content) return [];
+
+  return content
+    .split(/\r?\n/)
+    .map((raw) => raw.trim())
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => {
+      const value = line
+        .replace(/^[-*+]\s+/, "")
+        .replace(/^\d+[.)]\s+/, "")
+        .trim();
+
+      if (!value) return null;
+
+      if (value.startsWith("{")) {
+        try {
+          return normalizeVideo(JSON.parse(value));
+        } catch {
+          return null;
+        }
+      }
+
+      const [url, poster = ""] = value.split("|").map((part) => part.trim());
+      return normalizeVideo({ url, poster });
+    })
+    .filter(Boolean);
+}
+
+/* ------------------------------------------------------------------ */
 /* Full product document                                               */
 /* ------------------------------------------------------------------ */
 
@@ -228,6 +289,7 @@ export function parseProductDocument(text) {
     tags: parseListSection(sections["tags"] ?? scalars.tags),
     keywords: parseListSection(sections["keywords"] ?? scalars.keywords, ","),
     images: parseListSection(sections["images"] ?? scalars.images, "\nurl"),
+    videos: parseVideosSection(sections["videos"] ?? scalars.videos),
   };
   return { source: "md", raw: data };
 }
@@ -285,6 +347,7 @@ export function normalizeProductForValidation(p) {
     tags: p.tags ?? [],
     keywords: p.keywords ?? [],
     images: (p.images ?? []).filter((i) => String(i ?? "").trim() !== ""),
+    videos: (p.videos ?? []).map(normalizeVideo).filter(Boolean),
     dimensions: {
       width: Number(p.width) || 0,
       height: Number(p.height) || 0,
@@ -369,4 +432,8 @@ search keyword one, search keyword two
 
 - https://example.com/product-1.jpg
 - https://example.com/product-2.jpg
+
+## Videos
+
+- https://example.com/product-demo.webm
 `;

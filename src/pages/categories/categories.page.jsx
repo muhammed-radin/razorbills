@@ -27,7 +27,7 @@ function CategoriesPage() {
 
   const handleCardClick = (id) => {
     if (id) {
-      navigate(`/search?transform=${id}`);
+      navigate(`/search?transform=true&category=${id}`);
     }
   };
 
@@ -42,7 +42,7 @@ function CategoriesPage() {
             subtitle:
               item.description ||
               t("categories.noDescription", "No description available"),
-            image: item.image || null,
+            image: item.image || item.Logo || null,
             /* Resolved from the curated, statically analysable icon registry
              * (src/lib/icons.jsx) — importing lucide's dynamic maps pulls in
              * every icon module and floods the network with requests. */

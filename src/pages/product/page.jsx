@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, lazy, Suspense } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
   Minus,
   Plus,
   PackageSearch,
+  Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { currency } from "@/utils/currency";
@@ -63,12 +64,18 @@ import { ReviewRatingSection } from "@/components/review/review-rating";
 import { useStrictEffect } from "@/utils/hooks/useStrictEffect";
 import { useApiCacheStore } from "@/stores/apiCacheStore";
 
+/* Videos are optional, so the player (Vidstack runtime + CSS) is only fetched
+ * on product pages that actually contain one. */
+const ProductVideoPlayer = lazy(
+  () => import("@/components/product-video-player"),
+);
+
 const ProductDetailsPage = () => {
   const { t } = useTranslation();
   const { id } = useParams();
   const { data } = useUserSession();
   const user = data?.user;
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedMedia, setSelectedMedia] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState(() => {
     const cached = useApiCacheStore.getState().getCache(`product:${id}`);
@@ -102,7 +109,7 @@ const ProductDetailsPage = () => {
 
   useStrictEffect(() => {
     if (!id) return;
-    setSelectedImage(0);
+    setSelectedMedia(0);
     setQuantity(1);
 
     // Hydrate wishlist items if empty
@@ -302,6 +309,31 @@ const ProductDetailsPage = () => {
     return null;
   }
 
+  const galleryImages = product.images?.length
+    ? product.images
+    : product.thumbnail
+      ? [product.thumbnail]
+      : [];
+
+  const galleryMedia = [
+    ...galleryImages.map((src, index) => ({
+      key: `image-${index}`,
+      type: "image",
+      src,
+      poster: "",
+      alt: `${product.title} ${index + 1}`,
+    })),
+    ...(product.videos || []).map((video, index) => ({
+      key: `video-${index}`,
+      type: "video",
+      src: video.url,
+      poster: video.poster || "",
+      alt: `${product.title} ${index + 1}`,
+    })),
+  ];
+
+  const activeMedia = galleryMedia[selectedMedia] || galleryMedia[0];
+
   return (
     <div className="min-h-screen max-w-7xl flex flex-col p-4 lg:p-8 mx-auto">
       <Helmet>
@@ -336,37 +368,80 @@ const ProductDetailsPage = () => {
       <div className="max-w-7xl justify-items-center lg:justify-items-normal grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full">
         {/* Product Images */}
         <div className="space-y-4 w-full max-w-lg">
-          {/* Main Image */}
-          <div className="aspect-square rounded-xl overflow-hidden bg-gray-50 border">
-            <img
-              src={
-                (product.images && product.images[selectedImage]) ||
-                product.thumbnail
-              }
-              alt={product.title}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-            />
+          {/* Main media: image or video */}
+          <div className="relative aspect-square rounded-xl overflow-hidden bg-gray-50 border">
+            {activeMedia?.type === "video" ? (
+              <Suspense
+                fallback={
+                  <div className="grid h-full w-full place-items-center text-sm text-muted-foreground">
+                    {t("common.loading")}
+                  </div>
+                }
+              >
+                <ProductVideoPlayer
+                  src={activeMedia.src}
+                  poster={activeMedia.poster}
+                  title={`${product.title} — ${t("product.video")}`}
+                />
+              </Suspense>
+            ) : (
+              <img
+                src={activeMedia?.src || product.thumbnail}
+                alt={product.title}
+                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              />
+            )}
           </div>
 
-          {/* Thumbnail Images */}
-          {product.images && product.images.length > 1 && (
+          {/* Media thumbnails (images + videos) */}
+          {galleryMedia.length > 1 && (
             <div className="flex space-x-3 overflow-x-auto pb-2">
-              {product.images.map((image, index) => (
+              {galleryMedia.map((media, index) => (
                 <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
+                  key={media.key}
+                  type="button"
+                  onClick={() => setSelectedMedia(index)}
+                  aria-pressed={selectedMedia === index}
+                  aria-label={
+                    media.type === "video"
+                      ? `${t("product.playVideo")}: ${media.alt}`
+                      : media.alt
+                  }
                   className={cn(
-                    "w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0",
-                    selectedImage === index
+                    "relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0",
+                    selectedMedia === index
                       ? "border-primary"
                       : "border-gray-200",
                   )}
                 >
-                  <img
-                    src={image}
-                    alt={`${product.title} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                  {media.type === "video" ? (
+                    <>
+                      {media.poster ? (
+                        <img
+                          src={media.poster}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <video
+                          src={`${media.src}#t=0.1`}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <span className="absolute inset-0 grid place-items-center bg-black/35">
+                        <Play className="h-5 w-5 fill-white text-white" />
+                      </span>
+                    </>
+                  ) : (
+                    <img
+                      src={media.src}
+                      alt={media.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </button>
               ))}
             </div>
