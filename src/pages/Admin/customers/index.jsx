@@ -32,6 +32,7 @@ import {
   UserCog2,
   Trash2,
   RefreshCcw,
+  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -813,6 +814,24 @@ export default function CustomersPage() {
                               ></AvatarIcon>
                               <div className="min-w-0 flex-1">
                                 <CardTitle className="text-base sm:text-lg truncate">
+                                  {customer.role === "owner" && (
+                                    <Crown className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-amber-500 inline-block mr-1" />
+                                  )}
+                                  {customer.role === "admin" && (
+                                    <BadgeCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-green-500  rounded-full inline-block mr-1" />
+                                  )}
+                                  {customer.role === "manager" && (
+                                    <UserCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-green-500 inline-block mr-1" />
+                                  )}
+                                  {customer.role === "productManager" && (
+                                    <Package className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-purple-500 inline-block mr-1" />
+                                  )}
+                                  {customer.role === "orderManager" && (
+                                    <ShoppingCart className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-yellow-500 inline-block mr-1" />
+                                  )}
+                                  {customer.role === "supportAgent" && (
+                                    <Headphones className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-red-500 inline-block mr-1" />
+                                  )}
                                   {customer.name}
                                 </CardTitle>
                                 <p className="text-xs sm:text-sm text-muted-foreground font-mono truncate">
