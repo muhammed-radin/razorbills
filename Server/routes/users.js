@@ -241,16 +241,17 @@ router.patch(
             isActive: false,
           }
         : { banned: false, banReason: "", isActive: true };
-      const result = await db
+      const result = await getAuthInstance().api.banUser({
+        body: { userId, ...update },
+        headers: req.headers,
+      });
+      const updated = await db
         .collection("users")
         .updateOne({ id: userId }, { $set: update });
       if (result.matchedCount === 0) {
         return res.status(404).json({ error: "User not found" });
       }
-      const user = await db
-        .collection("users")
-        .findOne({ id: userId }, { projection: { password: 0, token: 0 } });
-      res.json({ success: true, user });
+      res.json({ success: true });
     } catch (err) {
       console.error("Error updating user status:", err);
       res.status(500).json({ error: "Failed to update user status" });
@@ -267,16 +268,7 @@ router.put(
   async (req, res) => {
     try {
       const userId = req.params.id;
-      const {
-        name,
-        avatar,
-        image,
-        profilePicture,
-        phone,
-        isActive,
-        email,
-        role,
-      } = req.body;
+      const { name, avatar, image, profilePicture, phone, isActive } = req.body;
 
       const updateFields = {};
       if (name) updateFields.name = encrypt(name);
@@ -288,8 +280,6 @@ router.put(
         );
       if (phone) updateFields.phoneNumber = encrypt(phone);
       if (typeof isActive === "boolean") updateFields.isActive = isActive;
-      if (email) updateFields.email = encrypt(email);
-      if (role) updateFields.role = role;
 
       updateFields.updatedAt = new Date().toISOString();
 
@@ -299,7 +289,7 @@ router.put(
         headers: req.headers,
       });
 
-      res.json({
+      res.status(200).json({
         success: true,
         message: "User profile updated successfully",
         result,
@@ -310,11 +300,11 @@ router.put(
       // 1. Check if it's a Better Auth specific API error
       if (isAPIError(error)) {
         // Example: User not found / Session expired usually returns a 401 or 404 status
-        return res.status(error.status).json({
+        return res.status(error.statusCode).json({
           success: false,
-          message: error.message, // e.g., "Unauthorized" or validation errors
-          errorCode: error.code, // e.g., "USER_NOT_FOUND" or "SESSION_EXPIRED"
-          error: error, // Include the full error object for debugging purposes
+          message: error.body?.message,
+          errorCode: error.statusCode,
+          error: error.status,
         });
       }
 

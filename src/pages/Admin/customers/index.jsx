@@ -31,6 +31,7 @@ import {
   Crown,
   UserCog2,
   Trash2,
+  RefreshCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,12 +146,13 @@ export default function CustomersPage() {
 
   const [loadError, setLoadError] = useState(null);
 
-  const fetchCustomers = async (search = "") => {
+  const fetchCustomers = async (search = "", realtime = false) => {
     try {
       setIsLoading(true);
       setLoadError(null);
       const data = await usersApi.list({
         limit: 50,
+        realtime: realtime ? true : false,
         ...(search?.trim() ? { search: search.trim() } : {}),
       });
       const users = Array.isArray(data) ? data : (data.users ?? []);
@@ -423,26 +425,11 @@ export default function CustomersPage() {
             required: true,
           },
           {
-            name: "email",
-            label: "Email",
-            type: "email",
-            defaultValue: customer.email,
-            required: true,
-          },
-          {
             name: "phone",
             label: "Phone",
             type: "tel",
             defaultValue: customer.phone,
             required: false,
-          },
-          {
-            name: "role",
-            label: "Role",
-            type: "select",
-            defaultValue: new String(customer.role).trim().toLowerCase(),
-            required: true,
-            options: roleOptions,
           },
           {
             name: "avatar",
@@ -462,12 +449,7 @@ export default function CustomersPage() {
           name: z
             .string()
             .min(3, "Name is required and must be at least 3 characters long"),
-          email: z.string().email("Invalid email address"),
           phone: z.string().optional(),
-          role: z.enum(
-            roleOptions.map((o) => o.value),
-            "Invalid role selected",
-          ),
           avatar: z.string().url("Invalid avatar URL").optional(),
           isActive: z.boolean().optional(),
         }),
@@ -481,12 +463,9 @@ export default function CustomersPage() {
           toast.promise(
             () =>
               new Promise(async (resolve, reject) => {
-                const newRole = result.role;
                 usersApi
                   .update(customer.id, {
-                    role: newRole,
                     name: result.name,
-                    email: result.email,
                     phone: result.phone,
                     avatar: result.avatar,
                     isActive: result.isActive,
@@ -509,39 +488,85 @@ export default function CustomersPage() {
       });
   };
 
-  const filteredCustomers = customers
-    .filter((customer) => {
-      const matchesSearch =
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.id.toLowerCase().includes(searchQuery.toLowerCase());
+  const deleteCustomer = (customer) => {
+    alert.error({
+      // error used for here to show red color for delete confirmation ( as Danger action )
+      title: "Delete Customer",
+      description: `Are you sure you want to delete ${customer.name}?`,
+      onClose: (confirmed) => {
+        if (confirmed === true) {
+          toast.promise(
+            new Promise(async (resolve, reject) => {
+              try {
+                const { data, error } = await authClient.admin.removeUser({
+                  userId: customer.id,
+                });
 
-      const matchesTier = tierFilter === "all" || customer.tier === tierFilter;
-      const matchesTab =
-        currentTab === "all" ||
-        (currentTab === "active" && customer.status === "active") ||
-        (currentTab === "inactive" && customer.status === "inactive");
-
-      return matchesSearch && matchesTier && matchesTab;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "recent":
-          return new Date(b.lastOrder) - new Date(a.lastOrder);
-        case "oldest":
-          return new Date(a.joinDate) - new Date(b.joinDate);
-        case "spent-desc":
-          return b.totalSpent - a.totalSpent;
-        case "spent-asc":
-          return a.totalSpent - b.totalSpent;
-        case "orders-desc":
-          return b.totalOrders - a.totalOrders;
-        default:
-          return 0;
-      }
+                if (error) {
+                  reject(error.message || "Failed to delete customer");
+                } else {
+                  resolve(data);
+                  setCustomers((prev) =>
+                    prev.filter((c) => c.id !== customer.id),
+                  );
+                }
+              } catch (error) {
+                reject(error.message || "Failed to delete customer");
+              }
+            }),
+            {
+              loading: "Deleting customer...",
+              success: "Customer deleted successfully",
+              error: (err) => err || "Failed to delete customer",
+            },
+          );
+        } else {
+          toast.info("Delete action cancelled");
+        }
+      },
+      buttonText: "Delete",
+      secondaryButtonText: "Cancel",
     });
+  };
 
-  const stats = getCustomerStats();
+  const filteredCustomers = useMemo(() => {
+    return customers
+      .filter((customer) => {
+        const matchesSearch =
+          customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          customer.id.toLowerCase().includes(searchQuery.toLowerCase());
+
+        const matchesTier =
+          tierFilter === "all" || customer.tier === tierFilter;
+        const matchesTab =
+          currentTab === "all" ||
+          (currentTab === "active" && customer.status === "active") ||
+          (currentTab === "inactive" && customer.status === "inactive");
+
+        return matchesSearch && matchesTier && matchesTab;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "recent":
+            return new Date(b.lastOrder) - new Date(a.lastOrder);
+          case "oldest":
+            return new Date(a.joinDate) - new Date(b.joinDate);
+          case "spent-desc":
+            return b.totalSpent - a.totalSpent;
+          case "spent-asc":
+            return a.totalSpent - b.totalSpent;
+          case "orders-desc":
+            return b.totalOrders - a.totalOrders;
+          default:
+            return 0;
+        }
+      });
+  }, [customers, searchQuery, tierFilter, currentTab, sortBy]);
+  const stats = useMemo(
+    () => getCustomerStats(),
+    [customers, searchQuery, tierFilter, currentTab, sortBy],
+  );
 
   if (isLoading) {
     return (
@@ -682,8 +707,17 @@ export default function CustomersPage() {
                   </SelectContent>
                 </Select>
                 <Button
+                  onClick={() => fetchCustomers("", true)}
+                  className="h-10 sm:h-11 px-4 sm:px-6 col-span-2 sm:col-span-1 text-xs sm:text-sm"
+                  variant="outline"
+                >
+                  <RefreshCcw className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  Refresh
+                </Button>
+                <Button
                   onClick={exportCustomersCsv}
                   className="h-10 sm:h-11 px-4 sm:px-6 col-span-2 sm:col-span-1 text-xs sm:text-sm"
+                  variant="secondary"
                 >
                   <Download className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   Export

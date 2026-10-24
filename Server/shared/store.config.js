@@ -1,7 +1,7 @@
 /**
  * store.config.js
  * ---------------------------------------------------------------------------
- * SINGLE SOURCE OF TRUTH for the store / brand ("RazorBills").
+ * SINGLE SOURCE OF TRUTH for the store / brand ("RazorBillz").
  *
  * This module is intentionally dependency-free and uses only ESM syntax so it
  * can be imported from BOTH sides of the project:
@@ -37,11 +37,11 @@ export const storeConfig = {
    * ----------------------------------------------------------------------- */
   brand: {
     /** Customer-facing brand / store name. */
-    name: { en: "RazorBills", ml: "RazorBills" },
+    name: { en: "RazorBillz", ml: "RazorBillz" },
     /** Registered / legal entity name (shown in policies, invoices). */
-    legalName: { en: "RazorBills", ml: "RazorBills" },
+    legalName: { en: "RazorBillz", ml: "RazorBillz" },
     /** Short machine-friendly name (used for slugs, CSV prefixes, etc.). */
-    shortName: "RazorBills",
+    shortName: "RazorBillz",
     /** One-line marketing tagline. */
     tagline: {
       en: "Your one-stop shop for the latest and greatest electronics.",
@@ -49,8 +49,8 @@ export const storeConfig = {
     },
     /** Short "about the store" paragraph. */
     about: {
-      en: "RazorBills is a comprehensive billing and commerce platform that simplifies invoicing, shopping and payments. We supply industrial-grade electronic components to engineers, makers, startups and institutions across India.",
-      ml: "ഇൻവോയ്സിംഗ്, ഷോപ്പിംഗ്, പേയ്മെന്റ് എന്നിവ ലളിതമാക്കുന്ന സമഗ്രമായ ബില്ലിംഗ് & കൊമേഴ്സ് പ്ലാറ്റ്ഫോമാണ് RazorBills. ഇന്ത്യയിലുടനീളമുള്ള എഞ്ചിനീയർമാർക്കും മേക്കർമാർക്കും സ്റ്റാർട്ടപ്പുകൾക്കും സ്ഥാപനങ്ങൾക്കും ഞങ്ങൾ ഇൻഡസ്ട്രിയൽ-ഗ്രേഡ് ഇലക്ട്രോണിക് കമ്പോണന്റുകൾ നൽകുന്നു.",
+      en: "RazorBillz is a comprehensive billing and commerce platform that simplifies invoicing, shopping and payments. We supply industrial-grade electronic components to engineers, makers, startups and institutions across India.",
+      ml: "ഇൻവോയ്സിംഗ്, ഷോപ്പിംഗ്, പേയ്മെന്റ് എന്നിവ ലളിതമാക്കുന്ന സമഗ്രമായ ബില്ലിംഗ് & കൊമേഴ്സ് പ്ലാറ്റ്ഫോമാണ് RazorBillz. ഇന്ത്യയിലുടനീളമുള്ള എഞ്ചിനീയർമാർക്കും മേക്കർമാർക്കും സ്റ്റാർട്ടപ്പുകൾക്കും സ്ഥാപനങ്ങൾക്കും ഞങ്ങൾ ഇൻഡസ്ട്രിയൽ-ഗ്രേഡ് ഇലക്ട്രോണിക് കമ്പോണന്റുകൾ നൽകുന്നു.",
     },
   },
 
@@ -58,8 +58,8 @@ export const storeConfig = {
    * Site / URLs / localisation defaults
    * ----------------------------------------------------------------------- */
   site: {
-    url: "https://razorbills.vercel.app",
-    domain: "razorbills.vercel.app",
+    url: "https://RazorBillz.vercel.app",
+    domain: "RazorBillz.vercel.app",
     /** Currency used to render prices & invoices. */
     currency: "INR",
     currencySymbol: "₹",
@@ -77,7 +77,8 @@ export const storeConfig = {
    * ----------------------------------------------------------------------- */
   assets: {
     logo: "/favicon_io/android-chrome-512x512.png",
-    ogImage: "https://razorbills.vercel.app/favicon_io/android-chrome-512x512.png",
+    ogImage:
+      "https://RazorBillz.vercel.app/favicon_io/android-chrome-512x512.png",
     icon: "/favicon.ico",
     appleTouchIcon: "/favicon_io/apple-touch-icon.png",
     favicon32: "/favicon_io/favicon-32x32.png",
@@ -91,9 +92,9 @@ export const storeConfig = {
    * ----------------------------------------------------------------------- */
   contact: {
     email: {
-      support: "support@razorbills.com",
-      care: "care@razorbills.in",
-      privacy: "privacy@razorbills.com",
+      support: "support@RazorBillz.com",
+      care: "care@RazorBillz.in",
+      privacy: "privacy@RazorBillz.com",
     },
     phone: {
       /** Primary display number. */
@@ -117,7 +118,7 @@ export const storeConfig = {
    * ----------------------------------------------------------------------- */
   address: {
     // TODO: replace with the real registered office address.
-    line1: { en: "RazorBills", ml: "RazorBills" },
+    line1: { en: "RazorBillz", ml: "RazorBillz" },
     line2: { en: "", ml: "" },
     city: { en: "Malappuram", ml: "മലപ്പുറം" },
     state: { en: "Kerala", ml: "കേരളം" },
@@ -131,11 +132,11 @@ export const storeConfig = {
    * Social profiles. Set a value to null/"" to hide it in the UI.
    * ----------------------------------------------------------------------- */
   social: {
-    instagram: null, // TODO: e.g. "https://www.instagram.com/razorbills"
+    instagram: null, // TODO: e.g. "https://www.instagram.com/RazorBillz"
     youtube: null,
     facebook: null,
     x: null,
-    website: "https://razorbills.vercel.app",
+    website: "https://RazorBillz.vercel.app",
     whatsapp: "https://wa.me/919847000000",
   },
 
@@ -144,22 +145,21 @@ export const storeConfig = {
    * ----------------------------------------------------------------------- */
   seo: {
     title: {
-      en: "RazorBills - Your One-Stop Billing & Commerce Solution",
-      ml: "RazorBills - നിങ്ങളുടെ വൺ-സ്റ്റോപ്പ് ബില്ലിംഗ് & കൊമേഴ്സ് പരിഹാരം",
+      en: "RazorBillz - Your One-Stop Billing & Commerce Solution",
+      ml: "RazorBillz - നിങ്ങളുടെ വൺ-സ്റ്റോപ്പ് ബില്ലിംഗ് & കൊമേഴ്സ് പരിഹാരം",
     },
     description: {
-      en: "RazorBills is a comprehensive billing solution that simplifies your invoicing, shopping, and payment processes. Manage your bills efficiently with our user-friendly platform.",
-      ml: "ഇൻവോയ്സിംഗ്, ഷോപ്പിംഗ്, പേയ്മെന്റ് പ്രക്രിയകൾ ലളിതമാക്കുന്ന സമഗ്ര ബില്ലിംഗ് പരിഹാരമാണ് RazorBills. ഞങ്ങളുടെ ഉപയോക്തൃ-സൗഹൃദ പ്ലാറ്റ്ഫോം ഉപയോഗിച്ച് ബില്ലുകൾ കാര്യക്ഷമമായി കൈകാര്യം ചെയ്യുക.",
+      en: "RazorBillz is a comprehensive billing solution that simplifies your invoicing, shopping, and payment processes. Manage your bills efficiently with our user-friendly platform.",
+      ml: "ഇൻവോയ്സിംഗ്, ഷോപ്പിംഗ്, പേയ്മെന്റ് പ്രക്രിയകൾ ലളിതമാക്കുന്ന സമഗ്ര ബില്ലിംഗ് പരിഹാരമാണ് RazorBillz. ഞങ്ങളുടെ ഉപയോക്തൃ-സൗഹൃദ പ്ലാറ്റ്ഫോം ഉപയോഗിച്ച് ബില്ലുകൾ കാര്യക്ഷമമായി കൈകാര്യം ചെയ്യുക.",
     },
     keywords: {
-      en: "razorbills, electronics, electronic components, billing, invoicing, online shopping, kerala, india",
-      ml: "razorbills, ഇലക്ട്രോണിക്സ്, ഇലക്ട്രോണിക് കമ്പോണന്റുകൾ, ബില്ലിംഗ്, ഇൻവോയ്സിംഗ്, ഓൺലൈൻ ഷോപ്പിംഗ്, കേരളം, ഇന്ത്യ",
+      en: "RazorBillz, electronics, electronic components, billing, invoicing, online shopping, kerala, india",
+      ml: "RazorBillz, ഇലക്ട്രോണിക്സ്, ഇലക്ട്രോണിക് കമ്പോണന്റുകൾ, ബില്ലിംഗ്, ഇൻവോയ്സിംഗ്, ഓൺലൈൻ ഷോപ്പിംഗ്, കേരളം, ഇന്ത്യ",
     },
     ogType: "website",
     twitterCard: "summary_large_image",
     robots: "index, follow",
-    googleSiteVerification:
-      "veZy80f_V7aq-MaybBl9rqtELtiV6r8QxQ3X_ZGWurU",
+    googleSiteVerification: "veZy80f_V7aq-MaybBl9rqtELtiV6r8QxQ3X_ZGWurU",
   },
 
   /* ----------------------------------------------------------------------- *
@@ -248,7 +248,10 @@ export function resolveStore(lang = DEFAULT_STORE_LOCALE) {
   ].filter(Boolean);
   const addressOneLine = addressLines.join(", ");
 
-  const whatsappDigits = String(contact.phone.whatsapp || "").replace(/\D/g, "");
+  const whatsappDigits = String(contact.phone.whatsapp || "").replace(
+    /\D/g,
+    "",
+  );
 
   return {
     lang: l,

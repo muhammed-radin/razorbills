@@ -42,6 +42,19 @@ const productSchema = z.object({
     .array(z.string().min(8, "Image URL must be at least 8 characters long"))
     .min(1, "At least one image is required")
     .default([]),
+  videos: z
+    .array(
+      z.object({
+        url: z.string().min(8, "Video URL must be at least 8 characters long"),
+        poster: z.string().optional().default(""),
+        duration: z.number().optional().default(0),
+        width: z.number().optional().default(0),
+        height: z.number().optional().default(0),
+        size: z.number().optional().default(0),
+      }),
+    )
+    .optional()
+    .default([]),
   rating: z.number().optional().default(0),
   reviewCount: z.number().optional().default(0),
   dimensions: z

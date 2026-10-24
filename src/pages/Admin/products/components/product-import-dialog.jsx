@@ -51,7 +51,7 @@ function download(name, content, type) {
  * designed to be AI-generatable) or a JSON payload, validates it against the
  * shared product Zod schema, previews the result, then applies it to the
  * form via onApply({formValues, specifications, features, tags, keywords,
- * images, thumbnail}).
+ * images, videos, thumbnail}).
  */
 export default function ProductImportDialog({ onApply, trigger }) {
   const [open, setOpen] = useState(false);
@@ -105,6 +105,7 @@ export default function ProductImportDialog({ onApply, trigger }) {
       tags: doc.raw.tags ?? [],
       keywords: doc.raw.keywords ?? [],
       images: doc.raw.images ?? [],
+      videos: doc.raw.videos ?? [],
     });
     const verdict = validateProduct(normalized);
     return { ...verdict, normalized, source: doc.source };
@@ -156,6 +157,7 @@ export default function ProductImportDialog({ onApply, trigger }) {
         tags: normalized.tags,
         keywords: normalized.keywords,
         images: normalized.images,
+        videos: normalized.videos,
         thumbnail: normalized.thumbnail,
       });
       toast.success("Product document applied — review and save");
@@ -318,6 +320,9 @@ export default function ProductImportDialog({ onApply, trigger }) {
                       <Badge variant="outline">{preview.normalized.tags.length} tags</Badge>
                       <Badge variant="outline">
                         {preview.normalized.images.length + (preview.normalized.thumbnail ? 1 : 0)} images
+                      </Badge>
+                      <Badge variant="outline">
+                        {preview.normalized.videos.length} videos
                       </Badge>
                     </div>
                   </>

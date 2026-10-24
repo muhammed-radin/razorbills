@@ -1,6 +1,19 @@
 import mongoose, { Schema } from "mongoose";
 import { productStatusCache } from "../../utils/cache-utils/product-status.js";
 
+/** Video metadata stored on a product (the file itself lives on Cloudinary). */
+const VideoSchema = new Schema(
+  {
+    url: { type: String, required: true },
+    poster: { type: String, default: "" },
+    duration: { type: Number, default: 0 },
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+    size: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
+
 export const ProductSchema = new Schema(
   {
     id: { type: String, required: true, unique: true },
@@ -27,6 +40,7 @@ export const ProductSchema = new Schema(
     },
     features: { type: [String], default: [] },
     images: { type: [String], default: [] },
+    videos: { type: [VideoSchema], default: [] },
     dimensions: {
       width: { type: Number, default: 0 },
       height: { type: Number, default: 0 },

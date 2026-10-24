@@ -98,7 +98,7 @@
     "subscribed": "Subscribed! Welcome to {{brand}}."
   },
   "home": {
-    "helmetTitle": "RazorBills - High-Quality Electronic Components",
+    "helmetTitle": "RazorBillz - High-Quality Electronic Components",
     "helmetDescription": "Your one-stop shop for the latest and greatest electronics. Industrial-grade electronic components for engineers, makers, startups, and institutions.",
     "searchPlaceholder": "Search electronic components, boards, sensors...",
     "featuredCollection": "Featured Collection",
@@ -112,8 +112,8 @@
     "requestProduct": "Request Product"
   },
   "search": {
-    "helmetTitle": "Search - RazorBills",
-    "helmetDescription": "Search for products, categories, or keywords on RazorBills. Find the perfect electronic components and gadgets.",
+    "helmetTitle": "Search - RazorBillz",
+    "helmetDescription": "Search for products, categories, or keywords on RazorBillz. Find the perfect electronic components and gadgets.",
     "pageTitle": "Search Products",
     "pageSubtitle": "Find the perfect electronic components and gadgets",
     "inputPlaceholder": "Search products, categories, or keywords...",
@@ -156,6 +156,8 @@
     "addToFavorites": "Add to favorites",
     "tags": "Tags:",
     "productDetails": "Product Details",
+    "video": "Video",
+    "playVideo": "Play video",
     "specifications": "Specifications",
     "techSpecs": "Technical specifications and details",
     "features": "Features",
@@ -202,8 +204,8 @@
     "featureSupportDesc": "24/7 customer support available"
   },
   "auth": {
-    "loginTitle": "Log in to RazorBills",
-    "signupTitle": "Sign up for RazorBills",
+    "loginTitle": "Log in to RazorBillz",
+    "signupTitle": "Sign up for RazorBillz",
     "or": "OR",
     "continueWithGoogle": "Continue with Google",
     "googleSignInFailed": "Google sign-in failed, Try again.",
@@ -262,7 +264,7 @@
   "categories": {
     "title": "Categories",
     "subtitle": "Browse our wide range of categories and find the perfect products for your needs.",
-    "helmetTitle": "Categories - RazorBills",
+    "helmetTitle": "Categories - RazorBillz",
     "helmetDescription": "Browse our wide range of categories and find the perfect products for your needs.",
     "noCategories": "No categories available.",
     "wishlistTitle": "Wishlists",
@@ -373,7 +375,7 @@
     "setDefault": "Set as Default"
   },
   "about": {
-    "helmetTitle": "About Us - RazorBills",
+    "helmetTitle": "About Us - RazorBillz",
     "title": "About Us",
     "subtitle": "Industrial-grade electronic components for engineers, makers, startups, and institutions.",
     "nationwide": "India · Nationwide Delivery",
@@ -412,7 +414,7 @@
     "ctaButton": "Explore Components"
   },
   "contact": {
-    "helmetTitle": "Contact Us - RazorBills",
+    "helmetTitle": "Contact Us - RazorBillz",
     "title": "Contact Us",
     "subtitle": "We're here to help with product questions, orders, and general inquiries.",
     "responseNote": "Our support team will respond as soon as possible.",
@@ -540,7 +542,7 @@
   "terms": {
     "title": "Terms & Conditions",
     "lastUpdated": "Last updated",
-    "welcome": "Welcome to RazorBills. By accessing or using our website, you agree to be bound by these Terms and Conditions.",
+    "welcome": "Welcome to RazorBillz. By accessing or using our website, you agree to be bound by these Terms and Conditions.",
     "sections": {
       "useOfWebsite": {
         "title": "Use of Website",
@@ -602,7 +604,7 @@
     "title": "Privacy Policy",
     "lastUpdated": "Last updated:",
     "introTitle": "Introduction",
-    "introText": "At RazorBills, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, protect, and share your information when you use our e-commerce platform for electronics and electronic components.",
+    "introText": "At RazorBillz, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, protect, and share your information when you use our e-commerce platform for electronics and electronic components.",
     "collectTitle": "Information We Collect",
     "personalInfoTitle": "Personal Information",
     "personalInfo1": "Name, email address, and phone number",
@@ -664,17 +666,17 @@
     "retentionTitle": "Data Retention",
     "retentionDesc": "We retain your personal information only for as long as necessary to fulfill the purposes outlined in this policy, comply with legal obligations, resolve disputes, and enforce our agreements. Account information is typically retained while your account is active and for a reasonable period thereafter for legal and business purposes.",
     "childrenTitle": "Children's Privacy",
-    "childrenDesc": "RazorBills is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately, and we will delete such information from our systems.",
+    "childrenDesc": "RazorBillz is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us immediately, and we will delete such information from our systems.",
     "transfersTitle": "International Data Transfers",
     "transfersDesc": "Your information may be transferred to and processed in countries other than your country of residence. These countries may have different data protection laws. When we transfer your information internationally, we ensure appropriate safeguards are in place to protect your privacy and comply with applicable data protection laws.",
     "updatesTitle": "Policy Updates",
     "updatesDesc": "We may update this Privacy Policy from time to time to reflect changes in our practices or applicable laws. We will notify you of any material changes by posting the updated policy on our website and updating the \"Last updated\" date. Your continued use of our services after such changes constitutes your acceptance of the updated policy.",
     "contactTitle": "Contact Us",
     "contactDesc": "If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:",
-    "team": "RazorBills Privacy Team",
+    "team": "RazorBillz Privacy Team",
     "email": "Email: {{email}}",
     "commitment": "We are committed to resolving any privacy-related concerns promptly and transparently.",
-    "footerNote": "© {{year}} RazorBills. Your privacy is our priority."
+    "footerNote": "© {{year}} RazorBillz. Your privacy is our priority."
   },
   "paymentSuccess": {
     "title": "Payment Successful",

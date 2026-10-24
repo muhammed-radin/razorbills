@@ -6,7 +6,7 @@
  * brand names or meta copy, so SEO metadata stays consistent everywhere.
  *
  *   <StoreMeta />                       // site defaults (localized)
- *   <StoreMeta title="Checkout" />      // "Checkout | RazorBills"
+ *   <StoreMeta title="Checkout" />      // "Checkout | RazorBillz"
  *   <StoreMeta title="X" noIndex />     // adds robots noindex,nofollow
  */
 import { Helmet } from "react-helmet-async";
@@ -43,9 +43,7 @@ export function StoreMeta({
     <Helmet prioritizeSeoTags>
       <title>{pageTitle}</title>
       <meta name="description" content={pageDescription} />
-      {pageKeywords ? (
-        <meta name="keywords" content={pageKeywords} />
-      ) : null}
+      {pageKeywords ? <meta name="keywords" content={pageKeywords} /> : null}
       <meta
         name="robots"
         content={noIndex ? "noindex, nofollow" : store.seo.robots}

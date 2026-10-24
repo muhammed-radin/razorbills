@@ -1,5 +1,4 @@
 // server/middleware/rbacMiddleware.js
-import { adminAc } from "better-auth/plugins/admin/access";
 import { getAuthInstance } from "../auth.js";
 
 // Middleware A: Protect Custom User Data Routes (Users access ONLY their own data)
@@ -25,11 +24,18 @@ export const requireAdmin = async (req, res, next) => {
     });
   }
 
+  // Gate on the staff marker every non-shopper role has (owner, admin,
+  // manager, productManager, orderManager, supportAgent). Demanding the whole
+  // Better Auth `adminAc.statements` set here only ever matched `owner`
+  // (custom roles intentionally do not grant `user:set-role` or
+  // `impersonate-admins`), which locked every other staff role out of the
+  // routes below. The real capability check lives in `requirePermission`,
+  // which every admin route pairs with this middleware.
   const { success, error } = await getAuthInstance().api.userHasPermission({
     body: {
       userId: userID,
       permissions: {
-        ...adminAc.statements, // Include all admin permissions
+        dashboard: ["view"],
       },
     },
   });

@@ -31,6 +31,7 @@ import { useEffect } from "react";
 import { useStoreInfo } from "@/utils/store";
 import { useUserSession } from "@/contexts/user-session-context";
 import { decrypt } from "@/utils/crypt";
+import AvatarIcon from "./avatar-icon";
 
 const navItems = {
   main: {
@@ -170,8 +171,13 @@ export function AdminSidebar({
       <SidebarFooter className="border-t border-sidebar-border">
         <div className="p-4">
           <div className="flex items-center gap-2 text-sm">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-              <Users className="h-4 w-4 text-primary" />
+            <div className="flex items-center justify-center rounded-full bg-primary/10">
+              <AvatarIcon
+                className={"w-8 h-8"}
+                name={adminName}
+                img={session?.user?.image}
+                size={32}
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-medium">{decrypt(adminName)}</span>

@@ -39,11 +39,26 @@ export const Footer = () => {
     {
       title: t("footer.shop"),
       links: [
-        { title: t("footer.phones"), href: "/search?transform=phones" },
-        { title: t("footer.laptops"), href: "/search?transform=laptops" },
-        { title: t("footer.audio"), href: "/search?transform=audio" },
-        { title: t("footer.gaming"), href: "/search?transform=gaming" },
-        { title: t("footer.components"), href: "/search?transform=components" },
+        {
+          title: t("footer.phones"),
+          href: "/search?transform=true&category=phones",
+        },
+        {
+          title: t("footer.laptops"),
+          href: "/search?transform=true&category=laptops",
+        },
+        {
+          title: t("footer.audio"),
+          href: "/search?transform=true&category=audio",
+        },
+        {
+          title: t("footer.gaming"),
+          href: "/search?transform=true&category=gaming",
+        },
+        {
+          title: t("footer.components"),
+          href: "/search?transform=true&category=components",
+        },
         { title: t("footer.allCategories"), href: "/categories" },
       ],
     },
@@ -85,7 +100,9 @@ export const Footer = () => {
           <div className="absolute -bottom-16 -left-16 size-56 rounded-full bg-violet-500/15 blur-3xl" />
           <div className="relative grid gap-6 md:grid-cols-[1.2fr_1fr] items-center">
             <div>
-              <Badge className="rounded-full">{t("footer.newsletterBadge")}</Badge>
+              <Badge className="rounded-full">
+                {t("footer.newsletterBadge")}
+              </Badge>
               {/* h2: the footer is a top-level landmark, and on pages whose
                * deepest heading is an h1 (404, forgot-password) an h3 here
                * would skip a level. */}
@@ -100,7 +117,8 @@ export const Footer = () => {
               className="flex gap-2 rounded-2xl border bg-background p-2 shadow-sm"
               onSubmit={(e) => {
                 e.preventDefault();
-                if (!email.includes("@")) return toast.error(t("footer.invalidEmail"));
+                if (!email.includes("@"))
+                  return toast.error(t("footer.invalidEmail"));
                 toast.success(t("footer.subscribed", { brand: store.name }));
                 setEmail("");
               }}
@@ -118,7 +136,9 @@ export const Footer = () => {
                 aria-label={t("footer.subscribe")}
               >
                 <Send className="size-4 sm:mr-1.5" />
-                <span className="hidden sm:inline">{t("footer.subscribe")}</span>
+                <span className="hidden sm:inline">
+                  {t("footer.subscribe")}
+                </span>
               </Button>
             </form>
           </div>
@@ -171,7 +191,9 @@ export const Footer = () => {
           </div>
           <div className="mt-4 flex flex-wrap gap-1.5">
             {["UPI", "Visa", "Mastercard", "COD", "GST invoice"].map((p) => (
-              <Badge key={p} variant="secondary" className="rounded-full">{p}</Badge>
+              <Badge key={p} variant="secondary" className="rounded-full">
+                {p}
+              </Badge>
             ))}
           </div>
         </div>
@@ -179,7 +201,9 @@ export const Footer = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{col.title}</h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                {col.title}
+              </h3>
               <ul className="mt-4 space-y-2.5">
                 {col.links.map((l) => (
                   <li key={l.title}>
@@ -200,22 +224,40 @@ export const Footer = () => {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center gap-2 rounded-2xl border bg-background px-4 py-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5"><Truck className="size-3.5 text-emerald-600" /> {t("footer.trustDispatch")}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Truck className="size-3.5 text-emerald-600" />{" "}
+            {t("footer.trustDispatch")}
+          </span>
           <span className="hidden sm:inline">·</span>
-          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-3.5 text-emerald-600" /> {t("footer.trustGenuine")}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <ShieldCheck className="size-3.5 text-emerald-600" />{" "}
+            {t("footer.trustGenuine")}
+          </span>
           <span className="hidden sm:inline">·</span>
-          <span className="inline-flex items-center gap-1.5"><BadgeCheck className="size-3.5 text-emerald-600" /> {t("footer.trustReturns")}</span>
+          <span className="inline-flex items-center gap-1.5">
+            <BadgeCheck className="size-3.5 text-emerald-600" />{" "}
+            {t("footer.trustReturns")}
+          </span>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <Separator className="mt-6" />
         <div className="py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>&copy; {new Date().getFullYear()} {store.legalName}. {t("footer.allRightsReserved")}</span>
+          <span>
+            &copy; {new Date().getFullYear()} {store.legalName}.{" "}
+            {t("footer.allRightsReserved")}
+          </span>
           <span className="inline-flex items-center gap-3">
-            <Link to="/privacy" className="hover:text-foreground">{t("footer.privacy")}</Link>
-            <Link to="/terms" className="hover:text-foreground">{t("footer.terms")}</Link>
-            <Link to="/shipping" className="hover:text-foreground">{t("footer.shipping")}</Link>
+            <Link to="/privacy" className="hover:text-foreground">
+              {t("footer.privacy")}
+            </Link>
+            <Link to="/terms" className="hover:text-foreground">
+              {t("footer.terms")}
+            </Link>
+            <Link to="/shipping" className="hover:text-foreground">
+              {t("footer.shipping")}
+            </Link>
           </span>
         </div>
       </div>
