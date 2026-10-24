@@ -32,6 +32,13 @@ function storeHtmlConfigPlugin() {
 export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss(), storeHtmlConfigPlugin()],
+    /* @ffmpeg/ffmpeg spawns its worker with
+     * `new Worker(new URL("./worker.js", import.meta.url))`. Pre-bundling it
+     * with esbuild rewrites that to a path that does not exist, so keep it out
+     * of the dependency optimizer and let Vite resolve it natively. */
+    optimizeDeps: {
+      exclude: ["@ffmpeg/ffmpeg"],
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

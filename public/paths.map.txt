@@ -138,7 +138,7 @@ GROUP A: PUBLIC STOREFRONT & CATALOG PAGES
 - Layout Chrome      : Navbar, Mobile Bottom Nav, and Footer are fully visible.
 - Robots.txt Status  : Allowed (User-agent: * Allow: /)
 - Sitemap Status     : Included (Priority: 1.0, Changefreq: daily, Lastmod: 2026-07-29).
-- Page Details       : Main landing page for RazorBills eCommerce store. Features promotional hero banners,
+- Page Details       : Main landing page for RazorBillz eCommerce store. Features promotional hero banners,
                        category showcases, featured product carousels, limited-time offers, recommendation
                        grids, service highlights (free delivery, secure payments), and brand trust metrics.
 
@@ -205,7 +205,7 @@ GROUP B: INFORMATIONAL & LEGAL POLICY PAGES
 - Layout Chrome      : Navbar, Mobile Bottom Nav, and Footer visible.
 - Robots.txt Status  : Allowed.
 - Sitemap Status     : Included (Priority: 0.7, Changefreq: monthly).
-- Page Details       : RazorBills company profile, mission statement, brand journey, founding philosophy,
+- Page Details       : RazorBillz company profile, mission statement, brand journey, founding philosophy,
                        commitment to genuine electronics, customer satisfaction metrics, and brand values.
 
 [ROUTE 06]
@@ -336,7 +336,7 @@ GROUP C: AUTHENTICATION & IDENTITY FLOWS
 - Who Can Visit      : System/Browser during OAuth flow.
 - Who Can Access     : Transient access for users completing third-party OAuth (Google).
 - Route Guard Rule   : Unprotected intermediary handler.
-- Layout Chrome      : Standard layout with loading indicator and RazorBills logo.
+- Layout Chrome      : Standard layout with loading indicator and RazorBillz logo.
 - Robots.txt Status  : Allowed.
 - Sitemap Status     : Excluded.
 - Page Details       : Google OAuth provider redirection intermediary. Renders a brand logo spinner with

@@ -48,7 +48,10 @@ export default function AdminSettingsPage() {
         setLoadingAdmins(true);
         setAdminError(null);
         const { usersApi } = await import("@/services/shop");
-        const data = await usersApi.list({ limit: 50 });
+        const data = await usersApi.list({
+          limit: 50,
+          roles: "admin,owner",
+        });
         const users = Array.isArray(data) ? data : (data.users ?? []);
         if (!cancelled) {
           setAdmins(

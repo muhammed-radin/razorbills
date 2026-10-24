@@ -1,4 +1,4 @@
-# robots.txt for RazorBills
+# robots.txt for RazorBillz
 User-agent: *
 Allow: /
 Disallow: /auth/

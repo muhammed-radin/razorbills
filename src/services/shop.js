@@ -128,10 +128,12 @@ export const interactionsApi = {
       return Promise.resolve({ suppressed: true, cached: true });
     }
     visitedProducts.set(productId, now);
-    return post("/api/interactions/product/visit", { productId }).catch((err) => {
-      visitedProducts.delete(productId);
-      throw err;
-    });
+    return post("/api/interactions/product/visit", { productId }).catch(
+      (err) => {
+        visitedProducts.delete(productId);
+        throw err;
+      },
+    );
   },
   share: (productId) => post("/api/interactions/product/share", { productId }),
   rate: (productId, rating) =>
@@ -151,6 +153,7 @@ export const usersApi = {
   profile: () => get("/api/users/profile"),
   list: (params) => get("/api/users", { params }),
   get: (id) => get(`/api/users/${id}`),
+  update: (id, payload) => put(`/api/users/${id}`, payload),
   setStatus: (id, banned, banReason) =>
     patch(`/api/users/${id}/status`, { banned, banReason }),
 };

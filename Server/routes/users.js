@@ -59,14 +59,12 @@ router.post("/profile", requireAuth, passUserAuth, async (req, res) => {
       headers: req.headers,
     });
 
-    res.json({ message: "Profile updated successfully", user: result });
+    res.json({ message: "Profile updated successfully", result });
   } catch (error) {
     // FAILURE: An error was thrown
 
     // 1. Check if it's a Better Auth specific API error
     if (isAPIError(error)) {
-      console.error(`Auth Error [${error.status}]: ${error.message}`);
-
       // Example: User not found / Session expired usually returns a 401 or 404 status
       return res.status(error.status).json({
         success: false,
@@ -77,7 +75,6 @@ router.post("/profile", requireAuth, passUserAuth, async (req, res) => {
     }
 
     // 2. Fallback for generic database or network crashes
-    console.error("System error:", error);
     return res.status(500).json({
       success: false,
       message: "An internal server error occurred.",
@@ -86,7 +83,7 @@ router.post("/profile", requireAuth, passUserAuth, async (req, res) => {
   }
 });
 
-/* GET users listing. */
+/* GET users listing. for Admin */
 router.get(
   "/",
   requireAuth,
@@ -107,6 +104,8 @@ router.get(
     let sortOrder = req.query?.sortOrder === "asc" ? 1 : -1;
     let startIndex =
       parseInt(req.query?.startIndex) || parseInt(req.body?.startIndex) || 0;
+    let roles =
+      req.query?.roles?.split(",") || req.body?.roles?.split(",") || null;
 
     if (page > 1) {
       startIndex = (page - 1) * limit;
@@ -119,6 +118,9 @@ router.get(
     if (search) {
       const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
       query = { $or: [{ name: rx }, { email: rx }, { id: rx }] };
+    }
+    if (roles && Array.isArray(roles) && roles.length > 0) {
+      query.role = { $in: roles };
     }
 
     let totalCount = await db.collection("users").countDocuments(query);
@@ -252,6 +254,76 @@ router.patch(
     } catch (err) {
       console.error("Error updating user status:", err);
       res.status(500).json({ error: "Failed to update user status" });
+    }
+  },
+);
+
+// update user profile route for admin
+router.put(
+  "/:id",
+  requireAuth,
+  requireAdmin,
+  requirePermission({ user: ["update", "set-role", "list", "set-email"] }),
+  async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const {
+        name,
+        avatar,
+        image,
+        profilePicture,
+        phone,
+        isActive,
+        email,
+        role,
+      } = req.body;
+
+      const updateFields = {};
+      if (name) updateFields.name = encrypt(name);
+      if (avatar)
+        updateFields.image = encrypt(avatar || image || profilePicture);
+      if (avatar)
+        updateFields.profilePicture = encrypt(
+          avatar || image || profilePicture,
+        );
+      if (phone) updateFields.phoneNumber = encrypt(phone);
+      if (typeof isActive === "boolean") updateFields.isActive = isActive;
+      if (email) updateFields.email = encrypt(email);
+      if (role) updateFields.role = role;
+
+      updateFields.updatedAt = new Date().toISOString();
+
+      const result = await getAuthInstance().api.updateUser({
+        query: { id: userId },
+        body: updateFields,
+        headers: req.headers,
+      });
+
+      res.json({
+        success: true,
+        message: "User profile updated successfully",
+        result,
+      });
+    } catch (error) {
+      // FAILURE: An error was thrown
+
+      // 1. Check if it's a Better Auth specific API error
+      if (isAPIError(error)) {
+        // Example: User not found / Session expired usually returns a 401 or 404 status
+        return res.status(error.status).json({
+          success: false,
+          message: error.message, // e.g., "Unauthorized" or validation errors
+          errorCode: error.code, // e.g., "USER_NOT_FOUND" or "SESSION_EXPIRED"
+          error: error, // Include the full error object for debugging purposes
+        });
+      }
+
+      // 2. Fallback for generic database or network crashes
+      return res.status(500).json({
+        success: false,
+        message: "An internal server error occurred.",
+        error: error.message || "Unknown error",
+      });
     }
   },
 );

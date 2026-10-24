@@ -47,7 +47,7 @@ function CategoriesPage() {
              * (src/lib/icons.jsx) — importing lucide's dynamic maps pulls in
              * every icon module and floods the network with requests. */
             icon: item.icon ? resolveIcon(item.icon) : Folder,
-            theme: "amber",
+            theme: "default",
             size: "small",
           };
         });
@@ -77,28 +77,27 @@ function CategoriesPage() {
         </header>
 
         {/* Category List */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 auto-rows-auto">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 auto-rows-fr">
           {isLoading ? (
             <>
-              <Skeleton className="h-40 w-full rounded-lg" />
-              <Skeleton className="h-40 w-full rounded-lg" />
-              <Skeleton className="h-40 w-full rounded-lg" />
-              <Skeleton className="h-40 w-full rounded-lg" />
-              <Skeleton className="h-40 w-full rounded-lg" />
-              <Skeleton className="h-40 w-full rounded-lg" />
-              <Skeleton className="h-40 w-full rounded-lg" />
-              <Skeleton className="h-40 w-full rounded-lg" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
+              <Skeleton className="h-52 w-full rounded-2xl" />
             </>
           ) : displayItems.length === 0 ? (
             <p className="text-gray-500 col-span-full text-center">
               {t("categories.noCategories")}
             </p>
           ) : (
-            displayItems.map((item, index) => (
+            displayItems.map((item) => (
               <GridCard
                 key={item.id}
                 item={item}
-                index={index}
                 /* Card titles sit directly under the page <h1> here, so they
                  * are h2s; inside a titled section (home page) h3 is right. */
                 titleAs="h2"

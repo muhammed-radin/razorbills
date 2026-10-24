@@ -14,6 +14,7 @@ import React, {
  * once an alert is opened, so they load on demand instead of riding along in
  * the entry bundle. */
 const DialogAlertView = lazy(() => import("./dialog-alert-view"));
+const DialogPromptView = lazy(() => import("./dialog-prompt-view"));
 
 export const DialogAlertContext = createContext(null);
 
@@ -48,6 +49,7 @@ export const alert = {
    * @param {{ title: string, description: string, buttonText: string, onClose: function, secondaryButtonText: string}} config
    */
   confirm: (config) => Promise.reject(new Error("Alert not initialized")),
+  prompt: (config) => Promise.reject(new Error("Alert not initialized")),
 };
 
 window.alerter = alert;
@@ -55,6 +57,7 @@ window.alerter = alert;
 export function DialogAlertProvider({ children }) {
   const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState("info");
+  const [mode, setMode] = useState("alert");
   const [config, setConfig] = useState({
     title: "",
     description: "",
@@ -64,6 +67,7 @@ export function DialogAlertProvider({ children }) {
   });
 
   const triggerAlert = useCallback((alertType, options) => {
+    setMode("alert");
     setType(alertType);
     setConfig(options);
     setIsOpen(true);
@@ -88,9 +92,9 @@ export function DialogAlertProvider({ children }) {
   const close = useCallback((options) => {
     setIsOpen(false);
     if (options && typeof options.onClose === "function") {
-      options.onClose(options.confirmed);
+      options.onClose(mode === "prompt" ? options.values : options.confirmed);
     }
-  }, []);
+  }, [mode]);
 
   const confirm = useCallback(
     (options) => {
@@ -116,29 +120,60 @@ export function DialogAlertProvider({ children }) {
     [triggerAlert],
   );
 
+  const prompt = useCallback((options = {}) => {
+    return new Promise((resolve, reject) => {
+      try {
+        setMode("prompt");
+        setConfig({
+          title: "",
+          description: "",
+          fields: [],
+          buttonText: "Submit",
+          secondaryButtonText: "Cancel",
+          initialValues: {},
+          ...options,
+          onClose: (values) => resolve(values ?? null),
+        });
+        setIsOpen(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     alert.success = success;
     alert.error = error;
     alert.warning = warning;
     alert.info = info;
     alert.confirm = confirm;
+    alert.prompt = prompt;
     alert.close = close;
-  }, [success, error, warning, info, confirm, close]);
+  }, [success, error, warning, info, confirm, prompt, close]);
 
   return (
     <DialogAlertContext.Provider
-      value={{ success, error, warning, info, close, confirm }}
+      value={{ success, error, warning, info, close, confirm, prompt }}
     >
       {children}
       {isOpen && (
         <Suspense fallback={null}>
-          <DialogAlertView
-            open={isOpen}
-            onOpenChange={setIsOpen}
-            type={type}
-            config={config}
-            onClose={close}
-          />
+          {mode === "prompt" ? (
+            <DialogPromptView
+              open={isOpen}
+              onOpenChange={setIsOpen}
+              config={config}
+              onClose={(values) => close({ ...config, values })}
+            />
+          ) : (
+            <DialogAlertView
+              open={isOpen}
+              onOpenChange={setIsOpen}
+              type={type}
+              config={config}
+              onClose={close}
+            />
+          )}
         </Suspense>
       )}
     </DialogAlertContext.Provider>

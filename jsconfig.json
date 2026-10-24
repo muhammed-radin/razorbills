@@ -5,5 +5,18 @@
       "@/*": ["./src/*"]
     }
   },
-  "exclude": ["Server/**/*"]
+  "exclude": [
+    "Server/**",
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "out/**",
+    ".next/**",
+    "coverage/**",
+    ".cache/**",
+    ".turbo/**",
+    "public/**",
+    "scripts/**",
+    "tests/**"
+  ]
 }

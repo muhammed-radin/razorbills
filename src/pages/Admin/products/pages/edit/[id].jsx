@@ -5,7 +5,6 @@ import { ArrowLeft, Plus, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { api } from "@/utils/api";
-import axios from "axios";
 import { toast } from "sonner";
 import {
   Accordion,
@@ -575,13 +574,25 @@ export default function EditProductPage() {
   /* see docs/PRODUCT_MD_FORMAT.md — validated by the shared zod schema.
    * On edit the route param is authoritative, so the document's id is
    * ignored (it must describe THIS product).                            */
-  const applyProductImport = ({ formValues, specifications: importedSpecs, features: importedFeatures, tags: importedTags, keywords: importedKeywords, images: importedImages, thumbnail: importedThumbnail }) => {
+  const applyProductImport = ({
+    formValues,
+    specifications: importedSpecs,
+    features: importedFeatures,
+    tags: importedTags,
+    keywords: importedKeywords,
+    images: importedImages,
+    thumbnail: importedThumbnail,
+  }) => {
     form.reset({
       ...form.getValues(),
       ...formValues,
       id, // keep this edit page's product id
     });
-    setSpecifications(importedSpecs.length ? [...importedSpecs, { label: "", value: "" }] : [{ label: "", value: "" }]);
+    setSpecifications(
+      importedSpecs.length
+        ? [...importedSpecs, { label: "", value: "" }]
+        : [{ label: "", value: "" }],
+    );
     setFeatures(importedFeatures.length ? [...importedFeatures, ""] : [""]);
     setTags(importedTags);
     setKeywords(importedKeywords);

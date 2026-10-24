@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -11,7 +11,6 @@ import {
 import {
   Users,
   Search,
-  Filter,
   Download,
   Eye,
   Mail,
@@ -23,16 +22,15 @@ import {
   MoreVertical,
   UserPlus,
   Edit,
-  Trash2,
   Star,
   TrendingUp,
-  Award,
-  Heart,
   Package,
   Ban,
   CheckCircle,
   UserCheck,
   Crown,
+  UserCog2,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +70,10 @@ import { usersApi } from "@/services/shop";
 import { decrypt, decryptAddress, decryptField } from "@/utils/crypt";
 import { cn } from "@/lib/utils";
 import AvatarIcon from "@/components/avatar-icon";
+import { api } from "@/utils/api";
+import { alert } from "@/components/dialog-alert-provider";
+import z from "zod";
+import { authClient } from "@/lib/auth-client";
 
 const customerTierConfig = {
   new: {
@@ -117,7 +119,16 @@ export default function CustomersPage() {
   const [togglingId, setTogglingId] = useState(null);
   const searchTimer = useRef(null);
 
+  const [isSudo, setSudo] = useState(false);
+
   useEffect(() => {
+    async function checkSudo() {
+      let { data: session } = await api.getSession();
+      if (session && session.user) {
+        setSudo(session.user.role === "owner" || session.user.role === "admin");
+      }
+    }
+    checkSudo();
     fetchCustomers();
   }, []);
 
@@ -161,9 +172,13 @@ export default function CustomersPage() {
             // Phone numbers may be stored encrypted (address-book flow).
             phone: decryptField(u.phoneNumber) || "No phone number registered",
             image: decrypt(u.image) ?? "",
+            // Determine the user's tier based on their role.
             tier: u.role === "admin" || u.role === "owner" ? "vip" : "regular",
+            role: u.role ?? "user",
             totalOrders: u.totalOrders ?? 0,
             totalSpent: u.totalSpent ?? 0,
+            isActive: u.banned && u.isActive === false ? false : true,
+            avatar: u.image ? decrypt(u.image) : null,
             averageOrderValue: u.totalOrders
               ? (u.totalSpent ?? 0) / u.totalOrders
               : 0,
@@ -173,7 +188,12 @@ export default function CustomersPage() {
             lastOrder: u.lastLogin
               ? new Date(u.lastLogin).toISOString().split("T")[0]
               : "",
-            location: address.city ?? "",
+            location:
+              address.street && address.city && address.state
+                ? address.street + ", " + address.city + ", " + address.state
+                : address.street && address.city
+                  ? address.street + ", " + address.city
+                  : "No location registered",
             status: u.banned ? "inactive" : "active",
           };
         }),
@@ -320,6 +340,173 @@ export default function CustomersPage() {
       console.error("CSV export failed:", error);
       toast.error("Failed to export customers");
     }
+  };
+
+  const roleOptions = [
+    { value: "user", label: "User" },
+    { value: "admin", label: "Admin" },
+    { value: "owner", label: "Owner" },
+  ];
+
+  const openChangeRole = (customer) => {
+    alert
+      .prompt({
+        title: "Change Customer Role",
+        description: `Change the role of ${customer.name}.`,
+        fields: [
+          {
+            name: "role",
+            label: "Role",
+            type: "select",
+            defaultValue: new String(customer.role).trim().toLowerCase(),
+            required: true,
+            options: roleOptions,
+          },
+        ],
+      })
+      .then(function (result) {
+        if (result && result.role && result.role !== customer.role) {
+          toast.promise(
+            () =>
+              new Promise(async (resolve, reject) => {
+                const newRole = result.role;
+                authClient.admin
+                  .setRole(
+                    {
+                      userId: customer.id,
+                      role: newRole,
+                    },
+                    {
+                      onSuccess: () => {
+                        resolve();
+                        setCustomers(() =>
+                          customers.map((c) =>
+                            c.id === customer.id ? { ...c, role: newRole } : c,
+                          ),
+                        );
+                      },
+                      onError: (ctx) => {
+                        reject(ctx?.error?.message || "Failed to change role");
+                      },
+                    },
+                  )
+                  .then(({ error }) => {
+                    if (error) {
+                      reject(error.message || "Failed to change role");
+                    }
+                  })
+                  .catch((error) => {
+                    reject("Network error or unexpected issue occurred");
+                  });
+              }),
+            {
+              loading: "Changing role...",
+              success: `Role changed to ${result.role}`,
+              error: (err) => err || "Failed to change role",
+            },
+          );
+        }
+      });
+  };
+
+  const openProfileEdit = (customer) => {
+    alert
+      .prompt({
+        title: "Edit Customer Profile",
+        description: `Edit the profile of ${customer.name}.`,
+        fields: [
+          {
+            name: "name",
+            label: "Name",
+            type: "text",
+            defaultValue: customer.name,
+            required: true,
+          },
+          {
+            name: "email",
+            label: "Email",
+            type: "email",
+            defaultValue: customer.email,
+            required: true,
+          },
+          {
+            name: "phone",
+            label: "Phone",
+            type: "tel",
+            defaultValue: customer.phone,
+            required: false,
+          },
+          {
+            name: "role",
+            label: "Role",
+            type: "select",
+            defaultValue: new String(customer.role).trim().toLowerCase(),
+            required: true,
+            options: roleOptions,
+          },
+          {
+            name: "avatar",
+            label: "Avatar URL",
+            type: "text",
+            defaultValue: customer.image,
+            required: false,
+          },
+          {
+            name: "isActive",
+            label: "Active Status",
+            type: "checkbox",
+            defaultValue: !!customer.isActive,
+          },
+        ],
+        schema: z.object({
+          name: z
+            .string()
+            .min(3, "Name is required and must be at least 3 characters long"),
+          email: z.string().email("Invalid email address"),
+          phone: z.string().optional(),
+          role: z.enum(
+            roleOptions.map((o) => o.value),
+            "Invalid role selected",
+          ),
+          avatar: z.string().url("Invalid avatar URL").optional(),
+          isActive: z.boolean().optional(),
+        }),
+      })
+      .then(function (result) {
+        // check if the result is valid and different from the current customer data
+        const isDifferent = Object.keys(result).some((key) => {
+          return result[key] !== customer[key];
+        });
+        if (result && isDifferent) {
+          toast.promise(
+            () =>
+              new Promise(async (resolve, reject) => {
+                const newRole = result.role;
+                usersApi
+                  .update(customer.id, {
+                    role: newRole,
+                    name: result.name,
+                    email: result.email,
+                    phone: result.phone,
+                    avatar: result.avatar,
+                    isActive: result.isActive,
+                  })
+                  .then((result) => {
+                    console.log("Profile update result:", result);
+                    resolve();
+                  })
+                  .catch((error) => {
+                    reject("Network error or unexpected issue occurred");
+                  });
+              }),
+            {
+              loading: "Updating profile...",
+              success: "Profile updated successfully",
+              error: (err) => err || "Failed to update profile",
+            },
+          );
+        }
+      });
   };
 
   const filteredCustomers = customers
@@ -511,7 +698,7 @@ export default function CustomersPage() {
           <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50 gap-1">
             <TabsTrigger
               value="all"
-              className="flex flex-col items-center gap-1 py-2 sm:py-3 text-xs sm:text-sm"
+              className="flex flex-row items-center gap-2 py-2 sm:py-3 text-xs sm:text-sm"
             >
               <span className="font-semibold">All</span>
               <Badge
@@ -523,7 +710,7 @@ export default function CustomersPage() {
             </TabsTrigger>
             <TabsTrigger
               value="active"
-              className="flex flex-col items-center gap-1 py-2 sm:py-3 text-xs sm:text-sm"
+              className="flex flex-row items-center gap-2 py-2 sm:py-3 text-xs sm:text-sm"
             >
               <span className="font-semibold">Active</span>
               <Badge
@@ -535,7 +722,7 @@ export default function CustomersPage() {
             </TabsTrigger>
             <TabsTrigger
               value="inactive"
-              className="flex flex-col items-center gap-1 py-2 sm:py-3 text-xs sm:text-sm"
+              className="flex flex-row items-center gap-2 py-2 sm:py-3 text-xs sm:text-sm"
             >
               <span className="font-semibold">Inactive</span>
               <Badge
@@ -627,6 +814,20 @@ export default function CustomersPage() {
                                     Send Email
                                   </a>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => openChangeRole(customer)}
+                                  disabled={isSudo === false}
+                                >
+                                  <UserCog2 className="mr-2 h-4 w-4" />
+                                  Change Role
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => openProfileEdit(customer)}
+                                  disabled={isSudo === false}
+                                >
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Update details
+                                </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   className={
@@ -634,12 +835,21 @@ export default function CustomersPage() {
                                       ? "text-red-600"
                                       : "text-green-600"
                                   }
+                                  disabled={isSudo === false}
                                   onClick={() => toggleCustomerStatus(customer)}
                                 >
                                   <Ban className="mr-2 h-4 w-4" />
                                   {customer.status === "active"
                                     ? "Deactivate"
                                     : "Reactivate"}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => deleteCustomer(customer)}
+                                  disabled={isSudo === false}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Customer
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -648,21 +858,33 @@ export default function CustomersPage() {
                         <CardContent className="pt-3 sm:pt-4 space-y-3 sm:space-y-4 p-3 sm:p-4">
                           {/* Tier Badge */}
                           <div className="flex items-center justify-between gap-2">
-                            <Badge
-                              className={cn(
-                                "gap-1.5 sm:gap-2 border text-xs",
-                                customerTierConfig[customer.tier].color,
-                              )}
-                            >
-                              <span
+                            <div className="flex flex-row gap-2">
+                              <Badge
                                 className={cn(
-                                  "h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full",
-                                  customerTierConfig[customer.tier].dotColor,
+                                  "gap-1.5 sm:gap-2 border text-xs",
+                                  customerTierConfig[customer.tier].color,
                                 )}
-                              ></span>
-                              <TierIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              {customerTierConfig[customer.tier].label}
-                            </Badge>
+                              >
+                                <span
+                                  className={cn(
+                                    "h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full",
+                                    customerTierConfig[customer.tier].dotColor,
+                                  )}
+                                ></span>
+                                <TierIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                {customerTierConfig[customer.tier].label}
+                              </Badge>
+                              <Badge
+                                className={cn(
+                                  "gap-1.5 sm:gap-2 border text-xs",
+                                  "bg-card/10 text-primary border-border",
+                                )}
+                              >
+                                {/* <TierIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> */}
+                                {new String(customer.role).at(0).toUpperCase() +
+                                  new String(customer.role).slice(1)}
+                              </Badge>
+                            </div>
                             <Badge
                               variant={
                                 customer.status === "active"
