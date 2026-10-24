@@ -348,6 +348,10 @@ export default function CustomersPage() {
     { value: "user", label: "User" },
     { value: "admin", label: "Admin" },
     { value: "owner", label: "Owner" },
+    { value: "manager", label: "Manager" },
+    { value: "productManager", label: "Product Manager" },
+    { value: "orderManager", label: "Order Manager" },
+    { value: "supportAgent", label: "Support Agent" },
   ];
 
   const openChangeRole = (customer) => {
