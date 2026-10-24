@@ -22,7 +22,7 @@ const AvatarIcon = ({ name, img, size = 40, className, imageClass }) => {
   const image = useMemo(() => {
     return decryptedImg !== null
       ? decryptedImg
-      : `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&size=${size * 2}&background=random&rounded=true&bold=true&format=png`;
+      : `https://api.dicebear.com/10.x/glyphs/svg?borderRadius=45&seed=${encodeURIComponent(initials)}`;
   }, [decryptedImg, initials, size]);
 
   return (

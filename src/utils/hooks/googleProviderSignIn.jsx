@@ -2,6 +2,7 @@ import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { encrypt } from "../crypt";
 import { generateHashLink } from "../route-util";
+import { api } from "../api";
 
 export default function onUserGoogleSignIn(setIsInputDisabled) {
   function navigate(path) {
@@ -39,7 +40,7 @@ export default function onUserGoogleSignIn(setIsInputDisabled) {
               },
             )
             .then((response) => {
-              sessionStorage.removeItem("session");
+              api.clearSessionCache(); // clear session cache to ensure fresh session data
             })
             .catch((error) => {
               console.error("Google Sign-In error:", error);

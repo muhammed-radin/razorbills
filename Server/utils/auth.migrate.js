@@ -69,7 +69,8 @@ function generateBasicBetterAuthData(
   return {
     emailVerified: user.emailVerified || false,
     banned: user.banned || false,
-    profilePicture: user.profilePicture || null,
+    profilePicture: user.profilePicture || user.image || null,
+    image: user.image || user.profilePicture || null,
     providedBy: user.providedBy || "local",
     updatedAt: user.updatedAt || new Date(),
     role: isOwner ? "owner" : user.role || "user",

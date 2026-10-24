@@ -321,12 +321,13 @@ export default function createAuth(db) {
           );
 
           return {
+            ...generateBasicBetterAuthData(profile, null),
             email: profile.email,
             emailVerified: profile.email_verified,
             name: nameFallback,
             image: profilePicture,
+            profilePicture, // override generateBasicBetterAuthData's null image with the profile picture from Google
             role: "user",
-            ...generateBasicBetterAuthData(profile, null),
             providedBy: "google",
           };
         },

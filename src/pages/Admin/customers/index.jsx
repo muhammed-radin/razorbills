@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -76,6 +76,7 @@ import { api } from "@/utils/api";
 import { alert } from "@/components/dialog-alert-provider";
 import z from "zod";
 import { authClient } from "@/lib/auth-client";
+import PaginationWithPrimaryButton from "@/components/customized/pagination/pagination-02";
 
 const customerTierConfig = {
   new: {
@@ -110,16 +111,22 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [tierFilter, setTierFilter] = useState("all");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
   const [currentTab, setCurrentTab] = useState("all");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [profileMode, setProfileMode] = useState("profile");
   const [profileDetail, setProfileDetail] = useState(null);
   const [profileOrders, setProfileOrders] = useState([]);
   const [profileLoading, setProfileLoading] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
-  const searchTimer = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  const requestRef = useRef({ key: "", promise: null });
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [isSudo, setSudo] = useState(false);
 
@@ -131,93 +138,129 @@ export default function CustomersPage() {
       }
     }
     checkSudo();
-    fetchCustomers();
   }, []);
-
-  // Debounced server-side search (backend ?search= over name/email/id).
-  useEffect(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      fetchCustomers(searchQuery);
-    }, 400);
-    return () => {
-      if (searchTimer.current) clearTimeout(searchTimer.current);
-    };
-  }, [searchQuery]);
 
   const [loadError, setLoadError] = useState(null);
 
-  const fetchCustomers = async (search = "", realtime = false) => {
-    try {
-      setIsLoading(true);
-      setLoadError(null);
-      const data = await usersApi.list({
-        limit: 50,
-        realtime: realtime ? true : false,
-        ...(search?.trim() ? { search: search.trim() } : {}),
-      });
-      const users = Array.isArray(data) ? data : (data.users ?? []);
-      setCustomers(
-        users.map((u, i) => {
-          // Names and address books are end-to-end encrypted at rest.
-          const name = decryptField(u.name) ?? "Unknown";
-          const address =
-            u.address && typeof u.address === "object"
-              ? decryptAddress(u.address)
-              : {};
-          return {
-            id: u.id ?? u._id ?? `user-${i}`,
-            name,
-            // Email is stored plain, but decrypt defensively —
-            // decryptField passes non-ciphertext through untouched.
-            email:
-              decryptField(u.email) || "No email registered, Maybe suspicious",
-            // Phone numbers may be stored encrypted (address-book flow).
-            phone: decryptField(u.phoneNumber) || "No phone number registered",
-            image: decrypt(u.image) ?? "",
-            // Determine the user's tier based on their role.
-            tier: u.role === "admin" || u.role === "owner" ? "vip" : "regular",
-            role: u.role ?? "user",
-            totalOrders: u.totalOrders ?? 0,
-            totalSpent: u.totalSpent ?? 0,
-            isActive: u.banned && u.isActive === false ? false : true,
-            avatar: u.image ? decrypt(u.image) : null,
-            averageOrderValue: u.totalOrders
-              ? (u.totalSpent ?? 0) / u.totalOrders
-              : 0,
-            joinDate: u.createdAt
-              ? new Date(u.createdAt).toISOString().split("T")[0]
-              : "",
-            lastOrder: u.lastLogin
-              ? new Date(u.lastLogin).toISOString().split("T")[0]
-              : "",
-            location:
-              address.street && address.city && address.state
-                ? address.street + ", " + address.city + ", " + address.state
-                : address.street && address.city
-                  ? address.street + ", " + address.city
-                  : "No location registered",
-            status: u.banned ? "inactive" : "active",
-          };
-        }),
-      );
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching customers:", error);
-      // Never render fake rows as if they were real customers.
-      setCustomers([]);
-      setLoadError(
-        error?.response?.status === 403
-          ? "Admin access required to view customers."
-          : "Could not load customers. Check the connection and retry.",
-      );
-      setIsLoading(false);
-    }
-  };
+  const fetchCustomers = useCallback(
+    async (realtime = false) => {
+      const sort =
+        sortBy === "spent-desc"
+          ? { sortBy: "totalSpent", sortOrder: "desc" }
+          : sortBy === "spent-asc"
+            ? { sortBy: "totalSpent", sortOrder: "asc" }
+            : sortBy === "orders-desc"
+              ? { sortBy: "totalOrders", sortOrder: "desc" }
+              : {
+                  sortBy: "createdAt",
+                  sortOrder: sortBy === "oldest" ? "asc" : "desc",
+                };
+      const params = {
+        page: currentPage,
+        limit: 30,
+        ...sort,
+        ...(appliedSearch.trim() ? { search: appliedSearch.trim() } : {}),
+        ...(roleFilter !== "all" ? { roles: roleFilter } : {}),
+        ...(currentTab !== "all"
+          ? { status: currentTab === "active" ? "active" : "inactive" }
+          : {}),
+        ...(realtime ? { realtime: "true" } : {}),
+      };
+      const key = JSON.stringify(params);
+      if (requestRef.current.key === key && requestRef.current.promise) {
+        return requestRef.current.promise;
+      }
+      const request = (async () => {
+        try {
+          setIsLoading(true);
+          setLoadError(null);
+          const data = await usersApi.list(params);
+          const users = Array.isArray(data) ? data : (data.users ?? []);
+          setTotalPages(Math.max(Number(data?.totalPages) || 1, 1));
+          setTotalCustomers(Number(data?.count) || users.length);
+          setCustomers(
+            users.map((u, i) => {
+              // Names and address books are end-to-end encrypted at rest.
+              const name = decryptField(u.name) ?? "Unknown";
+              const address =
+                u.address && typeof u.address === "object"
+                  ? decryptAddress(u.address)
+                  : {};
+              return {
+                id: u.id ?? u._id ?? `user-${i}`,
+                name,
+                // Email is stored plain, but decrypt defensively —
+                // decryptField passes non-ciphertext through untouched.
+                email:
+                  decryptField(u.email) ||
+                  "No email registered, Maybe suspicious",
+                // Phone numbers may be stored encrypted (address-book flow).
+                phone:
+                  decryptField(u.phoneNumber) || "No phone number registered",
+                image: decrypt(u.image) ?? "",
+                // Determine the user's tier based on their role.
+                tier:
+                  u.role === "admin" || u.role === "owner" ? "vip" : "regular",
+                role: u.role ?? "user",
+                totalOrders: u.totalOrders ?? 0,
+                totalSpent: u.totalSpent ?? 0,
+                isActive: u.banned && u.isActive === false ? false : true,
+                avatar: u.image ? decrypt(u.image) : null,
+                averageOrderValue: u.totalOrders
+                  ? (u.totalSpent ?? 0) / u.totalOrders
+                  : 0,
+                joinDate: u.createdAt
+                  ? new Date(u.createdAt).toISOString().split("T")[0]
+                  : "",
+                lastOrder: u.lastLogin
+                  ? new Date(u.lastLogin).toISOString().split("T")[0]
+                  : "",
+                location:
+                  address.street && address.city && address.state
+                    ? address.street +
+                      ", " +
+                      address.city +
+                      ", " +
+                      address.state
+                    : address.street && address.city
+                      ? address.street + ", " + address.city
+                      : "No location registered",
+                status: u.banned ? "inactive" : "active",
+              };
+            }),
+          );
+          setIsLoading(false);
+        } catch (error) {
+          console.error("Error fetching customers:", error);
+          // Never render fake rows as if they were real customers.
+          setCustomers([]);
+          setLoadError(
+            error?.response?.status === 403
+              ? "Admin access required to view customers."
+              : "Could not load customers. Check the connection and retry.",
+          );
+          setIsLoading(false);
+        }
+      })();
+      requestRef.current = { key, promise: request };
+      try {
+        await request;
+      } finally {
+        if (requestRef.current.promise === request) {
+          requestRef.current = { key: "", promise: null };
+        }
+      }
+    },
+    [appliedSearch, currentPage, currentTab, roleFilter, sortBy],
+  );
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers, refreshKey]);
 
   const getCustomerStats = () => {
     const stats = {
-      total: customers.length,
+      total: totalCustomers,
       active: customers.filter((c) => c.status === "active").length,
       inactive: customers.filter((c) => c.status === "inactive").length,
       new: customers.filter((c) => c.tier === "new").length,
@@ -236,28 +279,48 @@ export default function CustomersPage() {
 
   const openProfile = async (customer) => {
     setSelectedCustomer(customer);
+    setProfileMode("profile");
     setProfileOpen(true);
     setProfileLoading(true);
     setProfileDetail(null);
-    setProfileOrders([]);
     try {
-      const { usersApi: uApi, ordersApi } = await import("@/services/shop");
-      const [detail, ordersData] = await Promise.allSettled([
-        uApi.get(customer.id),
-        ordersApi.list({ userId: customer.id, limit: 20 }),
-      ]);
-      if (detail.status === "fulfilled") setProfileDetail(detail.value);
-      const list =
-        ordersData.status === "fulfilled"
-          ? (ordersData.value?.orders ??
-            (Array.isArray(ordersData.value) ? ordersData.value : []))
-          : [];
-      setProfileOrders(Array.isArray(list) ? list : []);
-      if (detail.status === "rejected")
-        toast.error("Could not load full profile");
+      const user = await usersApi.get(customer.id);
+      setProfileDetail({
+        ...user,
+        name: decryptField(user.name) || customer.name,
+        email: decryptField(user.email) || customer.email,
+        phoneNumber: decryptField(user.phoneNumber) || customer.phone,
+        address:
+          user.address && typeof user.address === "object"
+            ? decryptAddress(user.address)
+            : null,
+        addressBook: Array.isArray(user.addressBook)
+          ? user.addressBook.map(decryptAddress)
+          : [],
+      });
     } catch (error) {
       console.error("Error loading customer profile:", error);
       toast.error("Could not load customer profile");
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const openOrderHistory = async (customer) => {
+    setSelectedCustomer(customer);
+    setProfileMode("orders");
+    setProfileOpen(true);
+    setProfileLoading(true);
+    setProfileOrders([]);
+    try {
+      const { ordersApi } = await import("@/services/shop");
+      const response = await ordersApi.list({ userId: customer.id, limit: 20 });
+      const list =
+        response?.orders ?? (Array.isArray(response) ? response : []);
+      setProfileOrders(Array.isArray(list) ? list : []);
+    } catch (error) {
+      console.error("Error loading customer orders:", error);
+      toast.error("Could not load customer order history");
     } finally {
       setProfileLoading(false);
     }
@@ -534,44 +597,8 @@ export default function CustomersPage() {
     });
   };
 
-  const filteredCustomers = useMemo(() => {
-    return customers
-      .filter((customer) => {
-        const matchesSearch =
-          customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          customer.id.toLowerCase().includes(searchQuery.toLowerCase());
-
-        const matchesTier =
-          tierFilter === "all" || customer.tier === tierFilter;
-        const matchesTab =
-          currentTab === "all" ||
-          (currentTab === "active" && customer.status === "active") ||
-          (currentTab === "inactive" && customer.status === "inactive");
-
-        return matchesSearch && matchesTier && matchesTab;
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "recent":
-            return new Date(b.lastOrder) - new Date(a.lastOrder);
-          case "oldest":
-            return new Date(a.joinDate) - new Date(b.joinDate);
-          case "spent-desc":
-            return b.totalSpent - a.totalSpent;
-          case "spent-asc":
-            return a.totalSpent - b.totalSpent;
-          case "orders-desc":
-            return b.totalOrders - a.totalOrders;
-          default:
-            return 0;
-        }
-      });
-  }, [customers, searchQuery, tierFilter, currentTab, sortBy]);
-  const stats = useMemo(
-    () => getCustomerStats(),
-    [customers, searchQuery, tierFilter, currentTab, sortBy],
-  );
+  const filteredCustomers = customers;
+  const stats = getCustomerStats();
 
   if (isLoading) {
     return (
@@ -628,7 +655,7 @@ export default function CustomersPage() {
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
             <span className="flex-1 text-destructive">{loadError}</span>
             <button
-              onClick={fetchCustomers}
+              onClick={() => setRefreshKey((value) => value + 1)}
               className="rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted"
             >
               Retry
@@ -683,23 +710,42 @@ export default function CustomersPage() {
                   placeholder="Search customers..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setCurrentPage(1);
+                      setAppliedSearch(searchQuery);
+                    }
+                  }}
                   className="pl-10 h-10 sm:h-11 text-sm sm:text-base"
                 />
               </div>
               <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
-                <Select value={tierFilter} onValueChange={setTierFilter}>
+                <Select
+                  value={roleFilter}
+                  onValueChange={(value) => {
+                    setCurrentPage(1);
+                    setRoleFilter(value);
+                  }}
+                >
                   <SelectTrigger className="h-10 sm:h-11 text-xs sm:text-sm">
-                    <SelectValue placeholder="Tier" />
+                    <SelectValue placeholder="Role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Tiers</SelectItem>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="regular">Regular</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="vip">VIP</SelectItem>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    {roleOptions.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <Select value={sortBy} onValueChange={setSortBy}>
+                <Select
+                  value={sortBy}
+                  onValueChange={(value) => {
+                    setCurrentPage(1);
+                    setSortBy(value);
+                  }}
+                >
                   <SelectTrigger className="h-10 sm:h-11 text-xs sm:text-sm">
                     <SelectValue placeholder="Sort" />
                   </SelectTrigger>
@@ -712,7 +758,7 @@ export default function CustomersPage() {
                   </SelectContent>
                 </Select>
                 <Button
-                  onClick={() => fetchCustomers("", true)}
+                  onClick={() => setRefreshKey((value) => value + 1)}
                   className="h-10 sm:h-11 px-4 sm:px-6 col-span-2 sm:col-span-1 text-xs sm:text-sm"
                   variant="outline"
                 >
@@ -733,7 +779,13 @@ export default function CustomersPage() {
         </Card>
 
         {/* Customers Tabs */}
-        <Tabs value={currentTab} onValueChange={setCurrentTab}>
+        <Tabs
+          value={currentTab}
+          onValueChange={(value) => {
+            setCurrentPage(1);
+            setCurrentTab(value);
+          }}
+        >
           <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50 gap-1">
             <TabsTrigger
               value="all"
@@ -860,9 +912,9 @@ export default function CustomersPage() {
                                   View Profile
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => openProfile(customer)}
+                                  onClick={() => openOrderHistory(customer)}
                                 >
-                                  <Edit className="mr-2 h-4 w-4" />
+                                  <ShoppingBag className="mr-2 h-4 w-4" />
                                   Order History
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
@@ -1075,6 +1127,13 @@ export default function CustomersPage() {
                   })}
                 </div>
               )}
+              {totalPages > 1 && (
+                <PaginationWithPrimaryButton
+                  page={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -1083,7 +1142,11 @@ export default function CustomersPage() {
         <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{selectedCustomer?.name ?? "Customer"}</DialogTitle>
+              <DialogTitle>
+                {profileMode === "orders"
+                  ? `${selectedCustomer?.name ?? "Customer"} - Order History`
+                  : (selectedCustomer?.name ?? "Customer")}
+              </DialogTitle>
               <DialogDescription>
                 {selectedCustomer?.email} · {selectedCustomer?.id}
               </DialogDescription>
@@ -1092,6 +1155,37 @@ export default function CustomersPage() {
               <p className="text-sm text-muted-foreground py-6 text-center">
                 Loading profile…
               </p>
+            ) : profileMode === "orders" ? (
+              <div>
+                <p className="text-sm font-semibold mb-2">Order history</p>
+                {profileOrders.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No orders found for this customer.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {profileOrders.map((o) => (
+                      <div
+                        key={o.id ?? o._id}
+                        className="flex items-center justify-between rounded-lg border p-3 text-sm"
+                      >
+                        <div>
+                          <p className="font-mono font-semibold">
+                            {o.id ?? o._id}
+                          </p>
+                          <p className="text-xs text-muted-foreground capitalize">
+                            {o.status} · {o.payment?.method} (
+                            {o.payment?.status})
+                          </p>
+                        </div>
+                        <p className="font-bold">
+                          ₹{Number(o.totalAmount ?? 0).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-2 text-center">
@@ -1121,35 +1215,51 @@ export default function CustomersPage() {
                     </p>
                   </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold mb-2">Order history</p>
-                  {profileOrders.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No orders found for this customer.
+                <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Email</p>
+                    <p className="break-all text-sm font-medium">
+                      {profileDetail?.email ?? selectedCustomer?.email ?? "—"}
                     </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {profileOrders.map((o) => (
-                        <div
-                          key={o.id ?? o._id}
-                          className="flex items-center justify-between rounded-lg border p-3 text-sm"
-                        >
-                          <div>
-                            <p className="font-mono font-semibold">
-                              {o.id ?? o._id}
-                            </p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                              {o.status} · {o.payment?.method} (
-                              {o.payment?.status})
-                            </p>
-                          </div>
-                          <p className="font-bold">
-                            ₹{Number(o.totalAmount ?? 0).toFixed(2)}
-                          </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="text-sm font-medium">
+                      {profileDetail?.phoneNumber ??
+                        selectedCustomer?.phone ??
+                        "—"}
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <p className="mb-1 text-xs text-muted-foreground">
+                      Address
+                    </p>
+                    {(() => {
+                      const address =
+                        profileDetail?.address ??
+                        profileDetail?.addressBook?.[0];
+                      return address ? (
+                        <div className="flex items-start gap-2 text-sm">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span>
+                            {[
+                              address.street,
+                              address.city,
+                              address.state,
+                              address.postalCode ?? address.zipCode,
+                              address.country,
+                            ]
+                              .filter(Boolean)
+                              .join(", ") || "No address registered"}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          No address registered
+                        </p>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
             )}

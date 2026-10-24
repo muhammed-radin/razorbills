@@ -171,6 +171,11 @@ export const settingsApi = {
   save: (prefs) => post("/api/users/settings", prefs),
 };
 
+/** Profile updates are patches — only send the fields that actually changed. */
+export const profileApi = {
+  update: (patch) => post("/api/users/profile", patch),
+};
+
 export const analyticsApi = {
   global: () => get("/api/analytics"),
   daily: (dayid) => get(`/api/analytics/${dayid}`),

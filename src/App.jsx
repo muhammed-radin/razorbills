@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { LoaderScreen } from "./components/LoaderScreen";
 import { api } from "./utils/api";
 import { authClient } from "./lib/auth-client";
+import { openAuthenticationModal } from "./utils/signin-modal-required";
 
 const HIDE_CHROME_PATHS = ["/login", "/signup", "/forgot-password"];
 const GUEST_ACCESS_PATHS = [
@@ -96,7 +97,7 @@ function App() {
                   toast.success("Signed in as guest.");
                   // Drop any cached null-session so the new guest session
                   // takes effect on the next fetch without a reload.
-                  sessionStorage.removeItem("session");
+                  api.clearSessionCache();
                 }
               } catch (error) {
                 console.error("Error during guest sign-in:", error);
@@ -106,7 +107,7 @@ function App() {
               }
               setTimeout(() => {
                 setIsLoading(false);
-                sessionStorage.removeItem("session"); // Clear any existing session data
+                api.clearSessionCache(); // Clear any existing session data
                 window.location.reload(); // Reload the page to reflect the guest session
               }, 1500);
             }
@@ -119,7 +120,7 @@ function App() {
           searchParams.get("success") === "true"
         ) {
           toast.success("Google Sign-In successful");
-          sessionStorage.removeItem("session"); // Clear any existing session data
+          api.clearSessionCache(); // Clear any existing session data
           hasRun.current = true;
           navigate("/"); // Navigate to the home page after successful Google sign-in
         } else if (
@@ -137,7 +138,9 @@ function App() {
         isGuestAccess === false &&
         session?.user?.isAnonymous === true
       ) {
-        navigate("/"); // Navigate to the current path if authenticated and not on a guest access page
+        openAuthenticationModal().then((isLoggedin) => {
+          if (isLoggedin === false) navigate("/"); // Navigate to the current path if authenticated and not on a guest access page
+        });
       }
     }
 

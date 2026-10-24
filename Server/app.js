@@ -53,7 +53,7 @@ const globalApiLimiter = rateLimit({
 // limiter) so normal navigation cannot burn the credential budget and
 // lock users out of login for 15 minutes.
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 60 * 1000, // 15 minutes
   max: Number(process.env.RATE_LIMIT_AUTH_MAX) || 20, // Strict limit: max 20 auth attempts per IP per 15 mins
   standardHeaders: true,
   legacyHeaders: false,

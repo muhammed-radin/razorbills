@@ -1,4 +1,3 @@
-import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -10,60 +9,103 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { api } from "@/utils/api";
 import { encrypt, encryptStrict } from "@/utils/crypt";
 import { toast } from "sonner";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import onUserGoogleSignIn from "@/utils/hooks/googleProviderSignIn";
+import { Eye, EyeOff, Loader2, Mail, User, UserPlus, Lock } from "lucide-react";
+import GoogleLogo from "@/components/auth/google-logo";
+import AuthLayout from "@/components/auth/auth-layout";
+import PasswordStrength from "@/components/auth/password-strength";
+import { api } from "@/utils/api";
 
 const SignUpPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [isInputDisabled, setIsInputDisabled] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formShake, setFormShake] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(true);
+  const sessionChecked = useRef(false);
 
-  const formSchema = z.object({
-    email: z.string().email(t("auth.validationEmail")),
-    name: z.string().min(2, t("auth.validationName")),
-    password: z
-      .string()
-      .min(8, t("auth.validationPassword"))
-      .regex(/[A-Z]/, t("auth.validationPasswordUppercase"))
-      .regex(/[a-z]/, t("auth.validationPasswordLowercase"))
-      .regex(/[0-9]/, t("auth.validationPasswordNumber"))
-      .regex(/[@$!%*?&#]/, t("auth.validationPasswordSpecial")),
-  });
+  // ── Memoized Validation Schema ──
+  const formSchema = useMemo(
+    () =>
+      z.object({
+        name: z.string().min(
+          2,
+          t("auth.validationName", {
+            default: "Name must be at least 2 characters long",
+          }),
+        ),
+        email: z.string().email(
+          t("auth.validationEmail", {
+            default: "Please enter a valid email address",
+          }),
+        ),
+        password: z
+          .string()
+          .min(
+            8,
+            t("auth.validationPassword", {
+              default: "Password must be at least 8 characters long",
+            }),
+          )
+          .regex(
+            /[A-Z]/,
+            t("auth.validationPasswordUppercase", {
+              default: "Password must contain at least one uppercase letter",
+            }),
+          )
+          .regex(
+            /[a-z]/,
+            t("auth.validationPasswordLowercase", {
+              default: "Password must contain at least one lowercase letter",
+            }),
+          )
+          .regex(
+            /[0-9]/,
+            t("auth.validationPasswordNumber", {
+              default: "Password must contain at least one number",
+            }),
+          )
+          .regex(
+            /[@$!%*?&#]/,
+            t("auth.validationPasswordSpecial", {
+              default: "Password must contain at least one special character",
+            }),
+          ),
+      }),
+    [t],
+  );
 
   const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-      name: "",
-    },
+    defaultValues: { email: "", password: "", name: "" },
     resolver: zodResolver(formSchema),
   });
 
-  const onSubmit = (data) => {
-    let { email, password, name } = data;
-    let encryptedData = {
-      email: email,
-      password: encryptStrict(password),
-      name: encrypt(name),
-    };
-    setIsInputDisabled(true); // Disable inputs during submission
-    sumbitForm(encryptedData);
-  };
+  const watchedPassword = form.watch("password");
 
-  const sumbitForm = (data) => {
-    toast.promise(
-      () =>
-        new Promise((resolveui, rejectui) => {
-          try {
+  // ── Submit handler ──
+  const submitForm = useCallback(
+    (data) => {
+      if (!agreeTerms) {
+        toast.error(
+          "Please agree to the Terms of Service to create an account.",
+        );
+        return;
+      }
+
+      toast.promise(
+        () =>
+          new Promise((resolveui, rejectui) => {
             authClient.signUp
               .email(
                 {
@@ -78,35 +120,25 @@ const SignUpPage = () => {
                 },
                 {
                   onSuccess: (payload) => {
-                    const { response, data: response_data, user } = payload;
-                    console.log(response, response_data, user);
-                    if (response.status == 200) {
+                    if (payload.response.status === 200) {
                       resolveui(
                         t("auth.signupSuccess", {
-                          default: "Successfully signed up!",
+                          default: "Sign-up Successful",
                         }),
                       );
-                      // Drop any cached null-session so the new login takes
-                      // effect immediately (mirrors the login flow).
-                      sessionStorage.removeItem("session");
+                      api.clearSessionCache(); // clear session cache to ensure fresh session data
 
-                      // Verify the session and redirect accordingly. ( Helpful for Google login )
                       authClient
                         .getSession()
                         .then(({ data: session, error }) => {
-                          if (session && session.user) {
+                          if (session?.user) {
                             navigate("/");
                           } else {
                             navigate("/login");
                           }
-
-                          if (error) {
-                            navigate("/login");
-                          }
+                          if (error) navigate("/login");
                         })
-                        .catch(() => {
-                          navigate("/login");
-                        });
+                        .catch(() => navigate("/login"));
                     } else {
                       rejectui(
                         t("auth.signupFailed", {
@@ -115,200 +147,300 @@ const SignUpPage = () => {
                       );
                     }
                   },
-                  onError: (error) => {
-                    console.error(error);
-                    rejectui(error);
-                  },
+                  onError: (error) => rejectui(error),
                 },
               )
               .then(({ error }) => {
-                if (error) {
-                  rejectui(error);
-                }
+                if (error) rejectui(error);
               })
-              .catch((error) => {
-                rejectui(error);
-              });
-          } catch (error) {
-            rejectui(error);
-          }
-        }),
-      {
-        loading: t("auth.signingUp"),
-        success: (msg) => {
-          setIsInputDisabled(false);
-          return `${msg}`;
+              .catch((error) => rejectui(error));
+          }),
+        {
+          loading: t("auth.signingUp", { default: "Signing up..." }),
+          success: (msg) => {
+            setIsSubmitting(false);
+            return `${msg}`;
+          },
+          error: (err) => {
+            setIsSubmitting(false);
+            setFormShake(true);
+            setTimeout(() => setFormShake(false), 600);
+            const message =
+              err?.message ||
+              err?.error?.message ||
+              (typeof err === "string" && err) ||
+              err?.error?.statusText ||
+              (typeof err?.error === "string" && err?.error) ||
+              "Unknown error";
+            return t("auth.signupFailed", {
+              error: message,
+              default: `Sign-up failed: ${message}`,
+            });
+          },
         },
-        error: (err) => {
-          setIsInputDisabled(false);
-          const ErrMessage =
-            err?.message ||
-            (err.error && err.error.message) ||
-            (typeof err === "string" && err) ||
-            err?.error?.statusText ||
-            (typeof err?.error === "string" && err?.error) ||
-            "Unknown error";
-          return `${t("auth.signupFailed", {
-            error: ErrMessage,
-          })}`;
-        },
-      },
-    );
-  };
+      );
+    },
+    [t, navigate, agreeTerms],
+  );
 
+  const onSubmit = useCallback(
+    (data) => {
+      const encrypted = {
+        email: data.email,
+        password: encryptStrict(data.password),
+        name: encrypt(data.name),
+      };
+      setIsSubmitting(true);
+      submitForm(encrypted);
+    },
+    [submitForm],
+  );
+
+  // ── Google Sign-In handler ──
+  const handleGoogleSignIn = useCallback(() => {
+    setIsSubmitting(true);
+    onUserGoogleSignIn(setIsSubmitting);
+  }, []);
+
+  // ── Auto-redirect if already logged in ──
   useEffect(() => {
-    (async function () {
-      let user = await api.getUser();
-      if (user && user.isAnonymous === false) {
+    if (sessionChecked.current) return;
+    sessionChecked.current = true;
+
+    authClient.getSession().then(({ data: session }) => {
+      if (session?.user && !session.user.isAnonymous) {
         navigate("/");
-        return;
       }
-    })();
+    });
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center sm:bg-muted">
-      <div className="max-w-sm w-full flex flex-col items-center sm:border rounded-lg px-6 py-8 sm:shadow-sm/5 sm:bg-card">
-        <Logo className="h-9 w-9" />
-        <p className="mt-4 text-xl font-semibold tracking-tight">
-          {t("auth.signupTitle")}
-        </p>
-
+    <AuthLayout
+      type="signup"
+      title={t("auth.signupTitle", { default: "Sign up for RazorBillz" })}
+      subtitle="Join in seconds to access order tracking and member pricing."
+      seoTitle={t("auth.signupTitle", { default: "Sign Up" })}
+    >
+      <div className="space-y-2.5 sm:space-y-3.5">
+        {/* ── Google OAuth Button ── */}
         <Button
-          className="mt-8 w-full gap-3"
-          disabled={isInputDisabled}
-          onClick={() => {
-            setIsInputDisabled(true);
-            onUserGoogleSignIn(setIsInputDisabled);
-          }}
+          type="button"
+          variant="outline"
+          size="lg"
+          className="w-full gap-2.5 h-9 sm:h-10 text-xs sm:text-sm font-medium border-border/80 hover:bg-accent/60 hover:text-accent-foreground shadow-sm transition-all duration-200"
+          disabled={isSubmitting}
+          onClick={handleGoogleSignIn}
+          aria-label={t("auth.continueWithGoogle", {
+            default: "Continue with Google",
+          })}
         >
-          <GoogleLogo />
-          {t("auth.continueWithGoogle")}
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <GoogleLogo />
+          )}
+          <span>
+            {t("auth.continueWithGoogle", { default: "Continue with Google" })}
+          </span>
         </Button>
 
-        <div className="my-7 w-full flex items-center justify-center overflow-hidden">
-          <Separator />
-          <span className="text-sm px-2">{t("auth.or")}</span>
-          <Separator />
+        {/* ── Divider ── */}
+        <div className="relative my-1.5 sm:my-2.5 flex items-center justify-center">
+          <Separator className="w-full" />
+          <span className="absolute bg-background px-3 text-[10px] sm:text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t("auth.or", { default: "OR" })}
+          </span>
         </div>
 
+        {/* ── Sign-Up Form ── */}
         <Form {...form}>
           <form
-            className="w-full space-y-4"
+            className={`space-y-2 sm:space-y-2.5 ${formShake ? "auth-shake" : ""}`}
             onSubmit={form.handleSubmit(onSubmit)}
+            noValidate
+            aria-label="Sign up form"
           >
+            {/* Full Name */}
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("auth.fullName")}</FormLabel>
+                  <FormLabel className="text-[11px] sm:text-xs font-semibold">
+                    {t("auth.fullName", { default: "Full Name" })}
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      type="text"
-                      placeholder={t("auth.fullNamePlaceholder")}
-                      className="w-full"
-                      disabled={isInputDisabled}
-                      {...field}
-                    />
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/70 pointer-events-none" />
+                      <Input
+                        type="text"
+                        autoComplete="name"
+                        placeholder={t("auth.fullNamePlaceholder", {
+                          default: "Your Full Name",
+                        })}
+                        className="pl-9 h-9 sm:h-9.5 text-xs sm:text-sm rounded-lg bg-background border-border/80 focus-visible:ring-1 transition-all"
+                        disabled={isSubmitting}
+                        aria-required="true"
+                        {...field}
+                      />
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[11px]" />
                 </FormItem>
               )}
             />
+
+            {/* Email Address */}
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("auth.email")}</FormLabel>
+                  <FormLabel className="text-[11px] sm:text-xs font-semibold">
+                    {t("auth.email", { default: "Email" })}
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      type="email"
-                      placeholder={t("auth.emailPlaceholder")}
-                      className="w-full"
-                      disabled={isInputDisabled}
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/70 pointer-events-none" />
+                      <Input
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        placeholder={t("auth.emailPlaceholder", {
+                          default: "Email address",
+                        })}
+                        className="pl-9 h-9 sm:h-9.5 text-xs sm:text-sm rounded-lg bg-background border-border/80 focus-visible:ring-1 transition-all"
+                        disabled={isSubmitting}
+                        aria-required="true"
+                        {...field}
+                      />
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <FormMessage className="text-[11px]" />
                 </FormItem>
               )}
             />
+
+            {/* Password */}
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("auth.password")}</FormLabel>
+                  <FormLabel className="text-[11px] sm:text-xs font-semibold">
+                    {t("auth.password", { default: "Password" })}
+                  </FormLabel>
                   <FormControl>
-                    <Input
-                      type="password"
-                      placeholder={t("auth.passwordPlaceholder")}
-                      className="w-full"
-                      disabled={isInputDisabled}
-                      {...field}
-                    />
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/70 pointer-events-none" />
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder={t("auth.passwordPlaceholder", {
+                          default: "Create a password",
+                        })}
+                        className="pl-9 pr-9 h-9 sm:h-9.5 text-xs sm:text-sm rounded-lg bg-background border-border/80 focus-visible:ring-1 transition-all"
+                        disabled={isSubmitting}
+                        aria-required="true"
+                        aria-describedby="signup-password-strength"
+                        {...field}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                        tabIndex={-1}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
                   </FormControl>
-                  <FormMessage />
+                  <div id="signup-password-strength">
+                    <PasswordStrength password={watchedPassword} />
+                  </div>
+                  <FormMessage className="text-[11px]" />
                 </FormItem>
               )}
             />
+
+            {/* Terms of Service Checkbox */}
+            <div className="pt-1">
+              <label
+                htmlFor="agree-terms"
+                className="flex items-start gap-2 text-[11px] sm:text-xs text-muted-foreground cursor-pointer select-none"
+              >
+                <Checkbox
+                  id="agree-terms"
+                  checked={agreeTerms}
+                  onCheckedChange={(val) => setAgreeTerms(!!val)}
+                  disabled={isSubmitting}
+                  className="rounded mt-0.5"
+                />
+                <span className="leading-snug">
+                  I accept the{" "}
+                  <Link
+                    to="/terms"
+                    className="text-foreground underline underline-offset-2 hover:text-primary"
+                  >
+                    Terms
+                  </Link>{" "}
+                  &{" "}
+                  <Link
+                    to="/privacy"
+                    className="text-foreground underline underline-offset-2 hover:text-primary"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
+            </div>
+
+            {/* Submit Button */}
             <Button
               type="submit"
-              className="mt-4 w-full"
-              disabled={isInputDisabled}
+              size="lg"
+              className="w-full h-9 sm:h-10 gap-2 mt-1.5 font-semibold text-xs sm:text-sm shadow-sm transition-all duration-200"
+              disabled={isSubmitting}
             >
-              {t("auth.continueWithEmail")}
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <UserPlus className="h-4 w-4" />
+              )}
+              <span>
+                {t("auth.continueWithEmail", {
+                  default: "Create Free Account",
+                })}
+              </span>
             </Button>
           </form>
         </Form>
 
-        <p className="mt-5 text-sm text-center">
-          {t("auth.alreadyHaveAccount")}
-          <Link to="/login" className="ml-1 underline text-muted-foreground">
-            {t("auth.logIn")}
-          </Link>
-        </p>
+        {/* ── Login switch link ── */}
+        <div className="pt-1.5 text-center">
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            {t("auth.alreadyHaveAccount", {
+              default: "Already have an account?",
+            })}{" "}
+            <Link
+              to="/login"
+              className="font-semibold text-foreground underline underline-offset-4 hover:text-primary transition-colors ml-1"
+            >
+              {t("auth.logIn", { default: "Log in" })}
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
+    </AuthLayout>
   );
 };
-
-const GoogleLogo = () => (
-  <svg
-    width="1.2em"
-    height="1.2em"
-    id="icon-google"
-    viewBox="0 0 16 16"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className="inline-block shrink-0 align-sub text-inherit size-lg"
-  >
-    <g clipPath="url(#clip0)">
-      <path
-        d="M15.6823 8.18368C15.6823 7.63986 15.6382 7.0931 15.5442 6.55811H7.99829V9.63876H12.3194C12.1401 10.6323 11.564 11.5113 10.7203 12.0698V14.0687H13.2983C14.8122 12.6753 15.6823 10.6176 15.6823 8.18368Z"
-        fill="#4285F4"
-      ></path>
-      <path
-        d="M7.99812 16C10.1558 16 11.9753 15.2915 13.3011 14.0687L10.7231 12.0698C10.0058 12.5578 9.07988 12.8341 8.00106 12.8341C5.91398 12.8341 4.14436 11.426 3.50942 9.53296H0.849121V11.5936C2.2072 14.295 4.97332 16 7.99812 16Z"
-        fill="#34A853"
-      ></path>
-      <path
-        d="M3.50665 9.53295C3.17154 8.53938 3.17154 7.4635 3.50665 6.46993V4.4093H0.849292C-0.285376 6.66982 -0.285376 9.33306 0.849292 11.5936L3.50665 9.53295Z"
-        fill="#FBBC04"
-      ></path>
-      <path
-        d="M7.99812 3.16589C9.13867 3.14825 10.241 3.57743 11.067 4.36523L13.3511 2.0812C11.9048 0.723121 9.98526 -0.0235266 7.99812 -1.02057e-05C4.97332 -1.02057e-05 2.2072 1.70493 0.849121 4.40932L3.50648 6.46995C4.13848 4.57394 5.91104 3.16589 7.99812 3.16589Z"
-        fill="#EA4335"
-      ></path>
-    </g>
-    <defs>
-      <clipPath id="clip0">
-        <rect width="15.6825" height="16" fill="white"></rect>
-      </clipPath>
-    </defs>
-  </svg>
-);
 
 export default SignUpPage;

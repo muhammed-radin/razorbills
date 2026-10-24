@@ -183,6 +183,7 @@ const api = {
       }
     } catch {
       // Corrupt cache: fall through to a live fetch.
+      sessionStorage.removeItem("session"); // Clear cache if session is invalid. it helps to avoid caching invalid sessions.
       return {
         data: null,
         fromCache: false,
@@ -190,8 +191,40 @@ const api = {
       };
     }
   },
+  clearSessionCache() {
+    try {
+      sessionStorage.removeItem("session");
+    } catch {
+      // Ignore errors when clearing session cache
+    }
+  },
+  async refreshSession() {
+    this.clearSessionCache();
+    return this.getSession();
+  },
+  async isSudo() {
+    const session = await this.getSession();
+    if (!session || !session.data || !session.data.user) {
+      return false;
+    }
+    if (
+      session.data.user.role === "owner" ||
+      session.data.user.role === "admin"
+    ) {
+      return true;
+    }
+    return false;
+  },
+  async getUserRole() {
+    const session = await this.getSession();
+    if (!session || !session.data || !session.data.user) {
+      return null;
+    }
+    return session.data.user.role || null;
+  },
   actions: {
     async logOut() {
+      this.clearSessionCache();
       sessionStorage.clear();
       this.alreadyTryingToGetSession = false;
       return authClient.signOut();
